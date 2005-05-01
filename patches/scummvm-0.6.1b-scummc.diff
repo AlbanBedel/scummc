@@ -1,0 +1,23 @@
+--- scummvm-0.6.1b/scumm/scummvm.cpp	2004-07-29 11:56:11.000000000 +0200
++++ scummvm-0.6.1b-scummc/scumm/scummvm.cpp	2004-10-09 16:59:41.000000000 +0200
+@@ -185,6 +185,8 @@
+ 	{"snmidemo", "Sam & Max (Interactive WIP Demo)", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE,
+ 	 GF_NEW_OPCODES | GF_USE_KEY | GF_DRAWOBJ_OTHER_ORDER, 0},
+ 
++	{"scummc", "ScummC games", GID_SCUMMC, 6, MDT_ADLIB | MDT_NATIVE, GF_NEW_OPCODES, 0},
++
+ //	{"test", "Test demo game", GID_SAMNMAX, 6, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_NATIVE, GF_NEW_OPCODES, 0},
+ 
+ 	/* Scumm Version 7 */
+--- scummvm-0.6.1b/scumm/scumm.h	2004-07-19 00:15:52.000000000 +0200
++++ scummvm-0.6.1b-scummc/scumm/scumm.h	2004-10-09 17:03:22.000000000 +0200
+@@ -225,7 +225,8 @@
+ 	GID_FBEAR,
+ 	GID_PJSDEMO,
+ 	GID_MONKEY_SEGA,
+-	GID_FUNPACK
++	GID_FUNPACK,
++	GID_SCUMMC
+ };
+ 
+ #define _baseRooms res.address[rtRoom]

@@ -1,0 +1,178 @@
+
+
+                          ScummC 
+
+           A set of tools for creating scummc games
+
+
+I. What is ScummC ?
+
+ The aim of this project is to create a full set of tools making
+ it possible to write scumm games from scratch. As I'm not too crazy
+ I'm targeting a single version of the engine, the version 6 used in
+ Day of the Tentacle. Support of other version is not planned !!
+ There is already enough work with supporting one version.
+
+
+II. This release
+
+ This is the second release, it's not yet possible to create a game
+ from the ground. To play with these tools you will need some other
+ tools like Scumm Revisited (see http://scumm.mixnmojo.com) to extract
+ some of the needed resources from the dott data files.
+
+ In this release you will find:
+
+  * scc      : the compiler
+  * sld      : the linker
+  * zpnn2bmp : a tools to convert ZPnn blocks to bmp
+  * costview : a costume viewer/editor prototype
+  * boxedit  : a room box editor
+
+ Note: The two first releases was missing the scummVars6.s file.
+       That make these two release pretty useless. This release
+       (0.1.2b) is just a repack of the 0.1.2 with scummVars6.s added
+       and a few corrections in this README.
+
+III. Compiling it
+
+ To build scc you need flex (perhaps other's lex do, dunno) and bison.
+ Gtk >= 2.4 is needed to build boxedit and costview. The rest shouldn't
+ need anything special. I'm working on Linux, but scc/sld should probably
+ even compile on windows with mingw. Please report.
+
+ Paltforms reported as working (for the last release):
+
+  * Linux i386
+  * netbsd/i386 1.6.2
+
+
+IV. What can i do with that ?
+
+ In short, you can create your own rooms. Isn't that great ? 
+ OK there are some limitations. The various images  and z planes are
+ imported from bmp files. So you can create your own.
+ The new boxeditor allow you to define the box in the room. However
+ the scale data is still not editable. In fact i don't know much about
+ it currently. So you probably still want to reuse some room from dott. 
+ Then you need some actor, again you have get that from dott. That's all ?
+ No, you also need at least one charset.
+
+ So as you can see currently you won't be able to create your own game.
+ However you can already start to experiment with the scripting engine,
+ and by this help me improve the compiler :)
+
+ Note that this is still a very early release, so some "advanced" stuff
+ like cut scene and override cannot be used yet. There is also no
+ support for sounds or musics.
+
+
+V. Getting started
+
+ To run the games you are going to build from scummvm you will  need to
+ apply the provided patch and recompile scummvm. This patch only
+ add a new game to scummvm with the configuration needed by scummc.
+ The provided patch was for the last scummvm release so it probably
+ won't apply cleanly on newer release. That shouldn't be a big problem
+ provided you have minimal understanding of programming, the patch only
+ add 2 lines of code.
+
+ While scummvm is recompiling you can take a look at ParkingPast.scumm, 
+ it's quiet well commented (at least i hope). So if you are already
+ familiar with the vm it should be easy to understand.
+
+ To compile the example you will need a few ressouces (more about this in
+ the next section). When you have everything you should be able to run:
+
+ $ scc ParkinPast.scumm
+
+ It will probably generate a lot of output, but don't worry. If all went
+ well it will have generated a file called output.roobj. This file contain
+ all the data needed for the room plus some other stuff like symbol tables,
+ etc. To get the final game you must link it:
+
+ $ sld output.roobj
+
+ Again the output is pretty verbose and this time it generate 2 files
+ called scummc.000 and scummc.001. The game is ready to be played. Add it
+ to scummvm, and play :)
+
+
+VI. Getting the resources used in ParkingPast.scumm
+
+ WARNING: I use a French CD version, so the resource indexing might not be
+          the same for you. Again reports are welcome.
+
+ The room used is the room number 7 (offset 0x987B0). The image can
+ be extracted with scummrev. However for the z planes you will need
+ to use zpnn2bmp.
+
+ The costume is the number 304 (offset 0x881653) found in room 61
+ (offset 0x84FC9A). The charset should be in the same room as the
+ costume, i use the second one.
+
+VII. The box editor
+
+ This tool allow you to define the boxes in your room in a graphical
+ manner and to name them for easy reffering in the scripts.
+ Be warned it's interface is perhaps a bit unusual. The 2 open and save
+ buttons should be self-explicit. But both have an alternative action if
+ clicked with a shift key pressed. Namely open a background image and
+ save as. On the view you have following actions:
+
+  left button        : add point to the selection
+  right button       : remove point from the selection
+
+  shift+left button  : add box to the selection
+  shift+right button : remove box from the selection
+
+  ctrl+left button   : select other point (a point need to be selected first)
+  ctrl+right button  : select other box (a box need to be selected first)
+
+  left button        : move the selection
+  middle button drag : move the view
+
+  Their is also the following keys:
+
+  b         : create a new box
+  d/suppr   : delete the selection
+  esc       : clear selection
+  u/q       : undo
+  r/o       : redo
+  >/+       : zoom in
+  </-       : zoom out
+  s         : save
+  S         : save as
+
+  I'm using a Dvorak layout so the o/q are well placed, i put u/r as
+  alternative because they are easy to remember. However i would be glad
+  to add some qzerty friendly bindings.
+
+  On the command line you can specify a box filename and/or a background image
+  with the -img parameter.
+
+
+VIII. Warning and other legal stuff
+
+ Be warned this is very beta, a lot of features are missing. Use at your
+ own risk. All the code has been written by myself and is under GPL.
+ Some bit of code have been stolen (ie. copy/pasted and c-ifier) from scummvm.
+ I don't have time for legal stuff at the moment so just play fair ;)
+
+
+IX. Thanks
+
+ Big thanks to all scummvm coders and contributors. All this would
+ have never been possible without you !!!!
+ Big thanks to David Given, http://www.cowlark.com/scumm was a very
+ useful source.
+ Thanks to the few people how at least tried to compile and perhaps even
+ use a bit one of these early versions.
+
+
+X. Contact
+
+ I can be reached at albeu@free.fr. You can also try on #scummvm.
+ Patches and suggestions of all kinds are very welcome.
+
+
