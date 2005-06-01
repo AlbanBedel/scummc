@@ -101,9 +101,9 @@ int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
 static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   char hdr[2];
   int i,l,bpp;
-  uint32_t fsize,doff,hsize,w,stride,h,isize,ncol;
+  uint32_t fsize,doff,hsize,w,stride,h,isize,ncol,fmt;
   scc_img_t* img;
-  uint8_t* dst;
+  uint8_t* dst,n,c,x;
 
   // Header
   if(scc_fd_read(fd,hdr,2) != 2) return NULL;
@@ -151,14 +151,15 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   // align the stride on dword boundary
   stride = ((stride+3)/4)*4;
 
-  if(scc_fd_r32le(fd) != 0) {
-    printf("BMP file %s use an unsupported compression format.\n",fd->filename);
+  fmt = scc_fd_r32le(fd);
+  if(fmt != 0 && fmt != 1) {
+    printf("BMP file %s use an unsupported compression format: 0x%x.\n",fd->filename,fmt);
     return NULL;
   }
 
   isize = scc_fd_r32le(fd);
  
-  if(isize && isize != stride*h) {
+  if(fmt == 0 && isize && isize != stride*h) {
     printf("BMP file %s has an invalid image size: %d.\n",fd->filename,isize);
     return NULL;
   }
@@ -194,34 +195,127 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   img->trans = img->ncol-1;
   
   img->data = malloc(w*h);
-  for(l = 0, dst = &img->data[w*(h-1)] ; l < h ; dst -= w, l++) {
-    uint8_t data[stride];
 
-    if(scc_fd_read(fd,data,stride) != stride) {
-      printf("Error while reading BMP file %s\n",fd->filename);
-      scc_img_free(img);
-      return NULL;
-    }
+  switch(fmt) {
+  case 0: // raw data
+      for(l = 0, dst = &img->data[w*(h-1)] ; l < h ; dst -= w, l++) {
+          uint8_t data[stride];
 
-    switch(bpp) {
-    case 1:
-      for(i = 0 ; i < w ; i++) {
-	if(data[i/8] & (1<<(7-(i%8))))
-	  dst[i] = 1;
-	else
-	  dst[i] = 0;
+          if(scc_fd_read(fd,data,stride) != stride) {
+              printf("Error while reading BMP file %s\n",fd->filename);
+              scc_img_free(img);
+              return NULL;
+          }
+
+          switch(bpp) {
+          case 1:
+              for(i = 0 ; i < w ; i++) {
+                  if(data[i/8] & (1<<(7-(i%8))))
+                      dst[i] = 1;
+                  else
+                      dst[i] = 0;
+              }
+              break;
+          case 4:
+              for(i = 0 ; i < w ; i += 2) {
+                  dst[i] = data[i/2]>>4;
+                  dst[i+1] = data[i/2] & 0xF;
+              }
+              break;
+          case 8:
+              memcpy(dst,data,w);
+              break;
+          }
       }
       break;
-    case 2:
-      for(i = 0 ; i < w ; i += 2) {
-	dst[i] = data[i/2]>>4;
-	dst[i+1] = data[i/2] & 0xF;
-      }
+  case 1: // RLE 8 bit
+      dst = &img->data[w*(h-1)];
+      x = 0;
+      while(1) {
+          n = scc_fd_r8(fd);
+          c = scc_fd_r8(fd);
+
+          // repeated color
+          if(n > 0) {
+              if(x+n > w) {
+                  printf("Warning repetition should continue on the next line ???\n");
+                  n = w-x;
+              }
+              if(n > 0) {
+                  memset(&dst[x],c,n);
+                  x += n;
+              }
+              continue;
+          }
+           
+          if(c == 0) { // end of line
+              if(x < w)
+                  memset(&dst[x],0,w-x);
+              x = 0;
+              if(dst == img->data) break;
+              dst -= w;
+              continue;
+          } 
+
+          if(c == 1) { // end of bitmap
+              if(x < w)
+                  memset(&dst[x],0,w-x);
+              if(dst > img->data)
+                  memset(img->data,0,dst-img->data);
+              break;
+          }
+
+          if(c == 2) { // delta
+              // x delta
+              n = scc_fd_r8(fd);
+              // check we are still in the img
+              if(x+n > w) {
+                  printf("Warning bitmap contain invalid x delta: %d+%d > %d\n",
+                         x,n,w);
+                  n = w-x;
+              }
+              // fill the line
+              if(n > 0) {
+                  memset(&dst[x],0,n);
+                  x += n;
+              }
+              // y delta
+              n = scc_fd_r8(fd);
+              if(dst - n*w < img->data) {
+                  printf("Warning bitmap contain invalid y delta: %p -%d*%d < %p\n",
+                         dst,n,w,img->data);
+                  n = (dst - img->data)/w;
+              }
+              if(n > 0) {
+                  // finish the line
+                  if(x < w)
+                      memset(&dst[x],0,w-x);
+                  // fill the full lines
+                  while(n > 1) {
+                      dst -= w;
+                      memset(dst,0,w);
+                      n--;
+                  }
+                  // fill the last line up to x
+                  dst -= w;
+                  memset(dst,0,x);
+              }
+              continue;
+          }
+
+          // c >= 3 raw data
+          if(x+c > w) {
+              printf("Warning raw data should continue on the next line ???\n");
+              c = w-x;
+          }
+          scc_fd_read(fd,&dst[x],c);
+          if(c & 1) scc_fd_r8(fd); // padding
+          x += c;
+      } 
       break;
-    case 8:
-      memcpy(dst,data,w);
-      break;
-    } 
+  default:
+      printf("Got unsupported image format.\n");
+      
   }
 
   return img;
