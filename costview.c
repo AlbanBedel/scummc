@@ -139,7 +139,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
   scc_cost_pic_t* pic;
   uint8_t cmd,trans = dec->cost->pal[0];
 
-  for(i = 0 ; i < 16 ; i++) {
+  for(i = 15 ; i >= 0 ; i--) {
     if(dec->pc[i] == 0xFFFF || dec->stopped & (1<<i)) continue;
     
     if(dec->pc[i] >= dec->cost->cmds_size) {
@@ -369,13 +369,13 @@ GtkWidget* cost_view_anim_def_tbl_header(scc_cost_dec_t* dec,int step_size) {
   int i;
   char buf[20];
 
-  box = gtk_hbox_new(1,0);
+  box = gtk_hbox_new(0,0);
   for(i = 0 ; i < dec->cost->cmds_size ; i++) {
     sprintf(buf,"%u",dec->cost->cmds[i]);
     lbl = gtk_label_new(buf);
     gtk_widget_set_size_request(lbl,step_size,20);
     gtk_label_set_justify(GTK_LABEL(lbl),GTK_JUSTIFY_CENTER);
-    gtk_box_pack_start(GTK_BOX(box),lbl,1,1,0);
+    gtk_box_pack_start(GTK_BOX(box),lbl,0,0,0);
   }
 
   return box;
