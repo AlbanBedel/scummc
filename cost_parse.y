@@ -625,8 +625,8 @@ static int cost_pic_load(cost_pic_t* pic,char* file) {
       pic->data[pic->data_size] = rep;
       pic->data_size++;
     } else {
-      cur_pic->data[pic->data_size] = (color << shr) | rep;
-      cur_pic->data_size++;
+      pic->data[pic->data_size] = (color << shr) | rep;
+      pic->data_size++;
     }
   }
 
