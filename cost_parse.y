@@ -95,6 +95,36 @@
       if(!strcmp(name,p->name)) break;
     return p;
   }
+
+  struct anim_map {
+    char* name;
+    unsigned id;
+  } anim_map[] = {
+    { "initW",       4 },
+    { "initE",       5 },
+    { "initS",       6 },
+    { "initN",       7 },
+    { "walkW",       8 },
+    { "walkE",       9 },
+    { "walkS",      10 },
+    { "walkN",      11 },
+    { "standW",     12 },
+    { "standE",     13 },
+    { "standS",     14 },
+    { "standN",     15 },
+    { "talkStartW", 16 },
+    { "talkStartE", 17 },
+    { "talkStartS", 18 },
+    { "talkStartN", 19 },
+    { "talkStopW",  20 },
+    { "talkStopE",  21 },
+    { "talkStopS",  22 },
+    { "talkStopN",  23 },
+    { NULL, 0 }
+  };
+
+#define ANIM_USER_START 24
+
   
 %}
 
@@ -323,11 +353,18 @@ animdec: ANIM SYM location
     }
     // no anim with that name then look for a free index
     if(n == COST_MAX_ANIMS) {
-      for(n = 0 ; n < COST_MAX_ANIMS ; n++)
-        if(!anims[n].name) break;
-      if(n == COST_MAX_ANIMS)
-        COST_ABORT(@1,"Too many anims defined. Costumes can only have up to %d anims.\n",
-                   COST_MAX_ANIMS);
+      // look if it's a predefined name
+      for(n = 0 ; anim_map[n].name ; n++)
+        if(!strcmp(anim_map[n].name,$2)) break;
+
+      if(anim_map[n].name) n = anim_map[n].id;
+      else {
+        for(n = ANIM_USER_START ; n < COST_MAX_ANIMS ; n++)
+          if(!anims[n].name) break;
+        if(n == COST_MAX_ANIMS)
+          COST_ABORT(@1,"Too many anims defined. Costumes can only have up to %d anims.\n",
+                     COST_MAX_ANIMS);
+      }
     }
   }
 
@@ -561,7 +598,12 @@ static int cost_get_size(int *na,unsigned* coff,unsigned* aoff,unsigned* loff) {
   size += 2*num_anim; // anim offsets
 
   for(i = 0 ; i < num_anim ; i++) {
-    if(aoff) aoff[i] = size-clen;
+    if(aoff) {
+      if(anims[i].limb_mask)
+        aoff[i] = size-clen;
+      else
+        aoff[i] = 0;
+    }
     size += 2; // limb mask
     if(!anims[i].limb_mask) continue;
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
