@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+#include <glob.h>
 
 
 #include <sys/types.h>
@@ -198,9 +199,64 @@ picture: picturedec '=' '{' picparamlist '}'
     COST_ABORT(@1,"Picture %s have no path defined.\n",
                cur_pic->name);
   
-  // load it up
-  if(!cost_pic_load(cur_pic,cur_pic->path))
-    COST_ABORT(@1,"Failed to load %s.\n",cur_pic->path);
+  if(cur_pic->is_glob) {
+    glob_t gl;
+    int n,nlen = strlen(cur_pic->name);
+    char name[nlen+16];
+    cost_pic_t* p;
+    
+    // expand the glob
+    if(glob(cur_pic->path,0,NULL,&gl))
+      COST_ABORT(@1,"Glob patern error: %s\n",cur_pic->path);
+    if(!gl.gl_pathc)
+      COST_ABORT(@1,"Glob patern didn't matched anything: %s\n",cur_pic->path);
+    
+    // detach the current pic from the list
+    if(pic_list == cur_pic)
+      pic_list = cur_pic->next;
+    else {
+      for(p = pic_list ; p && p->next != cur_pic ; p = p->next);
+      if(!p) COST_ABORT(@1,"Internal error: failed to find current pic in pic list.\n");
+      p->next = cur_pic->next;
+    }
+    cur_pic->next = NULL;
+    
+    // create the new pictures
+    for(n = 0 ; n < gl.gl_pathc ; n++) {
+      sprintf(name,"%s%02d",cur_pic->name,n);
+      p = find_pic(name);
+      if(p) {
+        if(p->path)
+          COST_ABORT(@1,"Glob expension failed: %s is alredy defined\n",name);
+      } else {
+        p = calloc(1,sizeof(cost_pic_t));
+        p->name = strdup(name);
+      }
+      // load it up
+      p->path = strdup(gl.gl_pathv[n]);
+      if(!cost_pic_load(p,p->path))
+        COST_ABORT(@1,"Failed to load %s.\n",p->path);
+      // copy the position, etc
+      p->rel_x = cur_pic->rel_x;
+      p->rel_y = cur_pic->rel_y;
+      p->move_x = cur_pic->move_x;
+      p->move_y = cur_pic->move_y;
+      
+      // append it to the list
+      p->next = pic_list;
+      pic_list = p;
+    }
+    
+    // free the cur_pic
+    free(cur_pic->name);
+    free(cur_pic->path);
+    free(cur_pic);
+    globfree(&gl);
+  } else {  
+    // load it up
+    if(!cost_pic_load(cur_pic,cur_pic->path))
+      COST_ABORT(@1,"Failed to load %s.\n",cur_pic->path);
+  }
 
   cur_pic = NULL;
 }
@@ -238,6 +294,9 @@ picparam: PATH '=' STRING
 {
   if(cur_pic->path)
     COST_ABORT(@1,"This picture already have a path defined.\n");
+
+  if(cur_pic->ref)
+    COST_ABORT(@1,"This picture have alredy been referenced, we can't expand it to a glob anymore.\n");
 
   cur_pic->path = $3;
   cur_pic->is_glob = 1;
@@ -717,7 +776,7 @@ static int cost_write(scc_fd_t* fd) {
       if(!(p = limbs[i].pic[j])) continue;
       if(!p->ref) continue;
       if(!p->width || !p->height) printf("Bad pic ?\n");
-      printf("Write pic: %dx%d\n",p->width,p->height);
+      //printf("Write pic: %dx%d\n",p->width,p->height);
       scc_fd_w16le(fd,p->width);
       scc_fd_w16le(fd,p->height);
       scc_fd_w16le(fd,p->rel_x);
