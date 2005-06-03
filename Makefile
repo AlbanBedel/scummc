@@ -72,9 +72,14 @@ boxedit.o: boxedit.c
 boxedit: $(BE_OBJS)
 	gcc -o boxedit $(BE_OBJS)  $(LDFLAGS) $(GTK_LDFLAGS)
 
-imgtest: scc_img.c scc_fd.c
-	$(CC) $(CFLAGS) -DSCC_IMG_TEST  -o $@ scc_img.c scc_fd.c
+imgtest: scc_img.c scc_fd.o
+	$(CC) $(CFLAGS) -DSCC_IMG_TEST  -o $@ scc_img.c scc_fd.o
 
+imgsplit: imgsplit.c scc_img.o scc_fd.o scc_param.o
+	$(CC) $(CFLAGS) -o $@ imgsplit.c scc_img.o scc_fd.o scc_param.o
+
+imgremap: imgremap.c scc_img.o scc_fd.o scc_param.o
+	$(CC) $(CFLAGS) -o $@ imgremap.c scc_img.o scc_fd.o scc_param.o
 
 cost_parse.tab.c: cost_parse.y
 	bison -v cost_parse.y
