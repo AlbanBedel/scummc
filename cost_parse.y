@@ -705,7 +705,7 @@ static int cost_get_size(int *na,unsigned* coff,unsigned* aoff,unsigned* loff) {
 static int cost_write(scc_fd_t* fd) {
   int size,num_anim,i,j,pad = 0;
   cost_pic_t* p;
-  uint8_t fmt = 0;
+  uint8_t fmt = 0x58 | 0x80;
   unsigned coff,cpos = 0;
   unsigned aoff[COST_MAX_ANIMS];
   unsigned loff[COST_MAX_LIMBS];
