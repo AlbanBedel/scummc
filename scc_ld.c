@@ -1034,12 +1034,12 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
 
     
   scc_fd_w32(fd,MKID('D','S','O','U'));
-  scc_fd_w32be(fd,8 + 2 + 5);
+  scc_fd_w32be(fd,8 + 2 + snd_n*5);
   scc_fd_w16le(fd,snd_n);
   scc_ld_write_res_idx(fd,snd_n,"sound", SCC_RES_SOUND);
 
   scc_fd_w32(fd,MKID('D','C','O','S'));
-  scc_fd_w32be(fd,8 + 2 + 5);
+  scc_fd_w32be(fd,8 + 2 + cost_n*5);
   scc_fd_w16le(fd,cost_n);
   scc_ld_write_res_idx(fd,cost_n,"costume", SCC_RES_COST);
 
