@@ -72,6 +72,8 @@ int VAR_ROOM_FLAG              @ 70;     // Zak256 Note: Cashcard for Annie
 int VAR_GAME_LOADED            @ 71;   // Zak256 Note: Cashcard for Melissa
 int VAR_NEW_ROOM               @ 72;      // Zak256 Note: Cashcard for Leslie
 
+int VAR_LEFTBTN_HOLD           @ 74;
+int VAR_RIGHTBTN_HOLD          @ 75;
 int VAR_V6_EMSSPACE            @ 76;
 
 int VAR_RANDOM_NR              @ 118;
