@@ -187,6 +187,31 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return MOVE;
 }
 
+"START" {
+  SET_POS(5);
+  return START;
+}
+
+"STOP" {
+  SET_POS(4);
+  return STOP;
+}
+
+"HIDE" {
+  SET_POS(4);
+  return HIDE;
+}
+
+"SKIP" {
+  SET_POS(4);
+  return SKIP;
+}
+
+"SOUND" {
+  SET_POS(5);
+  return SOUND;
+}
+
 "NORTH" {
   SET_POS(5);
   yylval.integer = 3;

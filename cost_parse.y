@@ -123,9 +123,14 @@
     { "talkStopN",  23 },
     { NULL, 0 }
   };
-
+  
 #define ANIM_USER_START 24
 
+#define COST_CMD_SOUND 0x70
+#define COST_CMD_STOP  0x79
+#define COST_CMD_START 0x7A
+#define COST_CMD_HIDE  0x7B
+#define COST_CMD_SKIP  0x7C
   
 %}
 
@@ -147,11 +152,12 @@
 %token PATH,GLOB
 %token POSITION
 %token MOVE
+%token START,STOP,HIDE,SKIP,SOUND
 %token ERROR
 
 %type <integer> number,location
 %type <intpair> numberpair
-%type <intlist> intlist,intlistitem
+%type <intlist> intlist,intlistitem,cmdlist,cmdlistitem
 
 %defines
 %locations
@@ -440,7 +446,7 @@ limbanimlist: limbanim
 | limbanimlist ',' limbanim
 ;
 
-limbanim: SYM '(' intlist ')'
+limbanim: SYM '(' cmdlist ')'
 {
   int n;
   // find the limb
@@ -475,6 +481,54 @@ limbanim: SYM '(' intlist ')'
     COST_ABORT(@1,"Anim for limb %s is alredy defined.\n",
                limbs[n].name);
   cur_anim->limb_mask |= (1 << n);
+}
+;
+
+cmdlist: cmdlistitem
+| cmdlist ',' cmdlistitem
+{
+  int l = $1[0] + $3[0];
+
+  $$ = realloc($1,l+1);
+  memcpy($$+$$[0]+1,$3+1,$3[0]);
+  $$[0] = l;
+  free($3);
+}
+;
+
+cmdlistitem: intlistitem
+| START
+{
+  $$ = malloc(2);
+  $$[0] = 1;
+  $$[1] = COST_CMD_START;
+}
+| STOP
+{
+  $$ = malloc(2);
+  $$[0] = 1;
+  $$[1] = COST_CMD_STOP;
+}
+| HIDE
+{
+  $$ = malloc(2);
+  $$[0] = 1;
+  $$[1] = COST_CMD_HIDE;
+}
+| SKIP
+{
+  $$ = malloc(2);
+  $$[0] = 1;
+  $$[1] = COST_CMD_SKIP;
+}
+| SOUND '(' INTEGER ')'
+{
+  if($3 < 1 || $3 > 8)
+    COST_ABORT(@3,"Invalid costume sound index: %d.\n",$3);
+  
+  $$ = malloc(2);
+  $$[0] = 1;
+  $$[1] = COST_CMD_SOUND + $3;
 }
 ;
 
