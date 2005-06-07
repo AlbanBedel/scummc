@@ -2,66 +2,66 @@
 // A define for the various print function families
 
 #define PRINT(name,op) {                         \
-    "print" name "At", 0x##op##41, 0, 2, 0,      \
+    name "At", 0x##op##41, 0, 2, 0,      \
     { SCC_FA_VAL, SCC_FA_VAL}                    \
   },{                                            \
-    "print" name "Color", 0x##op##42, 0, 1, 0,   \
+    name "Color", 0x##op##42, 0, 1, 0,   \
     { SCC_FA_VAL }                               \
   },{                                            \
-    "print" name "Clipped", 0x##op##43, 0, 1, 0, \
+    name "Clipped", 0x##op##43, 0, 1, 0, \
     { SCC_FA_VAL }                               \
   },{                                            \
-    "print" name "Center", 0x##op##45, 0, 0, 0,  \
+    name "Center", 0x##op##45, 0, 0, 0,  \
     {}                                           \
   },{                                            \
-    "print" name "Left", 0x##op##47, 0, 0, 0,    \
+    name "Left", 0x##op##47, 0, 0, 0,    \
     {}                                           \
   },{                                            \
-    "print" name "Overhead", 0x##op##48, 0, 0, 0,\
+    name "Overhead", 0x##op##48, 0, 0, 0,\
     {}                                           \
   },{                                            \
-    "print" name "Mumble", 0x##op##4A, 0, 0, 0,  \
+    name "Mumble", 0x##op##4A, 0, 0, 0,  \
     {}                                           \
   },{                                            \
-    "print" name , 0x##op##4B, 0, 1, 0,          \
+    name , 0x##op##4B, 0, 1, 0,          \
     { SCC_FA_STR }                               \
   },{                                            \
-    "print" name "Begin", 0x##op##FE, 0, 0, 0,   \
+    name "Begin", 0x##op##FE, 0, 0, 0,   \
     {}                                           \
   },{                                            \
-    "print" name "End", 0x##op##FF, 0, 0, 0,     \
+    name "End", 0x##op##FF, 0, 0, 0,     \
     {} \
   }
 
 #define PRINT2(name,op) {                        \
-    "print" name "At", 0x##op##41, 0, 2, 0,      \
+    name "At", 0x##op##41, 0, 2, 0,      \
     { SCC_FA_VAL, SCC_FA_VAL}                    \
   },{                                            \
-    "print" name "Color", 0x##op##42, 0, 1, 0,   \
+    name "Color", 0x##op##42, 0, 1, 0,   \
     { SCC_FA_VAL }                               \
   },{                                            \
-    "print" name "Clipped", 0x##op##43, 0, 1, 0, \
+    name "Clipped", 0x##op##43, 0, 1, 0, \
     { SCC_FA_VAL }                               \
   },{                                            \
-    "print" name "Center", 0x##op##45, 0, 0, 0,  \
+    name "Center", 0x##op##45, 0, 0, 0,  \
     {}                                           \
   },{                                            \
-    "print" name "Left", 0x##op##47, 0, 0, 0,    \
+    name "Left", 0x##op##47, 0, 0, 0,    \
     {}                                           \
   },{                                            \
-    "print" name "Overhead", 0x##op##48, 0, 0, 0,\
+    name "Overhead", 0x##op##48, 0, 0, 0,\
     {}                                           \
   },{                                            \
-    "print" name "Mumble", 0x##op##4A, 0, 0, 0,  \
+    name "Mumble", 0x##op##4A, 0, 0, 0,  \
     {}                                           \
   },{                                            \
-    "print" name , 0x##op##4B, 0, 1, 0,          \
+    name , 0x##op##4B, 0, 1, 0,          \
     { SCC_FA_STR }                               \
   },{                                            \
-    "print" name "Begin", 0x##op##FE, 0, 1, 0,   \
+    name "Begin", 0x##op##FE, 0, 1, 0,   \
     { SCC_FA_VAL }                               \
   },{                                            \
-    "print" name "End", 0x##op##FF, 0, 0, 0,     \
+    name "End", 0x##op##FF, 0, 0, 0,     \
     {} \
   }
 
@@ -84,12 +84,14 @@ static scc_func_t scc_func[] = {
     "drawObjectAt", 0x62, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
+#if 0
     "stopObjectCodeA", 0x65, 0, 0, 0,
     {}
   },{
     "stopObjectCodeB", 0x66, 0, 0, 0,
     {}
   },{
+#endif
     "endCutscene", 0x67, 0, 0, 0,
     {}
   },{
@@ -121,13 +123,13 @@ static scc_func_t scc_func[] = {
     "softCursorOff", 0x6B95, 0, 0, 0,
     {}
   },{
-    "softUserputOn", 0x6B96, 0, 0, 0,
+    "softUserPutOn", 0x6B96, 0, 0, 0,
     {}
   },{
-    "softUserputOff", 0x6B97, 0, 0, 0,
+    "softUserPutOff", 0x6B97, 0, 0, 0,
     {}
   },{
-    "setCursorImg", 0x6B99, 0, 2, 0, // z
+    "setCursorImage", 0x6B99, 0, 2, 0, // z
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "setCursorHotspot", 0x6B9A, 0, 2, 0,
@@ -136,32 +138,32 @@ static scc_func_t scc_func[] = {
     "initCharset", 0x6B9C, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "charsetColors", 0x6B9D, 0, 1, 0,
+    "setCharsetColors", 0x6B9D, 0, 1, 0,
     { SCC_FA_LIST }
   },{
-    "makeCursorColorTransparent", 0x6BD6, 0, 1, 0,
+    "setCursorTransparency", 0x6BD6, 0, 1, 0,
     { SCC_FA_VAL }
 
   },{
     "breakScript", 0x6C, 0, 0, 0,
     {}
   },{
-    "ifClassOfIs", 0x6D, 1, 2, 0,
+    "isObjectOfClass", 0x6D, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
-    "setClass", 0x6E, 0, 2, 0,
+    "setObjectClass", 0x6E, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
-    "getState", 0x6F, 1, 1, 0,
+    "getObjectState", 0x6F, 1, 1, 0,
     { SCC_FA_VAL }
   },{
-    "setState", 0x70, 0, 2, 0,
+    "setObjectState", 0x70, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "setOwner", 0x71, 0, 2, 0,
+    "setObjectOwner", 0x71, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "getOwner", 0x72, 1, 1, 0,
+    "getObjectOwner", 0x72, 1, 1, 0,
     { SCC_FA_VAL }
   },{
     "startSound", 0x74, 0, 1, 0,
@@ -179,13 +181,13 @@ static scc_func_t scc_func[] = {
     "panCameraTo", 0x78, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorFollowCamera", 0x79, 0, 1, 0,
+    "cameraFollowActor", 0x79, 0, 1, 0,
     { SCC_FA_VAL }
   },{
     "setCameraAt", 0x7A, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "loadRoom", 0x7B, 0, 1, 0,
+    "startRoom", 0x7B, 0, 1, 0,
     { SCC_FA_VAL }
   },{
     "stopScript", 0x7C, 0, 1, 0,
@@ -197,13 +199,13 @@ static scc_func_t scc_func[] = {
     "walkActorTo", 0x7E, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "putActorInXY", 0x7F, 0, 4, 0,
+    "putActorAt", 0x7F, 0, 4, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "putActorAtObject", 0x80, 0, 3, 0, // z
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "faceActor", 0x81, 0, 2, 0,
+    "actorFace", 0x81, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "animateActor", 0x82, 0, 2, 0,
@@ -215,7 +217,7 @@ static scc_func_t scc_func[] = {
     "pickupObject", 0x84, 0, 2, 0,  // z
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "loadRoomWithEgo", 0x85, 0, 3, 0,
+    "startRoomWithEgo", 0x85, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "getRandomNumber", 0x87, 1, 1, 0,
@@ -224,7 +226,7 @@ static scc_func_t scc_func[] = {
     "getRandomNumberRange", 0x88, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "getActorMoving",0x8A, 1, 1, 0,
+    "isActorMoving",0x8A, 1, 1, 0,
     { SCC_FA_VAL }
   },{
     "isScriptRunning", 0x8B, 1, 1, 0,
@@ -254,7 +256,7 @@ static scc_func_t scc_func[] = {
     "getInventoryCount", 0x93, 1, 1, 0,
     { SCC_FA_VAL }
   },{
-    "getVerbFromXY", 0x94, 1, 2, 0,
+    "getVerbAt", 0x94, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_STR }
   },{ // TODO: begin/endOverride
 
@@ -330,22 +332,22 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_VAL }
 
   },{
-    "roomScroll", 0x9CAC, 0, 2, 0,
+    "setRoomScroll", 0x9CAC, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "setScreen", 0x9CAE, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "setPalColor", 0x9CAF, 0, 4, 0,
+    "setRoomPalette", 0x9CAF, 0, 4, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "shakeOn", 0x9CB0, 0, 0, 0,
+    "setShakeOn", 0x9CB0, 0, 0, 0,
     {}
   },{
-    "shakeOff", 0x9CB1, 0, 0, 0,
+    "setShakeOff", 0x9CB1, 0, 0, 0,
     {}
   },{
-    "darkenPalette", 0x9CB3, 0, 3, 0,
+    "setRoomIntensity", 0x9CB3, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "saveLoadThing", 0x9CB4, 0, 2, 0,
@@ -354,41 +356,41 @@ static scc_func_t scc_func[] = {
     "screenEffect", 0x9CB5, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "darkenPalette2", 0x9CB6, 0, 5, 0,
+    "setRoomRGBIntensity", 0x9CB6, 0, 5, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "setupShadowPalette", 0x9CB7, 0, 5, 0,
+    "setRoomShadow", 0x9CB7, 0, 5, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "palManipulate", 0x9CBA, 0, 4, 0,
+    "roomPalManipulate", 0x9CBA, 0, 4, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "colorCycleDelay", 0x9CBB, 0, 2, 0,
+    "setRoomCycleDelay", 0x9CBB, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "setPalette", 0x9CD5, 0, 1, 0,
+    "setRoomPalette", 0x9CD5, 0, 1, 0,
     { SCC_FA_VAL }
   },{
 
-    "actorSetCur", 0x9DC5, 0, 1, 0,
+    "setCurrentActor", 0x9DC5, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetCostume", 0x9D4C, 0, 1, 0,
+    "setActorCostume", 0x9D4C, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetWalkSpeed", 0x9D4D, 0, 2, 0,
+    "setActorWalkSpeed", 0x9D4D, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "actorSetSound", 0x9D4E, 0, 1, 0,
+    "setActorSounds", 0x9D4E, 0, 1, 0,
     { SCC_FA_LIST }
   },{
-    "actorSetWalkFrame", 0x9D4F, 0, 1, 0,
+    "setActorWalkFrame", 0x9D4F, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetTalkFrame", 0x9D50, 0, 2, 0,
+    "setActorTalkFrame", 0x9D50, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "actorSetStandFrame", 0x9D51, 0, 1, 0,
+    "setActorStandFrame", 0x9D51, 0, 1, 0,
     { SCC_FA_VAL }
   },{
 #if 0
@@ -397,79 +399,81 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
 #endif
-    "actorInit", 0x9D53, 0, 0, 0,
+    "initActor", 0x9D53, 0, 0, 0,
     {}
   },{
-    "actorSetElevation", 0x9D54, 0, 1, 0,
+    "setActorElevation", 0x9D54, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetDefAnim", 0x9D55, 0, 0, 0,
+    "setActorDefaultFrames", 0x9D55, 0, 0, 0,
     {}
   },{
-    "actorSetPalette", 0x9D56, 0, 2, 0,
+    "setActorPalette", 0x9D56, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "actorSetTalkColor", 0x9D57, 0, 1, 0,
+    "setActorTalkColor", 0x9D57, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetName", 0x9D58, 0, 1, 0,
+    "setActorName", 0x9D58, 0, 1, 0,
     { SCC_FA_STR }
   },{
-    "actorSetInitFrame", 0x9D59, 0, 1, 0,
+    "setActorInitFrame", 0x9D59, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetWidth", 0x9D5B, 0, 1, 0,
+    "setActorWidth", 0x9D5B, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetScale", 0x9D5C, 0, 1, 0,
+    "setActorScale", 0x9D5C, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetNeverZClip", 0x9D5D, 0, 0, 0,
+    "actorNeverZClip", 0x9D5D, 0, 0, 0,
     {}
   },{
-    "actorSetAlwayZClip2", 0x9DE1, 0, 0, 0,
-    {}
-  },{
-    "actorSetIgnoreBoxes", 0x9D5F, 0, 0, 0,
-    {}
-  },{
-    "actorSetFollowBoxes", 0x9D60, 0, 0, 0,
-    {}
-  },{
-    "actorSetAnimSpeed", 0x9D61, 0, 1, 0,
+    "setActorZClip", 0x9DE1, 0, 0, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetShadowMode", 0x9D62, 0, 1, 0,
+    "setActorIgnoreBoxes", 0x9D5F, 0, 0, 0,
+    {}
+  },{
+    "setActorFollowBoxes", 0x9D60, 0, 0, 0,
+    {}
+  },{
+    "setActorAnimSpeed", 0x9D61, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetTalkPos", 0x9D63, 0, 2, 0,
+    "setActorShadowMode", 0x9D62, 0, 1, 0,
+    { SCC_FA_VAL }
+  },{
+    "setActorTalkPos", 0x9D63, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "actorSetAnimVar", 0x9DC6, 0, 2, 0,
+    "setActorAnimVar", 0x9DC6, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "actorSetIgnoreTurnsOn", 0x9DD7, 0, 0, 0,
+    "setActorIgnoreTurnsOn", 0x9DD7, 0, 0, 0,
     {}
   },{
-    "actorSetIgnoreTurnsOff", 0x9DD8, 0, 0, 0,
+    "setActorIgnoreTurnsOff", 0x9DD8, 0, 0, 0,
     {}
   },{
-    "actorInitLittle", 0x9DD9, 0, 0, 0,
+    "initActorQuick", 0x9DD9, 0, 0, 0,
     {}
   },{
+#if 0
     "actorDrawVirScr", 0x9DDA, 0, 0, 0,
     {}
   },{
-    "actorSetLayer", 0x9DE3, 0, 1, 0,
+#endif
+    "setActorLayer", 0x9DE3, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetWalkScript", 0x9DE4, 0, 1, 0,
+    "setActorWalkScript", 0x9DE4, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "actorSetStanding", 0x9DE5, 0, 0, 0,
+    "setActorStanding", 0x9DE5, 0, 0, 0,
     {}
   },{
-    "actorSetDirection", 0x9DE6, 0, 1, 0,
+    "setActorDirection", 0x9DE6, 0, 1, 0,
     { SCC_FA_VAL }
   },{
     "actorTurnToDirection", 0x9DE7, 0, 1, 0,
@@ -481,81 +485,81 @@ static scc_func_t scc_func[] = {
     "actorUnfreeze", 0x9DEA, 0, 0, 0,
     {}
   },{
-    "actorSetTalkScript", 0x9DEB, 0, 1, 0,
+    "setActorTalkScript", 0x9DEB, 0, 1, 0,
     { SCC_FA_VAL }
   },{
 
-    "verbSetCur", 0x9EC4, 0, 1, 0,
+    "setCurrentVerb", 0x9EC4, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbLoadImg", 0x9E7C, 0, 1, 0,
+    "setVerbImage", 0x9E7C, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbLoadString", 0x9E7D, 0, 1, 0,
+    "setVerbName", 0x9E7D, 0, 1, 0,
     { SCC_FA_STR }
   },{
-    "verbSetColor", 0x9E7E, 0, 1, 0,
+    "setVerbColor", 0x9E7E, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbSetHiColor", 0x9E7F, 0, 1, 0,
+    "setVerbHiColor", 0x9E7F, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbSetXY", 0x9E80, 0, 2, 0,
+    "setVerbXY", 0x9E80, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "verbSetOn", 0x9E81, 0, 0, 0,
+    "setVerbOn", 0x9E81, 0, 0, 0,
     {}
   },{
-    "verbSetOff", 0x9E82, 0, 0, 0,
+    "setVerbOff", 0x9E82, 0, 0, 0,
     {}
   },{
-    "verbKill", 0x9E83, 0, 0, 0,
+    "killVerb", 0x9E83, 0, 0, 0,
     {}
   },{
-    "verbInit", 0x9E84, 0, 0, 0,
+    "initVerb", 0x9E84, 0, 0, 0,
     {}
   },{
-    "verbSetDimColor", 0x9E85, 0, 1, 0,
+    "setVerbDimColor", 0x9E85, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbSetDimmed", 0x9E86, 0, 0, 0,
+    "verbDim", 0x9E86, 0, 0, 0,
     {}
   },{
-    "verbSetKey", 0x9E87, 0, 1, 0,
+    "setVerbKey", 0x9E87, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbSetCenter", 0x9E88, 0, 0, 0,
+    "verbCenter", 0x9E88, 0, 0, 0,
     {}
   },{
-    "verbSetToString", 0x9E89, 0, 1, 0,
+    "setVerbNameString", 0x9E89, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbSetToObject", 0x9E8B, 0, 2, 0,
+    "setVerbObject", 0x9E8B, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "verbSetBkColor", 0x9E8C, 0, 1, 0,
+    "setVerbBackColor", 0x9E8C, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "verbRedraw", 0x9EFF, 0, 0, 0,
+    "redrawVerb", 0x9EFF, 0, 0, 0,
     {}
   },{
 
-    "getActorFromXY", 0x9F, 1, 2, 0,
+    "getActorAt", 0x9F, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "findObject", 0xA0, 1, 2, 0,
+    "getObjectAt", 0xA0, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     // This call allow to map the pseudo room index (idx > 0x7F) to
     // real room id. This call set all pseudo index in the list point
     // to VAL. idx < 0x80 are simply ignored.
-    "pseudoRoom", 0xA1, 0, 2, 0,
+    "setPseudoRooms", 0xA1, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
     "getActorElevation", 0xA2, 1, 1, 0,
     { SCC_FA_VAL }
   },{
-    "getVerbEntrypoint", 0xA3, 1, 2, 0,
+    "getObjectVerbEntrypoint", 0xA3, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
 
@@ -589,10 +593,14 @@ static scc_func_t scc_func[] = {
     "waitForSentence", 0xA9AB, 0, 0, 0,
     {}
   },{
-    // TODO "waitUntilActorDrawn", 0xA9E2
-    // TODO "waitUntilActorTurned", 0xA9E8
+    "waitForAnimation", 0xA9E2, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_SELF_OFF }
+  },{
+    "waitForTurn", 0xA9E8, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_SELF_OFF }
+  },{
 
-    "getActorScaleX", 0xAA, 1, 1, 0,
+    "getActorXScale", 0xAA, 1, 1, 0,
     { SCC_FA_VAL }
   },{
     "getActorAnimCounter1", 0xAB, 1, 1, 0,
@@ -616,7 +624,7 @@ static scc_func_t scc_func[] = {
   },{
 
     "isActorInBox", 0xAF, 1, 1, 0,
-    { SCC_FA_VAL }
+    { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "delay", 0xB0, 0, 1, 0,
     { SCC_FA_VAL }
@@ -631,18 +639,18 @@ static scc_func_t scc_func[] = {
     {}
   },
   
-  PRINT("",B4),
-  PRINT("Cur",B5),
-  PRINT("Dbg",B6),
-  PRINT("Sys",B7),
-  PRINT2("Actor",B8),
-  PRINT("Ego",B9)
+  PRINT("print",B4),
+  PRINT("cursorPrint",B5),
+  PRINT("dbgPrint",B6),
+  PRINT("sysPrint",B7),
+  PRINT2("actorPrint",B8),
+  PRINT("egoPrint",B9)
 
   ,{
-    "talkActor", 0xBA, 0, 2, 0,
+    "actorSay", 0xBA, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_STR }
   },{
-    "talkEgo", 0xBB, 0, 1, 0,
+    "egoSay", 0xBB, 0, 1, 0,
     { SCC_FA_STR }
   },{
     
@@ -694,7 +702,7 @@ static scc_func_t scc_func[] = {
     "stopTalking", 0xD1,0, 0, 0,
     {}
   },{
-    "getAnimateVariable", 0xD2, 1, 2, 0,
+    "getActorAnimVar", 0xD2, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "shuffle", 0xD4, 0, 3, 0,
@@ -703,16 +711,10 @@ static scc_func_t scc_func[] = {
     "jumpToScript", 0xD5, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_LIST }
   },{
-    "bAnd", 0xD6, 1, 2, 0,
-    { SCC_FA_VAL, SCC_FA_VAL }
-  },{
-    "bOr", 0xD7, 1, 2, 0,
-    { SCC_FA_VAL, SCC_FA_VAL }
-  },{
     "isRoomScriptRunning", 0xD8, 1, 1, 0,
     { SCC_FA_VAL }
   },{
-    "findAllObjects", 0xDD, 1, 1, 0,
+    "getRoomObjects", 0xDD, 1, 1, 0,
     { SCC_FA_VAL }
   },{
     // this opcode check ground area in minigame "Asteroid Lander" in the dig
@@ -731,7 +733,7 @@ static scc_func_t scc_func[] = {
     "pickVarRandom", 0xE3, 1, 2, 0,
     { SCC_FA_PTR, SCC_FA_LIST }
   },{
-    // do nothing in vm 0.6.1
+    // use an alternative box set, we can't generate such thing atm anyway.
     "setBoxSet", 0xE4, 0, 1, 0,
     { SCC_FA_VAL }
 #endif
