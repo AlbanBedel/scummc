@@ -1074,11 +1074,13 @@ static void usage(char* prog) {
 
 static char* out_file = NULL;
 static int dump_rooms = 0;
+static int enckey = 0;
 
 
 static scc_param_t scc_ld_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &out_file },
   { "rooms", SCC_PARAM_FLAG, 0, 1, &dump_rooms },
+  { "key", SCC_PARAM_INT, 0, 255, &enckey },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1135,7 +1137,7 @@ int main(int argc,char** argv) {
 	sprintf(name,"%03d.lflf",r->sym->addr);
       printf("Dumping room %s to %s\n",r->sym->sym,name);
       
-      fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
+      fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
       if(!fd) {
 	printf("Failed to open dump file %s\n",name);
 	continue;
@@ -1153,7 +1155,7 @@ int main(int argc,char** argv) {
     else
       sprintf(name,"scummc.001");
 
-    fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
+    fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
     printf("Outputing data file %s\n",name);
 
     if(!fd) {
@@ -1171,7 +1173,7 @@ int main(int argc,char** argv) {
     else
       sprintf(name,"scummc.000");
     printf("Outputing index file %s\n",name);
-    fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
+    fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
     if(!fd) {
       printf("Failed to open file %s\n",name);
       return 5;
