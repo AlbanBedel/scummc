@@ -313,10 +313,19 @@ int scc_boxedit_read_scale(scc_boxedit_t* be,
   uint32_t type,len;
   int i;
 
-  type = scc_fd_r32(fd);
-  len = scc_fd_r32be(fd);
+  while(1) {
+    type = scc_fd_r32(fd);
+    len = scc_fd_r32be(fd);
 
-  if(type != MKID('S','C','A','L')) return 0;
+    if(type == MKID('B','O','X','M') && len > 8) {
+      scc_fd_seek(fd,len-8,SEEK_CUR);
+      continue;
+    }
+    if(type == MKID('S','C','A','L'))
+      break;
+    return 0;
+  }
+
   if(len != SCC_NUM_SCALE_SLOT*8+8) {
     printf("SCAL block have an invalid length: %d, should be 40.\n",len);
     return 0;
@@ -331,7 +340,7 @@ int scc_boxedit_read_scale(scc_boxedit_t* be,
   return 1;
 }
 
-scc_box_t* scc_boxedit_load_box(char* path) {
+scc_box_t* scc_boxedit_load_box(scc_boxedit_t* be, char* path) {
   scc_box_t* list=NULL,*last=NULL,*b;
   scc_fd_t* fd = new_scc_fd(path,O_RDONLY,0);
   uint32_t type,len,pos = 8;
@@ -394,9 +403,16 @@ scc_box_t* scc_boxedit_load_box(char* path) {
 #endif
   }
 
-  scc_fd_close(fd);
-  //  be->boxes = list;
+  // try to read scal, it might be there
+  scc_boxedit_read_scale(be,fd);
 
+  scc_fd_close(fd);
+  
+  if(be->filename) free(be->filename);
+  be->filename = strdup(path);
+  if(be->boxes) scc_box_list_free(be->boxes);
+  be->boxes = list;
+  
   return list;
 }
 
@@ -503,6 +519,17 @@ int scc_boxedit_save(scc_boxedit_t* be, char* path) {
     }
   }
   scc_fd_w8(fd,0xFF);
+
+  // scal
+  scc_fd_w32be(fd,MKID('S','C','A','L'));
+  scc_fd_w32be(fd,8 + 8*SCC_NUM_SCALE_SLOT);
+  
+  for(i = 0 ; i < SCC_NUM_SCALE_SLOT ; i++) {
+    scc_fd_w16le(fd,be->scale_slots[i].s1);
+    scc_fd_w16le(fd,be->scale_slots[i].y1);
+    scc_fd_w16le(fd,be->scale_slots[i].s2);
+    scc_fd_w16le(fd,be->scale_slots[i].y2);
+  }
 
   scc_fd_close(fd);
   return 1;
@@ -2007,14 +2034,12 @@ static void clicked_open_btn_cb(GtkButton *btn,scc_boxedit_t* be) {
     scc_boxedit_load_pal(be,rmim);
     scc_boxedit_set_zoom(be,be->zoom);  
   } else {
-    new = scc_boxedit_load_box(fname);
+    new = scc_boxedit_load_box(be,fname);
+    free(fname);
     if(!new) {
       scc_boxedit_status_msg(be,"Failed to open %s\n",fname);
-      free(fname);
       return;
     }
-    if(be->filename) free(be->filename);
-    be->filename = fname;
     // free undo
     scc_undo_free(be->undo);
     be->undo = NULL;
@@ -2022,9 +2047,6 @@ static void clicked_open_btn_cb(GtkButton *btn,scc_boxedit_t* be) {
     be->changed = 0;
     // unset edit box
     scc_boxedit_set_edit_box(be,NULL);
-    // free old boxes
-    scc_box_list_free(be->boxes);
-    be->boxes = new;
     be->nsel = 0;
   }
 }
@@ -2560,6 +2582,9 @@ int main(int argc,char** argv) {
 
   be = scc_boxedit_new(rmim);
   
+  if(files && !scc_boxedit_load_box(be,files->val))
+    printf("Failed to load %s.\n",files->val);
+
   if(scal_file) {
     scc_fd_t* fd = new_scc_fd(scal_file,O_RDONLY,0);
     if(!fd)
@@ -2569,11 +2594,6 @@ int main(int argc,char** argv) {
         printf("Failed to load scal file %s.\n",scal_file);
       scc_fd_close(fd);
     }
-  }
-
-  if(files) {
-    be->boxes = scc_boxedit_load_box(files->val);
-    if(be->boxes) be->filename = strdup(files->val);
   }
 
   gtk_main();
