@@ -350,7 +350,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
 	b->scale = 255;
 	ro->boxd = b;
       
-	// now the matrix should follow
+	// now the matrix should follow with the scal
 
 	type = scc_fd_r32(fd);
 	len = scc_fd_r32be(fd);
@@ -364,6 +364,21 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
 	SCC_AT_32(ro->boxm->data,4) = SCC_TO_32BE(len);
 	if(scc_fd_read(fd,&ro->boxm->data[8],len - 8) != len - 8) {
 	  printf("Error while reading the box matrix.\n");
+	  break;
+	}
+        
+	type = scc_fd_r32(fd);
+	len = scc_fd_r32be(fd);
+	if(type != MKID('S','C','A','L') || len != 40) {
+	  printf("The box file is missing the scal block ????\n");
+	  break;
+	}
+	ro->scal = malloc(sizeof(scc_data_t)+len);
+	ro->scal->size = len;
+	SCC_AT_32(ro->scal->data,0) = SCC_TO_32BE(MKID('S','C','A','L'));
+	SCC_AT_32(ro->scal->data,4) = SCC_TO_32BE(len);
+	if(scc_fd_read(fd,&ro->scal->data[8],len - 8) != len - 8) {
+	  printf("Error while reading the scal block.\n");
 	  break;
 	}
       } else
