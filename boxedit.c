@@ -91,6 +91,8 @@ typedef struct scc_boxedit_st {
   scc_box_t* edit_box;
   GtkWidget* name_entry;
   GtkWidget* mask_entry;
+  GtkWidget* scale_val;
+  GtkWidget* scale_slot;
   GtkWidget* scale_entry;
   GtkWidget* flag_toggle[8];
   
@@ -575,6 +577,8 @@ static void scc_boxedit_set_edit_box(scc_boxedit_t* be, scc_box_t* box) {
     gtk_widget_set_sensitive(be->mask_entry,0);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->mask_entry),0);
     gtk_widget_set_sensitive(be->scale_entry,0);
+    gtk_widget_set_sensitive(be->scale_val,0);
+    gtk_widget_set_sensitive(be->scale_slot,0);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),0);
     for(i = 3 ; i < 8 ; i++) {
       gtk_widget_set_sensitive(be->flag_toggle[i],0);
@@ -587,7 +591,16 @@ static void scc_boxedit_set_edit_box(scc_boxedit_t* be, scc_box_t* box) {
   gtk_widget_set_sensitive(be->mask_entry,1);
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->mask_entry),box->mask);
   gtk_widget_set_sensitive(be->scale_entry,1);
-  gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),box->scale);
+  gtk_widget_set_sensitive(be->scale_val,1);
+  gtk_widget_set_sensitive(be->scale_slot,1);
+  if(box->scale & 0x8000) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(be->scale_slot),1);
+    gtk_spin_button_set_range(GTK_SPIN_BUTTON(be->scale_entry),0,3);
+  } else {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(be->scale_val),1);
+    gtk_spin_button_set_range(GTK_SPIN_BUTTON(be->scale_entry),1,255);
+  }
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),box->scale & 0xFF);
   for(i = 3 ; i < 8 ; i++) {
     gtk_widget_set_sensitive(be->flag_toggle[i],1);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(be->flag_toggle[i]),box->flags & (1 << i));
@@ -880,9 +893,22 @@ static int scc_boxedit_undo_action(scc_boxedit_t* be,
     b = be->edit_box;
     be->edit_box = NULL;
 
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),undo->pts[0]);
     b->scale = undo->pts[0];
     undo->pts[0] = n;
+
+    if(b->scale & 0x8000) {
+      if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(be->scale_slot))) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(be->scale_slot),1);
+        gtk_spin_button_set_range(GTK_SPIN_BUTTON(be->scale_entry),0,3);
+      }
+    } else {
+      if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(be->scale_val))) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(be->scale_val),1);
+        gtk_spin_button_set_range(GTK_SPIN_BUTTON(be->scale_entry),1,255);
+      }
+    }
+
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),b->scale & 0xFF);
 
     be->edit_box = b;
     break;
@@ -1849,15 +1875,49 @@ static void value_changed_mask_cb(GtkSpinButton *btn,
   gtk_widget_queue_draw(be->da);
 }
 
+static void toggled_scale_type(GtkWidget* btn,
+                               scc_boxedit_t* be) {
+  int s = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn));
+  scc_boxedit_undo_t* undo;
+  if(!s || !be->edit_box) return;
+
+  s = be->edit_box->scale;
+
+  if(btn == be->scale_val) {
+    be->edit_box->scale = 0x00FF;
+    gtk_spin_button_set_range(GTK_SPIN_BUTTON(be->scale_entry),1,255);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),255);
+  } else if(btn == be->scale_slot) {
+    be->edit_box->scale = 0x8000;
+    gtk_spin_button_set_range(GTK_SPIN_BUTTON(be->scale_entry),0,3);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_entry),0);
+  } else {
+    printf("Error: toggle scale type from unknown button ??\n");
+    return;
+  }
+
+  if(s == be->edit_box->scale) return;
+
+  undo = scc_boxedit_get_undo(be,SCC_UNDO_SCALE);
+  undo->pts[0] = s;
+
+}
+
 static void value_changed_scale_cb(GtkSpinButton *btn,
 				   scc_boxedit_t* be) {
   scc_boxedit_undo_t* undo;
+  int val;
   if(!be->edit_box) return;
+
+  val = (int)gtk_spin_button_get_value(btn) |
+    (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(be->scale_slot)) ? 0x8000 : 0);
+  
+  if(val == be->edit_box->scale) return;
 
   undo = scc_boxedit_get_undo(be,SCC_UNDO_SCALE);
   undo->pts[0] = be->edit_box->scale;
 
-  be->edit_box->scale = gtk_spin_button_get_value(btn);
+  be->edit_box->scale = val;
 }
 
 static void toggled_flag_cb(GtkToggleButton *btn,
@@ -2162,13 +2222,29 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
   w = gtk_label_new("Scale");
   gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
   be->scale_entry =
-    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,255,
+    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(1,1,255,
 							  1,1,10)),
 			1,0);
   g_signal_connect(G_OBJECT(be->scale_entry),"value-changed",
 		   G_CALLBACK(value_changed_scale_cb),be);
   gtk_widget_set_sensitive(be->scale_entry,0);
   gtk_box_pack_start(GTK_BOX(hbox),be->scale_entry,0,0,5);
+  w = gtk_button_new_with_label("Edit slots");
+  gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+  gtk_box_pack_start(GTK_BOX(vbox),hbox,0,0,5);
+
+  hbox = gtk_hbox_new(0,2);
+  be->scale_val = gtk_radio_button_new_with_label(NULL,"Fixed scale");
+  gtk_widget_set_sensitive(be->scale_val,0);
+  g_signal_connect(G_OBJECT(be->scale_val),"toggled",
+		   G_CALLBACK(toggled_scale_type),be);
+  gtk_box_pack_start(GTK_BOX(hbox),be->scale_val,0,0,5);
+  be->scale_slot = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(be->scale_val),
+                                                               "Slot");
+  gtk_widget_set_sensitive(be->scale_slot,0);
+  g_signal_connect(G_OBJECT(be->scale_slot),"toggled",
+		   G_CALLBACK(toggled_scale_type),be);
+  gtk_box_pack_start(GTK_BOX(hbox),be->scale_slot,0,0,5);
   gtk_box_pack_start(GTK_BOX(vbox),hbox,0,0,5);
 
   be->flag_toggle[7] = w = gtk_check_button_new_with_label("Invisible");
