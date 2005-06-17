@@ -23,6 +23,11 @@ typedef struct scc_box_pts_st {
   int selected;
 } scc_box_pts_t;
 
+typedef struct scc_scale_slot_st {
+  int s1,y1;
+  int s2,y2;
+} scc_scale_slot_t;
+
 typedef struct scc_box_st scc_box_t;
 struct scc_box_st {
   scc_box_t* next;
@@ -64,9 +69,13 @@ struct scc_boxedit_undo_st {
   int undone;
 };
 
+#define SCC_NUM_SCALE_SLOT 4
+
 typedef struct scc_boxedit_st {
   // box data
   scc_box_t* boxes;
+  // scale slots
+  scc_scale_slot_t scale_slots[SCC_NUM_SCALE_SLOT];
   // room image
   scc_img_t* rmim;
   // the view
@@ -86,6 +95,9 @@ typedef struct scc_boxedit_st {
   unsigned int sbar_ctx_coord;
   unsigned int sbar_ctx_msg;
   int sbar_have_msg;
+  
+  // the scale slots window
+  GtkWidget* scale_win;
 
   // the box entries
   scc_box_t* edit_box;
@@ -93,6 +105,7 @@ typedef struct scc_boxedit_st {
   GtkWidget* mask_entry;
   GtkWidget* scale_val;
   GtkWidget* scale_slot;
+  GtkWidget* scale_slot_entries[4*SCC_NUM_SCALE_SLOT];
   GtkWidget* scale_entry;
   GtkWidget* flag_toggle[8];
   
@@ -293,6 +306,29 @@ static int scc_boxm_size_from_matrix(uint8_t* matrix,int size) {
   }
   pos++;
   return pos;
+}
+
+int scc_boxedit_read_scale(scc_boxedit_t* be,
+                           scc_fd_t* fd) {
+  uint32_t type,len;
+  int i;
+
+  type = scc_fd_r32(fd);
+  len = scc_fd_r32be(fd);
+
+  if(type != MKID('S','C','A','L')) return 0;
+  if(len != SCC_NUM_SCALE_SLOT*8+8) {
+    printf("SCAL block have an invalid length: %d, should be 40.\n",len);
+    return 0;
+  }
+  
+  for(i = 0 ; i < SCC_NUM_SCALE_SLOT ; i++) {
+    be->scale_slots[i].s1 = scc_fd_r16le(fd);
+    be->scale_slots[i].y1 = scc_fd_r16le(fd);
+    be->scale_slots[i].s2 = scc_fd_r16le(fd);
+    be->scale_slots[i].y2 = scc_fd_r16le(fd);
+  }
+  return 1;
 }
 
 scc_box_t* scc_boxedit_load_box(char* path) {
@@ -2096,6 +2132,35 @@ static int key_release_btn_cb(GtkWidget *btn, GdkEventKey *ev,
   return 0;
 }
 
+static void clicked_edit_slot_btn_cb(GtkButton *btn,scc_boxedit_t* be) {
+  int i;
+
+  for(i = 0 ; i < SCC_NUM_SCALE_SLOT ; i++) {
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_slot_entries[4*i]),
+                              be->scale_slots[i].y1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_slot_entries[4*i+1]),
+                              be->scale_slots[i].s1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_slot_entries[4*i+2]),
+                              be->scale_slots[i].y2);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(be->scale_slot_entries[4*i+3]),
+                              be->scale_slots[i].s2);
+  }
+
+  gtk_widget_show_all(be->scale_win);
+}
+
+static void value_changed_scale_slot_cb(GtkSpinButton *btn,
+                                        int* entry) {
+  int val = (int)gtk_spin_button_get_value(btn);
+  entry[0] = val;  
+}
+
+static int delete_scale_win_cb(GtkWidget *widget,GdkEvent *event,
+                               scc_boxedit_t* be) {
+  gtk_widget_hide(be->scale_win);
+  return 1;
+}
+
 static int delete_win_cb(GtkWidget *widget,GdkEvent *event,
 			 scc_boxedit_t* be) {
   
@@ -2230,6 +2295,8 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
   gtk_widget_set_sensitive(be->scale_entry,0);
   gtk_box_pack_start(GTK_BOX(hbox),be->scale_entry,0,0,5);
   w = gtk_button_new_with_label("Edit slots");
+  g_signal_connect(G_OBJECT(w),"clicked",
+                   G_CALLBACK(clicked_edit_slot_btn_cb),be);
   gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
   gtk_box_pack_start(GTK_BOX(vbox),hbox,0,0,5);
 
@@ -2287,6 +2354,87 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
 
   return box;
 
+}
+
+GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
+  GtkWidget *w,*vbox,*hbox,*frame,*fbox,*win;
+  char lbl[32];
+  int i;
+
+  fbox = gtk_vbox_new(0,2);
+
+  for(i = 0 ; i < SCC_NUM_SCALE_SLOT ; i++) {
+    sprintf(lbl,"Slot %d",i);
+    frame = gtk_frame_new(lbl);
+    
+    vbox = gtk_vbox_new(0,2);
+    
+    hbox = gtk_hbox_new(0,2);
+    w = gtk_label_new("Y1");
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+    w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
+                                                              1,1,10)),
+                            1,0);
+    be->scale_slot_entries[4*i] = w;
+    g_signal_connect(G_OBJECT(w),"value-changed",
+                     G_CALLBACK(value_changed_scale_slot_cb),
+                     &be->scale_slots[i].y1);
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+
+    w = gtk_label_new("S1");
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+    w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
+                                                              1,1,10)),
+                            1,0);
+    be->scale_slot_entries[4*i+1] = w;
+    g_signal_connect(G_OBJECT(w),"value-changed",
+                     G_CALLBACK(value_changed_scale_slot_cb),
+                     &be->scale_slots[i].s1);
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+    
+    gtk_box_pack_start(GTK_BOX(vbox),hbox,0,0,5);
+
+    hbox = gtk_hbox_new(0,2);
+    w = gtk_label_new("Y2");
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+    w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
+                                                              1,1,10)),
+                            1,0);
+    be->scale_slot_entries[4*i+2] = w;
+    g_signal_connect(G_OBJECT(w),"value-changed",
+                     G_CALLBACK(value_changed_scale_slot_cb),
+                     &be->scale_slots[i].y2);
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+
+    w = gtk_label_new("S2");
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+    w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
+                                                              1,1,10)),
+                            1,0);
+    be->scale_slot_entries[4*i+3] = w;
+    g_signal_connect(G_OBJECT(w),"value-changed",
+                     G_CALLBACK(value_changed_scale_slot_cb),
+                     &be->scale_slots[i].s2);
+    gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
+    
+    gtk_box_pack_start(GTK_BOX(vbox),hbox,0,0,5);
+    
+    gtk_container_add(GTK_CONTAINER(frame),vbox);
+
+    gtk_box_pack_start(GTK_BOX(fbox),frame,0,0,5);
+  }
+
+  win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_container_set_border_width(GTK_CONTAINER(win),5);
+  gtk_container_add(GTK_CONTAINER(win),fbox);
+  
+
+  g_signal_connect(G_OBJECT(win),"delete-event",
+                   G_CALLBACK(delete_scale_win_cb),be);
+
+  //gtk_widget_show_all(win);
+
+  return win;
 }
 
 void scc_boxedit_load_pal(scc_boxedit_t* be,scc_img_t* img) {
@@ -2371,6 +2519,8 @@ scc_boxedit_t* scc_boxedit_new(scc_img_t* rmim) {
 
   gtk_widget_set_size_request(be->win,800,500);
 
+  be->scale_win = scc_boxedit_scale_win_new(be);
+
   scc_boxedit_set_zoom(be,1);
 
   gtk_widget_show_all(be->win);
@@ -2384,9 +2534,11 @@ static void usage(char* prog) {
 }
 
 static char* rmim_file = NULL;
+static char* scal_file = NULL;
 
 static scc_param_t boxedit_params[] = {
   { "img", SCC_PARAM_STR, 0, 0, &rmim_file },
+  { "scal", SCC_PARAM_STR, 0, 0, &scal_file },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -2408,6 +2560,17 @@ int main(int argc,char** argv) {
 
   be = scc_boxedit_new(rmim);
   
+  if(scal_file) {
+    scc_fd_t* fd = new_scc_fd(scal_file,O_RDONLY,0);
+    if(!fd)
+      printf("Failed to open %s.\n",scal_file);
+    else {
+      if(!scc_boxedit_read_scale(be,fd))
+        printf("Failed to load scal file %s.\n",scal_file);
+      scc_fd_close(fd);
+    }
+  }
+
   if(files) {
     be->boxes = scc_boxedit_load_box(files->val);
     if(be->boxes) be->filename = strdup(files->val);
