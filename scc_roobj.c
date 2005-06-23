@@ -558,7 +558,7 @@ scc_rmim_t* scc_roobj_gen_rmim(scc_roobj_t* ro) {
 
   if(!ro->image) {
     printf("Room have no image, using dummy one  !!!!\n");
-    ro->image = scc_make_default_image();
+    ro->image = scc_img_new(8,8,256);
   }
 
   for(i = 1 ; i < SCC_MAX_IM_PLANES ; i++) {
