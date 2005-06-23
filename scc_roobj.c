@@ -536,9 +536,8 @@ scc_pal_t* scc_roobj_gen_pals(scc_roobj_t* ro) {
   int i;
 
   if(!ro->image) {
-    // we probably want to generate a dummy pic in that case
-    printf("Room have no image !!!!\n");
-    return NULL;
+    printf("Room have no image, using dummy one !!!!\n");
+    ro->image = scc_img_new(8,8,256);
   }
 
   pal = calloc(1,sizeof(scc_pal_t));
@@ -558,9 +557,8 @@ scc_rmim_t* scc_roobj_gen_rmim(scc_roobj_t* ro) {
   uint8_t* zd;
 
   if(!ro->image) {
-    // we probably want to generate a dummy pic in that case
-    printf("Room have no image !!!!\n");
-    return NULL;
+    printf("Room have no image, using dummy one  !!!!\n");
+    ro->image = scc_make_default_image();
   }
 
   for(i = 1 ; i < SCC_MAX_IM_PLANES ; i++) {
@@ -1018,6 +1016,7 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   scc_script_t* scr;
   scc_roobj_obj_t* obj;
   scc_roobj_res_t* res;
+  int i;
   int num_obj = 0;
   int stab_len;
   int size = 8 + 6; // RMHD
@@ -1047,23 +1046,20 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   // local scripts
   size += scc_lscr_block_size(ro);
   // BOXD
-  if(!ro->boxd) {
-    printf("Room is missing a boxd.\n");
-    return 0;
-  }
-  size += 8 + scc_boxd_size(ro->boxd);
+  if(!ro->boxd)
+    size += 8 + 42;
+  else
+    size += 8 + scc_boxd_size(ro->boxd);
   // BOXM
-  if(!ro->boxm) {
-    printf("Room is missing a boxm.\n");
-    return 0;
-  }
-  size += ro->boxm->size;
+  if(!ro->boxm)
+    size += 8 + 8;
+  else
+    size += ro->boxm->size;
   // SCAL
-  if(!ro->scal) {
-    printf("Room is missing a scal.\n");
-    return 0;
-  }
-  size += ro->scal->size;
+  if(!ro->scal)
+    size += 8 + 20;
+  else
+    size += ro->scal->size;
 
   // global scripts
   for(scr = ro->scr ; scr ; scr = scr->next)
@@ -1126,14 +1122,48 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
 
   // BOXD
   scc_fd_w32(fd,MKID('B','O','X','D'));
-  scc_fd_w32be(fd,8 + scc_boxd_size(ro->boxd));
-  scc_write_boxd(fd,ro->boxd);
-
+  if(ro->boxd) {
+    scc_fd_w32be(fd,8 + scc_boxd_size(ro->boxd));
+    scc_write_boxd(fd,ro->boxd);
+  } else {
+    scc_fd_w32be(fd,8 + 42);
+    scc_fd_w16le(fd,2);      // num box
+    // box 0
+    for(i = 0 ; i < 8 ; i++) // coords
+      scc_fd_w16le(fd,-32000);
+    scc_fd_w16(fd,0); // mask, flags
+    scc_fd_w16le(fd,255); // scale
+    // dummy box
+    scc_fd_w16le(fd,2); // ulx
+    scc_fd_w16le(fd,2); // uly
+    scc_fd_w16le(fd,4); // urx
+    scc_fd_w16le(fd,2); // ury
+    scc_fd_w16le(fd,4); // lrx
+    scc_fd_w16le(fd,4); // lry
+    scc_fd_w16le(fd,2); // llx
+    scc_fd_w16le(fd,4); // lly
+    scc_fd_w16(fd,0); // mask, flags
+    scc_fd_w16le(fd,255); // scale
+  }
   // BOXM
-  scc_fd_write(fd,ro->boxm->data,ro->boxm->size);
+  if(ro->boxm)
+    scc_fd_write(fd,ro->boxm->data,ro->boxm->size);
+  else {
+    scc_fd_w32(fd,MKID('B','O','X','M'));
+    scc_fd_w32be(fd,8 + 8);
+    scc_fd_w32be(fd,0x000000FF);
+    scc_fd_w32be(fd,0x010101FF);
+  }
 
   // SCAL
-  scc_fd_write(fd,ro->scal->data,ro->scal->size);
+  if(ro->scal)
+    scc_fd_write(fd,ro->scal->data,ro->scal->size);
+  else {
+    scc_fd_w32(fd,MKID('S','C','A','L'));
+    scc_fd_w32be(fd,8 + 20);
+    for(i = 0 ; i < 5 ; i++)
+      scc_fd_w32(fd,0);
+  }
 
   // SCOB
   for(scr = ro->scr ; scr ; scr = scr->next) {
