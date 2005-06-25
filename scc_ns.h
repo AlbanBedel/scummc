@@ -8,8 +8,8 @@ typedef struct scc_ns_st {
   scc_symbol_t *cur;
   // this is used for rid allocation
   uint16_t rids[SCC_RES_LAST];
-  // this represent the address spaces
-  uint8_t as[SCC_RES_LAST][8192];
+  // this represent the address spaces, one bit per address
+  uint8_t as[SCC_RES_LAST][0x10000/8];
 } scc_ns_t;
 
 scc_ns_t* scc_ns_new(void);
