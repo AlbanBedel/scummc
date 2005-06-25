@@ -68,6 +68,7 @@ typedef union {
 
 %x STR
 %x INCLUDE
+%x COMMENT
       
 DIGIT    [0-9]
 XDIGIT   [0-9a-fA-F]
@@ -376,6 +377,11 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   col = 0;
   line++;
 }
+
+"/*" {
+  BEGIN(COMMENT);
+  col += 2;
+}
       
 [ \t]+  {         /* eat up whitespace */
   // we must perhaps do better with the \t
@@ -599,6 +605,24 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
       return STRVAR;
     }
   }
+
+}
+
+<COMMENT>{
+
+    "*/" {
+        BEGIN(INITIAL);
+        col += 2;
+    }
+
+    [\n]+ {
+        col = 0;
+        line += strlen(yytext);
+    }
+
+    . {
+        col++;
+    }
 
 }
       
