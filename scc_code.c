@@ -97,11 +97,11 @@ static void scc_loop_fix_code(scc_code_t* c,int br, int cont) {
     
     //c->data[0] = 0x73;
     if(c->data[2] == SCC_BRANCH_BREAK)
-      ((int16_t*)&c->data[1])[0] = br - pos;
+      SCC_SET_S16LE(c->data,1,br - pos);
     else if(cont >= 0 && c->data[2] == SCC_BRANCH_CONTINUE)
-      ((int16_t*)&c->data[1])[0] = cont - pos;
+      SCC_SET_S16LE(c->data,1,cont - pos);
     else
-      ((int16_t*)&c->data[1])[0] = pos;
+      SCC_SET_S16LE(c->data,1,pos);
     c->fix = SCC_FIX_NONE;
 
     printf("Branch fixed to 0x%x\n",((int16_t*)&c->data[1])[0]);
@@ -168,7 +168,7 @@ static scc_code_t* scc_code_push_val(uint8_t op,uint16_t v) {
   } else {
     code = scc_code_new(3);
     code->data[0] = op;
-    ((uint16_t*)&code->data[1])[0] = v;
+    SCC_SET_16LE(code->data,1,v);
   }
 
   return code;
@@ -189,7 +189,7 @@ static scc_code_t* scc_code_push_res(uint8_t op,scc_symbol_t* res) {
   c = scc_code_new(1);
   c->data[0] = op;
   d = scc_code_new(2);
-  ((uint16_t*)&d->data[0])[0] = res->rid;
+  SCC_SET_16LE(d->data,0,res->rid);
   d->fix = SCC_FIX_RES + res->type;
   c->next = d;
 
@@ -207,7 +207,7 @@ static scc_code_t* scc_code_res_addr(int op, scc_symbol_t* res,
 	return NULL;
       }
       c = scc_code_new(2);
-      ((uint16_t*)&c->data[0])[0] = res->addr;
+      SCC_SET_16LE(c->data,0,res->addr);
     } else {
       c = scc_code_new(1);
       c->data[0] = res->addr;
@@ -218,7 +218,7 @@ static scc_code_t* scc_code_res_addr(int op, scc_symbol_t* res,
       return NULL;
     }
     c = scc_code_new(2);
-    ((uint16_t*)&c->data[0])[0] = res->rid;
+    SCC_SET_16LE(c->data,0,res->rid);
     c->fix = SCC_FIX_RES + res->type;
   }
 
@@ -303,7 +303,7 @@ static scc_code_t* scc_statement_gen_ref_code(scc_statement_t* st, int ref_type)
       code->data[0] = ptr;
     } else {
       code = scc_code_new(2);
-      ((uint16_t*)&code->data[0])[0] =  ptr;
+      SCC_SET_16LE(code->data,0,ptr);
     }
     break;
   case SCC_ARG_STR:
@@ -620,14 +620,14 @@ static scc_code_t* scc_top_gen_code(scc_op_t* op, int ret_val) {
   // if
   c = scc_code_new(3);
   c->data[0] = SCC_OP_JZ;
-  ((int16_t*)&c->data[1])[0] =  scc_code_size(cb) + 3;
+  SCC_SET_S16LE(c->data,1,scc_code_size(cb) + 3);
   SCC_LIST_ADD(code,last,c);
 
   SCC_LIST_ADD(code,last,cb);
 
   c = scc_code_new(3);
   c->data[0] = SCC_OP_JMP;
-  ((int16_t*)&c->data[1])[0] =  scc_code_size(cc);
+  SCC_SET_S16LE(c->data,1,scc_code_size(cc));
   SCC_LIST_ADD(code,last,c);
   
   SCC_LIST_ADD(code,last,cc);
@@ -767,7 +767,7 @@ static scc_code_t* scc_if_gen_code(scc_instruct_t* inst) {
     c = scc_code_new(3);
     c->data[0] = inst->subtype ? SCC_OP_JNZ : SCC_OP_JZ;
 
-    ((int16_t*)&c->data[1])[0] =  len;
+    SCC_SET_S16LE(c->data,1,len);
     SCC_LIST_ADD(code,last,c);
     // body 1
     SCC_LIST_ADD(code,last,a);
@@ -787,7 +787,7 @@ static scc_code_t* scc_if_gen_code(scc_instruct_t* inst) {
       // endif :)
       c = scc_code_new(3);
       c->data[0] = SCC_OP_JMP;
-      ((int16_t*)&c->data[1])[0] =  scc_code_size(a);
+      SCC_SET_S16LE(c->data,1,scc_code_size(a));
       SCC_LIST_ADD(code,last,c);
     }
 
@@ -819,7 +819,7 @@ static scc_code_t* scc_for_gen_code(scc_instruct_t* inst) {
 
   c = scc_code_new(3);
   c->data[0] = SCC_OP_JZ;
-  ((int16_t*)&c->data[1])[0] =  scc_code_size(body) + scc_code_size(post) + 3;
+  SCC_SET_S16LE(c->data,1,scc_code_size(body) + scc_code_size(post) + 3);
   SCC_LIST_ADD(code,last,c);
 
   // body
@@ -831,7 +831,7 @@ static scc_code_t* scc_for_gen_code(scc_instruct_t* inst) {
   c->data[0] = SCC_OP_JMP;
   SCC_LIST_ADD(code,last,c);
 
-  ((int16_t*)&c->data[1])[0] =  - scc_code_size(loop);
+  SCC_SET_S16LE(c->data,1, - scc_code_size(loop));
 
   //  br = scc_code_size(code);
 
@@ -855,7 +855,7 @@ static scc_code_t* scc_while_gen_code(scc_instruct_t* inst) {
 
   c = scc_code_new(3);
   c->data[0] = inst->subtype ? SCC_OP_JNZ : SCC_OP_JZ;
-  ((int16_t*)&c->data[1])[0] =  scc_code_size(body) + 3;
+  SCC_SET_S16LE(c->data,1, scc_code_size(body) + 3);
   SCC_LIST_ADD(code,last,c);
 
   // body
@@ -865,7 +865,7 @@ static scc_code_t* scc_while_gen_code(scc_instruct_t* inst) {
   c->data[0] = SCC_OP_JMP;
   SCC_LIST_ADD(code,last,c);
 
-  ((int16_t*)&c->data[1])[0] =  - scc_code_size(code);
+  SCC_SET_S16LE(c->data,1, - scc_code_size(code));
 
   scc_loop_fix_code(code,scc_code_size(code),0);
 
@@ -892,7 +892,7 @@ static scc_code_t* scc_do_gen_code(scc_instruct_t* inst) {
   c->data[0] = inst->subtype ? SCC_OP_JZ : SCC_OP_JNZ;
   SCC_LIST_ADD(code,last,c);
 
-  ((int16_t*)&c->data[1])[0] =  -scc_code_size(code);
+  SCC_SET_S16LE(c->data,1, -scc_code_size(code));
 
   scc_loop_fix_code(code,scc_code_size(code),cont);
 
@@ -967,7 +967,7 @@ static scc_code_t* scc_switch_gen_code(scc_instruct_t* inst) {
     // instead of a real body
     if(cond->next) {
       add_jmp = 1;
-      ((int16_t*)&c->data[2])[0] =  1 /*kill*/ + 3 /*jmp*/;
+      SCC_SET_S16LE(c->data,2,1 /*kill*/ + 3 /*jmp*/);
 
     } else { // that's the last condition so put the body
 #if 1
@@ -984,7 +984,7 @@ static scc_code_t* scc_switch_gen_code(scc_instruct_t* inst) {
       
       body_code = scc_instruct_gen_code(i->body);
       
-      ((int16_t*)&c->data[2])[0] =  scc_code_size(body_code) + 1 + (add_jmp ? 3 : 0);
+      SCC_SET_S16LE(c->data,2,scc_code_size(body_code) + 1 + (add_jmp ? 3 : 0));
     }
     SCC_LIST_ADD(code,last,c);
 
@@ -1013,7 +1013,7 @@ static scc_code_t* scc_switch_gen_code(scc_instruct_t* inst) {
     if(add_jmp) {
       c = scc_code_new(3);
       c->data[0] = SCC_OP_JMP;
-      ((int16_t*)&c->data[1])[0] =  1 + (cond ? scc_code_size(cond_code) + 4 + 1 : 0);
+      SCC_SET_S16LE(c->data,1,1 + (cond ? scc_code_size(cond_code) + 4 + 1 : 0));
       SCC_LIST_ADD(code,last,c);
     }
     if(!cond && i) break;
@@ -1137,10 +1137,11 @@ scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst) {
   for(p = 0 ; code ; p+= code->len, code = code->next) {
     memcpy(&data[p],code->data,code->len);
     if(code->fix >= SCC_FIX_RES) {
-      sym = scc_ns_get_sym_with_id(ns,code->fix - SCC_FIX_RES,((uint16_t*)&data[p])[0]);
+      uint16_t rid = SCC_AT_16LE(data,p);
+      sym = scc_ns_get_sym_with_id(ns,code->fix - SCC_FIX_RES,rid);
       if(!sym) {
 	printf("Unable to find ressource %d of type %d\n",
-	       ((uint16_t*)&data[p])[0],code->fix - SCC_FIX_RES);
+	       rid,code->fix - SCC_FIX_RES);
 	continue;
       }
       r = calloc(1,sizeof(scc_sym_fix_t));

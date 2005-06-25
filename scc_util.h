@@ -1,14 +1,31 @@
 
-
+// FIXME: Add those for be platform too
 #define SCC_TO_16BE(x) ((((x)>>8)&0xFF)|(((x)<<8)&0xFF00))
 #define SCC_TO_32BE(x) (  SCC_TO_16BE((uint16_t)(((x)>>16)&0xFFFF)) | (SCC_TO_16BE((uint16_t)(x))<<16) )
+#define SCC_TO_16LE(x) (x)
+#define SCC_TO_32LE(x) (x)
 
 #define SCC_AT_32BE(x,at)  SCC_TO_32BE( (*((uint32_t*)&x[at])) )
-#define SCC_AT_32LE(x,at) (((uint32_t*)&x[at])[0])
-#define SCC_AT_32(x,at) (((uint32_t*)&x[at])[0])
+#define SCC_AT_S32BE(x,at) SCC_TO_32BE( (*((int32_t*)&x[at])) )
+#define SCC_AT_32LE(x,at)  (((uint32_t*)&x[at])[0])
+#define SCC_AT_S32LE(x,at) (((int32_t*)&x[at])[0])
+#define SCC_AT_32(x,at)    (((uint32_t*)&x[at])[0])
+#define SCC_AT_S32(x,at)   (((int32_t*)&x[at])[0])
 #define SCC_AT_16BE(x,at)  SCC_TO_16BE( (*((uint16_t*)&x[at])) )
-#define SCC_AT_16LE(x,at) (((uint16_t*)&x[at])[0])
-#define SCC_AT_16(x,at) (((uint16_t*)&x[at])[0])
+#define SCC_AT_S16BE(x,at) SCC_TO_16BE( (*((int16_t*)&x[at])) )
+#define SCC_AT_16LE(x,at)  (((uint16_t*)&x[at])[0])
+#define SCC_AT_S16LE(x,at) (((int16_t*)&x[at])[0])
+#define SCC_AT_16(x,at)    (((uint16_t*)&x[at])[0])
+#define SCC_AT_S16(x,at)   (((int16_t*)&x[at])[0])
+
+#define SCC_SET_16LE(x,at,v)  SCC_AT_16(x,at) = v
+#define SCC_SET_S16LE(x,at,v) SCC_AT_S16(x,at) = v
+
+#define SCC_SET_16BE(x,at,v)  SCC_AT_16(x,at) = v;  \
+                              SCC_AT_16(x,at) =  SCC_TO_16BE(SCC_AT_16(x,at))
+#define SCC_SET_S16BE(x,at,v) SCC_AT_S16(x,at) = v;  \
+                              SCC_AT_S16(x,at) = SCC_TO_16BE(SCC_AT_S16(x,at))
+
 
 
 #define MKID(a,b,c,d) ((uint32_t) \
