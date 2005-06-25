@@ -18,7 +18,7 @@ static int scc_addr_max[] = {
   0xFFFF,  // SOUND
   0xFFFF,  // CHSET
   0xFF,    // LSCR
-  0xEF,    // VERB (0xFF is default)
+  0xFF,    // VERB (0xFF is default)
   0xFFFF,  // OBJ
   0x0F,    // STATE
   0x400F,  // LVAR
@@ -29,8 +29,11 @@ static int scc_addr_max[] = {
   0xFF     // BOX
 };
 
+void scc_symbol_list_free(scc_symbol_t* s);
+
 void scc_symbol_free(scc_symbol_t* s) {
   if(s->sym) free(s->sym);
+  if(s->childs) scc_symbol_list_free(s->childs);
   free(s);
 }
 

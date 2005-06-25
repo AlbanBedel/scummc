@@ -63,6 +63,8 @@
   // output fd
   static scc_fd_t* out_fd = NULL;
 
+  static scc_roobj_t* scc_roobj_list = NULL;
+
   // the global namespace
   // not static bcs of code gen, we'll see how to fix it
   static scc_ns_t* scc_ns = NULL;
@@ -349,7 +351,7 @@ scrdecl: SCRIPT SYM NS SYM location
 }
 ;
 
-// cost, sound, chset, verb, obj
+// cost, sound, chset
 gresdecl: RESTYPE SYM NS SYM location
 {
   scc_ns_decl(scc_ns,$2,$4,$1,0,$5);
@@ -382,8 +384,8 @@ room: roombdecl roombody
   printf("Room done :)\n");
   scc_ns_pop(scc_ns);
 
-  if(!scc_roobj_write(scc_roobj,scc_ns,out_fd))
-    SCC_ABORT(@1,"Failed to write ROOM ????\n");
+  scc_roobj->next = scc_roobj_list;
+  scc_roobj_list = scc_roobj;
 }
 ;
 
@@ -671,8 +673,32 @@ verbentrydecl: SYM '(' scriptargs ')'
 }
 | DEFAULT '(' scriptargs ')'
 {
-  // TODO
-  $$ = NULL;
+  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,"default");
+  scc_scr_arg_t* a = $3;
+
+  if(!sym) {
+    // we need this little hack to declare it at the toplevel of the
+    // namespace.
+    scc_symbol_t* tmp = scc_ns->cur;
+    scc_ns->cur = NULL;
+    sym = scc_ns_decl(scc_ns,NULL,"default",SCC_RES_VERB,0,0xFF);
+    scc_ns->cur = tmp;
+    scc_ns_get_rid(scc_ns,sym);
+  } else if(sym->type != SCC_RES_VERB) // shouldn't happend
+    SCC_ABORT(@1,"default is already defined as something else than a verb.\n");
+
+  // push the obj for the local vars
+  scc_ns_push(scc_ns,scc_obj->sym);
+
+  // declare the arguments
+  local_vars = 0;
+  while(a) {
+    scc_ns_decl(scc_ns,NULL,a->sym,SCC_RES_LVAR,a->type,local_vars);
+    local_vars++;
+    a = a->next;
+  }
+  
+  $$ = sym;
 }
 ;
 
@@ -1399,15 +1425,39 @@ static scc_param_t scc_parse_params[] = {
   { NULL, 0, 0, 0, NULL }
 };
 
+typedef struct scc_source_st scc_source_t;
+struct scc_source_st {
+  scc_source_t* next;
+  scc_ns_t* ns;
+  scc_roobj_t* roobj_list;
+};
+
+
 int main (int argc, char** argv) {
   scc_cl_arg_t* files,*f;
   char* out;
+  scc_source_t *src,*srcs = NULL;
 
   if(argc < 2) usage(argv[0]);
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
   if(!files) usage(argv[0]);
+
+  for(f = files ; f ; f = f->next) {
+    src = malloc(sizeof(scc_source_t));
+    src->ns = scc_ns = scc_ns_new();
+    local_scr = 0;
+    scc_roobj = NULL;
+    scc_roobj_list = NULL;
+    if(!scc_lex_init(f->val)) return -1;
+
+    if(yyparse()) return -1;
+
+    src->roobj_list = scc_roobj_list;
+    src->next = srcs;
+    srcs = src;
+  }
 
   out = scc_output ? scc_output : "output.roobj";
   out_fd = new_scc_fd(out,O_WRONLY|O_CREAT|O_TRUNC,0);
@@ -1416,17 +1466,14 @@ int main (int argc, char** argv) {
     return -1;
   }
 
-  for(f = files ; f ; f = f->next) {
-    scc_ns = scc_ns_new();
-    local_scr = 0;
-    scc_roobj = NULL;
-    if(!scc_lex_init(f->val)) return -1;
-
-    if(yyparse()) return -1;
- 
-    // blow the ns
-    scc_ns_free(scc_ns);
- 
+  for(src = srcs ; src ; src = src->next) {
+    for(scc_roobj = src->roobj_list ; scc_roobj ; 
+        scc_roobj = scc_roobj->next) {
+      if(!scc_roobj_write(scc_roobj,src->ns,out_fd)) {
+        printf("Failed to write ROOM ????\n");
+        return 1;
+      }
+    }
   }
 
   scc_fd_close(out_fd);

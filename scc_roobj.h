@@ -42,6 +42,8 @@ struct scc_roobj_obj_st {
 };
 
 struct scc_roobj_st {
+  scc_roobj_t* next; // chain when we have several room
+
   scc_symbol_t* sym; // our sym
   scc_symbol_t* cur; // currently parsed sym
 
