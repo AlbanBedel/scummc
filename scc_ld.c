@@ -249,7 +249,7 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
   scc_ld_room_t* room;
   scc_ld_block_t* blk;
   scc_ld_block_t* room_last = NULL,*scr_last = NULL, *cost_last = NULL;
-  scc_ld_block_t* chset_last = NULL;
+  scc_ld_block_t* chset_last = NULL, *snd_last = NULL;
 
   room = calloc(1,sizeof(scc_ld_room_t));
   room->ns = scc_ns_new();
@@ -315,6 +315,18 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
       blk->addr = addr;
       blk->asis = 1;
       SCC_LIST_ADD(room->chset,chset_last,blk);
+      break;
+
+    case MKID('s','o','u','n'):
+      addr = scc_fd_r16le(fd);
+      blk = scc_fd_read_block(fd,type,len-2);
+      if(!blk) {
+	scc_ld_room_free(room);
+	return NULL;
+      }
+      blk->addr = addr;
+      blk->asis = 1;
+      SCC_LIST_ADD(room->snd,snd_last,blk);
       break;
 
     default:
@@ -712,6 +724,23 @@ static scc_ld_block_t* scc_ld_scrp_patch(scc_ld_room_t* room,
   return new;
 }
 
+int scc_ld_res_patch(scc_ld_room_t* room, scc_ld_block_t* list,
+                     int type,uint32_t newid, char* name) {
+  scc_ld_block_t* blk;
+
+  for(blk = list ; blk ; blk = blk->next) {
+    scc_symbol_t* s = scc_ns_get_sym_with_id(room->ns,type,blk->addr);
+    if(!s) {
+      printf("Got %s with invalid id !!!!\n",name);
+      return 0;
+    }
+    blk->type = newid;
+    blk->addr = s->addr;
+  }
+  return 1;
+}
+
+
 int scc_ld_room_patch(scc_ld_room_t* room) {
   scc_ld_block_t* blk,*new,*last = NULL;
 
@@ -780,25 +809,17 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
     last = new;
   }
 
-  for(blk = room->cost ; blk ; blk = blk->next) {
-    scc_symbol_t* s = scc_ns_get_sym_with_id(room->ns,SCC_RES_COST,blk->addr);
-    if(!s) {
-      printf("Got costume with invalid id !!!!\n");
-      return 0;
-    }
-    blk->type = MKID('C','O','S','T');
-    blk->addr = s->addr;
-  }
+  if(!scc_ld_res_patch(room,room->cost,SCC_RES_COST,
+                      MKID('C','O','S','T'),"costume"))
+    return 0;
 
-  for(blk = room->chset ; blk ; blk = blk->next) {
-    scc_symbol_t* s = scc_ns_get_sym_with_id(room->ns,SCC_RES_CHSET,blk->addr);
-    if(!s) {
-      printf("Got charset with invalid id !!!!\n");
-      return 0;
-    }
-    blk->type = MKID('C','H','A','R');
-    blk->addr = s->addr;
-  }
+  if(!scc_ld_res_patch(room,room->chset,SCC_RES_CHSET,
+                       MKID('C','H','A','R'),"charset"))
+    return 0;
+
+  if(!scc_ld_res_patch(room,room->snd,SCC_RES_SOUND,
+                       MKID('S','O','U','N'),"sound"))
+    return 0;
 
   return 1;
 }
@@ -986,11 +1007,16 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
   int obj_n = scc_ns_res_max(scc_ns,SCC_RES_OBJ) + 1;
   int cost_n = scc_ns_res_max(scc_ns,SCC_RES_COST)+1;
   int snd_n = scc_ns_res_max(scc_ns,SCC_RES_SOUND)+1;
+  int var_n = scc_ns_res_max(scc_ns,SCC_RES_VAR)+1;
   scc_ld_room_t* r;
 
 
   for(r = room ; r ; r = r->next) room_n++;
   room_n++;
+
+  // we must give enouth space for all the engine vars
+  // if we didn't used them all.
+  if(var_n < 140) var_n = 140;
 
   scc_fd_w32(fd,MKID('R','N','A','M'));
   scc_fd_w32be(fd,8 + 1);
@@ -999,7 +1025,7 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
   scc_fd_w32(fd,MKID('M','A','X','S'));
   scc_fd_w32be(fd,8 + 15*2);
 
-  scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_VAR)+1);
+  scc_fd_w16le(fd,var_n);
   scc_fd_w16le(fd,0); // unk
   scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1);
   scc_fd_w16le(fd,200); // local obj, dunno what's that exactly
