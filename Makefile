@@ -6,6 +6,9 @@ CFLAGS  = -g -Wall
 GTK_CFLAGS=`pkg-config gtk+-2.0  --cflags`
 GTK_LDFLAGS=`pkg-config gtk+-2.0  --libs`
 
+FT_CFLAGS=`freetype-config --cflags`
+FT_LDFLAGS=`freetype-config --libs`
+
 ## Newer readline need ncurse
 LDFLAGS = 
 
@@ -21,7 +24,9 @@ COSTVIEW_OBJS = $(COSTVIEW_SRCS:.c=.o)
 
 # .PHONY: all clean
 
-all: scc sld zpnn2bmp costview boxedit cost
+all: scc sld costview boxedit cost char
+
+utils: imgsplit imgremap zpnn2bmp
 
 .c.o:
 	$(CC) -c $(CFLAGS) -o $@ $<
@@ -94,8 +99,17 @@ COST_SRCS= cost_lex.c cost_parse.tab.c scc_fd.c scc_param.c scc_img.c
 COST_OBJS=$(COST_SRCS:.c=.o)
 
 cost: $(COST_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(COST_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(COST_OBJS) $(LDFLAGS)
 
+
+CHAR_SRCS= char.c scc_fd.c scc_param.c scc_img.c
+CHAR_OBJS=$(CHAR_SRCS:.c=.o)
+
+char.o: char.c
+	$(CC) -c $(CFLAGS) $(FT_CFLAGS) -o $@ $<
+
+char: $(CHAR_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(CHAR_OBJS) $(LDFLAGS) $(FT_LDFLAGS)
 
 clean:
 	rm -f *.o *.a *~ *.tab.[ch] scc_lex.c cost_lex.c
@@ -105,9 +119,9 @@ distclean: clean
 
 dep:    depend
 
-depend: $(PARSER_SRCS) $(LINKER_SCRS) $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS)
+depend: $(PARSER_SRCS) $(LINKER_SCRS) $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS) $(CHAR_SRCS)
 	$(CC) -MM $(CFLAGS) $(GTK_CFLAGS) $(PARSER_SRCS) $(LINKER_SCRS) \
-	      $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS) 1>.depend
+	      $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS) $(CHAR_SRCS) 1>.depend
 
 #
 # include dependency files if they exist
