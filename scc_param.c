@@ -39,6 +39,21 @@ static int scc_parse_int(scc_param_t* param,char* val) {
   return 1;
 }
 
+static int scc_parse_double(scc_param_t* param,char* val) {
+  double* p = param->ptr;
+  char* end = NULL;
+  double n;
+  
+  n = strtod(val,&end);
+
+  if(!end || end[0] != '\0') return SCC_PARAM_INVALID;
+  if(n < param->min || n > param->max) return SCC_PARAM_OUT_OF_RANGE;
+
+  p[0] = n;
+
+  return 1;
+}
+
 static int scc_parse_str(scc_param_t* param,char* val) {
   char** p = param->ptr;
 
@@ -53,6 +68,7 @@ static int scc_parse_str(scc_param_t* param,char* val) {
 scc_param_parser_t scc_param_parser[] = {
   { SCC_PARAM_FLAG, SCC_PARAM_TYPE_NO_ARG, scc_parse_flag },
   { SCC_PARAM_INT, 0, scc_parse_int },
+  { SCC_PARAM_DBL, 0, scc_parse_double },
   { SCC_PARAM_STR, 0, scc_parse_str },
   { 0, 0, NULL }
 };

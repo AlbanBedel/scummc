@@ -2,6 +2,7 @@
 #define SCC_PARAM_FLAG 1
 #define SCC_PARAM_INT  2
 #define SCC_PARAM_STR  3
+#define SCC_PARAM_DBL  4
 
 #define SCC_PARAM_TYPE_NO_ARG 1
 
