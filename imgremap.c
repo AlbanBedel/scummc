@@ -37,7 +37,6 @@ int main(int argc,char** argv) {
   int x,y;
   char outname[1024];
   scc_img_t *in;
-  scc_fd_t* fd;
   uint8_t* src;
   
   if(argc < 6) usage(argv[0]);
@@ -76,13 +75,7 @@ int main(int argc,char** argv) {
     snprintf(outname,1023,"%s.map",f->val);
     outname[1023] = '\0';
 
-    fd = new_scc_fd(outname,O_WRONLY|O_CREAT|O_TRUNC,0);
-    if(!fd) {
-      printf("Failed to open %s.\n",outname);
-      return 1;
-    }
-    scc_img_write_bmp(in,fd);
-    scc_fd_close(fd);
+    if(!scc_img_save_bmp(in,outname)) return 1;
   }
   return 0;
 }

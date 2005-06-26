@@ -19,4 +19,6 @@ void scc_img_free(scc_img_t* img);
 
 int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd);
 
+int scc_img_save_bmp(scc_img_t* img,char* path);
+
 scc_img_t* scc_img_open(char* path);

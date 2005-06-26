@@ -96,6 +96,23 @@ int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
   return 1;
 }
   
+int scc_img_save_bmp(scc_img_t* img,char* path) {
+  scc_fd_t* fd = new_scc_fd(path,O_WRONLY|O_CREAT|O_TRUNC,0);
+  
+  if(!fd) {
+    printf("Failed to open %s for writing.\n",path);
+    return 0;
+  }
+  
+  if(!scc_img_write_bmp(img,fd)) {
+    printf("BMP writing failed.\n");
+    scc_fd_close(fd);
+    return 0;
+  }
+  
+  scc_fd_close(fd);
+  return 1;
+}
 
 
 static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {

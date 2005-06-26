@@ -28,7 +28,7 @@ static scc_param_t scc_parse_params[] = {
 };
 
 int main(int argc,char** argv) {
-  scc_fd_t* in_fd,*out_fd;
+  scc_fd_t* in_fd;
   scc_cl_arg_t* files;
   char* out;
   uint32_t type,len;
@@ -101,19 +101,8 @@ int main(int argc,char** argv) {
   for(i = 0 ; i < w*h ; i++)
     img->data[i] = (zdata[i/8] & (1<<(7-(i%8))) ? 1 : 0);
   
-  // open the out fd
-  out_fd = new_scc_fd(out,O_WRONLY|O_CREAT|O_TRUNC,0);
-  if(!out_fd) {
-    printf("Failed to open %s for writing.\n",out);
-    return -1;
-  }
-
-  if(!scc_img_write_bmp(img,out_fd)) {
-    printf("BMP writing failed.\n");
-    return -1;
-  }
-
-  scc_fd_close(out_fd);
+  // save the bmp
+  if(!scc_img_save_bmp(img,out)) return -1;
 
   return 0;
 }
