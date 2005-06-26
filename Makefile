@@ -24,7 +24,7 @@ COSTVIEW_OBJS = $(COSTVIEW_SRCS:.c=.o)
 
 # .PHONY: all clean
 
-all: scc sld costview boxedit cost char
+all: scc sld costview boxedit cost char soun
 
 utils: imgsplit imgremap zpnn2bmp
 
@@ -110,6 +110,12 @@ char.o: char.c
 
 char: $(CHAR_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(CHAR_OBJS) $(LDFLAGS) $(FT_LDFLAGS)
+
+SOUN_SRCS= soun.c scc_fd.c scc_param.c
+SOUN_OBJS=$(SOUN_SRCS:.c=.o)
+
+soun: $(SOUN_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(SOUN_OBJS) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.a *~ *.tab.[ch] scc_lex.c cost_lex.c

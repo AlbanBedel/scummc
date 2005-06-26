@@ -18,6 +18,7 @@
 #define SCC_AT_16(x,at)    (((uint16_t*)&x[at])[0])
 #define SCC_AT_S16(x,at)   (((int16_t*)&x[at])[0])
 
+#define SCC_SET_16(x,at,v)    SCC_AT_16(x,at) = v
 #define SCC_SET_16LE(x,at,v)  SCC_AT_16(x,at) = v
 #define SCC_SET_S16LE(x,at,v) SCC_AT_S16(x,at) = v
 
@@ -26,7 +27,14 @@
 #define SCC_SET_S16BE(x,at,v) SCC_AT_S16(x,at) = v;  \
                               SCC_AT_S16(x,at) = SCC_TO_16BE(SCC_AT_S16(x,at))
 
+#define SCC_SET_32(x,at,v)    SCC_AT_32(x,at) = v
+#define SCC_SET_32LE(x,at,v)  SCC_AT_32(x,at) = v
+#define SCC_SET_S32LE(x,at,v) SCC_AT_S32(x,at) = v
 
+#define SCC_SET_32BE(x,at,v)  SCC_AT_32(x,at) = v;  \
+                              SCC_AT_32(x,at) =  SCC_TO_32BE(SCC_AT_32(x,at))
+#define SCC_SET_S32BE(x,at,v) SCC_AT_S32(x,at) = v;  \
+                              SCC_AT_S32(x,at) = SCC_TO_32BE(SCC_AT_S32(x,at))
 
 #define MKID(a,b,c,d) ((uint32_t) \
 			((d) & 0x000000FF) | \
