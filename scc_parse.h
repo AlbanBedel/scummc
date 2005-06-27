@@ -3,16 +3,16 @@
 #define SCC_MAX_CLASS  32
 
 // direct integer vals
-#define SCC_ARG_VAL     0
+#define SCC_ST_VAL     0
 // ressources (vars, room, etc)
-#define SCC_ARG_RES     1
-#define SCC_ARG_STR     2
-#define SCC_ARG_CALL    3
-#define SCC_ARG_LIST    4
+#define SCC_ST_RES     1
+#define SCC_ST_STR     2
+#define SCC_ST_CALL    3
+#define SCC_ST_LIST    4
 // derefrenced array var
-#define SCC_ARG_AVAR    5
-#define SCC_ARG_OP      6
-#define SCC_ARG_CHAIN   7
+#define SCC_ST_AVAR    5
+#define SCC_ST_OP      6
+#define SCC_ST_CHAIN   7
 
 
 #define SCC_VOID        0

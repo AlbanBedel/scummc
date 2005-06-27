@@ -289,13 +289,13 @@ static scc_code_t* scc_statement_gen_ref_code(scc_statement_t* st, int ref_type)
   uint16_t ptr;
 
   switch(st->type) {
-  case SCC_ARG_AVAR:
+  case SCC_ST_AVAR:
     code = scc_code_res_addr(-1,st->val.av.r,ref_type);
     break;
-  case SCC_ARG_RES:
+  case SCC_ST_RES:
     code = scc_code_res_addr(-1,st->val.r,ref_type);
     break;
-  case SCC_ARG_VAL:
+  case SCC_ST_VAL:
     ptr = st->val.i;
     if(ref_type == SCC_FA_BREF) {
       if(ptr > 0xFF) printf("Warning pointer value 0x%x can't be encoded as short.\n",ptr);
@@ -306,7 +306,7 @@ static scc_code_t* scc_statement_gen_ref_code(scc_statement_t* st, int ref_type)
       SCC_SET_16LE(code->data,0,ptr);
     }
     break;
-  case SCC_ARG_STR:
+  case SCC_ST_STR:
     code = scc_str_gen_code(st->val.s);
     break;
   }
@@ -367,7 +367,7 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
   scc_operator_t* oper;
 
   switch(a->type) {
-  case SCC_ARG_RES:
+  case SCC_ST_RES:
 
     if(a->val.r->type != SCC_RES_VAR &&
        a->val.r->type != SCC_RES_LVAR &&
@@ -402,9 +402,9 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
     c = scc_code_push_res(SCC_OP_VAR_WRITE,a->val.r);
     SCC_LIST_ADD(code,last,c);
     break;
-  case SCC_ARG_AVAR:
+  case SCC_ST_AVAR:
     switch(b->type) {
-    case SCC_ARG_LIST:
+    case SCC_ST_LIST:
       
       if(a->val.av.x) {
 	c = scc_statement_gen_code(a->val.av.x,1);
@@ -428,7 +428,7 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
       }
 
       break;
-    case SCC_ARG_STR:
+    case SCC_ST_STR:
 
       if(a->val.av.x) {
 	printf("Strings can't be assigned to 2-dim arrays.\n");
@@ -551,7 +551,7 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
     break;
   case PREINC:
   case PREDEC:
-    if(op->argv->type == SCC_ARG_AVAR) {
+    if(op->argv->type == SCC_ST_AVAR) {
       o = (op->op == PREINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
       // push the index
       c = scc_statement_gen_code(op->argv->val.av.y,1);
@@ -573,7 +573,7 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
       c = scc_statement_gen_code(op->argv,1);
       SCC_LIST_ADD(code,last,c);
     }
-    if(op->argv->type == SCC_ARG_AVAR) {
+    if(op->argv->type == SCC_ST_AVAR) {
       o = (op->op == POSTINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
       // push the index
       c = scc_statement_gen_code(op->argv->val.av.y,1);
@@ -664,13 +664,13 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
   int n = 0;
 
   switch(st->type) {
-  case SCC_ARG_VAL:
+  case SCC_ST_VAL:
     if(ret_val) {
       c = scc_code_push_val(SCC_OP_PUSH,st->val.i);
       SCC_LIST_ADD(code,last,c);
     }
     break;
-  case SCC_ARG_RES:
+  case SCC_ST_RES:
     if(ret_val) {
       if(st->val.r->type == SCC_RES_VAR ||
 	 st->val.r->type == SCC_RES_BVAR ||
@@ -682,11 +682,11 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
     }
     //code = scc_code_push_val(SCC_OP_VAR_READ,scc_var_get_ptr(st->val.v));
     break;
-  case SCC_ARG_CALL:
+  case SCC_ST_CALL:
     c = scc_call_gen_code(&st->val.c,ret_val);
     SCC_LIST_ADD(code,last,c);
     break;
-  case SCC_ARG_LIST:
+  case SCC_ST_LIST:
     if(!ret_val) break;
     // count the elements
     //for(a = st->val.l ; a ; a = a->next) n++;
@@ -701,7 +701,7 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
     c = scc_code_push_val(SCC_OP_PUSH,n);
     SCC_LIST_ADD(code,last,c);
     break;
-  case SCC_ARG_AVAR:
+  case SCC_ST_AVAR:
     if(!ret_val) break;
 
     // push x value
@@ -716,11 +716,11 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
     c = scc_code_push_res(SCC_OP_ARRAY_READ,st->val.av.r);
     SCC_LIST_ADD(code,last,c);
     break;
-  case SCC_ARG_OP:
+  case SCC_ST_OP:
     c = scc_op_gen_code(&st->val.o,ret_val);
     SCC_LIST_ADD(code,last,c);
     break;
-  case SCC_ARG_CHAIN:
+  case SCC_ST_CHAIN:
     // gen the code for each element
     // only the last one one should potentialy return a value
     for(a = st->val.l ; a ; a = a->next) {

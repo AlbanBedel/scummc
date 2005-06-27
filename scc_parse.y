@@ -36,14 +36,14 @@
 }
 
 #define SCC_BOP(d,bop,a,cop,b) {                              \
-  if(a->type == SCC_ARG_VAL &&                                \
-     b->type == SCC_ARG_VAL) {                                \
+  if(a->type == SCC_ST_VAL &&                                 \
+     b->type == SCC_ST_VAL) {                                 \
     a->val.i = ((int16_t)a->val.i) bop ((int16_t)b->val.i);   \
     free(b);                                                  \
     d = a;                                                    \
   } else {                                                    \
     d = calloc(1,sizeof(scc_statement_t));                    \
-    d->type = SCC_ARG_OP;                                     \
+    d->type = SCC_ST_OP;                                      \
     d->val.o.type = SCC_OT_BINARY;                            \
     d->val.o.op = cop;                                        \
     d->val.o.argc = 2;                                        \
@@ -103,22 +103,22 @@
       
     for(n = 0, a = c->argv ; a ; n++, a = a->next) {
       if(c->func->argt[n] == SCC_FA_VAL) {
-	if(a->type == SCC_ARG_STR ||
-	   a->type == SCC_ARG_LIST) {
+	if(a->type == SCC_ST_STR ||
+	   a->type == SCC_ST_LIST) {
 	  sprintf(func_err,"Argument %d of call to %s is of a wrong type.\n",
 		  n+1,c->func->sym);
 	  return func_err;
 	}
       } else if(c->func->argt[n] == SCC_FA_PTR ||
 		c->func->argt[n] == SCC_FA_SPTR) {
-	if(a->type != SCC_ARG_RES) {
+	if(a->type != SCC_ST_RES) {
 	  sprintf(func_err,"Argument %d of call to %s must be a variable.\n",
 		  n+1,c->func->sym);
 	  return func_err;
 	}
       } else if(c->func->argt[n] == SCC_FA_APTR ||
 		c->func->argt[n] == SCC_FA_SAPTR) {
-	if(a->type != SCC_ARG_RES ||
+	if(a->type != SCC_ST_RES ||
 	   a->val.r->type != SCC_VAR_ARRAY) {
 	  sprintf(func_err,"Argument %d of call to %s must be an array.\n",
 		  n+1,c->func->sym);
@@ -126,12 +126,12 @@
 	}
 
       } else if(c->func->argt[n] == SCC_FA_LIST &&
-		a->type != SCC_ARG_LIST) {
+		a->type != SCC_ST_LIST) {
 	sprintf(func_err,"Argument %d of %s must be a list.\n",
 		n+1,c->func->sym);
 	return func_err;
       } else if(c->func->argt[n] == SCC_FA_STR &&
-		a->type != SCC_ARG_STR) {
+		a->type != SCC_ST_STR) {
 	sprintf(func_err,"Argument %d of %s must be a string.\n",
 		n+1,c->func->sym);
 	return func_err;
@@ -1074,9 +1074,9 @@ statements: statement
   scc_statement_t* i;
 
   // no chain yet, create it
-  if($1->type != SCC_ARG_CHAIN) {
+  if($1->type != SCC_ST_CHAIN) {
     $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ARG_CHAIN;
+    $$->type = SCC_ST_CHAIN;
     // init the chain
     $$->val.l = $1;
   } else
@@ -1109,20 +1109,20 @@ statement: dval
   scc_statement_t* a;
   
   for(a = $2 ; a ; a = a->next) {
-    if(a->type == SCC_ARG_STR ||
-       a->type == SCC_ARG_LIST)
+    if(a->type == SCC_ST_STR ||
+       a->type == SCC_ST_LIST)
       SCC_ABORT(@2,"String and list can't be used inside a list.\n");
   }
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_LIST;
+  $$->type = SCC_ST_LIST;
   $$->val.l = $2;
 }
 
 | statement ASSIGN statement
 {
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_OP;
+  $$->type = SCC_ST_OP;
   $$->val.o.type = SCC_OT_ASSIGN;
   $$->val.o.op = $2;
   $$->val.o.argc = 2;
@@ -1133,7 +1133,7 @@ statement: dval
 | statement '?' statement ':' statement
 {
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_OP;
+  $$->type = SCC_ST_OP;
   $$->val.o.type = SCC_OT_TERNARY;
   $$->val.o.op = $2;
   $$->val.o.argc = 3;
@@ -1214,12 +1214,12 @@ statement: dval
 
 | '-' statement %prec NEG
 {
-   if($2->type == SCC_ARG_VAL) {
+   if($2->type == SCC_ST_VAL) {
     $2->val.i = -$2->val.i;
     $$ = $2;
   } else { 
     $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ARG_OP;
+    $$->type = SCC_ST_OP;
     $$->val.o.type = SCC_OT_UNARY;
     $$->val.o.op = $1;
     $$->val.o.argc = 1;
@@ -1229,12 +1229,12 @@ statement: dval
 
 | '!' statement
 {
-  if($2->type == SCC_ARG_VAL) {
+  if($2->type == SCC_ST_VAL) {
     $2->val.i = ! $2->val.i;
     $$ = $2;
   } else { // we call not
     $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ARG_OP;
+    $$->type = SCC_ST_OP;
     $$->val.o.type = SCC_OT_UNARY;
     $$->val.o.op = $1;
     $$->val.o.argc = 1;
@@ -1244,15 +1244,15 @@ statement: dval
 
 | SUFFIX statement %prec PREFIX
 {
-  if(($2->type == SCC_ARG_RES &&
+  if(($2->type == SCC_ST_RES &&
       ($2->val.r->type == SCC_RES_VAR ||
        $2->val.r->type == SCC_RES_LVAR ||
        $2->val.r->type == SCC_RES_BVAR)) ||
-     $2->type == SCC_ARG_AVAR) {
-    if($2->type == SCC_ARG_AVAR && $2->val.av.x)
+     $2->type == SCC_ST_AVAR) {
+    if($2->type == SCC_ST_AVAR && $2->val.av.x)
       SCC_ABORT(@1,"Suffix operators can't be applied to 2 dimmensional arrays.\n");
     $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ARG_OP;
+    $$->type = SCC_ST_OP;
     $$->val.o.type = SCC_OT_UNARY;
     $$->val.o.op = ($1 == INC ? PREINC : PREDEC);
     $$->val.o.argc = 1;
@@ -1262,15 +1262,15 @@ statement: dval
 }
 | statement SUFFIX %prec POSTFIX
 {
-  if(($1->type == SCC_ARG_RES &&
+  if(($1->type == SCC_ST_RES &&
       ($1->val.r->type == SCC_RES_VAR ||
        $1->val.r->type == SCC_RES_LVAR ||
        $1->val.r->type == SCC_RES_BVAR)) ||
-     $1->type == SCC_ARG_AVAR) {
-    if($1->type == SCC_ARG_AVAR && $1->val.av.x)
+     $1->type == SCC_ST_AVAR) {
+    if($1->type == SCC_ST_AVAR && $1->val.av.x)
       SCC_ABORT(@1,"Suffix operators can't be applied to 2 dimmensional arrays.\n");
     $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ARG_OP;
+    $$->type = SCC_ST_OP;
     $$->val.o.type = SCC_OT_UNARY;
     $$->val.o.op = ($2 == INC) ? POSTINC : POSTDEC;
     $$->val.o.argc = 1;
@@ -1292,7 +1292,7 @@ var: SYM
     SCC_ABORT(@1,"%s is not a declared ressource.\n",$1);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_RES;
+  $$->type = SCC_ST_RES;
   $$->val.r = v;
   // allocate rid
   if(!v->rid) scc_ns_get_rid(scc_ns,v);
@@ -1305,7 +1305,7 @@ var: SYM
     SCC_ABORT(@1,"%s::%s is not a declared ressource.\n",$1,$3);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_RES;
+  $$->type = SCC_ST_RES;
   $$->val.r = v;
   // allocate rid
   if(!v->rid) scc_ns_get_rid(scc_ns,v);
@@ -1326,7 +1326,7 @@ var: SYM
 	      $1);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_AVAR;
+  $$->type = SCC_ST_AVAR;
   $$->val.av.r = v;
   $$->val.av.y = $3;
 
@@ -1348,7 +1348,7 @@ var: SYM
 	      $1);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_AVAR;
+  $$->type = SCC_ST_AVAR;
   $$->val.av.r = v;
   $$->val.av.x = $3;
   $$->val.av.y = $5;
@@ -1368,7 +1368,7 @@ call: SYM '(' cargs ')'
     SCC_ABORT(@1,"%s is not a know function.\n",$1);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_CALL;
+  $$->type = SCC_ST_CALL;
 
   $$->val.c.func = f;
   $$->val.c.argv = $3;
@@ -1406,14 +1406,14 @@ cargs:
 dval: INTEGER
 {
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_VAL;
+  $$->type = SCC_ST_VAL;
   $$->val.i = $1;
 }
 
 | string
 {
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ARG_STR;
+  $$->type = SCC_ST_STR;
   $$->val.s = $1;
   //printf("Got string: %s\n",$1);
 };
