@@ -300,6 +300,11 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return OBJECT;
 }
 
+"class" {
+  SET_POS(5);
+  return CLASS;
+}
+
 "cost" {
   SET_POS(4);
   yylval.integer = SCC_RES_COST;

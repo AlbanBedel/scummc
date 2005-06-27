@@ -520,7 +520,24 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
     obj->hs_y = val;
   else if(!strcmp(sym,"dir"))
     obj->dir = val;
-  else {
+  else if(!strcmp(sym,"state")) {
+    scc_roobj_state_t* s;
+    int i;
+    if(val < 0) {
+      printf("Invalid object state: %d\n",val);
+      return 0;
+    }
+    if(!val) {
+      obj->state = 0;
+      return 1;
+    }
+    for(i = 1, s = obj->states ; s && i != val ; i++, s = s->next);
+    if(!s) {
+      printf("Invalid object state: %d\n",val);
+      return 0;
+    }
+    obj->state = val;
+  } else {
     printf("Unknow integer object parameter: %s\n",sym);
     return 0;
   }
@@ -528,6 +545,23 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
   return 1;
 }
 
+int scc_roobj_obj_set_class(scc_roobj_obj_t* obj, scc_symbol_t* sym) {
+  int i;
+
+  // look if that class is alredy set
+  for(i = 0 ; i < SCC_MAX_CLASS ; i++) {
+    if(!obj->class[i]) continue;
+    if(obj->class[i] == sym) return 1;
+  }
+  // add it
+  for(i = 0 ; i < SCC_MAX_CLASS ; i++) {
+    if(obj->class[i]) continue;
+    obj->class[i] = sym;
+    return 1;
+  }
+  // no space left ???
+  return 0;
+}
 
 //////////////////////////// Writing ///////////////////////////////
 
@@ -943,7 +977,7 @@ int scc_write_verb_block(scc_script_t* scr,scc_fd_t* fd) {
 }
 
 int scc_obob_size(scc_roobj_obj_t* obj) {
-  int size = 8 + 2 +2+2 +2+2 +1+1 +2*2 +1;
+  int size = 8 + 2 +1+2+2*SCC_MAX_CLASS +2+2 +2+2 +1+1 +2*2 +1;
 
   size += scc_verb_block_size(obj->verb);
 
@@ -954,13 +988,28 @@ int scc_obob_size(scc_roobj_obj_t* obj) {
 
 
 int scc_write_obob(scc_roobj_obj_t* obj,scc_fd_t* fd) {
- 
-
+  int i;
 
   scc_fd_w32(fd,MKID('c','d','h','d'));
-  scc_fd_w32be(fd,8 + 2 +2+2 +2+2 +1+1 +2*2 +1);
+  scc_fd_w32be(fd,8 + 2 +1+2+2*SCC_MAX_CLASS +2+2 +2+2 +1+1 +2*2 +1);
 
+  // rid
   scc_fd_w16le(fd,obj->sym->rid);
+
+  // initial state
+  scc_fd_w8(fd,obj->state);
+  // owner
+  if(obj->owner)
+    scc_fd_w16le(fd,obj->owner->rid);
+  else
+    scc_fd_w16le(fd,0);
+  // classes
+  for(i = 0 ; i < SCC_MAX_CLASS ; i++) {
+    if(obj->class[i])
+      scc_fd_w16le(fd,obj->class[i]->rid);
+    else
+      scc_fd_w16le(fd,0);
+  }
 
   scc_fd_w16le(fd,obj->x);
   scc_fd_w16le(fd,obj->y);

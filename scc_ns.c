@@ -26,7 +26,8 @@ static int scc_addr_max[] = {
   0xFFFF,  // PALS
   0x0F,    // CYCL
   0x0F,    // ACTOR
-  0xFF     // BOX
+  0xFF,    // BOX
+  SCC_MAX_CLASS  // CLASS
 };
 
 void scc_symbol_list_free(scc_symbol_t* s);
@@ -45,6 +46,17 @@ void scc_symbol_list_free(scc_symbol_t* s) {
     scc_symbol_free(s);
     s = n;
   }
+}
+
+int scc_res_is_global(int type) {
+  if(type == SCC_RES_VAR ||
+     type == SCC_RES_BVAR ||
+     type == SCC_RES_ROOM ||
+     type == SCC_RES_VERB ||
+     type == SCC_RES_ACTOR ||
+     type == SCC_RES_CLASS)
+    return 1;
+  return 0;
 }
 
 scc_ns_t* scc_ns_new(void) {
@@ -103,11 +115,7 @@ scc_symbol_t* scc_ns_get_sym_with_id(scc_ns_t* ns,int type, int id) {
   scc_symbol_t* r,*r2;
 
   // room, verbs and variables are in the global ns
-  if(type == SCC_RES_VAR ||
-     type == SCC_RES_BVAR ||
-     type == SCC_RES_ROOM ||
-     type == SCC_RES_VERB ||
-     type == SCC_RES_ACTOR)   {
+  if(scc_res_is_global(type)) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->rid == id) return r;
     }
@@ -387,7 +395,8 @@ int scc_ns_alloc_addr(scc_ns_t* ns) {
     1,  // PAL
     1,  // CYCL
     1,  // ACTOR
-    0   // BOX
+    0,  // BOX
+    1   // CLASS
   };
 
   // a little self test in case SCC_RES_LAST change
@@ -469,11 +478,7 @@ int scc_ns_res_max(scc_ns_t* ns,int type) {
   scc_symbol_t* r,*s;
   int n = 0;
 
-  if(type == SCC_RES_VAR ||
-     type == SCC_RES_BVAR ||
-     type == SCC_RES_ROOM ||
-     type == SCC_RES_VERB ||
-     type == SCC_RES_ACTOR) {
+  if(scc_res_is_global(type)) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->addr > n) n = r->addr;
     }
@@ -503,11 +508,7 @@ scc_symbol_t* scc_ns_get_sym_at(scc_ns_t* ns,int type,int addr) {
   scc_symbol_t* r,*r2;
 
   // room, verbs and variables are in the global ns
-  if(type == SCC_RES_VAR ||
-     type == SCC_RES_BVAR ||
-     type == SCC_RES_ROOM ||
-     type == SCC_RES_VERB ||
-     type == SCC_RES_ACTOR)   {
+  if(scc_res_is_global(type)) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->addr == addr) return r;
     }

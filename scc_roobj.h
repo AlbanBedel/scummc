@@ -29,6 +29,7 @@ struct scc_roobj_obj_st {
   int x,y,w,h;
   int flags;
   int dir;
+  int state;
   char* name;
 
   // hotspot used if no extra state is defined
@@ -39,6 +40,9 @@ struct scc_roobj_obj_st {
   scc_script_t* verb;
   // generated imnn
   scc_imnn_t* im;
+
+  scc_symbol_t* owner;
+  scc_symbol_t* class[SCC_MAX_CLASS];
 };
 
 struct scc_roobj_st {
@@ -101,3 +105,5 @@ int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr);
 int scc_roobj_obj_set_param(scc_roobj_obj_t* obj,char* sym,char* val);
 
 int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val);
+
+int scc_roobj_obj_set_class(scc_roobj_obj_t* obj, scc_symbol_t* sym);

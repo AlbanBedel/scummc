@@ -1,5 +1,6 @@
 
 #define SCC_MAX_ARGS   31
+#define SCC_MAX_CLASS  32
 
 // direct integer vals
 #define SCC_ARG_VAL     0
@@ -196,7 +197,8 @@ struct scc_instruct_st {
 #define SCC_RES_CYCL    14
 #define SCC_RES_ACTOR   15
 #define SCC_RES_BOX     16
-#define SCC_RES_LAST    17
+#define SCC_RES_CLASS   17
+#define SCC_RES_LAST    18
 
 struct scc_symbol_st {
   scc_symbol_t* next;

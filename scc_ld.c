@@ -20,6 +20,8 @@
 
 
 static scc_ns_t* scc_ns = NULL;
+static uint8_t* obj_owner;
+static uint32_t* obj_class;
 
 typedef struct scc_ld_block_st scc_ld_block_t;
 struct scc_ld_block_st {
@@ -385,9 +387,10 @@ int scc_ld_check_ns(scc_ns_t* ns,scc_symbol_t* sym) {
 
   while(sym) {
     if((!(sym->type == SCC_RES_VAR ||
-	  sym->type == SCC_RES_BVAR ||
-	  sym->type == SCC_RES_VERB ||
-	  sym->type == SCC_RES_ACTOR)) && 
+          sym->type == SCC_RES_BVAR ||
+          sym->type == SCC_RES_VERB ||
+          sym->type == SCC_RES_ACTOR ||
+          sym->type == SCC_RES_CLASS)) &&
        sym->status == 'I') {
       if(sym->parent)
 	printf("Found unresolved symbol %s in room %s.\n",
@@ -549,30 +552,52 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
 					 scc_ld_block_t* blk) {
   uint32_t type = SCC_AT_32BE(blk->data,0);
   uint32_t  size = SCC_AT_32BE(blk->data,4);
-  uint16_t vid,id;
-  scc_symbol_t* sym;
-  int nverb=0,verb_size=0,len,pos = 0,new_size,vpos,vn;
+  uint16_t vid,oid,cid,id,addr;
+  scc_symbol_t* sym,*osym,*csym;
+  int nverb=0,verb_size=0,len,pos = 0,new_size,vpos,vn,st,i;
   scc_script_t* scr=NULL,*scr_last=NULL,*new_scr;
   scc_ld_block_t* new;
   
 
   printf("Patching obcd.\n");
 
-  if(type != MKID('c','d','h','d') || size != 25) {
+  if(type != MKID('c','d','h','d') || size != 25 + 1 + 2 + SCC_MAX_CLASS*2) {
     printf("Invalid cdhd block.\n");
     return NULL;
   }
-
+  // find the object
   vid = SCC_AT_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,vid);
   if(!sym) {
-    printf("cdhd block contain an invalid id ????\n");
+    printf("cdhd block contain an invalid id (0x%x) ????\n",vid);
     return NULL;
   }
-  
-  SCC_AT_32(blk->data,0) = SCC_TO_32BE(MKID('C','D','H','D'));
-  SCC_AT_16(blk->data,8) = sym->addr;
+  addr = sym->addr;
+  // initial state
+  st = blk->data[10];
+  // owner
+  oid = SCC_AT_16LE(blk->data,11);
+  if(oid) {
+    osym = scc_ns_get_sym_with_id(room->ns,SCC_RES_ACTOR,oid);
+    if(!osym) {
+      printf("cdhd block contain an invalid owner id (0x%x) ????\n",oid);
+      return NULL;
+    }
+    obj_owner[sym->addr] = (st << 4) | osym->addr;
+  } else
+    obj_owner[sym->addr] = (st << 4) | 0x0F;
 
+  for(i = 0 ; i < SCC_MAX_CLASS ; i++) {
+    cid = SCC_AT_16LE(blk->data,8+2+1+2+2*i);
+    if(!cid) continue;
+    csym = scc_ns_get_sym_with_id(room->ns,SCC_RES_CLASS,cid);
+    if(!csym) {
+      printf("cdhd block contain an invalid class id (0x%x) ????\n",cid);
+      return NULL;
+    }
+    obj_class[sym->addr] |= (1 << (csym->addr-1));
+  }
+  
   pos = size;
   while(pos < blk->data_len) {
     type = SCC_AT_32BE(blk->data,pos);
@@ -621,8 +646,12 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   new->asis = 1;
   new->data_len = new_size;
   
-  // copy cdhd
-  memcpy(new->data,blk->data,25);
+  // make the cdhd header
+  SCC_SET_32BE(new->data,0,MKID('C','D','H','D'));
+  SCC_SET_32BE(new->data,4,25);
+  SCC_SET_16LE(new->data,8,addr);
+  // copy cdhd  
+  memcpy(new->data + 8 + 2,blk->data + 8 + 2 + 1 + 2 + SCC_MAX_CLASS*2,15);
   // write VERB
   SCC_AT_32(new->data,25) = SCC_TO_32BE(MKID('V','E','R','B'));
   SCC_AT_32(new->data,29) = SCC_TO_32BE(8 + nverb*3+1+verb_size);
@@ -1002,7 +1031,7 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
 }
 
 int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
-  int a,room_n = 0,scr_n = scc_ns_res_max(scc_ns,SCC_RES_SCR) + 1;
+  int room_n = 0,scr_n = scc_ns_res_max(scc_ns,SCC_RES_SCR) + 1;
   int chset_n = scc_ns_res_max(scc_ns,SCC_RES_CHSET) + 1;
   int obj_n = scc_ns_res_max(scc_ns,SCC_RES_OBJ) + 1;
   int cost_n = scc_ns_res_max(scc_ns,SCC_RES_COST)+1;
@@ -1081,10 +1110,8 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
   scc_fd_w32(fd,MKID('D','O','B','J'));
   scc_fd_w32be(fd,8 + 2 + obj_n*5);
   scc_fd_w16le(fd,obj_n);
-  for(a = 0 ; a < obj_n ; a++)
-    scc_fd_w8(fd,0xF);
-  for(a = 0 ; a < obj_n ; a++)
-    scc_fd_w32le(fd,0);
+  scc_fd_write(fd,obj_owner,obj_n);
+  scc_fd_write(fd,obj_class,obj_n*4);
 
   scc_fd_w32(fd,MKID('A','A','R','Y'));
   scc_fd_w32be(fd,8 + 2);
@@ -1113,6 +1140,7 @@ static scc_param_t scc_ld_params[] = {
 int main(int argc,char** argv) {
   scc_ld_room_t* r;
   scc_cl_arg_t* files,*f;
+  int obj_n;
 
   if(argc < 2) usage(argv[0]);
 
@@ -1145,6 +1173,11 @@ int main(int argc,char** argv) {
     printf("Address allocation failed.\n");
     return 4;
   }
+
+  // allocate the object tables
+  obj_n = scc_ns_res_max(scc_ns,SCC_RES_OBJ) + 1;
+  obj_owner = calloc(1,obj_n);
+  obj_class = calloc(4,obj_n);
 
   // patch the rooms
   for(r = scc_room ; r ; r = r->next) {

@@ -215,6 +215,7 @@
 %nonassoc CASE
 %nonassoc DEFAULT
 %nonassoc CUTSCENE
+%nonassoc CLASS
 
 %token <integer> SCRTYPE
 
@@ -274,6 +275,7 @@ gdecl: gvardecl
 | groomdecl
 | actordecl
 | verbdecl
+| classdecl
 | objdecl
 | scrdecl
 | gresdecl
@@ -330,6 +332,16 @@ verbdecl: VERB SYM location
   scc_ns_decl(scc_ns,NULL,$3,SCC_RES_VERB,0,$4);
 }
 ;
+
+classdecl: CLASS SYM location
+{
+  scc_ns_decl(scc_ns,NULL,$2,SCC_RES_CLASS,0,$3);
+}
+| classdecl ',' SYM location
+{
+  scc_ns_decl(scc_ns,NULL,$3,SCC_RES_CLASS,0,$4);
+}
+; 
 
 objdecl: OBJECT SYM NS SYM location
 {
@@ -591,9 +603,69 @@ objectparam: SYM ASSIGN STRING
 }
 | SYM ASSIGN '{' imgdecls '}'
 {
+  if($2 != '=')
+    SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
   // bitch on the keyword
   if(strcmp($1,"states"))
     SCC_ABORT(@1,"Expexted \"images\".\n");
+}
+| SYM ASSIGN SYM
+{
+  scc_symbol_t* sym;
+
+  if($2 != '=')
+    SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
+  // bitch on the keyword
+  if(strcmp($1,"owner"))
+    SCC_ABORT(@1,"Expexted \"owner\".\n");
+
+  sym = scc_ns_get_sym(scc_ns,NULL,$3);
+  if(!sym)
+    SCC_ABORT(@3,"%s is not a declared actor.\n",$3);
+  if(sym->type != SCC_RES_ACTOR)
+    SCC_ABORT(@3,"%s is not an actor.\n",sym->sym);
+  
+  scc_obj->owner = sym;
+}
+| CLASS ASSIGN '{' classlist '}'
+{
+  if($2 != '=')
+    SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
+}
+;
+
+classlist: SYM
+{
+  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$1);
+
+  if(!sym)
+    SCC_ABORT(@1,"%s is not a declared class.\n",$1);
+
+  if(sym->type != SCC_RES_CLASS)
+    SCC_ABORT(@1,"%s is not a class in the current context.\n",$1);
+
+  // allocate an rid
+  if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
+
+  if(!scc_roobj_obj_set_class(scc_obj,sym))
+    SCC_ABORT(@1,"Failed to set object class.\n");
+
+}
+| classlist ',' SYM
+{
+  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$3);
+
+  if(!sym)
+    SCC_ABORT(@3,"%s is not a declared class.\n",$3);
+
+  if(sym->type != SCC_RES_CLASS)
+    SCC_ABORT(@3,"%s is not a class in the current context.\n",$3);
+
+  // allocate an rid
+  if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
+
+  if(!scc_roobj_obj_set_class(scc_obj,sym))
+    SCC_ABORT(@3,"Failed to set object class.\n");
 }
 ;
 
