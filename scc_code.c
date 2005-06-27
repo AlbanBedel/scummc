@@ -1079,6 +1079,37 @@ static scc_code_t* scc_cutscene_gen_code(scc_instruct_t* inst) {
     return code;
 }
 
+static scc_code_t* scc_override_gen_code(scc_instruct_t* inst) {
+  scc_code_t *code=NULL,*last=NULL,*c;
+  scc_code_t *try;
+  int try_size;
+
+  // generate the code in the try block
+  try = scc_instruct_gen_code(inst->body);
+  try_size = scc_code_size(try);
+
+  // make the override op
+  c = scc_code_new(4);
+  c->data[0] = SCC_OP_OVERRIDE_BEGIN;
+  c->data[1] = SCC_OP_JMP;
+  SCC_SET_S16LE(c->data,2,try_size);
+  SCC_LIST_ADD(code,last,c);
+
+  // append the try code
+  SCC_LIST_ADD(code,last,try);
+
+  // then the override block
+  c = scc_instruct_gen_code(inst->body2);
+  SCC_LIST_ADD(code,last,c);
+
+  // end the block
+  c = scc_code_new(1);
+  c->data[0] = SCC_OP_OVERRIDE_END;
+  SCC_LIST_ADD(code,last,c);
+
+  return code;
+}
+
 static scc_code_t* scc_instruct_gen_code(scc_instruct_t* inst) {
   scc_code_t *code=NULL,*last=NULL,*c;
 
@@ -1107,6 +1138,9 @@ static scc_code_t* scc_instruct_gen_code(scc_instruct_t* inst) {
       break;
     case SCC_INST_CUTSCENE:
       c = scc_cutscene_gen_code(inst);
+      break;
+    case SCC_INST_OVERRIDE:
+      c = scc_override_gen_code(inst);
       break;
     default:
       printf("Unsupported instruction type: %d\n",inst->type);

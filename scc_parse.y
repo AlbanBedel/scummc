@@ -216,6 +216,8 @@
 %nonassoc DEFAULT
 %nonassoc CUTSCENE
 %nonassoc CLASS
+%nonassoc TRY
+%nonassoc OVERRIDE
 
 %token <integer> SCRTYPE
 
@@ -979,6 +981,14 @@ loopblock: FOR '(' statements ';' statements ';' statements ')' body
   $$->type = SCC_INST_CUTSCENE;
   $$->cond = $3;
   $$->body = $5;
+}
+
+| TRY body OVERRIDE body
+{
+  $$ = calloc(1,sizeof(scc_instruct_t));
+  $$->type = SCC_INST_OVERRIDE;
+  $$->body = $2;
+  $$->body2 = $4;
 }
 ;
 

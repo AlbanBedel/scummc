@@ -155,6 +155,7 @@ struct scc_statement_st {
 #define SCC_INST_SWITCH   6
 #define SCC_INST_CASE     7
 #define SCC_INST_CUTSCENE 8
+#define SCC_INST_OVERRIDE 9
 
 
 #define SCC_BRANCH_BREAK     0
@@ -303,6 +304,9 @@ struct scc_operator_st {
 #define SCC_OP_CUTSCENE_BEGIN    0x68
 
 #define SCC_OP_JMP               0x73
+
+#define SCC_OP_OVERRIDE_BEGIN    0x95
+#define SCC_OP_OVERRIDE_END      0x96
 
 #define SCC_OP_BAND              0xD6
 #define SCC_OP_BOR               0xD7
