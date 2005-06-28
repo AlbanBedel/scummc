@@ -1673,7 +1673,7 @@ void scc_dump_res(scc_res_t* res) {
   uint32_t type,size;
   int pos = 0;
   scc_res_cont_t* stack = NULL;
-  int room = -1,idx;
+  int room = -1,idx,rid = 0;
   char path[255];
 
   scc_fd_seek(res->fd,0,SEEK_SET);
@@ -1699,13 +1699,14 @@ void scc_dump_res(scc_res_t* res) {
     if(type == 0 || size < 8) break;
     size -= 8;
 
-    if(stack && stack->type == MKID('O','B','I','M') &&
-       type >> 8 == (('I' << 16) | ('M' << 8)| '0'))
-      type = MKID('I','M','0','0');
+    //if(stack && stack->type == MKID('O','B','I','M') &&
+    //   type >> 8 == (('I' << 16) | ('M' << 8)| '0'))
+    //  type = MKID('I','M','0','0');
 
     switch(type) {
     case MKID('R','O','O','M'):
       room = scc_res_idx_pos2room(res->idx,pos-8);
+      rid = 0;
       if(room < 0)
 	printf("Failed to find room number :(\n");
       else {
@@ -1722,10 +1723,10 @@ void scc_dump_res(scc_res_t* res) {
     case MKID('L','F','L','F'):
       
 
-    case MKID('O','B','I','M'):
-    case MKID('O','B','C','D'):
-    case MKID('I','M','0','0'):
-          case MKID('R','M','I','M'):
+      //case MKID('O','B','I','M'):
+      //case MKID('O','B','C','D'):
+      //case MKID('I','M','0','0'):
+      //case MKID('R','M','I','M'):
       //    case MKID('P','A','L','S'):
       //    case MKID('W','R','A','P'):
 
@@ -1750,59 +1751,55 @@ void scc_dump_res(scc_res_t* res) {
       if(room >= 0) {
 	scc_res_list_t* l = scc_get_res_idx_list(res->idx,type);
 	if(l) {
-	  idx = scc_res_idx_pos2idx(res->idx,l,room,pos-8);
-	  if(idx < 0)
+          idx = scc_res_idx_pos2idx(res->idx,l,room,pos-8);
+	  if(idx < 0) {
 	    printf("Failed to find object index :((\n");
-	  else {
-	    printf("Found %c%c%c%c %3.3d (%d bytes)\n",
-		   (uint8_t)(type >> 24),
-		   (uint8_t)(type >> 16),
-		   (uint8_t)(type >> 8),
-		   (uint8_t)(type >> 0),
-		   idx,
-		   size);
-	    if(stack && stack->type == MKID('R','O','O','M')) {
-	      sprintf(path,"dump/lfl.%3.3d/room/%c%c%c%c.%3.3d",
-		      room,
-		      (uint8_t)(type >> 24),
-		      (uint8_t)(type >> 16),
-		      (uint8_t)(type >> 8),
+            break;
+          }
+        } else {
+          idx = rid;
+          rid++;
+        }
+        printf("Found %c%c%c%c %3.3d (%d bytes)\n",
+               (uint8_t)(type >> 24),
+               (uint8_t)(type >> 16),
+               (uint8_t)(type >> 8),
+               (uint8_t)(type >> 0),
+               idx,
+               size);
+        if(stack && stack->type == MKID('R','O','O','M')) {
+          sprintf(path,"dump/lfl.%3.3d/room/%c%c%c%c.%3.3d",
+                  room,
+                  (uint8_t)(type >> 24),
+                  (uint8_t)(type >> 16),
+                  (uint8_t)(type >> 8),
+                  (uint8_t)(type >> 0),
+                  idx);
+        } else {
+          sprintf(path,"dump/lfl.%3.3d/%c%c%c%c.%3.3d",
+                  room,
+                  (uint8_t)(type >> 24),
+                  (uint8_t)(type >> 16),
+                  (uint8_t)(type >> 8),
 		      (uint8_t)(type >> 0),
-		      idx);
-	    } else {
-	      sprintf(path,"dump/lfl.%3.3d/%c%c%c%c.%3.3d",
-		      room,
-		      (uint8_t)(type >> 24),
-		      (uint8_t)(type >> 16),
-		      (uint8_t)(type >> 8),
-		      (uint8_t)(type >> 0),
-		      idx);
-	    }
-	    if(!scc_fd_dump(res->fd,path,size)) {
-	      scc_fd_seek(res->fd,pos,SEEK_SET);
-	      printf("Dump failed :((\n");
-	    } else {
-	      pos += size;
-	      break;
-	    }
-	  }
-	} else {
-	  printf("Found item %c%c%c%c (%d bytes)\n",
-		 (uint8_t)(type >> 24),
-		 (uint8_t)(type >> 16),
-		 (uint8_t)(type >> 8),
-		 (uint8_t)(type >> 0),
-		 size);
-	  //printf("Failed to find the list for this obj type\n");
-	  
-	}
+                  idx);
+        }
+        
+        scc_fd_seek(res->fd,-8,SEEK_CUR);
+        if(!scc_fd_dump(res->fd,path,size+8)) {
+          scc_fd_seek(res->fd,pos,SEEK_SET);
+          printf("Dump failed :((\n");
+        } else {
+          pos += size;
+          break;
+        }
       } else 
-	printf("Found item %c%c%c%c (%d bytes)\n",
-	       (uint8_t)(type >> 24),
-	       (uint8_t)(type >> 16),
-	       (uint8_t)(type >> 8),
-	       (uint8_t)(type >> 0),
-	       size);
+        printf("Found item %c%c%c%c (%d bytes)\n",
+               (uint8_t)(type >> 24),
+               (uint8_t)(type >> 16),
+               (uint8_t)(type >> 8),
+               (uint8_t)(type >> 0),
+               size);
       pos += size;
       scc_fd_seek(res->fd,size,SEEK_CUR);
     }
