@@ -1058,7 +1058,7 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
   scc_fd_w16le(fd,0); // unk
   scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1);
   scc_fd_w16le(fd,200); // local obj, dunno what's that exactly
-  scc_fd_w16le(fd,10);  // num array we should count them
+  scc_fd_w16le(fd,200);  // num array we should count them
   scc_fd_w16le(fd,0); // unk
   scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_VERB)+1);
   scc_fd_w16le(fd,0); // fl objects
