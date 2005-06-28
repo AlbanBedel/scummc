@@ -118,7 +118,7 @@ array VAR_SAVE_MENU_TITLE      @ 108;
 array VAR_LOAD_MENU_TITLE      @ 109;
 
 // "Que desirez-vous?"
-array VAR_MAIN_MENU_TITLE      @ 117
+array VAR_MAIN_MENU_TITLE      @ 117;
 int VAR_RANDOM_NR              @ 118;
 int VAR_TIMEDATE_YEAR          @ 119;
 
