@@ -116,6 +116,8 @@ array VAR_LOAD_MSG             @ 107;
 array VAR_SAVE_MENU_TITLE      @ 108;
 // "Entrez le nom de la partie a CHARGER"
 array VAR_LOAD_MENU_TITLE      @ 109;
+// Array with color index for various parts of the GUI
+array VAR_GUI_COLORS           @ 110;
 
 // "Que desirez-vous?"
 array VAR_MAIN_MENU_TITLE      @ 117;
