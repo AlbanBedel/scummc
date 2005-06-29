@@ -285,6 +285,16 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return CUTSCENE;
 }
 
+"try" {
+  SET_POS(3);
+  return TRY;
+}
+
+"override" {
+  SET_POS(8);
+  return OVERRIDE;
+}
+
 "script" {
   SET_POS(6);
   return SCRIPT;
