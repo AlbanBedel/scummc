@@ -26,7 +26,7 @@ COSTVIEW_OBJS = $(COSTVIEW_SRCS:.c=.o)
 
 all: scc sld costview boxedit cost char soun
 
-utils: imgsplit imgremap zpnn2bmp
+utils: imgsplit imgremap zpnn2bmp raw2voc
 
 .c.o:
 	$(CC) -c $(CFLAGS) -o $@ $<
@@ -117,6 +117,12 @@ SOUN_OBJS=$(SOUN_SRCS:.c=.o)
 soun: $(SOUN_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(SOUN_OBJS) $(LDFLAGS)
 
+RAW2VOC_SRCS= raw2voc.c scc_fd.c scc_param.c
+RAW2VOC_OBJS=$(RAW2VOC_SRCS:.c=.o)
+
+raw2voc: $(RAW2VOC_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(RAW2VOC_OBJS) $(LDFLAGS)
+
 clean:
 	rm -f *.o *.a *~ *.tab.[ch] scc_lex.c cost_lex.c
 
@@ -125,7 +131,15 @@ distclean: clean
 
 dep:    depend
 
-depend: $(PARSER_SRCS) $(LINKER_SCRS) $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS) $(CHAR_SRCS)
+depend: $(PARSER_SRCS)    \
+	$(LINKER_SCRS)    \
+	$(ZPNN2BMP_SCRS)  \
+	$(BE_SCRS)        \
+	$(COST_SRCS)      \
+	$(CHAR_SRCS)      \
+	$(SOUN_SRCS)      \
+	$(RAW2VOC_SRCS)   \
+
 	$(CC) -MM $(CFLAGS) $(GTK_CFLAGS) $(PARSER_SRCS) $(LINKER_SCRS) \
 	      $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS) $(CHAR_SRCS) 1>.depend
 
