@@ -55,6 +55,7 @@ static struct scc_res_types {
   { SCC_RES_SOUND, MKID('S','O','U','N'), MKID('s','o','u','n') },
   { SCC_RES_COST, MKID('C','O','S','T'), MKID('c','o','s','t') },
   { SCC_RES_CHSET, MKID('C','H','A','R'), MKID('c','h','a','r') },
+  { SCC_RES_VOICE, MKID('v','o','i','c'), MKID('v','o','i','c') },
   { -1, 0, 0 }
 };
 
@@ -184,6 +185,56 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   scc_fd_close(fd);
   
   return r;
+}
+
+int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
+                        int nsync, int* sync) {
+  scc_fd_t* fd = new_scc_fd(file,O_RDONLY,0);
+  off_t vsize;
+  scc_roobj_res_t* r;
+  int i;
+  
+  if(!fd) {
+    printf("Failed to open %s.\n",file);
+    return 0;
+  }
+  // get the voc file size
+  vsize = scc_fd_seek(fd,0,SEEK_END);
+  if(vsize < 0x1A) {
+    printf("%s is too small to be voc file.\n",file);
+    scc_fd_close(fd);
+    return 0;
+  }
+  scc_fd_seek(fd,0,SEEK_SET);
+
+  // alloc the res
+  r = malloc(sizeof(scc_roobj_res_t));
+  r->sym = sym;
+  r->data_len = 8 + 2*nsync + vsize;
+  r->data = malloc(r->data_len);
+
+  // write the sync point table
+  SCC_SET_32BE(r->data,0,MKID('V','C','T','L'));
+  SCC_SET_32BE(r->data,4,8 + 2*nsync);
+  for(i = 0 ; i < nsync ; i++) {
+    SCC_SET_16BE(r->data,8+2*i,sync[i]);
+  }
+  // load the voc data
+  if(scc_fd_read(fd,r->data+8+2*nsync,vsize) != vsize) {
+    printf("Error while reading voc file.\n");
+    free(r->data);
+    free(r);
+    scc_fd_close(fd);
+    return 0;
+  }
+
+  scc_fd_close(fd);
+
+  // add the res to the list
+  r->next = ro->res;
+  ro->res = r;
+
+  return 1;
 }
 
 int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,

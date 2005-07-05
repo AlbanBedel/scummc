@@ -51,7 +51,21 @@ struct scc_ld_room_st {
   scc_ld_block_t* chset;
 };
 
+typedef struct scc_ld_voice_st scc_ld_voice_t;
+struct scc_ld_voice_st {
+  scc_ld_voice_t* next;
+
+  scc_symbol_t* sym;
+  unsigned offset;
+  unsigned vctl_size;
+  
+  int data_len;
+  char data[0];
+};
+
 static scc_ld_room_t* scc_room = NULL;
+static scc_ld_voice_t* scc_voice = NULL, *scc_last_voice = NULL;
+static unsigned scc_voice_off = 8;
 
 static int scc_fd_get_block(scc_fd_t* fd, int max_len,uint32_t* type) {
   int len;
@@ -130,6 +144,13 @@ void scc_ld_room_free(scc_ld_room_t* room) {
   scc_ld_block_list_free(room->cost);
 
   free(room);
+}
+
+scc_ld_voice_t* scc_ld_get_voice(scc_symbol_t* sym) {
+  scc_ld_voice_t* v;
+  for(v = scc_voice ; v ; v = v->next)
+    if(sym == v->sym) return v;
+  return NULL;
 }
 
 int scc_ld_parse_sym_block(scc_fd_t* fd, scc_ld_room_t* room, int len) {
@@ -244,7 +265,41 @@ int scc_ld_parse_stab(scc_fd_t* fd, scc_ld_room_t* room, int max_len) {
   return 1;
 }
 
+int scc_ld_parse_voice(scc_fd_t* fd, scc_ld_room_t* room, int len) {
+  int rid;
+  scc_symbol_t* sym;
+  scc_ld_voice_t* v;
 
+  if(len < 10) {
+    printf("Too small voic block.\n");
+    return 0;
+  }
+
+  rid = scc_fd_r16le(fd);
+  sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VOICE,rid);
+  if(!sym) {
+    printf("Invalid voic block.\n");
+    return 0;
+  }
+
+  len -= 2;
+  
+  v = calloc(1,sizeof(scc_ld_voice_t) + len);
+  v->data_len = len;
+  if(scc_fd_read(fd,v->data,len) != len) {
+    printf("Error while reading voic block.\n");
+    return 0;
+  }
+
+  v->sym = sym;
+  v->offset = scc_voice_off;
+  scc_voice_off += len;
+  v->vctl_size = SCC_AT_32BE(v->data,4);
+
+  SCC_LIST_ADD(scc_voice,scc_last_voice,v);
+
+  return 1;
+}
 
 scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
   int addr,type,len,pos = 0;
@@ -329,6 +384,13 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
       blk->addr = addr;
       blk->asis = 1;
       SCC_LIST_ADD(room->snd,snd_last,blk);
+      break;
+
+    case MKID('v','o','i','c'):
+      if(!scc_ld_parse_voice(fd,room,len)) {
+        scc_ld_room_free(room);
+	return NULL;
+      }      
       break;
 
     default:
@@ -510,8 +572,33 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
       printf("Got invalid fix offset.\n");
       return NULL;
     }
-    SCC_AT_16(scr_data,fix->off) = fix->sym->addr;
+    if(fix->sym->type == SCC_RES_VOICE) {
+      scc_ld_voice_t* v = scc_ld_get_voice(fix->sym);
+      if(!v) {
+        printf("Got invalid voice sym fix ???.\n");
+        return NULL;
+      }
+      scr_data[fix->off] = v->offset & 0xFF;
+      scr_data[fix->off+1] = (v->offset >> 8) & 0xFF;
+      scr_data[fix->off+2] = 0xFF;
+      scr_data[fix->off+3] = 0x0A;
+      scr_data[fix->off+4] = (v->offset >> 16) & 0xFF;
+      scr_data[fix->off+5] = (v->offset >> 24) & 0xFF;
+
+      scr_data[fix->off+6] = 0xFF;
+      scr_data[fix->off+7] = 0x0A;
+      scr_data[fix->off+8] = v->vctl_size & 0xFF;
+      scr_data[fix->off+9] = (v->vctl_size >> 8) & 0xFF;
+      scr_data[fix->off+10] = 0xFF;
+      scr_data[fix->off+11] = 0x0A;
+      scr_data[fix->off+12] = (v->vctl_size >> 16) & 0xFF;
+      scr_data[fix->off+13] = (v->vctl_size >> 24) & 0xFF;
+    } else {
+      SCC_AT_16(scr_data,fix->off) = fix->sym->addr;
+    }
   }
+
+  SCC_LIST_FREE(fix_list,fix);
 
   scr = calloc(1,sizeof(scc_script_t));
   scr->sym = sym;
@@ -1120,6 +1207,22 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
   return 1;
 }
 
+int scc_ld_write_sou(scc_ld_voice_t* v,scc_fd_t* fd) {
+
+  scc_fd_w32(fd,MKID('S','O','U',' '));
+  scc_fd_w32(fd,0);
+
+  while(v) {
+    if(scc_fd_write(fd,v->data,v->data_len) != v->data_len) {
+      printf("Write error.\n");
+      return 0;
+    }
+    v = v->next;
+  }
+
+  return 1;
+}
+
 static void usage(char* prog) {
   printf("Usage: %s [-o basename] [-rooms] input.roobj [file2.roobj ...]\n",prog);
   exit(-1);
@@ -1183,6 +1286,29 @@ int main(int argc,char** argv) {
   for(r = scc_room ; r ; r = r->next) {
     printf("Patching room %s\n",r->sym->sym);
     if(!scc_ld_room_patch(r)) return 5;
+  }
+
+  // write the voice file
+  if(scc_voice) {
+    char name[255];
+    scc_fd_t* fd;
+
+    if(out_file)
+      sprintf(name,"%s.sou",out_file);
+    else
+      sprintf(name,"scummc.sou");
+
+    printf("Outputing voice file %s\n",name);
+    fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
+    if(!fd) {
+      printf("Failed to open file %s\n",name);
+      return 5;
+    }
+    if(!scc_ld_write_sou(scc_voice,fd)) {
+      printf("Failed to write SOU file %s\n",name);
+      return 6;
+    }
+    scc_fd_close(fd);
   }
 
   // dump rooms

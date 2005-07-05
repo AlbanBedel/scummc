@@ -154,6 +154,7 @@
   scc_scr_arg_t* arg;
   scc_script_t* scr;
   scc_str_t* strvar;
+  int* intlist;
 }
 
 // Operators, the order is defining the priority.
@@ -205,6 +206,7 @@
 %token SCRIPT
 %token VERB
 %token ACTOR
+%token VOICE
 
 %nonassoc <integer> IF
 %nonassoc ELSE
@@ -256,6 +258,7 @@
 %type <sym> roomscrdecl
 %type <sym> verbentrydecl
 %type <strlist> zbufs
+%type <intlist> synclist
 
 %defines
 %locations
@@ -535,6 +538,41 @@ roomdecl: resdecl ';'
 
   if(!scc_roobj_set_param(scc_roobj,scc_ns,$1,$3,$6))
     SCC_ABORT(@1,"Failed to set room parameter.\n");
+}
+| voicedecl ';'
+;
+
+voicedecl: VOICE SYM ASSIGN '{' STRING ',' synclist '}'
+{
+  scc_symbol_t* v;
+
+  if($3 != '=')
+    SCC_ABORT(@3,"Invalid operator for voice declaration.\n");
+
+  v = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VOICE,0,-1);
+  if(!v) SCC_ABORT(@1,"Declaration failed.\n");
+
+  if(!v->rid) scc_ns_get_rid(scc_ns,v);
+
+  if(!scc_roobj_add_voice(scc_roobj,v,$5,$7[0],$7+1))
+    SCC_ABORT(@1,"Failed to add voice.");
+
+  free($7);
+}
+;
+
+synclist: INTEGER
+{
+  $$ = malloc(2*sizeof(int));
+  $$[0] = 1;
+  $$[1] = $1;
+}
+| synclist ',' INTEGER
+{
+  int l = $1[0]+1;
+  $$ = realloc($1,(l+1)*sizeof(int));
+  $$[l] = $3;
+  $$[0] = l;
 }
 ;
 
@@ -1448,6 +1486,25 @@ str: STRING
 
     free($$->str);
     $$->str = NULL;
+
+    switch($$->type) {
+    case SCC_STR_VERB:
+      if($$->sym->type != SCC_RES_VERB)
+        SCC_ABORT(@1,"%s is not a verb",$$->sym->sym);
+      break;
+    case SCC_STR_NAME:
+      if($$->sym->type != SCC_RES_ACTOR)
+        SCC_ABORT(@1,"%s is not a actor",$$->sym->sym);
+      break;
+    case SCC_STR_VOICE:
+      if($$->sym->type != SCC_RES_VOICE)
+        SCC_ABORT(@1,"%s is not a voice",$$->sym->sym);
+      break;
+    case SCC_STR_FONT:
+      if($$->sym->type != SCC_RES_CHSET)
+        SCC_ABORT(@1,"%s is not a charset",$$->sym->sym);
+      break;
+    }
   }
 }
 ;

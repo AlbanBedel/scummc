@@ -333,6 +333,11 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return RESTYPE;
 }
 
+"voice" {
+  SET_POS(5);
+  return VOICE;
+}
+
 "actor" {
   SET_POS(5);
   return ACTOR;
@@ -452,7 +457,7 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
     return STRING;
   }
 
-  "%"[i|v|n|s|f|c]"{"({ID}|[0-2]?[0-9]?[0-9]|"0x"{XDIGIT}?{XDIGIT})"}" {
+  "%"[i|v|V|n|s|f|c]"{"({ID}|[0-2]?[0-9]?[0-9]|"0x"{XDIGIT}?{XDIGIT})"}" {
     int len;
     scc_str_t* s;
 
@@ -468,6 +473,9 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
       break;
     case 'v':
       s->type = SCC_STR_VERB;
+      break;
+    case 'V':
+      s->type = SCC_STR_VOICE;
       break;
     case 'n':
       s->type = SCC_STR_NAME;

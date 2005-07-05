@@ -10,7 +10,7 @@
 #include "scc_ns.h"
 
 static int scc_addr_max[] = {
-  0,       // unsused
+  0,       // unused
   0x3FFF,  // VAR
   0xFF,    // ROOM
   SCC_MAX_GLOB_SCR-1, // SCR
@@ -27,7 +27,8 @@ static int scc_addr_max[] = {
   0x0F,    // CYCL
   0x0F,    // ACTOR
   0xFF,    // BOX
-  SCC_MAX_CLASS  // CLASS
+  SCC_MAX_CLASS,  // CLASS
+  0x7FFFFFFF      // VOICE
 };
 
 void scc_symbol_list_free(scc_symbol_t* s);
@@ -396,7 +397,8 @@ int scc_ns_alloc_addr(scc_ns_t* ns) {
     1,  // CYCL
     1,  // ACTOR
     0,  // BOX
-    1   // CLASS
+    1,  // CLASS
+    0   // VOICE
   };
 
   // a little self test in case SCC_RES_LAST change

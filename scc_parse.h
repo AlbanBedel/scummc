@@ -111,6 +111,7 @@ struct scc_op_st {
 #define SCC_STR_VERB     5
 #define SCC_STR_NAME     6
 #define SCC_STR_STR      7
+#define SCC_STR_VOICE   10
 #define SCC_STR_COLOR   12
 #define SCC_STR_FONT    14
 
@@ -199,7 +200,8 @@ struct scc_instruct_st {
 #define SCC_RES_ACTOR   15
 #define SCC_RES_BOX     16
 #define SCC_RES_CLASS   17
-#define SCC_RES_LAST    18
+#define SCC_RES_VOICE   18
+#define SCC_RES_LAST    19
 
 struct scc_symbol_st {
   scc_symbol_t* next;

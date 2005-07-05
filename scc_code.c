@@ -268,6 +268,15 @@ static scc_code_t* scc_str_gen_code(scc_str_t* s) {
       c->data[2] = s->str[0];
       c->data[3] = s->str[1];
       break;
+    case SCC_STR_VOICE:
+      c = scc_code_new(2);
+      c->data[0] = 0xFF;
+      c->data[1] = SCC_STR_VOICE;
+      SCC_LIST_ADD(code,last,c);
+      c = scc_code_new(14);
+      SCC_SET_16LE(c->data,0,s->sym->rid);
+      c->fix |= SCC_FIX_RES + s->sym->type;
+      break;
     default:
       printf("Got an unknow string type.\n");
       break;
