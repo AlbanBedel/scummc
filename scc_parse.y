@@ -286,6 +286,7 @@ gdecl: gvardecl
 | gresdecl
 {
 }
+| voicedecl
 ;
 
 gvardecl: TYPE SYM location
@@ -365,6 +366,16 @@ scrdecl: SCRIPT SYM NS SYM location
 | scrdecl ',' SYM NS SYM location
 {
   scc_ns_decl(scc_ns,$3,$5,SCC_RES_SCR,0,$6);
+}
+;
+
+voicedecl: VOICE SYM NS SYM
+{
+  scc_ns_decl(scc_ns,$2,$4,SCC_RES_VOICE,0,-1);
+}
+| voicedecl ',' SYM NS SYM
+{
+  scc_ns_decl(scc_ns,$3,$5,SCC_RES_VOICE,0,-1);
 }
 ;
 
@@ -539,10 +550,10 @@ roomdecl: resdecl ';'
   if(!scc_roobj_set_param(scc_roobj,scc_ns,$1,$3,$6))
     SCC_ABORT(@1,"Failed to set room parameter.\n");
 }
-| voicedecl ';'
+| voicedef ';'
 ;
 
-voicedecl: VOICE SYM ASSIGN '{' STRING ',' synclist '}'
+voicedef: VOICE SYM ASSIGN '{' STRING ',' synclist '}'
 {
   scc_symbol_t* v;
 
