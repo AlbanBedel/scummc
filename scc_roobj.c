@@ -187,6 +187,67 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   return r;
 }
 
+static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
+  int hsize,ver,magic,pos,type,len,pack;
+
+  if(strncmp(data,"Creative Voice File",19)) {
+    printf("%s is not a creative voice file.\n",file);
+    return 0;
+  }
+
+  hsize = SCC_AT_16LE(data,20);
+  ver = SCC_AT_16LE(data,22);
+  magic = SCC_AT_16LE(data,24);
+  if(hsize < 0x1A) {
+    printf("%s: Header is too small.\n",file);
+    return 0;
+  }
+
+  if(~ver + 0x1234 != magic) {
+    printf("%s: Invalid voc header.\n",file);
+    return 0;
+  }
+
+  pos = hsize;
+  while(pos < size) {
+    type = data[pos]; pos++;
+
+    // terminator
+    if(type == 0) {
+      if(pos != size)
+        printf("%s: Warning garbage after terminator ???\n",file);
+      return 1;
+    }
+
+    len = data[pos]; pos++;
+    len |= data[pos] << 8; pos++;
+    len |= data[pos] << 16; pos++;
+
+    switch(type) {
+    case 1:
+      pos++; // srate
+      pack = data[pos]; pos++;
+      len -= 2;
+
+      if(pack != 0) {
+        printf("%s: Unssuported packing format: %x\n",file,pack);
+        return 0;
+      }
+    case 6:
+    case 7:
+      break;
+    default:
+      printf("%s: Unsupported block type: %x\n",file,type);
+      return 0;
+    }
+
+    pos += len;
+  }
+
+  printf("%s: Truncated file, or the terminator is missing.\n",file);
+  return 0;
+}
+
 int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
                         int nsync, int* sync) {
   scc_fd_t* fd = new_scc_fd(file,O_RDONLY,0);
@@ -229,6 +290,12 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
   }
 
   scc_fd_close(fd);
+
+  if(!scc_check_voc(file,r->data+8+2*nsync,vsize)) {
+    free(r->data);
+    free(r);
+    return 0;
+  }
 
   // add the res to the list
   r->next = ro->res;
