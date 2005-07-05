@@ -195,6 +195,18 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   SET_POS(l);
   return INTEGER;
 }
+
+\'\\\'\' {
+  yylval.integer = '\'';
+  SET_POS(3);
+  return INTEGER;
+}
+
+\'[^\']\' {
+  yylval.integer = yytext[1];
+  SET_POS(3);
+  return INTEGER;
+}
          
 "bit" {
   SET_POS(3);
