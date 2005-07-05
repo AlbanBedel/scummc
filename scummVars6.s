@@ -126,6 +126,8 @@ array VAR_MAIN_MENU_TITLE      @ 117;
 int VAR_RANDOM_NR              @ 118;
 int VAR_TIMEDATE_YEAR          @ 119;
 
+int VAR_GAME_VERSION           @ 122;
+
 int VAR_TIMEDATE_HOUR          @ 125;
 int VAR_TIMEDATE_MINUTE        @ 126;
 
