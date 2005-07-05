@@ -559,6 +559,21 @@ voicedecl: VOICE SYM ASSIGN '{' STRING ',' synclist '}'
 
   free($7);
 }
+| VOICE SYM ASSIGN '{' STRING '}'
+{
+  scc_symbol_t* v;
+
+  if($3 != '=')
+    SCC_ABORT(@3,"Invalid operator for voice declaration.\n");
+
+  v = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VOICE,0,-1);
+  if(!v) SCC_ABORT(@1,"Declaration failed.\n");
+
+  if(!v->rid) scc_ns_get_rid(scc_ns,v);
+
+  if(!scc_roobj_add_voice(scc_roobj,v,$5,0,NULL))
+    SCC_ABORT(@1,"Failed to add voice.");
+}
 ;
 
 synclist: INTEGER
