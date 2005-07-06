@@ -1531,6 +1531,8 @@ str: STRING
         SCC_ABORT(@1,"%s is not a charset",$$->sym->sym);
       break;
     }
+    // allocate rid
+    if(!$$->sym->rid) scc_ns_get_rid(scc_ns,$$->sym);
   }
 }
 ;
