@@ -435,7 +435,9 @@ static int compMask(uint8_t *dst,
 	memcpy(dst+1,&buf[ds],dst[0]);
 	len += dst[0]+1;
 	dst += dst[0]+1;
-      } else if(r >= height && buf[l] == 0) return 0;
+      } 
+      //else if(r >= height && buf[l] == 0) return 0;
+      // scummvm have no pb with this, but not the original engine.
       while(r > 0) {
 	uint8_t v = (r > 0x7f) ? 0x7f : r;
 	*dst = v | 0x80; dst++;
