@@ -25,11 +25,11 @@ int VAR_LAST_SOUND             @ 23;
 int VAR_CUTSCENEEXIT_KEY       @ 24;
 int VAR_TALK_ACTOR             @ 25;
 int VAR_CAMERA_FAST_X          @ 26;
-int VAR_SCROLL_SCRIPT          @ 27;
-int VAR_ENTRY_SCRIPT           @ 28;
-int VAR_ENTRY_SCRIPT2          @ 29;
-int VAR_EXIT_SCRIPT            @ 30;
-int VAR_EXIT_SCRIPT2           @ 31;
+int VAR_CAMERA_SCRIPT          @ 27;
+int VAR_PRE_ENTRY_SCRIPT       @ 28;
+int VAR_POST_ENTRY_SCRIPT      @ 29;
+int VAR_PRE_EXIT_SCRIPT        @ 30;
+int VAR_POST_EXIT_SCRIPT       @ 31;
 int VAR_VERB_SCRIPT            @ 32;
 int VAR_SENTENCE_SCRIPT        @ 33;
 int VAR_INVENTORY_SCRIPT       @ 34;
@@ -59,8 +59,8 @@ int VAR_TALKSTOP_KEY           @ 57;
 
 int VAR_FADE_DELAY             @ 59;
 int VAR_NOSUBTITLES            @ 60;
-int VAR_SAVELOAD_SCRIPT        @ 61;
-int VAR_SAVELOAD_SCRIPT2       @ 62;
+int VAR_GUI_ENTRY_SCRIPT       @ 61;
+int VAR_GUI_EXIT_SCRIPT        @ 62;
 
 int VAR_SOUNDPARAM             @ 64;
 int VAR_SOUNDPARAM2            @ 65;
