@@ -654,7 +654,25 @@ static scc_func_t scc_func[] = {
     { SCC_FA_STR }
   },{
     
-    // TODO dim array
+    // dim array
+    "dimInt", 0xBCC7, 0, 2, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL }
+  },{
+    "dimBit", 0xBCC8, 0, 2, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL }
+  },{
+    "dimNibble", 0xBCC9, 0, 2, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL }
+  },{
+    "dimByte", 0xBCCA, 0, 2, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL }
+  },{
+    "dimChar", 0xBCCB, 0, 2, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL }
+  },{
+    "undim", 0xBCCC, 0, 1, 0,
+    { SCC_FA_ARRAY }
+  },{
 
     // this one still need special care i think
     "startObjectQuick", 0xBE, 0, 3, 0,
@@ -667,7 +685,22 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
     
-    // TODO dim2 array
+    // dim2 array
+    "dimInt2", 0xC0C7, 0, 3, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "dimBit2", 0xC0C8, 0, 3, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "dimNibble2", 0xC0C9, 0, 3, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "dimByte2", 0xC0CA, 0, 3, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "dimChar2", 0xC0CB, 0, 3, 0,
+    { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
+  },{
     
     "abs", 0xC4, 1, 1, 0,
     { SCC_FA_VAL }
@@ -706,7 +739,7 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "shuffle", 0xD4, 0, 3, 0,
-    { SCC_FA_PTR, SCC_FA_VAL, SCC_FA_VAL }
+    { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "jumpToScript", 0xD5, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_LIST }

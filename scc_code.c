@@ -196,28 +196,13 @@ static scc_code_t* scc_code_push_res(uint8_t op,scc_symbol_t* res) {
   return c;
 }
 
-static scc_code_t* scc_code_res_addr(int op, scc_symbol_t* res,
-				     int ref_type) {
+static scc_code_t* scc_code_res_addr(int op, scc_symbol_t* res) {
   scc_code_t *c,*o;
 
+  c = scc_code_new(2);
   if(res->addr >= 0) {
-    if(ref_type != SCC_FA_BREF || res->addr > 0xFF) {
-      if(ref_type == SCC_FA_BREF) {
-	printf("Ressource address is too big to be coded on 1 byte.\n");
-	return NULL;
-      }
-      c = scc_code_new(2);
-      SCC_SET_16LE(c->data,0,res->addr);
-    } else {
-      c = scc_code_new(1);
-      c->data[0] = res->addr;
-    }
+    SCC_SET_16LE(c->data,0,res->addr);
   } else {
-    if(ref_type == SCC_FA_BREF) {
-      printf("Ressource with \"dynamic\" address can't be coded on 1 byte.\n");
-      return NULL;
-    }
-    c = scc_code_new(2);
     SCC_SET_16LE(c->data,0,res->rid);
     c->fix = SCC_FIX_RES + res->type;
   }
@@ -259,7 +244,7 @@ static scc_code_t* scc_str_gen_code(scc_str_t* s) {
     case SCC_STR_VERB:
     case SCC_STR_NAME:
     case SCC_STR_STR:
-      c = scc_code_res_addr(0xFF00 | (s->type & 0xFF),s->sym,SCC_FA_WREF);
+      c = scc_code_res_addr(0xFF00 | (s->type & 0xFF),s->sym);
       break;
     case SCC_STR_COLOR:
       c = scc_code_new(4);
@@ -293,27 +278,19 @@ static scc_code_t* scc_str_gen_code(scc_str_t* s) {
   return code;
 }
 
-static scc_code_t* scc_statement_gen_ref_code(scc_statement_t* st, int ref_type) {
+static scc_code_t* scc_statement_gen_ref_code(scc_statement_t* st) {
   scc_code_t* code = NULL;
-  uint16_t ptr;
 
   switch(st->type) {
-  case SCC_ST_AVAR:
-    code = scc_code_res_addr(-1,st->val.av.r,ref_type);
+  case SCC_ST_VAR:
+    code = scc_code_res_addr(-1,st->val.v.r);
     break;
   case SCC_ST_RES:
-    code = scc_code_res_addr(-1,st->val.r,ref_type);
+    code = scc_code_res_addr(-1,st->val.r);
     break;
   case SCC_ST_VAL:
-    ptr = st->val.i;
-    if(ref_type == SCC_FA_BREF) {
-      if(ptr > 0xFF) printf("Warning pointer value 0x%x can't be encoded as short.\n",ptr);
-      code = scc_code_new(1);
-      code->data[0] = ptr;
-    } else {
-      code = scc_code_new(2);
-      SCC_SET_16LE(code->data,0,ptr);
-    }
+    code = scc_code_new(2);
+    SCC_SET_16LE(code->data,0,(uint16_t)st->val.i);
     break;
   case SCC_ST_STR:
     code = scc_str_gen_code(st->val.s);
@@ -348,7 +325,7 @@ static scc_code_t* scc_call_gen_code(scc_call_t* call, int ret_val) {
   // add ref arguments
   for(n = 0, a = call->argv ; a ; n++, a = a->next) {
     if(!(call->func->argt[n] & SCC_FA_REF)) continue;
-    c = scc_statement_gen_ref_code(a,call->func->argt[n] & SCC_FA_REF);
+    c = scc_statement_gen_ref_code(a);
     SCC_LIST_ADD(code,last,c);
   }
 
@@ -375,15 +352,7 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
   scc_statement_t *a = op->argv, *b = op->argv->next;
   scc_operator_t* oper;
 
-  switch(a->type) {
-  case SCC_ST_RES:
-
-    if(a->val.r->type != SCC_RES_VAR &&
-       a->val.r->type != SCC_RES_LVAR &&
-       a->val.r->type != SCC_RES_BVAR) {
-      printf("Assignement to a non-variable ressource is invalid !!\n");
-      return NULL;
-    }
+  if(!a->val.v.y) { // simple variable
 
     if(op->op != '=') {
       c = scc_statement_gen_code(a,1);
@@ -408,106 +377,106 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
       SCC_LIST_ADD(code,last,c);
     }
 
-    c = scc_code_push_res(SCC_OP_VAR_WRITE,a->val.r);
+    c = scc_code_push_res(SCC_OP_VAR_WRITE,a->val.v.r);
     SCC_LIST_ADD(code,last,c);
+
+    return code;
+  }
+
+  // assignement to an array
+  switch(b->type) {
+  case SCC_ST_LIST:
+      
+    if(a->val.v.x) {
+      c = scc_statement_gen_code(a->val.v.x,1);
+      SCC_LIST_ADD(code,last,c);
+    }
+
+    c = scc_statement_gen_code(b,1);
+    SCC_LIST_ADD(code,last,c);
+
+    c = scc_statement_gen_code(a->val.v.y,1);
+    SCC_LIST_ADD(code,last,c);
+      
+    c = scc_code_res_addr(a->val.v.x ? SCC_OP_ARRAY2_WRITE_LIST : SCC_OP_ARRAY_WRITE_LIST,
+                          a->val.v.r);
+    SCC_LIST_ADD(code,last,c);
+
+    // put a dummy return val
+    if(ret_val) {
+      c = scc_code_push_val(SCC_OP_PUSH,1);
+      SCC_LIST_ADD(code,last,c);
+    }
     break;
-  case SCC_ST_AVAR:
-    switch(b->type) {
-    case SCC_ST_LIST:
-      
-      if(a->val.av.x) {
-	c = scc_statement_gen_code(a->val.av.x,1);
-	SCC_LIST_ADD(code,last,c);
-      }
 
-      c = scc_statement_gen_code(b,1);
+  case SCC_ST_STR:
+
+    // should not happend, alredy checked in the parser
+    // or we should simply multiply both index ??
+    if(a->val.v.x)
+      printf("Warning: Strings can't be assigned to 2-dim arrays, ignoring second index.\n");
+
+    c = scc_statement_gen_code(a->val.v.y,1);
+    SCC_LIST_ADD(code,last,c);
+
+    c = scc_code_res_addr(SCC_OP_ARRAY_WRITE_STR,a->val.v.r);
+    SCC_LIST_ADD(code,last,c);
+
+    c = scc_str_gen_code(b->val.s);
+    SCC_LIST_ADD(code,last,c);
+
+    // push a dummy return value.
+    if(ret_val) {
+      c = scc_code_push_val(SCC_OP_PUSH,1);
       SCC_LIST_ADD(code,last,c);
-
-      c = scc_statement_gen_code(a->val.av.y,1);
-      SCC_LIST_ADD(code,last,c);
-      
-      c = scc_code_res_addr(a->val.av.x ? 0xA4D4 : 0xA4D0,
-			    a->val.av.r,SCC_FA_WREF);
-      SCC_LIST_ADD(code,last,c);
-
-      // put a dummy return val
-      if(ret_val) {
-	c = scc_code_push_val(SCC_OP_PUSH,1);
-	SCC_LIST_ADD(code,last,c);
-      }
-
-      break;
-    case SCC_ST_STR:
-
-      if(a->val.av.x) {
-	printf("Strings can't be assigned to 2-dim arrays.\n");
-	return NULL;
-      }
-
-      c = scc_statement_gen_code(a->val.av.y,1);
-      SCC_LIST_ADD(code,last,c);
-
-      c = scc_code_res_addr(0xA4CD,a->val.av.r,SCC_FA_WREF);
-      SCC_LIST_ADD(code,last,c);
-
-      c = scc_statement_gen_ref_code(b,SCC_FA_SREF);
-      SCC_LIST_ADD(code,last,c);
-
-      // push a dummy return value.
-      if(ret_val) {
-	c = scc_code_push_val(SCC_OP_PUSH,1);
-	SCC_LIST_ADD(code,last,c);
-      }
-      break;
-
-    default:
-
-      // push the x index
-      if(a->val.av.x) {
-	c = scc_statement_gen_code(a->val.av.x,1);
-	SCC_LIST_ADD(code,last,c);
-      }
-
-      // the y
-      c = scc_statement_gen_code(a->val.av.y,1);
-      SCC_LIST_ADD(code,last,c);
-
-      // If we have an op push a
-      if(op->op != '=') {
-	c = scc_statement_gen_code(a,1);
-	SCC_LIST_ADD(code,last,c);
-      }
-
-      // push b
-      c = scc_statement_gen_code(b,1);
-      SCC_LIST_ADD(code,last,c);
-
-      // put the op
-      if(op->op != '=') {
-	oper = scc_get_assign_op(op->op);
-
-	c = scc_code_new(1);
-	c->data[0] = oper->op;
-	SCC_LIST_ADD(code,last,c);
-      }
-      
-      if(a->val.av.x)
-	c = scc_code_push_res(SCC_OP_ARRAY2_WRITE,a->val.av.r);
-      else
-	c = scc_code_push_res(SCC_OP_ARRAY_WRITE,a->val.av.r);
-      SCC_LIST_ADD(code,last,c);
-
-      // put a dummy return val
-      if(ret_val) {
-	c = scc_code_push_val(SCC_OP_PUSH,1);
-	SCC_LIST_ADD(code,last,c);
-      }
     }
     break;
 
   default:
-    printf("Got unhandled assignement to a %d\n",a->type);
+
+    // push the x index
+    if(a->val.v.x) {
+      c = scc_statement_gen_code(a->val.v.x,1);
+      SCC_LIST_ADD(code,last,c);
+    }
+
+    // the y
+    c = scc_statement_gen_code(a->val.v.y,1);
+    SCC_LIST_ADD(code,last,c);
+
+    // If we have an op push a
+    if(op->op != '=') {
+      c = scc_statement_gen_code(a,1);
+      SCC_LIST_ADD(code,last,c);
+    }
+
+    // push b
+    c = scc_statement_gen_code(b,1);
+    SCC_LIST_ADD(code,last,c);
+
+    // put the op
+    if(op->op != '=') {
+      oper = scc_get_assign_op(op->op);
+      
+      c = scc_code_new(1);
+      c->data[0] = oper->op;
+      SCC_LIST_ADD(code,last,c);
+    }
+      
+    if(a->val.v.x)
+      c = scc_code_push_res(SCC_OP_ARRAY2_WRITE,a->val.v.r);
+    else
+      c = scc_code_push_res(SCC_OP_ARRAY_WRITE,a->val.v.r);
+    SCC_LIST_ADD(code,last,c);
+
+    // put a dummy return val
+    if(ret_val) {
+      c = scc_code_push_val(SCC_OP_PUSH,1);
+      SCC_LIST_ADD(code,last,c);
+    }
+    break;
   }
+
   return code;
 }
 
@@ -560,16 +529,19 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
     break;
   case PREINC:
   case PREDEC:
-    if(op->argv->type == SCC_ST_AVAR) {
+    if(op->argv->val.v.y) {
+      if(op->argv->val.v.x)
+        printf("Warning: Suffix operator on 2d arrays not yet implemented.");
+        
       o = (op->op == PREINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
       // push the index
-      c = scc_statement_gen_code(op->argv->val.av.y,1);
+      c = scc_statement_gen_code(op->argv->val.v.y,1);
       SCC_LIST_ADD(code,last,c);
       // the inc/dec
-      c = scc_code_push_res(o,op->argv->val.av.r);
+      c = scc_code_push_res(o,op->argv->val.v.r);
     } else {
       o = (op->op == PREINC ? SCC_OP_INC_VAR : SCC_OP_DEC_VAR);
-      c = scc_code_push_res(o,op->argv->val.r);
+      c = scc_code_push_res(o,op->argv->val.v.r);
     }
     SCC_LIST_ADD(code,last,c);
     if(!ret_val) break;
@@ -582,16 +554,19 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
       c = scc_statement_gen_code(op->argv,1);
       SCC_LIST_ADD(code,last,c);
     }
-    if(op->argv->type == SCC_ST_AVAR) {
+    if(op->argv->val.v.y) {
+      if(op->argv->val.v.x)
+        printf("Warning: Suffix operator on 2d arrays not yet implemented.");
+
       o = (op->op == POSTINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
       // push the index
-      c = scc_statement_gen_code(op->argv->val.av.y,1);
+      c = scc_statement_gen_code(op->argv->val.v.y,1);
       SCC_LIST_ADD(code,last,c);
       // the inc/dec
-      c = scc_code_push_res(o,op->argv->val.av.r);
+      c = scc_code_push_res(o,op->argv->val.v.r);
     } else {
       o = (op->op == POSTINC ? SCC_OP_INC_VAR : SCC_OP_DEC_VAR);
-      c = scc_code_push_res(o,op->argv->val.r);
+      c = scc_code_push_res(o,op->argv->val.v.r);
     }
     SCC_LIST_ADD(code,last,c);
     break;
@@ -681,15 +656,9 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
     break;
   case SCC_ST_RES:
     if(ret_val) {
-      if(st->val.r->type == SCC_RES_VAR ||
-	 st->val.r->type == SCC_RES_BVAR ||
-	 st->val.r->type == SCC_RES_LVAR)
-	c = scc_code_push_res(SCC_OP_VAR_READ,st->val.r);
-      else
-	c = scc_code_res_addr(SCC_OP_PUSH,st->val.r,SCC_FA_WREF);
+      c = scc_code_push_res(SCC_OP_PUSH,st->val.r);
       SCC_LIST_ADD(code,last,c);
     }
-    //code = scc_code_push_val(SCC_OP_VAR_READ,scc_var_get_ptr(st->val.v));
     break;
   case SCC_ST_CALL:
     c = scc_call_gen_code(&st->val.c,ret_val);
@@ -710,20 +679,25 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
     c = scc_code_push_val(SCC_OP_PUSH,n);
     SCC_LIST_ADD(code,last,c);
     break;
-  case SCC_ST_AVAR:
+  case SCC_ST_VAR:
     if(!ret_val) break;
 
-    // push x value
-    if(st->val.av.x) {
-      c = scc_statement_gen_code(st->val.av.x,1);
+    if(st->val.v.y) {
+      // push x value
+      if(st->val.v.x) {
+        c = scc_statement_gen_code(st->val.v.x,1);
+        SCC_LIST_ADD(code,last,c);
+      }
+      // push y value
+      c = scc_statement_gen_code(st->val.v.y,1);
+      SCC_LIST_ADD(code,last,c);
+      // op code
+      c = scc_code_push_res(SCC_OP_ARRAY_READ,st->val.v.r);
+      SCC_LIST_ADD(code,last,c);
+    } else {
+      c = scc_code_push_res(SCC_OP_VAR_READ,st->val.v.r);
       SCC_LIST_ADD(code,last,c);
     }
-    // push y value
-    c = scc_statement_gen_code(st->val.av.y,1);
-    SCC_LIST_ADD(code,last,c);
-    // op code
-    c = scc_code_push_res(SCC_OP_ARRAY_READ,st->val.av.r);
-    SCC_LIST_ADD(code,last,c);
     break;
   case SCC_ST_OP:
     c = scc_op_gen_code(&st->val.o,ret_val);

@@ -49,7 +49,15 @@ void scc_symbol_list_free(scc_symbol_t* s) {
   }
 }
 
-int scc_res_is_global(int type) {
+int scc_sym_is_var(int type) {
+  if(type == SCC_RES_VAR ||
+     type == SCC_RES_BVAR ||
+     type == SCC_RES_LVAR)
+    return 1;
+  return 0;
+}
+
+int scc_sym_is_global(int type) {
   if(type == SCC_RES_VAR ||
      type == SCC_RES_BVAR ||
      type == SCC_RES_ROOM ||
@@ -116,7 +124,7 @@ scc_symbol_t* scc_ns_get_sym_with_id(scc_ns_t* ns,int type, int id) {
   scc_symbol_t* r,*r2;
 
   // room, verbs and variables are in the global ns
-  if(scc_res_is_global(type)) {
+  if(scc_sym_is_global(type)) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->rid == id) return r;
     }
@@ -480,7 +488,7 @@ int scc_ns_res_max(scc_ns_t* ns,int type) {
   scc_symbol_t* r,*s;
   int n = 0;
 
-  if(scc_res_is_global(type)) {
+  if(scc_sym_is_global(type)) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->addr > n) n = r->addr;
     }
@@ -510,7 +518,7 @@ scc_symbol_t* scc_ns_get_sym_at(scc_ns_t* ns,int type,int addr) {
   scc_symbol_t* r,*r2;
 
   // room, verbs and variables are in the global ns
-  if(scc_res_is_global(type)) {
+  if(scc_sym_is_global(type)) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->addr == addr) return r;
     }

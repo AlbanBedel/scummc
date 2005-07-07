@@ -214,15 +214,33 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return TYPE;
 }
 
-"int" {
-  SET_POS(3);
+"nibble" {
+  SET_POS(6);
+  yylval.integer = SCC_VAR_NIBBLE;
+  return TYPE;
+}
+
+"byte" {
+  SET_POS(4);
+  yylval.integer = SCC_VAR_BYTE;
+  return TYPE;
+}
+
+"char" {
+  SET_POS(4);
+  yylval.integer = SCC_VAR_CHAR;
+  return TYPE;
+}
+
+"word" {
+  SET_POS(4);
   yylval.integer = SCC_VAR_WORD;
   return TYPE;
 }
 
-"array" {
-  SET_POS(5);
-  yylval.integer = SCC_VAR_ARRAY;
+"int" {
+  SET_POS(3);
+  yylval.integer = SCC_VAR_WORD;
   return TYPE;
 }
 

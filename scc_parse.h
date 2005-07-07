@@ -4,25 +4,30 @@
 
 // direct integer vals
 #define SCC_ST_VAL     0
-// ressources (vars, room, etc)
+// ressources (room, actor, verb, etc)
 #define SCC_ST_RES     1
+// string
 #define SCC_ST_STR     2
+// function call
 #define SCC_ST_CALL    3
+// list
 #define SCC_ST_LIST    4
-// derefrenced array var
-#define SCC_ST_AVAR    5
+// variables
+#define SCC_ST_VAR     5
+// operation
 #define SCC_ST_OP      6
+// statement chain
 #define SCC_ST_CHAIN   7
 
 
 #define SCC_VOID        0
 #define SCC_VAR_BIT     1
-#define SCC_VAR_WORD    2
-#define SCC_VAR_LOCAL   3
-#define SCC_VAR_ARRAY   4
+#define SCC_VAR_NIBBLE  2
+#define SCC_VAR_BYTE    3
+#define SCC_VAR_CHAR    4
+#define SCC_VAR_WORD    5
 
-#define SCC_DECL_VAR    0
-#define SCC_DECL_FUNC   1
+#define SCC_VAR_ARRAY   0x100
 
 typedef struct scc_code_st scc_code_t;
 typedef struct scc_func_st scc_func_t;
@@ -48,23 +53,15 @@ typedef struct scc_str_st scc_str_t;
 #define SCC_FA_SREF   0x400
 
 // value, on stack
-#define SCC_FA_VAL    0
+#define SCC_FA_VAL      0
 // list of value, on stack
-#define SCC_FA_LIST   1
+#define SCC_FA_LIST     1
 // string, emmbeded in the code
-#define SCC_FA_STR    (3|SCC_FA_SREF)
-// short pointers
-#define SCC_FA_SPTR   (SCC_FA_VAL|SCC_FA_BREF)
-// pointers
-#define SCC_FA_PTR    (SCC_FA_VAL|SCC_FA_WREF)
-// array
-#define SCC_FA_ARRAY  4
-// short array pointer
-#define SCC_FA_SAPTR  (SCC_FA_ARRAY|SCC_FA_BREF)
-// array pointer
-#define SCC_FA_APTR   (SCC_FA_ARRAY|SCC_FA_WREF)
+#define SCC_FA_STR     (2|SCC_FA_SREF)
+// array pointers
+#define SCC_FA_ARRAY   (3|SCC_FA_WREF)
 // offset to the begining of the call
-#define SCC_FA_SELF_OFF 5
+#define SCC_FA_SELF_OFF 4
 
 // op type
 #define SCC_OT_ASSIGN  0
@@ -128,7 +125,7 @@ struct scc_statement_st {
   union {
     // val
     uint16_t i;
-    // var
+    // ressource
     scc_symbol_t* r;
     // string
     scc_str_t* s;
@@ -136,11 +133,11 @@ struct scc_statement_st {
     scc_call_t c;
     // list / chains
     scc_statement_t* l;
-    // array val
+    // variable
     struct {
       scc_symbol_t* r;
       scc_statement_t* x, *y;
-    } av;
+    } v;
     // operation
     scc_op_t o;
   } val;
@@ -309,6 +306,11 @@ struct scc_operator_st {
 
 #define SCC_OP_OVERRIDE_BEGIN    0x95
 #define SCC_OP_OVERRIDE_END      0x96
+
+#define SCC_OP_ARRAY_WRITE_STR   0xA4CD
+
+#define SCC_OP_ARRAY_WRITE_LIST  0xA4D0
+#define SCC_OP_ARRAY2_WRITE_LIST 0xA4D4
 
 #define SCC_OP_BAND              0xD6
 #define SCC_OP_BOR               0xD7

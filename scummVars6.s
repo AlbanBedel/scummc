@@ -77,56 +77,58 @@ int VAR_RIGHTBTN_HOLD          @ 75;
 int VAR_V6_EMSSPACE            @ 76;
 
 // "Inserez la disquette %c et cliquez sur la souris."
-array VAR_GAME_DISK_MSG        @ 90;
+char* VAR_GAME_DISK_MSG        @ 90;
 // "Impossible d'ouvrir %s, (%c%d) Cliquez sur la souris."
-array VAR_OPEN_FAILED_MSG      @ 91;
+char* VAR_OPEN_FAILED_MSG      @ 91;
 // "Erreur de lecture disque %c, (%c%d) Cliquez sur la souris."
-array VAR_READ_ERROR_MSG       @ 92;
+char* VAR_READ_ERROR_MSG       @ 92;
 // "Pause. Appuyez sur ESPACE pour continuer."
-array VAR_PAUSE_MSG            @ 93;
+char* VAR_PAUSE_MSG            @ 93;
 // "Vous voulez vraiment recommencer?  (O/N)o"
-array VAR_RESTART_MSG          @ 94;
+char* VAR_RESTART_MSG          @ 94;
 // "Vous voulez vraiment quitter le jeu?  (O/N)O"
-array VAR_QUIT_MSG             @ 95;
+char* VAR_QUIT_MSG             @ 95;
 // "Sauver"
-array VAR_SAVE_BTN             @ 96;
+char* VAR_SAVE_BTN             @ 96;
 // "Charger"
-array VAR_LOAD_BTN             @ 97;
+char* VAR_LOAD_BTN             @ 97;
 // "Jouer"
-array VAR_PLAY_BTN             @ 98;
+char* VAR_PLAY_BTN             @ 98;
 // "Annuler"
-array VAR_CANCEL_BTN           @ 99;
+char* VAR_CANCEL_BTN           @ 99;
 // "Quitter"
-array VAR_QUIT_BTN             @ 100;
+char* VAR_QUIT_BTN             @ 100;
 // "OK"
-array VAR_OK_BTN               @ 101;
+char* VAR_OK_BTN               @ 101;
 // "Inserez votre disquette de sauvegardes"
-array VAR_SAVE_DISK_MSG        @ 102;
+char* VAR_SAVE_DISK_MSG        @ 102;
 // "Vous devez entrer un nom"
-array VAR_ENTER_NAME_MSG       @ 103;
+char* VAR_ENTER_NAME_MSG       @ 103;
 // "Partie NON sauvegardee (disque plein?)"
-array VAR_NOT_SAVED_MSG        @ 104;
+char* VAR_NOT_SAVED_MSG        @ 104;
 // "Partie NON chargee"
-array VAR_NOT_LOADED_MSG       @ 105;
+char* VAR_NOT_LOADED_MSG       @ 105;
 // "Sauvegarde de '%s'"
-array VAR_SAVE_MSG             @ 106;
+char* VAR_SAVE_MSG             @ 106;
 // "Chargement de '%s'"
-array VAR_LOAD_MSG             @ 107;
+char* VAR_LOAD_MSG             @ 107;
 // "Entrez le nom de la SAUVEGARDE"
-array VAR_SAVE_MENU_TITLE      @ 108;
+char* VAR_SAVE_MENU_TITLE      @ 108;
 // "Entrez le nom de la partie a CHARGER"
-array VAR_LOAD_MENU_TITLE      @ 109;
+char* VAR_LOAD_MENU_TITLE      @ 109;
 // Array with color index for various parts of the GUI
-array VAR_GUI_COLORS           @ 110;
+int* VAR_GUI_COLORS            @ 110;
 // Array with the debug password
-array VAR_DEBUG_PASSWORD       @ 111;
+char* VAR_DEBUG_PASSWORD       @ 111;
 
 // "Que desirez-vous?"
-array VAR_MAIN_MENU_TITLE      @ 117;
+char* VAR_MAIN_MENU_TITLE      @ 117;
 int VAR_RANDOM_NR              @ 118;
 int VAR_TIMEDATE_YEAR          @ 119;
 
 int VAR_GAME_VERSION           @ 122;
+// dunno what it do, vars.cpp say it's SnM specific
+int VAR_CHARSET_MASK           @ 123;
 
 int VAR_TIMEDATE_HOUR          @ 125;
 int VAR_TIMEDATE_MINUTE        @ 126;

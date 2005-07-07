@@ -44,4 +44,6 @@ int scc_ns_is_addr_alloc(scc_ns_t* ns,int type,int addr);
 
 scc_symbol_t* scc_ns_get_sym_at(scc_ns_t* ns,int type,int addr);
 
-int scc_res_is_global(int type);
+int scc_sym_is_global(int type);
+
+int scc_sym_is_var(int type);

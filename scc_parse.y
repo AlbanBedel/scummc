@@ -109,18 +109,10 @@
 		  n+1,c->func->sym);
 	  return func_err;
 	}
-      } else if(c->func->argt[n] == SCC_FA_PTR ||
-		c->func->argt[n] == SCC_FA_SPTR) {
-	if(a->type != SCC_ST_RES) {
-	  sprintf(func_err,"Argument %d of call to %s must be a variable.\n",
-		  n+1,c->func->sym);
-	  return func_err;
-	}
-      } else if(c->func->argt[n] == SCC_FA_APTR ||
-		c->func->argt[n] == SCC_FA_SAPTR) {
-	if(a->type != SCC_ST_RES ||
-	   a->val.r->type != SCC_VAR_ARRAY) {
-	  sprintf(func_err,"Argument %d of call to %s must be an array.\n",
+      } else if(c->func->argt[n] == SCC_FA_ARRAY) {
+	if(a->type != SCC_ST_VAR ||
+	   !(a->val.v.r->subtype & SCC_VAR_ARRAY)) {
+	  sprintf(func_err,"Argument %d of call to %s must be an array variable.\n",
 		  n+1,c->func->sym);
 	  return func_err;
 	}
@@ -259,6 +251,7 @@
 %type <sym> verbentrydecl
 %type <strlist> zbufs
 %type <intlist> synclist
+%type <integer> typemod
 
 %defines
 %locations
@@ -289,23 +282,33 @@ gdecl: gvardecl
 | voicedecl
 ;
 
-gvardecl: TYPE SYM location
+gvardecl: TYPE typemod SYM location
 {
-  if($1 == SCC_VAR_BIT)
-    scc_ns_decl(scc_ns,NULL,$2,SCC_RES_BVAR,0,$3);
+  if($1 == SCC_VAR_BIT && !$2)
+    scc_ns_decl(scc_ns,NULL,$3,SCC_RES_BVAR,$1,$4);
   else
-    scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VAR,$1,$3);
+    scc_ns_decl(scc_ns,NULL,$3,SCC_RES_VAR,$1 | $2,$4);
 
   $$ = $1;
 }
-| gvardecl ',' SYM location
+| gvardecl ',' typemod SYM location
 {
-  if($1 == SCC_VAR_BIT)
-    scc_ns_decl(scc_ns,NULL,$3,SCC_RES_BVAR,0,$4);
+  if($1 == SCC_VAR_BIT && !$3)
+    scc_ns_decl(scc_ns,NULL,$4,SCC_RES_BVAR,$1,$5);
   else
-    scc_ns_decl(scc_ns,NULL,$3,SCC_RES_VAR,$1,$4);
+    scc_ns_decl(scc_ns,NULL,$4,SCC_RES_VAR,$1 | $3,$5);
 
   $$ = $1;
+}
+;
+
+typemod: /* nothing */
+{
+  $$ = 0;
+}
+| '*'
+{
+  $$ = SCC_VAR_ARRAY;
 }
 ;
 
@@ -856,22 +859,22 @@ scriptargs: /* */
 {
   $$ = NULL;
 }
-| TYPE SYM
+| TYPE typemod SYM
 {
-  if($1 == SCC_VAR_BIT)
-    SCC_ABORT(@1,"Script argument can't be of bit type.\n");
+  //if($1 == SCC_VAR_BIT)
+  //  SCC_ABORT(@1,"Script argument can't be of bit type.\n");
 
   $$ = malloc(sizeof(scc_scr_arg_t));
   $$->next = NULL;
-  $$->type = $1;
-  $$->sym = $2;
+  $$->type = $1 | $2;
+  $$->sym = $3;
 }
-| scriptargs ',' TYPE SYM
+| scriptargs ',' TYPE typemod SYM
 {
   scc_scr_arg_t *i,*a = malloc(sizeof(scc_scr_arg_t));
   a->next = NULL;
-  a->type = $3;
-  a->sym = $4;
+  a->type = $3 | $4;
+  a->sym = $5;
 
   for(i = $1 ; i->next ; i = i->next);
   i->next = a;
@@ -915,20 +918,20 @@ vardecl: vdecl ';'
 ;
 
 /// this will only decl local vars
-vdecl: TYPE SYM
+vdecl: TYPE typemod SYM
 {
-  if($1 == SCC_VAR_BIT)
-    SCC_ABORT(@1,"Local bit variable are not possible.\n");
+  //if($1 == SCC_VAR_BIT)
+  //  SCC_ABORT(@1,"Local bit variable are not possible.\n");
 
-  $$ = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_LVAR,$1,local_vars);
+  $$ = scc_ns_decl(scc_ns,NULL,$3,SCC_RES_LVAR,$1 | $2,local_vars);
   if(!$$) SCC_ABORT(@1,"Declaration failed.\n");
   local_vars++;
 }
 
-| vdecl ',' SYM
+| vdecl ',' typemod SYM
 {
-  $$ = scc_ns_decl(scc_ns,NULL,$3,SCC_RES_LVAR,$1->subtype,local_vars);
-  if(!$$) SCC_ABORT(@3,"Declaration failed.\n");
+  $$ = scc_ns_decl(scc_ns,NULL,$4,SCC_RES_LVAR,$1->subtype | $3,local_vars);
+  if(!$$) SCC_ABORT(@4,"Declaration failed.\n");
   local_vars++;
   $$ = $1;
 };
@@ -1163,6 +1166,35 @@ statement: dval
   $$ = $1;
 }
 
+| var '[' statement ']'
+{
+  scc_symbol_t* v;
+
+  if($1->type != SCC_ST_VAR)
+    SCC_ABORT(@1,"%s is not a variable, so it can't be subscribed.\n",
+	      $1->val.r->sym);
+  v = $1->val.v.r;
+  if(!(v->subtype & SCC_VAR_ARRAY))
+    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscribed.\n",v->sym);
+  $$ = $1;
+  $$->val.v.y = $3;
+}
+
+| var '[' statement ',' statement ']'
+{
+  scc_symbol_t* v;
+
+  if($1->type != SCC_ST_VAR)
+    SCC_ABORT(@1,"%s is not a variable, so it can't be subscribed.\n",
+	      $1->val.r->sym);
+  v = $1->val.v.r;
+  if(!(v->subtype & SCC_VAR_ARRAY))
+    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscribed.\n",v->sym);
+  $$ = $1;
+  $$->val.v.x = $3;
+  $$->val.v.y = $5;
+}
+
 | call
 {
   $$ = $1;
@@ -1185,6 +1217,12 @@ statement: dval
 
 | statement ASSIGN statement
 {
+  if($1->type != SCC_ST_VAR)
+    SCC_ABORT(@1,"rvalue is not a variable, so it can't be assigned.\n");
+
+  if($1->val.v.x && $3->type == SCC_ST_STR)
+    SCC_ABORT(@1,"Strings can't be assigned to 2-dim arrays.\n");
+
   $$ = calloc(1,sizeof(scc_statement_t));
   $$->type = SCC_ST_OP;
   $$->val.o.type = SCC_OT_ASSIGN;
@@ -1308,40 +1346,30 @@ statement: dval
 
 | SUFFIX statement %prec PREFIX
 {
-  if(($2->type == SCC_ST_RES &&
-      ($2->val.r->type == SCC_RES_VAR ||
-       $2->val.r->type == SCC_RES_LVAR ||
-       $2->val.r->type == SCC_RES_BVAR)) ||
-     $2->type == SCC_ST_AVAR) {
-    if($2->type == SCC_ST_AVAR && $2->val.av.x)
-      SCC_ABORT(@1,"Suffix operators can't be applied to 2 dimmensional arrays.\n");
-    $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ST_OP;
-    $$->val.o.type = SCC_OT_UNARY;
-    $$->val.o.op = ($1 == INC ? PREINC : PREDEC);
-    $$->val.o.argc = 1;
-    $$->val.o.argv = $2;
-  } else
+  if($2->type != SCC_ST_VAR)
     SCC_ABORT(@1,"Suffix operators can only be used on variables.\n");
+
+  $$ = calloc(1,sizeof(scc_statement_t));
+  $$->type = SCC_ST_OP;
+  $$->val.o.type = SCC_OT_UNARY;
+  $$->val.o.op = ($1 == INC ? PREINC : PREDEC);
+  $$->val.o.argc = 1;
+  $$->val.o.argv = $2;
 }
+
 | statement SUFFIX %prec POSTFIX
 {
-  if(($1->type == SCC_ST_RES &&
-      ($1->val.r->type == SCC_RES_VAR ||
-       $1->val.r->type == SCC_RES_LVAR ||
-       $1->val.r->type == SCC_RES_BVAR)) ||
-     $1->type == SCC_ST_AVAR) {
-    if($1->type == SCC_ST_AVAR && $1->val.av.x)
-      SCC_ABORT(@1,"Suffix operators can't be applied to 2 dimmensional arrays.\n");
-    $$ = calloc(1,sizeof(scc_statement_t));
-    $$->type = SCC_ST_OP;
-    $$->val.o.type = SCC_OT_UNARY;
-    $$->val.o.op = ($2 == INC) ? POSTINC : POSTDEC;
-    $$->val.o.argc = 1;
-    $$->val.o.argv = $1;
-  } else
+  if($1->type != SCC_ST_VAR)
     SCC_ABORT(@1,"Suffix operators can only be used on variables.\n");
+
+  $$ = calloc(1,sizeof(scc_statement_t));
+  $$->type = SCC_ST_OP;
+  $$->val.o.type = SCC_OT_UNARY;
+  $$->val.o.op = ($2 == INC) ? POSTINC : POSTDEC;
+  $$->val.o.argc = 1;
+  $$->val.o.argv = $1;
 }
+
 | '(' statements ')'
 {
   $$ = $2;
@@ -1356,8 +1384,13 @@ var: SYM
     SCC_ABORT(@1,"%s is not a declared ressource.\n",$1);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ST_RES;
-  $$->val.r = v;
+  if(scc_sym_is_var(v->type)) {
+    $$->type = SCC_ST_VAR;
+    $$->val.v.r = v;
+  } else {
+    $$->type = SCC_ST_RES;
+    $$->val.r = v;
+  }
   // allocate rid
   if(!v->rid) scc_ns_get_rid(scc_ns,v);
 }
@@ -1369,57 +1402,18 @@ var: SYM
     SCC_ABORT(@1,"%s::%s is not a declared ressource.\n",$1,$3);
 
   $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ST_RES;
-  $$->val.r = v;
+  if(scc_sym_is_var(v->type)) {
+    $$->type = SCC_ST_VAR;
+    $$->val.v.r = v;
+  } else {
+    $$->type = SCC_ST_RES;
+    $$->val.r = v;
+  }
   // allocate rid
   if(!v->rid) scc_ns_get_rid(scc_ns,v);
 
 }
-
-| SYM '[' statement ']'
-{
-  scc_symbol_t* v = scc_ns_get_sym(scc_ns,NULL,$1);
-
-  if(!v || (v->type != SCC_RES_VAR &&
-	    v->type != SCC_RES_BVAR &&
-	    v->type != SCC_RES_LVAR))
-    SCC_ABORT(@1,"%s is not a declared variable.\n",$1);
-
-  if(v->subtype != SCC_VAR_ARRAY)
-    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscribed.\n",
-	      $1);
-
-  $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ST_AVAR;
-  $$->val.av.r = v;
-  $$->val.av.y = $3;
-
-  // allocate rid
-  if(!v->rid) scc_ns_get_rid(scc_ns,v);
-}
-
-| SYM '[' statement ',' statement ']'
-{
-  scc_symbol_t* v = scc_ns_get_sym(scc_ns,NULL,$1);
-
-  if(!v || (v->type != SCC_RES_VAR &&
-	    v->type != SCC_RES_BVAR &&
-	    v->type != SCC_RES_LVAR))
-    SCC_ABORT(@1,"%s is not a declared variable.\n",$1);
-
-  if(v->subtype != SCC_VAR_ARRAY)
-    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscribed.\n",
-	      $1);
-
-  $$ = calloc(1,sizeof(scc_statement_t));
-  $$->type = SCC_ST_AVAR;
-  $$->val.av.r = v;
-  $$->val.av.x = $3;
-  $$->val.av.y = $5;
-
-  // allocate rid
-  if(!v->rid) scc_ns_get_rid(scc_ns,v);
-};
+;
 
 call: SYM '(' cargs ')'
 {
