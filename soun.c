@@ -86,6 +86,7 @@ int main(int argc,char** argv) {
 
   if(midi_file) {
     SCC_SET_32BE(data,8,MKID('M','I','D','I'));
+    pos = 16;
     if(!(s = load_file(midi_file,&data,&pos,&size))) return 1;
     SCC_SET_32BE(data,12,s + 8);
   } else {
