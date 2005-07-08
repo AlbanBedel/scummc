@@ -1513,8 +1513,9 @@ str: STRING
         SCC_ABORT(@1,"%s is not a verb",$$->sym->sym);
       break;
     case SCC_STR_NAME:
-      if($$->sym->type != SCC_RES_ACTOR)
-        SCC_ABORT(@1,"%s is not a actor",$$->sym->sym);
+      if($$->sym->type != SCC_RES_ACTOR &&
+         $$->sym->type != SCC_RES_OBJ)
+        SCC_ABORT(@1,"%s is not a actor or an object",$$->sym->sym);
       break;
     case SCC_STR_VOICE:
       if($$->sym->type != SCC_RES_VOICE)
