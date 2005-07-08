@@ -480,7 +480,7 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
   return code;
 }
 
-static scc_code_t* scc_bop_gen_code(scc_op_t* op) {
+static scc_code_t* scc_bop_gen_code(scc_op_t* op, int ret_val) {
   scc_code_t *code = NULL,*last = NULL,*c;
   scc_statement_t *a = op->argv, *b = op->argv->next;
   scc_operator_t* oper = scc_get_bin_op(op->op);
@@ -499,6 +499,12 @@ static scc_code_t* scc_bop_gen_code(scc_op_t* op) {
   c->data[0] = oper->op;
   SCC_LIST_ADD(code,last,c);  
 
+  if(!ret_val) {
+    c = scc_code_new(1);
+    c->data[0] = SCC_OP_POP;
+    SCC_LIST_ADD(code,last,c);
+  }
+
   return code;
 }
 
@@ -508,10 +514,11 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
 
   switch(op->op) {
   case '-':
-    if(!ret_val) break;
-    c = scc_code_push_val(SCC_OP_PUSH,-1);
+    c = scc_statement_gen_code(op->argv,ret_val);
     SCC_LIST_ADD(code,last,c);
-    c = scc_statement_gen_code(op->argv,1);
+    if(!ret_val) break;
+
+    c = scc_code_push_val(SCC_OP_PUSH,-1);
     SCC_LIST_ADD(code,last,c);
 
     c = scc_code_new(1);
@@ -519,9 +526,9 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
     SCC_LIST_ADD(code,last,c);
     break;
   case '!':
-    if(!ret_val) break;
-    c = scc_statement_gen_code(op->argv,1);
+    c = scc_statement_gen_code(op->argv,ret_val);
     SCC_LIST_ADD(code,last,c);
+    if(!ret_val) break;
 
     c = scc_code_new(1);
     c->data[0] = SCC_OP_NOT;
@@ -676,7 +683,7 @@ static scc_code_t* scc_op_gen_code(scc_op_t* op, int ret_val) {
     code = scc_assign_gen_code(op,ret_val);
     break;
   case SCC_OT_BINARY:
-    if(ret_val) code = scc_bop_gen_code(op);
+    code = scc_bop_gen_code(op,ret_val);
     break;
   case SCC_OT_UNARY:
     code = scc_uop_gen_code(op,ret_val);
