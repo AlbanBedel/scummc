@@ -255,9 +255,12 @@ struct scc_operator_st {
 #define SCC_OP_PUSH              0x01
 #define SCC_OP_VAR_READ_B        0x02
 #define SCC_OP_VAR_READ          0x03
+
 #define SCC_OP_ARRAY_READ_B      0x06
 #define SCC_OP_ARRAY_READ        0x07
 
+#define SCC_OP_ARRAY2_READ_B     0x0A
+#define SCC_OP_ARRAY2_READ       0x0B
 #define SCC_OP_DUP               0x0C
 #define SCC_OP_NOT               0x0D
 #define SCC_OP_EQ                0x0E

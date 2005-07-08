@@ -530,19 +530,44 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
   case PREINC:
   case PREDEC:
     if(op->argv->val.v.y) {
-      if(op->argv->val.v.x)
-        printf("Warning: Suffix operator on 2d arrays not yet implemented.");
-        
-      o = (op->op == PREINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
+      if(op->argv->val.v.x) {
+        // push the index for the final write
+        c = scc_statement_gen_code(op->argv->val.v.x,1);
+        SCC_LIST_ADD(code,last,c);
+        c = scc_statement_gen_code(op->argv->val.v.y,1);
+        SCC_LIST_ADD(code,last,c);
+
+        // for 2dim array we have to expand to a full addition
+        // push the x index and choose the op we need
+        c = scc_statement_gen_code(op->argv->val.v.x,1);
+        SCC_LIST_ADD(code,last,c);
+        o = (op->op == PREINC ? SCC_OP_ADD : SCC_OP_SUB);
+      } else
+        o = (op->op == PREINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
+
       // push the index
       c = scc_statement_gen_code(op->argv->val.v.y,1);
       SCC_LIST_ADD(code,last,c);
-      // the inc/dec
-      c = scc_code_push_res(o,op->argv->val.v.r);
-    } else {
+
+    } else
       o = (op->op == PREINC ? SCC_OP_INC_VAR : SCC_OP_DEC_VAR);
+
+    if(op->argv->val.v.x) {
+      // push the array entry on the stack
+      c = scc_code_push_res(SCC_OP_ARRAY2_READ,op->argv->val.v.r);
+      SCC_LIST_ADD(code,last,c);
+      // push a 1
+      c = scc_code_push_val(SCC_OP_PUSH,1);
+      SCC_LIST_ADD(code,last,c);
+
+      // push the op
+      c = scc_code_new(1);
+      c->data[0] = o;
+      SCC_LIST_ADD(code,last,c);
+      // put the result back into the variable
+      c = scc_code_push_res(SCC_OP_ARRAY2_WRITE,op->argv->val.v.r);
+    } else  // put the opcode
       c = scc_code_push_res(o,op->argv->val.v.r);
-    }
     SCC_LIST_ADD(code,last,c);
     if(!ret_val) break;
     c = scc_statement_gen_code(op->argv,1);
@@ -555,19 +580,43 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
       SCC_LIST_ADD(code,last,c);
     }
     if(op->argv->val.v.y) {
-      if(op->argv->val.v.x)
-        printf("Warning: Suffix operator on 2d arrays not yet implemented.");
+      if(op->argv->val.v.x) {
+        // push the index for the final write
+        c = scc_statement_gen_code(op->argv->val.v.x,1);
+        SCC_LIST_ADD(code,last,c);
+        c = scc_statement_gen_code(op->argv->val.v.y,1);
+        SCC_LIST_ADD(code,last,c);
 
-      o = (op->op == POSTINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
+        // for 2dim array we have to expand to a full addition
+        // push the x index and choose the op we need
+        c = scc_statement_gen_code(op->argv->val.v.x,1);
+        SCC_LIST_ADD(code,last,c);
+        o = (op->op == POSTINC ? SCC_OP_ADD : SCC_OP_SUB);
+      } else
+        o = (op->op == POSTINC ? SCC_OP_INC_ARRAY : SCC_OP_DEC_ARRAY);
+
       // push the index
       c = scc_statement_gen_code(op->argv->val.v.y,1);
       SCC_LIST_ADD(code,last,c);
-      // the inc/dec
-      c = scc_code_push_res(o,op->argv->val.v.r);
-    } else {
+    } else
       o = (op->op == POSTINC ? SCC_OP_INC_VAR : SCC_OP_DEC_VAR);
+
+    if(op->argv->val.v.x) {
+      // push the array entry on the stack
+      c = scc_code_push_res(SCC_OP_ARRAY2_READ,op->argv->val.v.r);
+      SCC_LIST_ADD(code,last,c);
+      // push a 1
+      c = scc_code_push_val(SCC_OP_PUSH,1);
+      SCC_LIST_ADD(code,last,c);
+
+      // push the op
+      c = scc_code_new(1);
+      c->data[0] = o;
+      SCC_LIST_ADD(code,last,c);
+      // put the result back into the variable
+      c = scc_code_push_res(SCC_OP_ARRAY2_WRITE,op->argv->val.v.r);
+    } else
       c = scc_code_push_res(o,op->argv->val.v.r);
-    }
     SCC_LIST_ADD(code,last,c);
     break;
   default:
@@ -692,7 +741,8 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
       c = scc_statement_gen_code(st->val.v.y,1);
       SCC_LIST_ADD(code,last,c);
       // op code
-      c = scc_code_push_res(SCC_OP_ARRAY_READ,st->val.v.r);
+      c = scc_code_push_res(st->val.v.x ? SCC_OP_ARRAY2_READ  : SCC_OP_ARRAY_READ,
+                            st->val.v.r);
       SCC_LIST_ADD(code,last,c);
     } else {
       c = scc_code_push_res(SCC_OP_VAR_READ,st->val.v.r);
