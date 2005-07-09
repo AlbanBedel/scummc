@@ -113,12 +113,20 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
         
     if(slot->bitmap_left < left)
       left = slot->bitmap_left;
+
+    if(slot->bitmap_left+slot->bitmap.width > 255) {
+        printf("Warning too wide character: %c (%d)\n",
+               chars[i],chars[i]);
+        chars[i] = 0;
+        continue;
+    }
+
     if(slot->bitmap_left+slot->bitmap.width > right)
       right = slot->bitmap_left+slot->bitmap.width;
     // in scumm the advance is done with width+offset
     // so we must include it if it's bigger
-    if(slot->advance.x > right)
-      right = slot->advance.x;
+    if((slot->advance.x >> 6) > right)
+      right = slot->advance.x >> 6;
         
   }
 
@@ -171,10 +179,11 @@ void charmap_render_char(uint8_t* dst,unsigned dst_stride,
 
 }
 
-scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space) {
+scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space,
+                             int pal_size) {
   scc_img_t* img;
   int cpl,rows,ncol;
-  int i,x,y;
+  int i,j,x,y;
   scc_char_t* ch;
 
   if(width < chmap->width+2*space) {
@@ -204,21 +213,42 @@ scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space
     return NULL;
   }
 
-  img = scc_img_new(width,rows*chmap->height,ncol);
-  img->pal[3] = 0xFF;
-  img->pal[4] = 0xFF;
-  img->pal[5] = 0xFF;
+  if(pal_size) {
+      if(ncol+1 > pal_size) {
+          printf("A bigger palette is needed for this charset (at least %d colors).\n",
+                 ncol+1);
+          return NULL;
+      }
+      ncol = pal_size-1;
+  }
+
+  img = scc_img_new(width,rows*(chmap->height+ 2*space),ncol+1);
+  for(i = 1 ; i < ncol ; i++) {
+      img->pal[3*i+0] = 0xFF;
+      img->pal[3*i+1] = 0xFF;
+      img->pal[3*i+2] = 0xFF;
+  }
+  img->pal[3*i+0] = 0xFF;
+  img->pal[3*i+1] = 0;
+  img->pal[3*i+2] = 0;
+
 
   y = x = space;
   for(i = 0 ; i <= chmap->max_char ; i++) {
-    if(!chmap->chars[i].data) continue;
     ch = &chmap->chars[i];
-        
-    charmap_render_char(&img->data[width*y+x],
-                        width,ch->data,ch->w,ch->h);
+      
+    memset(&img->data[width*(y-1)+x],ncol,ch->x+ch->w);
+    memset(&img->data[width*(y+chmap->height)+x],ncol,ch->x+ch->w);
+    for(j = -1 ; j <= chmap->height ; j++) {
+        img->data[width*(y+j)+x-1] = ncol;
+        img->data[width*(y+j)+x+ch->x+ch->w] = ncol;
+    }
+
+    if(ch->data) charmap_render_char(&img->data[width*(y+ch->y)+x+ch->x],
+                                     width,ch->data,ch->w,ch->h);
 
     x += chmap->width + 2*space;
-    if(width - x < chmap->width + space) {
+    if(x + chmap->width + space > width) {
       x = space;
       y += chmap->height + 2*space;
     }
@@ -342,6 +372,9 @@ static int char_height = 24*64;
 static int hdpi = 30;
 static int vdpi = 30;
 static int vspace = 0;
+static int palsize = 0;
+static int bmp_width = 800;
+static int bmp_space = 8;
 
 static scc_param_t scc_parse_params[] = {
   { "font", SCC_PARAM_STR, 0, 0, &font_file },
@@ -352,6 +385,9 @@ static scc_param_t scc_parse_params[] = {
   { "vdpi", SCC_PARAM_INT, 1, 1000, &vdpi },
   { "hdpi", SCC_PARAM_INT, 1, 1000, &hdpi },
   { "vspace", SCC_PARAM_INT, -1000, 1000, &vspace },
+  { "palsize", SCC_PARAM_INT, 0, 255, &palsize },
+  { "bmp-width", SCC_PARAM_INT, 1, 10000, &bmp_width },
+  { "bmp-space", SCC_PARAM_INT, 3, 10000, &bmp_space },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -400,7 +436,7 @@ int main(int argc,char** argv) {
   if(!chmap) return 1;
 
   if(obmp_file) {
-    oimg = charmap_to_bitmap(chmap,800,8);
+    oimg = charmap_to_bitmap(chmap,bmp_width,bmp_space,palsize);
     if(!oimg) return 1;
 
     if(!scc_img_save_bmp(oimg,obmp_file)) return 1;
