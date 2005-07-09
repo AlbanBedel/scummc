@@ -65,6 +65,34 @@
     {} \
   }
 
+#define PRINT3(name,op) {                        \
+    name "At", 0x##op##41, 0, 2, 0,      \
+    { SCC_FA_VAL, SCC_FA_VAL}                    \
+  },{                                            \
+    name "Color", 0x##op##42, 0, 1, 0,   \
+    { SCC_FA_VAL }                               \
+  },{                                            \
+    name "Clipped", 0x##op##43, 0, 1, 0, \
+    { SCC_FA_VAL }                               \
+  },{                                            \
+    name "Center", 0x##op##45, 0, 0, 0,  \
+    {}                                           \
+  },{                                            \
+    name "Left", 0x##op##47, 0, 0, 0,    \
+    {}                                           \
+  },{                                            \
+    name "Overhead", 0x##op##48, 0, 0, 0,\
+    {}                                           \
+  },{                                            \
+    name "Mumble", 0x##op##4A, 0, 0, 0,  \
+    {}                                           \
+  },{                                            \
+    name , 0x##op##4B, 0, 1, 0,          \
+    { SCC_FA_STR }                               \
+  },{                                            \
+    name "End", 0x##op##FF, 0, 0, 0,     \
+    {} \
+  }
 
 static scc_func_t scc_func[] = {
   {
@@ -644,9 +672,12 @@ static scc_func_t scc_func[] = {
   PRINT("dbgPrint",B6),
   PRINT("sysPrint",B7),
   PRINT2("actorPrint",B8),
-  PRINT("egoPrint",B9)
-
-  ,{
+  PRINT3("egoPrint",B8),
+  
+  {
+    "egoPrintBegin" , 0xB9FE, 0, 0, 0,
+    {}
+  },{
     "actorSay", 0xBA, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_STR }
   },{
@@ -700,6 +731,10 @@ static scc_func_t scc_func[] = {
   },{
     "dimChar2", 0xC0CB, 0, 3, 0,
     { SCC_FA_ARRAY, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+
+    "trace", 0xC1, 0, 2, 0,
+    { SCC_FA_VAL, SCC_FA_STR }
   },{
     
     "abs", 0xC4, 1, 1, 0,
