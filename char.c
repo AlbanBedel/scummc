@@ -64,7 +64,7 @@ static FT_GlyphSlot ft_render_char(FT_Face face,int ch) {
            ch,isprint(ch) ? ch : ' ');
     return NULL;
   }
-  err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+  err = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_MONO);
   if(err) {
     printf("Failed to render character %d (%c)\n",
            ch,isprint(ch) ? ch : ' ');
@@ -175,8 +175,7 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
     dst = ch->data;
     for(r = 0 ; r < ch->h ; r++) {
       for(c = 0 ; c < slot->bitmap.width ; c++)
-        if(src[c] > 0) dst[c] = 1;
-      //memcpy(dst,src,slot->bitmap.width);
+        dst[c] = (src[c/8] & (0x80 >> (c%8))) ? 1 : 0;
       dst += ch->w;
       src += slot->bitmap.pitch;
     }
