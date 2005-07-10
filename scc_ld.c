@@ -1135,13 +1135,16 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
   return 1;
 }
 
-int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
+int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
+                     int local_n,int array_n,int flobj_n,
+                     int inv_n) {
   int room_n = 0,scr_n = scc_ns_res_max(scc_ns,SCC_RES_SCR) + 1;
   int chset_n = scc_ns_res_max(scc_ns,SCC_RES_CHSET) + 1;
   int obj_n = scc_ns_res_max(scc_ns,SCC_RES_OBJ) + 1;
   int cost_n = scc_ns_res_max(scc_ns,SCC_RES_COST)+1;
   int snd_n = scc_ns_res_max(scc_ns,SCC_RES_SOUND)+1;
   int var_n = scc_ns_res_max(scc_ns,SCC_RES_VAR)+1;
+  int bvar_n = scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1;
   scc_ld_room_t* r;
 
 
@@ -1152,6 +1155,9 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
   // if we didn't used them all.
   if(var_n < 140) var_n = 140;
 
+  // the orginal engine seems to just divide by 8 :(
+  bvar_n = ((bvar_n+7)/8)*8;
+
   scc_fd_w32(fd,MKID('R','N','A','M'));
   scc_fd_w32be(fd,8 + 1);
   scc_fd_w8(fd,0);
@@ -1161,13 +1167,13 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd) {
 
   scc_fd_w16le(fd,var_n);
   scc_fd_w16le(fd,0); // unk
-  scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1);
-  scc_fd_w16le(fd,200); // local obj, dunno what's that exactly
-  scc_fd_w16le(fd,200);  // num array we should count them
+  scc_fd_w16le(fd,bvar_n);
+  scc_fd_w16le(fd,local_n); // local obj, dunno what's that exactly
+  scc_fd_w16le(fd,array_n);  // num array we should count them
   scc_fd_w16le(fd,0); // unk
   scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_VERB)+1);
-  scc_fd_w16le(fd,0); // fl objects
-  scc_fd_w16le(fd,0); // inventory
+  scc_fd_w16le(fd,flobj_n); // fl objects
+  scc_fd_w16le(fd,inv_n); // inventory
   scc_fd_w16le(fd,room_n);
   scc_fd_w16le(fd,scr_n);
   scc_fd_w16le(fd,snd_n);
@@ -1249,12 +1255,20 @@ static void usage(char* prog) {
 static char* out_file = NULL;
 static int dump_rooms = 0;
 static int enckey = 0;
+static int max_local = 200;
+static int max_array = 100;
+static int max_flobj = 20;
+static int max_inventory = 20;
 
 
 static scc_param_t scc_ld_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &out_file },
   { "rooms", SCC_PARAM_FLAG, 0, 1, &dump_rooms },
   { "key", SCC_PARAM_INT, 0, 255, &enckey },
+  { "max-local", SCC_PARAM_INT, 0, 0xFFFF, &max_local },
+  { "max-array", SCC_PARAM_INT, 0, 0xFFFF, &max_array },
+  { "max-flobj", SCC_PARAM_INT, 0, 0xFFFF, &max_flobj },
+  { "max-inventory", SCC_PARAM_INT, 0, 0xFFFF, &max_inventory },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1381,7 +1395,7 @@ int main(int argc,char** argv) {
       printf("Failed to open file %s\n",name);
       return 5;
     }
-    if(!scc_ld_write_idx(scc_room,fd)) {
+    if(!scc_ld_write_idx(scc_room,fd,max_local,max_array,max_flobj,max_inventory)) {
       printf("Failed to write index file.\n");
       return 6;
     }
