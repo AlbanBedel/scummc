@@ -194,13 +194,14 @@ void import_char(scc_char_t* ch,char* src, int stride,int w, int h) {
         return;
     }
 
-    for(s = 1, y = 0 ; s && y < h ; y++)
+    for(s = 1, y = 0 ; y < h ; y++) {
         for(x = 0 ; x < w ; x++)
             if(src[y*stride+x]) {
                 s = 0; 
                 break;
             }
-
+        if(!s) break;
+    }
     if(y >= h) {
         ch->data = calloc(1,1);
         ch->x = w-1;
@@ -210,12 +211,14 @@ void import_char(scc_char_t* ch,char* src, int stride,int w, int h) {
     }
     ch->y = y;
     ch->h = h - y;
-    for(s = 1, x = 0 ; s && x < w ; x++)
+    for(s = 1, x = 0 ; x < w ; x++) {
         for(y = ch->y ; y < h ; y++)
             if(src[y*stride+x]) {
                 s = 0;
                 break;
             }
+        if(!s) break;
+    }
 
     ch->x = x;
     ch->w = w - x;
