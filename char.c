@@ -311,6 +311,115 @@ scc_charmap_t* new_charmap_from_bitmap(char* path) {
     return chmap;
 }
 
+scc_charmap_t* charmap_from_char(char* path) {
+    scc_fd_t* fd = new_scc_fd(path,O_RDONLY,0);
+    uint32_t size,fmt;
+    uint32_t size2,unk,bpp,height,num_char;
+    uint8_t pal[15],byte,mask,bits,step;
+    off_t font_ptr;
+    uint32_t* char_off,x,i;
+    scc_charmap_t* chmap;
+    scc_char_t *ch;
+
+    if(!fd) {
+        printf("Failed to open %s\n",path);
+        return NULL;
+    }
+
+    // read the scumm block header
+    fmt = scc_fd_r32(fd);
+    size = scc_fd_r32be(fd);
+
+    if(fmt != MKID('C','H','A','R') || size < 8+25 ) {
+        printf("%s doesn't seems to be a valid CHAR file.\n",path);
+        scc_fd_close(fd);
+        return NULL;
+    }
+
+    // read the charset header
+    size2 = scc_fd_r32le(fd);
+    if(size2 != size-8-15)
+        printf("Warning size2 is invalid: %d != %d\n",size2,size-8-15);
+    
+    unk = scc_fd_r16le(fd);
+    if(scc_fd_read(fd,pal,15) != 15) {
+        printf("Failed to read the palette.\n");
+        scc_fd_close(fd);
+        return NULL;
+    }
+    font_ptr = scc_fd_pos(fd);
+    bpp = scc_fd_r8(fd);
+    switch(bpp) {
+    case 1:
+        mask = 0x1;
+        break;
+    case 2:
+        mask = 0x3;
+        break;
+    case 4:
+        mask = 0xF;
+        break;
+    default:
+        printf("Invalid bpp: %d\n",bpp);
+        scc_fd_close(fd);
+        return NULL;
+    }
+    height = scc_fd_r8(fd);
+    if(!height) {
+        printf("Charset have 0 height ??\n");
+        scc_fd_close(fd);
+        return NULL;
+    }
+    num_char = scc_fd_r16le(fd);
+    if(!num_char) {
+        printf("Charset have no char ???\n");
+        scc_fd_close(fd);
+        return NULL;
+    }
+    if(size < 8 + 25 + 4*num_char) {
+        printf("Charset is too small.\n");
+        scc_fd_close(fd);
+        return NULL;
+    }
+    // read the offset table
+    char_off = malloc(num_char*4);
+    for(i = 0 ; i < num_char ; i++)
+        char_off[i] = scc_fd_r32le(fd);
+    
+    chmap = calloc(1,sizeof(scc_charmap_t));
+    chmap->bpp = bpp;
+    chmap->height = height;
+
+    // read the chars
+    printf("Reading %d chars\n",num_char);
+    for(i = 0 ; i < num_char ; i++) {
+        if(!char_off[i]) continue;
+        scc_fd_seek(fd,font_ptr + char_off[i],SEEK_SET);
+        ch = &chmap->chars[i];
+        ch->w = scc_fd_r8(fd);
+        ch->h = scc_fd_r8(fd);
+        ch->x = scc_fd_r8(fd);
+        ch->y = scc_fd_r8(fd);
+        if(!ch->w || !ch->h) continue;
+        ch->data = malloc(ch->w*ch->h);
+        bits = 0;
+        step = 8/bpp;
+        x = 0;
+        while(x < ch->w*ch->h) {
+            if(!bits) {
+                byte = scc_fd_r8(fd);
+                bits = 8;
+            }
+            ch->data[x] = (byte >> (8-bpp)) & mask;
+            byte <<= bpp;
+            bits -= bpp;
+            x++;
+        }
+        chmap->max_char = i;
+    }
+    return chmap;
+}
+
 void charmap_render_char(uint8_t* dst,unsigned dst_stride,
                          uint8_t* src,unsigned src_stride,
                          unsigned h) {
@@ -508,6 +617,7 @@ static char* font_file = NULL;
 static char* obmp_file = NULL;
 static char* ibmp_file = NULL;
 static char* ochar_file = NULL;
+static char* ichar_file = NULL;
 static int char_width = 0;
 static int char_height = 24*64;
 static int hdpi = 30;
@@ -522,6 +632,7 @@ static scc_param_t scc_parse_params[] = {
   { "obmp", SCC_PARAM_STR, 0, 0, &obmp_file },
   { "ibmp", SCC_PARAM_STR, 0, 0, &ibmp_file },
   { "ochar", SCC_PARAM_STR, 0, 0, &ochar_file },
+  { "ichar", SCC_PARAM_STR, 0, 0, &ichar_file },
   { "cw", SCC_PARAM_INT, 1, 1000*64, &char_width },
   { "ch", SCC_PARAM_INT, 1, 1000*64, &char_height },
   { "vdpi", SCC_PARAM_INT, 1, 1000, &vdpi },
@@ -550,7 +661,8 @@ int main(int argc,char** argv) {
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
-  if(files || !(font_file || ibmp_file) || !(obmp_file || ochar_file)) usage(argv[0]);
+  if(files || !(font_file || ibmp_file || ichar_file) ||
+     !(obmp_file || ochar_file)) usage(argv[0]);
 
   // init some default chars
   memset(chars,0,SCC_MAX_CHAR*sizeof(int));
@@ -575,6 +687,8 @@ int main(int argc,char** argv) {
                                   font_file,0,
                                   char_width,char_height,
                                   hdpi,vdpi,vspace);
+  else if(ichar_file)
+      chmap = charmap_from_char(ichar_file);
   else
       chmap = new_charmap_from_bitmap(ibmp_file);
 
