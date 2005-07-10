@@ -34,6 +34,25 @@ typedef struct scc_charmap_st {
   scc_char_t chars[SCC_MAX_CHAR];
 } scc_charmap_t;
 
+uint8_t default_pal[] = {
+    0x00, 0x00, 0x00, // 0
+    0xFF, 0xFF, 0xFF,
+    0x00, 0x00, 0xAD,
+    0x00, 0xAA, 0x00,
+    0x00, 0xAA, 0xAD, // 4
+    0xAD, 0x00, 0x00,
+    0xAD, 0x00, 0xAD,
+    0xAD, 0x55, 0x00,
+    0xAD, 0xAA, 0xAD, // 8
+    0x52, 0x55, 0x52,
+    0x52, 0x55, 0xFF,
+    0x52, 0xFF, 0x52,
+    0x52, 0xFF, 0xFF, // 12
+    0xFF, 0x55, 0x52,
+    0xFF, 0x55, 0x55,
+    0xFF, 0xFF, 0x52,
+};
+
 static FT_GlyphSlot ft_render_char(FT_Face face,int ch) {
   FT_ULong gidx;
   FT_Error err;
@@ -167,6 +186,97 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
   return chmap;
 }
 
+scc_charmap_t* new_charmap_from_bitmap(char* path) {
+    scc_img_t* img = scc_img_open(path);
+    char bcol = img->ncol-1;
+    int x,y,x2,y2,w,h,idx = 0;
+    char* src;
+    scc_charmap_t* chmap;
+    scc_char_t* ch;
+
+    if(!img) {
+        printf("Failed to open %s\n",path);
+        return NULL;
+    }
+    // check the palette
+    // keep in mind we need an extra color for our "borders"
+    if(img->ncol > 17) {
+        printf("Image have too many colors.\n");
+        scc_img_free(img);
+        return NULL;
+    }
+    if(img->ncol < 3) {
+        printf("Image have too few colors.\n");
+        scc_img_free(img);
+        return NULL;
+    }
+
+    chmap = calloc(1,sizeof(scc_charmap_t));
+
+    if(img->ncol > 9)
+        chmap->bpp = 4;
+    else if(img->ncol > 5)
+        chmap->bpp = 3;
+    else if(img->ncol >= 3)
+        chmap->bpp = 2;
+    else
+        chmap->bpp = 1;
+    
+
+    y = 1;
+    src = img->data+img->w;
+    while(y < img->h) {
+        x = 0;
+        while(x < img->w) {
+            // look for the start of a border
+            if(src[x] != bcol || src[x-img->w] == bcol) {
+                x++;
+                continue;
+            }
+            // look for some width
+            //if(src[-img->w] == bcol)
+            for( x2 = x+1 ; x2 < img->w ; x2++)
+                if(src[x2] != bcol) break;
+            w = x2-x-2;
+            if(w < 0) {
+                x++;
+                continue;
+            }
+            // and some height
+            for( y2 = y+1 ; y2 < img->h ; y2++)
+                if(img->data[img->w*y2+x] != bcol) break;
+            h = y2-y-2;
+            if(h < 0) {
+                x++;
+                continue;
+            }
+            //printf("Found char %d at %dx%d (%dx%d)\n",idx,x+1,y+1,w,h);
+
+            if(w > chmap->width) chmap->width = w;
+            if(h > chmap->height) chmap->height = h;
+
+            // do something crude atm
+            ch = &chmap->chars[idx];
+            ch->w = w;
+            ch->h = h;
+
+            if(w > 0 && h > 0) {
+                ch->data = malloc(w*h);
+                for(y2 = 0 ; y2 < h ; y2++)
+                    memcpy(&ch->data[y2*w],&src[(y2+1)*img->w+x+1],w);
+            }
+            
+            idx++;
+            x = x2;
+        }
+        src += img->w;
+        y++;
+    }
+    chmap->max_char = idx-1;
+
+    return chmap;
+}
+
 void charmap_render_char(uint8_t* dst,unsigned dst_stride,
                          uint8_t* src,unsigned src_stride,
                          unsigned h) {
@@ -223,14 +333,10 @@ scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space
   }
 
   img = scc_img_new(width,rows*(chmap->height+ 2*space),ncol+1);
-  for(i = 1 ; i < ncol ; i++) {
-      img->pal[3*i+0] = 0xFF;
-      img->pal[3*i+1] = 0xFF;
-      img->pal[3*i+2] = 0xFF;
-  }
-  img->pal[3*i+0] = 0xFF;
-  img->pal[3*i+1] = 0;
-  img->pal[3*i+2] = 0;
+  memcpy(img->pal,default_pal,3*ncol);
+  img->pal[3*ncol+0] = 0xFF;
+  img->pal[3*ncol+1] = 0;
+  img->pal[3*ncol+2] = 0;
 
 
   y = x = space;
@@ -366,6 +472,7 @@ int charmap_to_char(scc_charmap_t* chmap, char* path) {
 
 static char* font_file = NULL;
 static char* obmp_file = NULL;
+static char* ibmp_file = NULL;
 static char* ochar_file = NULL;
 static int char_width = 0;
 static int char_height = 24*64;
@@ -379,6 +486,7 @@ static int bmp_space = 8;
 static scc_param_t scc_parse_params[] = {
   { "font", SCC_PARAM_STR, 0, 0, &font_file },
   { "obmp", SCC_PARAM_STR, 0, 0, &obmp_file },
+  { "ibmp", SCC_PARAM_STR, 0, 0, &ibmp_file },
   { "ochar", SCC_PARAM_STR, 0, 0, &ochar_file },
   { "cw", SCC_PARAM_INT, 1, 1000*64, &char_width },
   { "ch", SCC_PARAM_INT, 1, 1000*64, &char_height },
@@ -408,7 +516,7 @@ int main(int argc,char** argv) {
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
-  if(files || !font_file || !(obmp_file || ochar_file)) usage(argv[0]);
+  if(files || !(font_file || ibmp_file) || !(obmp_file || ochar_file)) usage(argv[0]);
 
   // init some default chars
   memset(chars,0,SCC_MAX_CHAR*sizeof(int));
@@ -428,10 +536,13 @@ int main(int argc,char** argv) {
   if(char_width < 128) char_width *= 64;
   if(char_height < 128) char_height *= 64;
 
-  chmap = new_charmap_from_ft(chars,SCC_MAX_CHAR,
-                              font_file,0,
-                              char_width,char_height,
-                              hdpi,vdpi,vspace);
+  if(font_file)
+      chmap = new_charmap_from_ft(chars,SCC_MAX_CHAR,
+                                  font_file,0,
+                                  char_width,char_height,
+                                  hdpi,vdpi,vspace);
+  else
+      chmap = new_charmap_from_bitmap(ibmp_file);
 
   if(!chmap) return 1;
 
