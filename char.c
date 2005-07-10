@@ -186,13 +186,53 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
   return chmap;
 }
 
+void import_char(scc_char_t* ch,char* src, int stride,int w, int h) {
+    int x,y,s;
+    
+    if(w <= 0 || h <= 0) {
+        ch->w = 0;
+        ch->h = 0;
+        return;
+    }
+
+    for(s = 1, y = 0 ; s && y < h ; y++)
+        for(x = 0 ; x < w ; x++)
+            if(src[y*stride+x]) {
+                s = 0; 
+                break;
+            }
+
+    if(y >= h) {
+        ch->data = calloc(1,1);
+        ch->x = w-1;
+        ch->y = h-1;
+        ch->w = ch->h = 1;
+        return;
+    }
+    ch->y = y;
+    ch->h = h - y;
+    for(s = 1, x = 0 ; s && x < w ; x++)
+        for(y = ch->y ; y < h ; y++)
+            if(src[y*stride+x]) {
+                s = 0;
+                break;
+            }
+
+    ch->x = x;
+    ch->w = w - x;
+
+    ch->data = malloc(ch->w*ch->h);
+
+    for(y = 0 ; y < ch->h ; y++)
+        memcpy(&ch->data[y*ch->w],&src[(y+ch->y)*stride+ch->x],ch->w);
+}
+
 scc_charmap_t* new_charmap_from_bitmap(char* path) {
     scc_img_t* img = scc_img_open(path);
     char bcol = img->ncol-1;
     int x,y,x2,y2,w,h,idx = 0;
     char* src;
     scc_charmap_t* chmap;
-    scc_char_t* ch;
 
     if(!img) {
         printf("Failed to open %s\n",path);
@@ -234,7 +274,6 @@ scc_charmap_t* new_charmap_from_bitmap(char* path) {
                 continue;
             }
             // look for some width
-            //if(src[-img->w] == bcol)
             for( x2 = x+1 ; x2 < img->w ; x2++)
                 if(src[x2] != bcol) break;
             w = x2-x-2;
@@ -255,16 +294,9 @@ scc_charmap_t* new_charmap_from_bitmap(char* path) {
             if(w > chmap->width) chmap->width = w;
             if(h > chmap->height) chmap->height = h;
 
-            // do something crude atm
-            ch = &chmap->chars[idx];
-            ch->w = w;
-            ch->h = h;
-
-            if(w > 0 && h > 0) {
-                ch->data = malloc(w*h);
-                for(y2 = 0 ; y2 < h ; y2++)
-                    memcpy(&ch->data[y2*w],&src[(y2+1)*img->w+x+1],w);
-            }
+            // read the char
+            import_char(&chmap->chars[idx],&src[img->w+x+1],
+                        img->w,w,h);
             
             idx++;
             x = x2;
