@@ -17,13 +17,14 @@
  *
  */
 
-class ClassNeverClip @ 20;
-class ClassAlwaysClip @ 21;
-class ClassIgnoreBoxes @ 22;
-class ClassYFlip @ 29;
-class ClassXFlip @ 30;
-class ClassPlayer @ 31;
-class ClassUntouchable @ 32;
+class ClassNeverClip           @ 20;
+class ClassAlwaysClip          @ 21;
+class ClassIgnoreBoxes         @ 22;
+
+class ClassYFlip               @ 29;
+class ClassXFlip               @ 30;
+class ClassPlayer              @ 31;
+class ClassUntouchable         @ 32;
 
 int VAR_KEYPRESS               @ 0;
 int VAR_EGO                    @ 1;
