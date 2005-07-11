@@ -327,6 +327,12 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return BRANCH;
 }
 
+"return" {
+  SET_POS(6);
+  yylval.integer = SCC_BRANCH_RETURN;
+  return BRANCH;
+}
+
 "cutscene" {
   SET_POS(8);
   return CUTSCENE;

@@ -806,7 +806,8 @@ static scc_code_t* scc_if_gen_code(scc_instruct_t* inst) {
   SCC_LIST_ADD(code,last,c);
 
   // Optimize out the branch instructions, they all generate a jump
-  if(inst->body->type == SCC_INST_BRANCH) {
+  if(inst->body->type == SCC_INST_BRANCH &&
+     inst->body->subtype != SCC_BRANCH_RETURN) {
     // get the code
     c = scc_branch_gen_code(inst->body);
     // set our condition instead of the unconditional jmp
@@ -959,6 +960,13 @@ static scc_code_t* scc_do_gen_code(scc_instruct_t* inst) {
 static scc_code_t* scc_branch_gen_code(scc_instruct_t* inst) {
   scc_code_t* c;
   scc_loop_t* l;
+
+  if(inst->subtype == SCC_BRANCH_RETURN) {
+    c = scc_code_new(1);
+    c->data[0] = SCC_OP_SCR_RET;
+    c->fix = SCC_FIX_RETURN;
+    return c;
+  }
 
   if(!loop_stack) {
     printf("Branching instruction can't be used outside of loops.\n");
@@ -1209,7 +1217,8 @@ static scc_code_t* scc_instruct_gen_code(scc_instruct_t* inst) {
   return code;
 }
 
-scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst) {
+scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst,
+                             uint8_t return_op,char close_scr) {
   scc_code_t* code = scc_instruct_gen_code(inst);
   scc_sym_fix_t* rf = NULL, *rf_last = NULL, *r;
   scc_symbol_t* sym;
@@ -1217,16 +1226,17 @@ scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst) {
   uint8_t* data;
   scc_script_t* scr;
   
-  if(!code) {
-    printf("Code generation failed.\n");
-    return NULL;
-  }
+  if(!code) return NULL;
 
-  l = scc_code_size(code) + 1;
+  l = scc_code_size(code) + (close_scr ? 1 : 0);
   data = malloc(l);
 
   for(p = 0 ; code ; p+= code->len, code = code->next) {
     memcpy(&data[p],code->data,code->len);
+    if(code->fix == SCC_FIX_RETURN) {
+      data[p] = return_op;
+      continue;
+    }
     if(code->fix >= SCC_FIX_RES) {
       uint16_t rid = SCC_AT_16LE(data,p);
       sym = scc_ns_get_sym_with_id(ns,code->fix - SCC_FIX_RES,rid);
@@ -1241,10 +1251,8 @@ scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst) {
       SCC_LIST_ADD(rf,rf_last,r);
     }
   }
-  // Add return. The original game seems to use different op
-  // for object script and script, but scumvm just use the same
-  // code for both, so why bother.
-  data[l-1] = 0x65;
+
+  if(close_scr) data[l-1] = return_op;
 
   scr = calloc(1,sizeof(scc_script_t));
   scr->code = data;

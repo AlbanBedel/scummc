@@ -165,6 +165,7 @@
   scc_script_t* scr;
   scc_str_t* strvar;
   int* intlist;
+  scc_verb_script_t* vscr;
 }
 
 // Operators, the order is defining the priority.
@@ -258,6 +259,9 @@
 %type <inst> instructions
 %type <inst> body
 %type <scr> scriptbody
+%type <inst> verbcode
+%type <sym> verbentry
+%type <vscr> verbsblock
 
 %type <integer> gvardecl
 %type <integer> gresdecl
@@ -266,7 +270,6 @@
 
 %type <arg> scriptargs
 %type <sym> roomscrdecl
-%type <sym> verbentrydecl
 %type <strlist> zbufs
 %type <intlist> synclist
 %type <integer> typemod
@@ -466,12 +469,6 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
 }
 // objects
 | roomobjdecl '{' objectparams objectverbs '}'
-{
-  // add the obj to the room
-  scc_roobj_add_obj(scc_roobj,scc_obj);
-  scc_obj = NULL;
-}
-| roomobjdecl '{' objectparams '}'
 {
   // add the obj to the room
   scc_roobj_add_obj(scc_roobj,scc_obj);
@@ -788,76 +785,91 @@ zbufs: STRING
 }
 ;
 
-
-objectverbs: verbentry
-| objectverbs verbentry;
-
-// a verb entry. SYM should be a declared verb name
-verbentry: verbentrydecl '{' scriptbody '}'
+objectverbs: /* nothing */
 {
-  if($3) {
-    $3->sym = $1;
-    if(!scc_roobj_obj_add_verb(scc_obj,$3))
-      SCC_ABORT(@1,"Failed to add verb script.\n");
-  }
+}
+| verbentrydecl '{' verbsblock '}'
+{
+  scc_verb_script_t* v,*l;
+  scc_script_t* scr;
+
+  for(v = $3 ; v ; l = v, v = v->next,free(l) ) {
+    if(v->inst)
+      scr = scc_script_new(scc_ns,v->inst,SCC_OP_VERB_RET,v->next ? 0 : 1);
+    else
+      scr = calloc(1,sizeof(scc_script_t));
+    scr->sym = v->sym;
+    if(!scc_roobj_obj_add_verb(scc_obj,scr))
+      SCC_ABORT(@1,"Failed to add verb %s.\n",v->sym ? v->sym->sym : "default");
+  }    
 
   scc_ns_pop(scc_ns);
 }
 ;
 
-verbentrydecl: SYM '(' scriptargs ')'
+verbentrydecl: VERB '(' scriptargs ')'
 {
   scc_scr_arg_t* a = $3;
-  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$1);
+  // push the obj for the local vars
+  scc_ns_push(scc_ns,scc_obj->sym);
+
+  // declare the arguments
+  local_vars = 0;
+  while(a) {
+    scc_ns_decl(scc_ns,NULL,a->sym,SCC_RES_LVAR,a->type,local_vars);
+    local_vars++;
+    a = a->next;
+  }
+}
+;
+
+verbsblock: verbentry verbcode
+{
+  $$ = calloc(1,sizeof(scc_verb_script_t));
+  $$->sym = $1;
+  $$->inst = $2;
+}
+
+| verbsblock verbentry verbcode
+{
+  $$ = $1;
+  for(; $1 ; $1 = $1->next) {
+    if($1->sym == $2)
+      SCC_ABORT(@2,"Verb %s is already defined.\n",
+                $2 ? $2->sym : "default");
+    if(!$1->next) break;
+  }
+  $1->next = calloc(1,sizeof(scc_verb_script_t));
+  $1 = $1->next;
+  $1->sym = $2;
+  $1->inst = $3;
+}
+;
+
+verbcode: /* nothing */
+{
+  $$ = NULL;
+}
+| instructions
+;
+
+verbentry: CASE SYM ':'
+{
+  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$2);
   if(!sym)
-    SCC_ABORT(@1,"%s is not a declared verb.\n",$1);
+    SCC_ABORT(@1,"%s is not a declared verb.\n",$2);
   
   if(sym->type != SCC_RES_VERB)
-    SCC_ABORT(@1,"%s is not a verb in the current context.\n",$1);
+    SCC_ABORT(@1,"%s is not a verb in the current context.\n",$2);
 
   // allocate an rid
   if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
-  // push the obj for the local vars
-  scc_ns_push(scc_ns,scc_obj->sym);
 
-  // declare the arguments
-  local_vars = 0;
-  while(a) {
-    scc_ns_decl(scc_ns,NULL,a->sym,SCC_RES_LVAR,a->type,local_vars);
-    local_vars++;
-    a = a->next;
-  }
-  
   $$ = sym;
 }
-| DEFAULT '(' scriptargs ')'
+| DEFAULT ':'
 {
-  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,"default");
-  scc_scr_arg_t* a = $3;
-
-  if(!sym) {
-    // we need this little hack to declare it at the toplevel of the
-    // namespace.
-    scc_symbol_t* tmp = scc_ns->cur;
-    scc_ns->cur = NULL;
-    sym = scc_ns_decl(scc_ns,NULL,"default",SCC_RES_VERB,0,0xFF);
-    scc_ns->cur = tmp;
-    scc_ns_get_rid(scc_ns,sym);
-  } else if(sym->type != SCC_RES_VERB) // shouldn't happend
-    SCC_ABORT(@1,"default is already defined as something else than a verb.\n");
-
-  // push the obj for the local vars
-  scc_ns_push(scc_ns,scc_obj->sym);
-
-  // declare the arguments
-  local_vars = 0;
-  while(a) {
-    scc_ns_decl(scc_ns,NULL,a->sym,SCC_RES_LVAR,a->type,local_vars);
-    local_vars++;
-    a = a->next;
-  }
-  
-  $$ = sym;
+  $$ = NULL;
 }
 ;
 
@@ -920,12 +932,16 @@ scriptbody:  /* empty */
 }
 | instructions
 {
-  $$ = scc_script_new(scc_ns,$1);
+  $$ = scc_script_new(scc_ns,$1,SCC_OP_SCR_RET,1);
+  if(!$$)
+    SCC_ABORT(@1,"Code generation failed.\n");
 }
 
 | vardecl instructions
 {
-  $$ = scc_script_new(scc_ns,$2);
+  $$ = scc_script_new(scc_ns,$2,SCC_OP_SCR_RET,1);
+  if(!$$)
+    SCC_ABORT(@1,"Code generation failed.\n");
 }
 ;
 

@@ -23,7 +23,8 @@ void scc_code_free(scc_code_t* c);
 
 void scc_code_free_all(scc_code_t* c);
 
-scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst);
+scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst,
+                             uint8_t return_op,char close_scr);
 
 void scc_script_free(scc_script_t* scr);
 

@@ -36,7 +36,7 @@ static int scc_addr_max[] = {
   0xFFFF,  // SOUND
   0xFFFF,  // CHSET
   0xFF,    // LSCR
-  0xFF,    // VERB (0xFF is default)
+  0xFE,    // VERB (0xFF is default)
   0xFFFF,  // OBJ
   0x0F,    // STATE
   0x400F,  // LVAR

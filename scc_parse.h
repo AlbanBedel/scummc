@@ -62,6 +62,7 @@ typedef struct scc_op_st scc_op_t;
 typedef struct scc_operator_st scc_operator_t;
 typedef struct scc_sym_fix_st scc_sym_fix_t;
 typedef struct scc_str_st scc_str_t;
+typedef struct scc_verb_script_st scc_verb_script_t;
 
 // func arg type
 
@@ -176,9 +177,11 @@ struct scc_statement_st {
 
 #define SCC_BRANCH_BREAK     0
 #define SCC_BRANCH_CONTINUE  1
+#define SCC_BRANCH_RETURN    2
 
 #define SCC_FIX_NONE    0
 #define SCC_FIX_BRANCH  1
+#define SCC_FIX_RETURN  2
 #define SCC_FIX_RES     0x100
 
 struct scc_instruct_st {
@@ -263,6 +266,12 @@ struct scc_script_st {
   scc_sym_fix_t* sym_fix;
 };
 
+struct scc_verb_script_st {
+  scc_verb_script_t* next;
+  scc_symbol_t* sym;
+  scc_instruct_t* inst;
+};
+
 struct scc_operator_st {
   int scc_op;
   int op;
@@ -319,6 +328,9 @@ struct scc_operator_st {
 
 #define SCC_OP_JNZ               0x5C
 #define SCC_OP_JZ                0x5D
+
+#define SCC_OP_VERB_RET          0x65
+#define SCC_OP_SCR_RET           0x66
 
 #define SCC_OP_CUTSCENE_END      0x67
 #define SCC_OP_CUTSCENE_BEGIN    0x68

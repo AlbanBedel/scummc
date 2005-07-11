@@ -575,9 +575,15 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
     size = SCC_AT_32BE(data,pos+4);
   }
 
-  if(type != MKID('s','c','o','b') || size <= 8 || pos+size != len) {
+  if(type != MKID('s','c','o','b') || size < 8 || pos+size != len) {
     printf("Invalid scob block ????\n");
     return NULL;
+  }
+
+  if(size == 8) {
+    scr = calloc(1,sizeof(scc_script_t));
+    scr->sym = sym;
+    return scr;
   }
 
   pos += 8;
@@ -715,11 +721,14 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
       return NULL;
     }
     id = SCC_AT_16LE(blk->data,pos + 8);
-    sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VERB,id);
-    if(!sym) {
-      printf("verb block contain an invalid id: %d ????\n",id);
-      return NULL;
-    }
+    if(id) {
+      sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VERB,id);
+      if(!sym) {
+        printf("verb block contain an invalid id: %d ????\n",id);
+        return NULL;
+      }
+    } else
+      sym = NULL;
     new_scr = scc_ld_parse_scob(room,sym,&blk->data[pos+10],len-10);
     if(!new_scr) {
       printf("Failed to create verb %s.\n",sym->sym);
@@ -764,9 +773,12 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   vpos = 33+nverb*3+1;
   vn = 0;
   while(scr) {
-    new->data[33+vn*3] = scr->sym->addr;
+    if(scr->sym)
+      new->data[33+vn*3] = scr->sym->addr;
+    else
+      new->data[33+vn*3] = 0xFF;
     SCC_AT_16(new->data,33+vn*3+1) = vpos-25;
-    memcpy(&new->data[vpos],scr->code,scr->code_len);
+    if(scr->code_len) memcpy(&new->data[vpos],scr->code,scr->code_len);
     vpos += scr->code_len;
     vn++;
     // we should free it too

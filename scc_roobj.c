@@ -603,25 +603,19 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
 }
 
 
-
-scc_script_t* scc_roobj_obj_get_verb(scc_roobj_obj_t* obj,scc_symbol_t* sym) {
+int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr) {
   scc_script_t* s;
 
   for(s = obj->verb ; s ; s = s->next) {
-    if(s->sym == sym) return s;
-  }
-  return NULL;
-
-}
-
-int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr) {
-  if(scc_roobj_obj_get_verb(obj,scr->sym)) {
-    printf("Why are we trying to add a verb we alredy have ????\n");
-    return 0;
+    if(scr->sym == s->sym) {
+      printf("Why are we trying to add a verb we alredy have ????\n");
+      return 0;
+    }
+    if(!s->next) break;
   }
 
-  scr->next = obj->verb;
-  obj->verb = scr;
+  if(s) s->next = scr;
+  else obj->verb = scr;
 
   return 1;
 }
@@ -848,7 +842,7 @@ static int scc_write_scob(scc_fd_t* fd, scc_script_t* scr) {
 
   scc_fd_w32(fd,MKID('s','c','o','b'));
   scc_fd_w32be(fd,8 + scr->code_len);
-  scc_fd_write(fd,scr->code,scr->code_len);
+  if(scr->code_len) scc_fd_write(fd,scr->code,scr->code_len);
 
   return 1;
 }
@@ -1105,7 +1099,8 @@ int scc_write_verb_block(scc_script_t* scr,scc_fd_t* fd) {
   while(scr) {
     scc_fd_w32(fd,MKID('v','e','r','b'));
     scc_fd_w32be(fd,8 + 2 +scc_scob_size(scr));
-    scc_fd_w16le(fd,scr->sym->rid);
+    if(scr->sym) scc_fd_w16le(fd,scr->sym->rid);
+    else scc_fd_w16le(fd,0);
     scc_write_scob(fd,scr);
     scr = scr->next;
   }
