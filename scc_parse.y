@@ -788,12 +788,12 @@ zbufs: STRING
 objectverbs: /* nothing */
 {
 }
-| verbentrydecl '{' verbsblock '}'
+| verbentrydecl '{' vardecl verbsblock '}'
 {
   scc_verb_script_t* v,*l;
   scc_script_t* scr;
 
-  for(v = $3 ; v ; l = v, v = v->next,free(l) ) {
+  for(v = $4 ; v ; l = v, v = v->next,free(l) ) {
     if(v->inst)
       scr = scc_script_new(scc_ns,v->inst,SCC_OP_VERB_RET,v->next ? 0 : 1);
     else
@@ -926,16 +926,6 @@ scriptbody:  /* empty */
 {
   $$ = NULL;
 }
-| vardecl
-{
-  $$ = NULL;
-}
-| instructions
-{
-  $$ = scc_script_new(scc_ns,$1,SCC_OP_SCR_RET,1);
-  if(!$$)
-    SCC_ABORT(@1,"Code generation failed.\n");
-}
 
 | vardecl instructions
 {
@@ -945,10 +935,16 @@ scriptbody:  /* empty */
 }
 ;
 
-// bit/word/array/local
-vardecl: vdecl ';'
-{}
-| vardecl vdecl ';'
+
+// bit, nibble, char, byte, int
+vardecl: /* empty */
+| vardec
+;
+
+vardec: vdecl ';'
+{
+}
+| vardec vdecl ';'
 ;
 
 /// this will only decl local vars
