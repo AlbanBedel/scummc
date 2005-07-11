@@ -255,6 +255,7 @@
 %type <st> caseblock
 %type <inst> switchblock
 %type <inst> loopblock
+%type <inst> cutsceneblock
 %type <inst> block
 %type <inst> instructions
 %type <inst> oneinstruct
@@ -1035,6 +1036,7 @@ block: ifblock
 {
   $$ = $1;
 }
+| cutsceneblock
 
 | loopblock
 {
@@ -1084,8 +1086,9 @@ loopblock: FOR '(' statements ';' statements ';' statements ')' body
   $$->cond = $3;
   $$->body = $6;
 }
+;
 
-| CUTSCENE '(' cargs ')' body
+cutsceneblock: CUTSCENE '(' cargs ')' body
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_CUTSCENE;
