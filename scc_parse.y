@@ -257,6 +257,8 @@
 %type <inst> loopblock
 %type <inst> block
 %type <inst> instructions
+%type <inst> oneinstruct
+%type <inst> dobody
 %type <inst> body
 %type <scr> scriptbody
 %type <inst> verbcode
@@ -990,31 +992,42 @@ instructions: instruct
 }
 ;
 
-instruct: statements ';'
+instruct: oneinstruct ';'
+| block
+;
+
+oneinstruct: statements
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_ST;
   $$->pre = $1;
 }
 
-| BRANCH ';'
+| BRANCH
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_BRANCH;
   $$->subtype = $1;
 }
 
-| BRANCH SYM ';'
+| BRANCH SYM
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_BRANCH;
   $$->subtype = $1;
   $$->sym = $2;
 }
+;
 
-| block
+
+dobody: oneinstruct
 {
   $$ = $1;
+}
+
+| '{' instructions '}'
+{
+  $$ = $2;
 }
 ;
 
@@ -1055,7 +1068,7 @@ loopblock: FOR '(' statements ';' statements ';' statements ')' body
   $$->body = $5; 
 }
 
-| DO body WHILE '(' statements ')' ';'
+| DO dobody WHILE '(' statements ')' ';'
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_DO;
