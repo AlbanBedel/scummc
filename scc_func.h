@@ -120,7 +120,7 @@ static scc_func_t scc_func[] = {
     "startScriptQuick", 0x5F, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
-    "startObject", 060, 0, 4, 0,
+    "startObject", 0x60, 0, 4, 0,
     // flags,     script,     entryp,     args
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_LIST }
   },{
