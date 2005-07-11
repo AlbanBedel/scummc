@@ -578,6 +578,13 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   img = scc_img_open(img_path);
   if(!img) return 0;
 
+  if(img->w%8 != 0) {
+      printf("Image width must be a multiple of 8.\n");
+      scc_img_free(img);
+      return 0;
+  }
+
+
   st = calloc(1,sizeof(scc_roobj_state_t));
   st->hs_x = x;
   st->hs_y = y;
@@ -585,7 +592,10 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
 
   if(zp_paths) {
     for(i = 0 ; zp_paths[i] ; i++) {
-      st->zp[i] = scc_img_open(zp_paths[i]);
+      if(zp_paths[i][0] == '\0')
+        st->zp[i] = scc_img_new(img->w,img->h,2);
+      else
+        st->zp[i] = scc_img_open(zp_paths[i]);
       if(!st->zp[i]) {
 	scc_roobj_state_free(st);
 	return 0;
