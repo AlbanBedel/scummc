@@ -218,7 +218,7 @@ scc_symbol_t*  scc_ns_add_sym(scc_ns_t* ns, char* sym,
   rr->type = type;
   rr->subtype = subtype;
   rr->sym = strdup(sym);
-  rr->addr = addr;
+  rr->addr = -1;
   rr->status = status;
 
   if(addr >= 0) {
@@ -226,8 +226,7 @@ scc_symbol_t*  scc_ns_add_sym(scc_ns_t* ns, char* sym,
       scc_symbol_free(rr);
       return NULL;
     }
-  } else
-      rr->addr = addr;
+  }
 
   if(ns->cur) {
     rr->next = ns->cur->childs;
