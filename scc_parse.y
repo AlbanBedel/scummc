@@ -1435,13 +1435,34 @@ var: SYM
 
 call: SYM '(' cargs ')'
 {
-  scc_statement_t* a;
+  scc_statement_t *a,*scr,*list;
   scc_func_t* f;
+  scc_symbol_t* s;
   char* err;
 
   f = scc_get_func($1);
-  if(!f)
-    SCC_ABORT(@1,"%s is not a know function.\n",$1);
+  if(!f) {
+    s = scc_ns_get_sym(scc_ns,NULL,$1);
+    if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
+      SCC_ABORT(@1,"%s is not a know function or script.\n",$1);
+
+    f = scc_get_func("startScriptQuick");
+    if(!f)
+      SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
+
+    // create the arguments
+    scr = calloc(1,sizeof(scc_statement_t));
+    scr->type = SCC_ST_RES;
+    scr->val.r = s;
+
+    list = calloc(1,sizeof(scc_statement_t));
+    list->type = SCC_ST_LIST;
+    list->val.l = $3;
+
+    scr->next = list;
+
+    $3 = scr;
+  }
 
   $$ = calloc(1,sizeof(scc_statement_t));
   $$->type = SCC_ST_CALL;
@@ -1455,7 +1476,41 @@ call: SYM '(' cargs ')'
   err = scc_statement_check_func(&$$->val.c);
   if(err)
     SCC_ABORT(@1,"%s",err);
-};
+}
+
+| SYM NS SYM '(' cargs ')'
+{
+  scc_statement_t *scr,*list;
+  scc_func_t* f;
+  scc_symbol_t* s;
+
+  s = scc_ns_get_sym(scc_ns,$1,$3);
+  if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
+    SCC_ABORT(@1,"%s::%s is not a know function or script.\n",$1,$3);
+
+  f = scc_get_func("startScriptQuick");
+  if(!f)
+    SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
+
+  // create the arguments
+  scr = calloc(1,sizeof(scc_statement_t));
+  scr->type = SCC_ST_RES;
+  scr->val.r = s;
+  
+  list = calloc(1,sizeof(scc_statement_t));
+  list->type = SCC_ST_LIST;
+  list->val.l = $5;
+  
+  scr->next = list;
+
+  $$ = calloc(1,sizeof(scc_statement_t));
+  $$->type = SCC_ST_CALL;
+
+  $$->val.c.func = f;
+  $$->val.c.argv = scr;
+  $$->val.c.argc = 2;
+}
+;
 
 cargs: 
 /* empty */
@@ -1528,7 +1583,8 @@ str: STRING
     switch($$->type) {
     case SCC_STR_VERB:
     case SCC_STR_NAME:
-      if($$->sym->type != SCC_RES_VAR)
+      if($$->sym->type != SCC_RES_VAR &&
+         $$->sym->type != SCC_RES_LVAR)
         SCC_ABORT(@1,"%s is not a variable",$$->sym->sym);
       break;
     case SCC_STR_VOICE:
