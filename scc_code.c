@@ -870,8 +870,7 @@ static scc_code_t* scc_for_gen_code(scc_instruct_t* inst) {
   c = scc_statement_gen_code(inst->pre,0);
   SCC_LIST_ADD(code,last,c);
 
-  // cond
-  cont = scc_code_size(c);
+  // cond  
   loop = c = scc_statement_gen_code(inst->cond,1);
   SCC_LIST_ADD(code,last,c);
 
@@ -883,6 +882,7 @@ static scc_code_t* scc_for_gen_code(scc_instruct_t* inst) {
   // body
   SCC_LIST_ADD(code,last,body);
   // post
+  cont = scc_code_size(code);
   SCC_LIST_ADD(code,last,post);
 
   c = scc_code_new(3);
