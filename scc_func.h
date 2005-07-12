@@ -297,13 +297,13 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL }
   },{
     "findInventory", 0x92, 1, 2, 0,
-    { SCC_FA_VAL, SCC_FA_STR }
+    { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "getInventoryCount", 0x93, 1, 1, 0,
     { SCC_FA_VAL }
   },{
     "getVerbAt", 0x94, 1, 2, 0,
-    { SCC_FA_VAL, SCC_FA_STR }
+    { SCC_FA_VAL, SCC_FA_VAL }
   },{ // TODO: begin/endOverride
 
     // set the object name in the _newNames table.
