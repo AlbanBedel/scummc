@@ -418,6 +418,7 @@ scc_charmap_t* charmap_from_char(char* path) {
         ch->h = scc_fd_r8(fd);
         ch->x = scc_fd_r8(fd);
         ch->y = scc_fd_r8(fd);
+        if(ch->w + ch->x > chmap->width) chmap->width = ch->w + ch->x;
         if(!ch->w || !ch->h) continue;
         ch->data = malloc(ch->w*ch->h);
         bits = 0;
