@@ -117,7 +117,7 @@ static scc_func_t scc_func[] = {
     "startScript", 0x5E, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_LIST }
   },{
-    "startScriptQuick", 0x5F, 0, 2, 0,
+    "startScript0", 0x5F, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
     "startObject", 0x60, 0, 4, 0,
@@ -724,12 +724,12 @@ static scc_func_t scc_func[] = {
   },{
 
     // this one still need special care i think
-    "startObjectQuick", 0xBE, 0, 3, 0,
+    "startObject2", 0xBE, 0, 3, 0,
     // script,    entryp,     args
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_LIST }
   },{
 
-    "startScriptQuick2", 0xBF, 0, 2, 0,
+    "startScript2", 0xBF, 0, 2, 0,
     // script,    args
     { SCC_FA_VAL, SCC_FA_LIST }
   },{

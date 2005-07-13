@@ -1474,7 +1474,7 @@ call: SYM '(' cargs ')'
     if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
       SCC_ABORT(@1,"%s is not a know function or script.\n",$1);
 
-    f = scc_get_func("startScriptQuick");
+    f = scc_get_func("startScript0");
     if(!f)
       SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
 
@@ -1516,7 +1516,7 @@ call: SYM '(' cargs ')'
   if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
     SCC_ABORT(@1,"%s::%s is not a know function or script.\n",$1,$3);
 
-  f = scc_get_func("startScriptQuick");
+  f = scc_get_func("startScript0");
   if(!f)
     SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
 
