@@ -1140,6 +1140,7 @@ static scc_code_t* scc_cutscene_gen_code(scc_instruct_t* inst) {
     // put the cutscene end op code
     c = scc_code_new(1);
     c->data[0] = SCC_OP_CUTSCENE_END;
+    SCC_LIST_ADD(code,last,c);
 
     return code;
 }
