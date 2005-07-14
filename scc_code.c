@@ -59,21 +59,34 @@ struct scc_loop_st {
 
 static scc_loop_t *loop_stack = NULL;
 
-static scc_loop_t* scc_loop_get(char* sym) {
+scc_loop_t* scc_loop_get(int type,char* sym) {
   scc_loop_t* l;
-  if(!sym) return loop_stack;
+
+  // look for the first match
+  if(!sym) {
+    if(type == SCC_BRANCH_CONTINUE) {
+      // continue don't work in switch, so find the first
+      // non switch loop
+      for(l = loop_stack ; l && l->type == SCC_INST_SWITCH ; l = l->next);
+      return l;
+    }
+    return loop_stack;
+  }
   
   for(l = loop_stack ; l ; l = l->next) {
     if(!l->sym) continue;
-    if(!strcmp(l->sym,sym)) return l;
+    if(!strcmp(l->sym,sym)) {
+      if(type != SCC_BRANCH_CONTINUE || l->type != SCC_INST_SWITCH)
+        return l;
+    }
   }
   return NULL;
 }
 
-static void scc_loop_push(int type, char* sym) {
+void scc_loop_push(int type, char* sym) {
   scc_loop_t* l;
 
-  if(sym && scc_loop_get(sym)) {
+  if(sym && scc_loop_get(SCC_BRANCH_BREAK,sym)) {
     printf("Warning there is alredy a loop named %s in the loop stack.\n",
 	   sym);
   }
@@ -88,7 +101,7 @@ static void scc_loop_push(int type, char* sym) {
   loop_stack = l;
 }
 
-static scc_loop_t* scc_loop_pop(void) {
+scc_loop_t* scc_loop_pop(void) {
   scc_loop_t* l;
 
   if(!loop_stack) {
@@ -121,8 +134,10 @@ static void scc_loop_fix_code(scc_code_t* c,int br, int cont) {
       SCC_SET_S16LE(c->data,1,pos);
     c->fix = SCC_FIX_NONE;
 
-    printf("Branch fixed to 0x%x\n",((int16_t*)&c->data[1])[0]);
+    printf("Branch fixed to 0x%hx\n",((int16_t*)&c->data[1])[0]);
   }
+
+  free(l);
 }
 
 static scc_operator_t* scc_get_bin_op(int op) {
@@ -973,7 +988,7 @@ static scc_code_t* scc_branch_gen_code(scc_instruct_t* inst) {
     return NULL;
   }
 
-  l = scc_loop_get(inst->sym);
+  l = scc_loop_get(inst->subtype,inst->sym);
   if(!l) {
     printf("No loop named %s was found in the loop stack.\n",
 	   inst->sym);

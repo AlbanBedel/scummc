@@ -17,6 +17,15 @@
  *
  */
 
+// A little stack for the loop, this is needed
+// by the parser to check the branch instruction validity.
+void scc_loop_push(int type, char* sym);
+
+scc_loop_t* scc_loop_pop(void);
+
+scc_loop_t* scc_loop_get(int type,char* sym);
+
+
 scc_code_t* scc_code_new(int len);
 
 void scc_code_free(scc_code_t* c);

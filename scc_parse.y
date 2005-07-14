@@ -261,6 +261,10 @@
 %type <inst> oneinstruct
 %type <inst> dobody
 %type <inst> body
+%type <inst> loophead
+%type <str> label
+%type <inst> dohead
+%type <inst> switchhead
 %type <scr> scriptbody
 %type <inst> verbcode
 %type <sym> verbentry
@@ -1006,6 +1010,11 @@ oneinstruct: statements
 
 | BRANCH
 {
+  if($1 != SCC_BRANCH_RETURN) {
+    scc_loop_t* l = scc_loop_get($1,NULL);
+    if(!l)
+      SCC_ABORT(@1,"Invalid branch instruction.\n");
+  }
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_BRANCH;
   $$->subtype = $1;
@@ -1013,6 +1022,11 @@ oneinstruct: statements
 
 | BRANCH SYM
 {
+  if($1 != SCC_BRANCH_RETURN) {
+    scc_loop_t* l = scc_loop_get($1,$2);
+    if(!l)
+      SCC_ABORT(@1,"Invalid branch instruction.\n");
+  }
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_BRANCH;
   $$->subtype = $1;
@@ -1042,49 +1056,79 @@ block: ifblock
 {
   $$ = $1;
 }
+;
 
-| SYM ':' loopblock
+loopblock: loophead body
 {
-  $$ = $3;
-  $$->sym = $1;
+  $$ = $1;
+  $$->body = $2;
+  free(scc_loop_pop());
+}
+| dohead dobody WHILE '(' statements ')' ';'
+{
+  $$ = $1;
+  $$->subtype = $3;
+  $$->cond = $5;
+  $$->body = $2;
+  free(scc_loop_pop());
+}
+| switchhead  '{' switchblock  '}'
+{
+  $$ = $1;
+  $$->body = $3;
+  free(scc_loop_pop());
 }
 ;
 
-loopblock: FOR '(' statements ';' statements ';' statements ')' body
+
+loophead: label FOR '(' statements ';' statements ';' statements ')'
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_FOR;
-  $$->pre = $3;
-  $$->cond = $5;
-  $$->post = $7;
-  $$->body = $9;
+  $$->sym = $1;
+  $$->pre = $4;
+  $$->cond = $6;
+  $$->post = $8;
+  scc_loop_push($$->type,$$->sym);
 }
 
-
-| WHILE '(' statements ')' body
+| label WHILE '(' statements ')'
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_WHILE;
-  $$->subtype = $1;
-  $$->cond = $3;
-  $$->body = $5; 
+  $$->sym = $1;
+  $$->subtype = $2;
+  $$->cond = $4;
+  scc_loop_push($$->type,$$->sym);
 }
+;
 
-| DO dobody WHILE '(' statements ')' ';'
+dohead: label DO
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_DO;
-  $$->subtype = $3;
-  $$->cond = $5;
-  $$->body = $2; 
+  $$->sym = $1;
+  scc_loop_push($$->type,$$->sym);
 }
+;
 
-| SWITCH '(' statements ')' '{' switchblock  '}'
+switchhead: label SWITCH '(' statements ')'
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_SWITCH;
-  $$->cond = $3;
-  $$->body = $6;
+  $$->sym = $1;
+  $$->cond = $4;
+  scc_loop_push($$->type,$$->sym);
+}
+;
+
+label: /* nothing */
+{
+  $$ = NULL;
+}
+| SYM ':'
+{
+  $$ = $1;
 }
 ;
 
