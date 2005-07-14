@@ -578,12 +578,19 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   img = scc_img_open(img_path);
   if(!img) return 0;
 
-  if(img->w%8 != 0) {
-      printf("Image width must be a multiple of 8.\n");
-      scc_img_free(img);
-      return 0;
+  if(img->w%8 || img->h%8) {
+    printf("Image width and height must be multiple of 8.\n");
+    scc_img_free(img);
+    return 0;
   }
 
+  if(!obj->w) obj->w = img->w;
+  if(!obj->h) obj->h = img->h;
+  if(obj->w != img->w || obj->h != img->h) {
+    printf("Image size is not matching the alredy defined size.\n");
+    scc_img_free(img);
+    return 0;
+  }
 
   st = calloc(1,sizeof(scc_roobj_state_t));
   st->hs_x = x;
@@ -594,11 +601,18 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
     for(i = 0 ; zp_paths[i] ; i++) {
       if(zp_paths[i][0] == '\0')
         st->zp[i] = scc_img_new(img->w,img->h,2);
-      else
+      else {
         st->zp[i] = scc_img_open(zp_paths[i]);
-      if(!st->zp[i]) {
-	scc_roobj_state_free(st);
-	return 0;
+        if(!st->zp[i]) {
+          scc_roobj_state_free(st);
+          return 0;
+        }
+        if(st->zp[i]->w != img->w ||
+           st->zp[i]->h != img->h) {
+          printf("ZPlane %d have a wrong size.\n",i+1);
+          scc_roobj_state_free(st);
+          return 0;
+        }
       }
     }
   }
