@@ -87,4 +87,10 @@ struct scc_data {
   list = last;                                            \
 }
 
+#define SCC_LIST_FREE_CB(list,last,cb) while(list) {      \
+  last = list->next;                                      \
+  cb(list);                                               \
+  list = last;                                            \
+}
+
 scc_data_t* scc_data_load(char* path);

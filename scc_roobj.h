@@ -92,6 +92,8 @@ struct scc_roobj_st {
 
 scc_roobj_t* scc_roobj_new(scc_symbol_t* sym);
 
+void scc_roobj_free(scc_roobj_t* ro);
+
 scc_roobj_res_t* scc_roobj_get_res(scc_roobj_t* ro,scc_symbol_t* sym);
 
 scc_script_t* scc_roobj_get_scr(scc_roobj_t* ro, scc_symbol_t* sym);

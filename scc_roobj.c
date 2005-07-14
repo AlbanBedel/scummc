@@ -86,6 +86,33 @@ scc_roobj_t* scc_roobj_new(scc_symbol_t* sym) {
   return ro;
 }
 
+static void scc_roobj_res_free(scc_roobj_res_t* r) {
+  if(r->data) free(r->data);
+  free(r);
+}
+
+void scc_roobj_free(scc_roobj_t* ro) {
+  scc_script_t* scr;
+  scc_roobj_obj_t* obj;
+  scc_roobj_res_t* res;
+  scc_boxd_t* box;
+  int i;
+
+  SCC_LIST_FREE_CB(ro->scr,scr,scc_script_free);
+  SCC_LIST_FREE_CB(ro->lscr,scr,scc_script_free);
+
+  SCC_LIST_FREE_CB(ro->obj,obj,scc_roobj_obj_free);
+  SCC_LIST_FREE_CB(ro->res,res,scc_roobj_res_free);
+
+  if(ro->image) scc_img_free(ro->image);
+  for(i = 0 ; i < SCC_MAX_IM_PLANES ; i++)
+    if(ro->zplane[i]) scc_img_free(ro->zplane[i]);
+  SCC_LIST_FREE(ro->boxd,box);
+  if(ro->boxm) free(ro->boxm);
+  if(ro->scal) free(ro->scal);
+  free(ro);
+}
+
 scc_script_t* scc_roobj_get_scr(scc_roobj_t* ro, scc_symbol_t* sym) {
   scc_script_t* s;
 
@@ -571,18 +598,12 @@ static void scc_roobj_obj_state_free(scc_roobj_state_t* st) {
 }
 
 void scc_roobj_obj_free(scc_roobj_obj_t* obj) {
-  scc_roobj_state_t *st,*st2;
-  scc_script_t *scr,*scr2;
+  scc_roobj_state_t *st;
+  scc_script_t *scr;
 
   if(obj->name) free(obj->name);
-  for(st = obj->states ; st ; st = st2) {
-    st2 = st->next;
-    scc_roobj_obj_state_free(st);
-  }
-  for(scr = obj->verb ; scr ; scr = scr2) {
-    scr2 = scr->next;
-    scc_script_free(scr);
-  }
+  SCC_LIST_FREE_CB(obj->states,st,scc_roobj_obj_state_free);
+  SCC_LIST_FREE_CB(obj->verb,scr,scc_script_free);
   //if(obj->im) TODO
   free(obj);
 }

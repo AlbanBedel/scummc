@@ -443,8 +443,18 @@ room: roombdecl roombody
   printf("Room done :)\n");
   scc_ns_pop(scc_ns);
 
-  scc_roobj->next = scc_roobj_list;
-  scc_roobj_list = scc_roobj;
+  if(!scc_roobj->scr &&
+     !scc_roobj->lscr &&
+     !scc_roobj->obj &&
+     !scc_roobj->res &&
+     !scc_roobj->image) {
+    printf("Room is empty, only declarations.\n");
+    scc_roobj_free(scc_roobj);
+  } else {
+    scc_roobj->next = scc_roobj_list;
+    scc_roobj_list = scc_roobj;
+  }
+  scc_roobj = NULL;
 }
 ;
 
