@@ -67,7 +67,6 @@ struct scc_roobj_st {
   scc_roobj_t* next; // chain when we have several room
 
   scc_symbol_t* sym; // our sym
-  scc_symbol_t* cur; // currently parsed sym
 
   scc_script_t* scr;
   scc_script_t* lscr;
@@ -115,6 +114,8 @@ int scc_roobj_write(scc_roobj_t* ro,scc_ns_t* ns, scc_fd_t* fd);
 
 
 scc_roobj_obj_t* scc_roobj_obj_new(scc_symbol_t* sym);
+
+void scc_roobj_obj_free(scc_roobj_obj_t* obj);
 
 int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
 			    char *img_path,char** zp_paths);

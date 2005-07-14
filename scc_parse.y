@@ -484,7 +484,7 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
 // forward declaration
 | roomobjdecl ';'
 {
-  // TODO
+  scc_roobj_obj_free(scc_obj);
   scc_obj = NULL;
 }
 ;

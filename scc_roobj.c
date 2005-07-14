@@ -37,6 +37,7 @@
 
 #include "scc.h"
 #include "scc_roobj.h"
+#include "scc_code.h"
 
 
 static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,
@@ -559,7 +560,7 @@ scc_roobj_obj_t* scc_roobj_obj_new(scc_symbol_t* sym) {
   return obj;
 }
 
-static void scc_roobj_state_free(scc_roobj_state_t* st) {
+static void scc_roobj_obj_state_free(scc_roobj_state_t* st) {
   int l;
 
   if(st->img) scc_img_free(st->img);
@@ -567,6 +568,23 @@ static void scc_roobj_state_free(scc_roobj_state_t* st) {
     if(st->zp[l]) scc_img_free(st->zp[l]);
 
   free(st);
+}
+
+void scc_roobj_obj_free(scc_roobj_obj_t* obj) {
+  scc_roobj_state_t *st,*st2;
+  scc_script_t *scr,*scr2;
+
+  if(obj->name) free(obj->name);
+  for(st = obj->states ; st ; st = st2) {
+    st2 = st->next;
+    scc_roobj_obj_state_free(st);
+  }
+  for(scr = obj->verb ; scr ; scr = scr2) {
+    scr2 = scr->next;
+    scc_script_free(scr);
+  }
+  //if(obj->im) TODO
+  free(obj);
 }
 
 int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
@@ -604,13 +622,13 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
       else {
         st->zp[i] = scc_img_open(zp_paths[i]);
         if(!st->zp[i]) {
-          scc_roobj_state_free(st);
+          scc_roobj_obj_state_free(st);
           return 0;
         }
         if(st->zp[i]->w != img->w ||
            st->zp[i]->h != img->h) {
           printf("ZPlane %d have a wrong size.\n",i+1);
-          scc_roobj_state_free(st);
+          scc_roobj_obj_state_free(st);
           return 0;
         }
       }
