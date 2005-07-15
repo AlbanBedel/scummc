@@ -45,7 +45,8 @@ struct scc_roobj_obj_st {
   scc_symbol_t* sym;
   int hotspots[SCC_MAX_IM_PLANES+1];
   int x,y,w,h;
-  int flags;
+  scc_symbol_t* parent;
+  int parent_state,parent_id;
   int dir;
   int state;
   char* name;
@@ -71,7 +72,7 @@ struct scc_roobj_st {
   scc_script_t* scr;
   scc_script_t* lscr;
 
-  scc_roobj_obj_t* obj;
+  scc_roobj_obj_t* obj,*last_obj;
 
   // the defined ressources.
   scc_roobj_res_t *res;

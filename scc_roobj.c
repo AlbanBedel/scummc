@@ -168,8 +168,7 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj) {
     return 0;
   }
 
-  obj->next = ro->obj;
-  ro->obj = obj;
+  SCC_LIST_ADD(ro->obj,ro->last_obj,obj);
 
   return 1;
 }
@@ -730,6 +729,12 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
       return 0;
     }
     obj->state = val;
+  } else if(!strcmp(sym,"parent_state")) {
+    if(val < 0) {
+      printf("Invalid parent state: %d.\n",val);
+      return 0;
+    }
+    obj->parent_state = val;
   } else {
     printf("Unknow integer object parameter: %s\n",sym);
     return 0;
@@ -870,6 +875,26 @@ static scc_imnn_t* scc_roobj_obj_gen_imnn(scc_roobj_obj_t* obj) {
   }
 
   return imnn;
+}
+
+static int scc_roobj_make_obj_parent(scc_roobj_t* ro) {
+  scc_roobj_obj_t* obj,*iter;
+  int idx,n;
+  
+  for(obj = ro->obj ; obj ; obj = obj->next) {
+    if(!obj->parent) continue;
+    // find the parent
+    for(iter = ro->obj, idx = 1 ;
+        iter && iter->sym != obj->parent ;
+        iter = iter->next, idx++);
+    if(!iter) {
+      printf("Failed to find the parent of object %s\n",
+             obj->sym->sym);
+      return 0;
+    }
+    obj->parent_id = idx;
+  }
+  return 1;
 }
 
 static int scc_scob_size(scc_script_t* scr) {
@@ -1211,10 +1236,10 @@ int scc_write_obob(scc_roobj_obj_t* obj,scc_fd_t* fd) {
   scc_fd_w16le(fd,obj->w);
   scc_fd_w16le(fd,obj->h);
 
-  // flags
-  scc_fd_w8(fd,0);
+  // parent state
+  scc_fd_w8(fd,obj->parent_state);
   // parent
-  scc_fd_w8(fd,0);
+  scc_fd_w8(fd,obj->parent_id);
   // unk
   scc_fd_w32(fd,0);
   // actor dir
@@ -1280,6 +1305,7 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   if(!rmim) return 0;
   size += 8 + scc_rmim_size(rmim);
   // OBIM/OBCD
+  if(!scc_roobj_make_obj_parent(ro)) return 0;
   for(obj = ro->obj ; obj ; obj = obj->next) {
     obj->im = scc_roobj_obj_gen_imnn(obj);
     size += 8 + scc_imob_size(obj);

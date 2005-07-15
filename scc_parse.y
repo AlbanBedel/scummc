@@ -716,17 +716,29 @@ objectparam: SYM ASSIGN STRING
 
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
-  // bitch on the keyword
-  if(strcmp($1,"owner"))
-    SCC_ABORT(@1,"Expexted \"owner\".\n");
 
-  sym = scc_ns_get_sym(scc_ns,NULL,$3);
-  if(!sym)
-    SCC_ABORT(@3,"%s is not a declared actor.\n",$3);
-  if(sym->type != SCC_RES_ACTOR)
-    SCC_ABORT(@3,"%s is not an actor.\n",sym->sym);
+  if(!strcmp($1,"owner")) {
+    sym = scc_ns_get_sym(scc_ns,NULL,$3);
+    if(!sym)
+      SCC_ABORT(@3,"%s is not a declared actor.\n",$3);
+    if(sym->type != SCC_RES_ACTOR)
+      SCC_ABORT(@3,"%s is not an actor.\n",sym->sym);
   
-  scc_obj->owner = sym;
+    scc_obj->owner = sym;
+
+  } else if(!strcmp($1,"parent")) {
+    sym = scc_ns_get_sym(scc_ns,NULL,$3);
+    if(!sym)
+      SCC_ABORT(@3,"%s is not a declared object.\n",$3);
+    if(sym->type != SCC_RES_OBJ)
+      SCC_ABORT(@3,"%s is not an object.\n",sym->sym);
+    if(sym->parent != scc_roobj->sym)
+      SCC_ABORT(@3,"%s doesn't belong to room %s.\n",sym->sym,scc_roobj->sym->sym);
+
+    scc_obj->parent = sym;
+  } else
+    SCC_ABORT(@1,"Expexted 'owner' or 'parent'.\n");
+    
 }
 | CLASS ASSIGN '{' classlist '}'
 {
