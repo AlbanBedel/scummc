@@ -18,6 +18,7 @@
  */
 
 typedef struct scc_roobj_res_st scc_roobj_res_t;
+typedef struct scc_roobj_cycl_st scc_roobj_cycl_t;
 typedef struct scc_roobj_state_st scc_roobj_state_t;
 typedef struct scc_roobj_obj_st scc_roobj_obj_t;
 typedef struct scc_roobj_st scc_roobj_t;
@@ -28,6 +29,14 @@ struct scc_roobj_res_st {
   scc_symbol_t* sym;
   uint8_t* data;
   unsigned data_len;
+};
+
+struct scc_roobj_cycl_st {
+  scc_roobj_cycl_t* next;
+
+  scc_symbol_t* sym;
+  int freq,flags;
+  int start,end;
 };
 
 struct scc_roobj_state_st {
@@ -77,7 +86,8 @@ struct scc_roobj_st {
   // the defined ressources.
   scc_roobj_res_t *res;
 
-  // cycles: TODO may need gramm. extension
+  // cycles
+  scc_roobj_cycl_t* cycl;
   // transparent color
   int trans;
   // room image
@@ -112,6 +122,9 @@ int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,char* p,int idx, char* val)
 
 int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
                         int nsync, int* sync);
+
+int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
+                       int freq, int flags, int start, int end);
 
 int scc_roobj_write(scc_roobj_t* ro,scc_ns_t* ns, scc_fd_t* fd);
 

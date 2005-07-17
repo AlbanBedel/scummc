@@ -92,6 +92,7 @@ static void scc_roobj_res_free(scc_roobj_res_t* r) {
 }
 
 void scc_roobj_free(scc_roobj_t* ro) {
+  scc_roobj_cycl_t* cycl;
   scc_script_t* scr;
   scc_roobj_obj_t* obj;
   scc_roobj_res_t* res;
@@ -101,6 +102,7 @@ void scc_roobj_free(scc_roobj_t* ro) {
   SCC_LIST_FREE_CB(ro->scr,scr,scc_script_free);
   SCC_LIST_FREE_CB(ro->lscr,scr,scc_script_free);
 
+  SCC_LIST_FREE(ro->cycl,cycl);
   SCC_LIST_FREE_CB(ro->obj,obj,scc_roobj_obj_free);
   SCC_LIST_FREE_CB(ro->res,res,scc_roobj_res_free);
 
@@ -157,6 +159,14 @@ scc_roobj_obj_t* scc_roobj_get_obj(scc_roobj_t* ro,scc_symbol_t* sym) {
     if(obj->sym == sym) return obj;
   }
 
+  return NULL;
+}
+
+scc_roobj_cycl_t* scc_roobj_get_cycl(scc_roobj_t* ro,scc_symbol_t* sym) {
+  scc_roobj_cycl_t* c;
+
+  for(c = ro->cycl ; c ; c = c->next)
+    if(c->sym == sym) return c;
   return NULL;
 }
 
@@ -345,6 +355,45 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
   // add the res to the list
   r->next = ro->res;
   ro->res = r;
+
+  return 1;
+}
+
+int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
+                       int freq, int flags, int start, int end) {
+  scc_roobj_cycl_t* c = scc_roobj_get_cycl(ro,sym);
+
+  if(c) {
+    printf("Cycle %s is alredy defined.\n",sym->sym);
+    return 0;
+  }
+
+  if(freq < 1 || freq > 0xffff) {
+    printf("Error invalid cycle frequency.\n");
+    return 0;
+  }
+  if(start < 0 || start > 0xFF) {
+    printf("Error invalid cycle start point.\n");
+    return 0;
+  }
+  if(end < 0 || end > 0xFF) {
+    printf("Error invalid cycle end point.\n");
+    return 0;
+  }
+  if(start > end) {
+    printf("Error cycle start point is after the end point.\n");
+    return 0;
+  }
+
+  c = calloc(1,sizeof(scc_roobj_cycl_t));
+  c->sym = sym;
+  c->freq = freq;
+  c->flags = flags;
+  c->start = start;
+  c->end = end;
+
+  c->next = ro->cycl;
+  ro->cycl = c;
 
   return 1;
 }
@@ -879,7 +928,7 @@ static scc_imnn_t* scc_roobj_obj_gen_imnn(scc_roobj_obj_t* obj) {
 
 static int scc_roobj_make_obj_parent(scc_roobj_t* ro) {
   scc_roobj_obj_t* obj,*iter;
-  int idx,n;
+  int idx;
   
   for(obj = ro->obj ; obj ; obj = obj->next) {
     if(!obj->parent) continue;
@@ -1278,6 +1327,32 @@ int scc_roobj_write_res(scc_roobj_res_t* res, scc_fd_t* fd) {
   return 1;
 }
 
+
+int scc_roobj_cycl_size(scc_roobj_cycl_t* c) {
+  int size = 1;
+  while(c) {
+    size += 9;
+    c = c->next;
+  }
+  return size;
+}
+  
+
+int scc_roobj_write_cycl(scc_roobj_cycl_t* c, scc_fd_t* fd) {
+  
+  while(c) {
+    scc_fd_w8(fd,c->sym->addr);
+    scc_fd_w16(fd,0);
+    scc_fd_w16be(fd,c->freq);
+    scc_fd_w16be(fd,c->flags);
+    scc_fd_w8(fd,c->start);
+    scc_fd_w8(fd,c->end);
+    c = c->next;
+  }
+  scc_fd_w8(fd,0);
+  return 1;
+}
+
 int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   scc_pal_t* pals;
   scc_rmim_t* rmim;
@@ -1293,7 +1368,7 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   if(stab_len) size += 8 + stab_len;
   
   // CYCL
-  size += 8 + scc_cycl_size(NULL);
+  size += 8 + scc_roobj_cycl_size(ro->cycl);
   // TRNS
   size += 8 + 2;
   // PALS
@@ -1356,8 +1431,8 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   }
 
   scc_fd_w32(fd,MKID('C','Y','C','L'));
-  scc_fd_w32be(fd,8 + scc_cycl_size(NULL));
-  scc_write_cycl(fd,NULL);
+  scc_fd_w32be(fd,8 + scc_roobj_cycl_size(ro->cycl));
+  scc_roobj_write_cycl(ro->cycl,fd);
 
   scc_fd_w32(fd,MKID('T','R','N','S'));
   scc_fd_w32be(fd,8 + 2);

@@ -48,9 +48,13 @@ int scc_ns_get_rid(scc_ns_t* ns, scc_symbol_t* s);
 
 int scc_ns_push(scc_ns_t* ns, scc_symbol_t* s);
 
+void scc_ns_clear(scc_ns_t* ns,int type);
+
 int scc_ns_pop(scc_ns_t* ns);
 
 int scc_ns_set_sym_addr(scc_ns_t* ns, scc_symbol_t* s,int addr);
+
+int scc_ns_alloc_sym_addr(scc_ns_t* ns,scc_symbol_t* s,int* cur);
 
 int scc_ns_alloc_addr(scc_ns_t* ns);
 

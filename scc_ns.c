@@ -315,19 +315,18 @@ int scc_ns_push(scc_ns_t* ns, scc_symbol_t* s) {
   return 1;
 }
 
-int scc_ns_pop(scc_ns_t* ns) {
+void scc_ns_clear(scc_ns_t* ns,int type) {
   scc_symbol_t *s,*o = NULL;
 
   if(!ns->cur) {
-    printf("Trying to pop ns, but there is no pushed sym !!!\n");
-    return 0;
+    printf("Trying to clear ns, but there is no pushed sym !!!\n");
+    return;
   }
 
-  // blow up the local vars
   s = ns->cur->childs;
   while(s) {
     
-    if(s->type != SCC_RES_LVAR) {
+    if(s->type != type) {
       o = s;
       s = s->next;
       continue;
@@ -343,8 +342,16 @@ int scc_ns_pop(scc_ns_t* ns) {
       s = ns->cur->childs;
     }
   }
-  // blow local vars
-  memset(&ns->as[SCC_RES_LVAR][2048],0,2048);
+  memset(&ns->as[type],0,0x10000/8);
+}
+
+int scc_ns_pop(scc_ns_t* ns) {
+
+
+  if(!ns->cur) {
+    printf("Trying to pop ns, but there is no pushed sym !!!\n");
+    return 0;
+  }
 
   ns->cur = ns->cur->parent;
   return 1;
@@ -385,7 +392,7 @@ int scc_ns_set_sym_addr(scc_ns_t* ns, scc_symbol_t* s,int addr) {
   return 1;
 }
 
-static int scc_ns_alloc_sym_addr(scc_ns_t* ns,scc_symbol_t* s,int* cur) {
+int scc_ns_alloc_sym_addr(scc_ns_t* ns,scc_symbol_t* s,int* cur) {
   uint8_t* as = ns->as[s->type];
   int i;
 

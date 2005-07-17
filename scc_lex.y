@@ -401,6 +401,11 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
   return VERB;
 }
 
+"cycle" {
+  SET_POS(5);
+  return CYCL;
+}
+
 "local" {
   SET_POS(5);
   yylval.integer = SCC_RES_LSCR;

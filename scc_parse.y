@@ -92,7 +92,8 @@
   static scc_roobj_obj_t* scc_obj = NULL;
 
   static int local_vars = 0;
-  static int local_scr = 0;
+  static int scc_local_scr = SCC_MAX_GLOB_SCR;
+  static int scc_cycl = 1;
 
   scc_func_t* scc_get_func(char* sym) {
     int i;
@@ -218,6 +219,7 @@
 %token VERB
 %token ACTOR
 %token VOICE
+%token CYCL
 
 %nonassoc <integer> IF
 %nonassoc ELSE
@@ -272,11 +274,16 @@
 
 %type <integer> gvardecl
 %type <integer> gresdecl
+%type <integer> groomresdecl
+%type <integer> globalres
+%type <integer> roomres
 %type <integer> resdecl
 %type <integer> scripttype
 
 %type <arg> scriptargs
 %type <sym> roomscrdecl
+%type <sym> cycledecl
+%type <sym> voicedecl
 %type <strlist> zbufs
 %type <intlist> synclist
 %type <integer> typemod
@@ -291,23 +298,17 @@ srcfile: /* empty */
 | globdecl rooms
 ;
 
-globdecl: gdecl ';'
-| globdecl gdecl ';'
+globdecl: gdecl
+| globdecl gdecl
 ;
 
-gdecl: gvardecl
-{
-}
-| groomdecl
-| actordecl
-| verbdecl
-| classdecl
-| objdecl
-| scrdecl
-| gresdecl
-{
-}
-| voicedecl
+gdecl: gvardecl ';'
+{}
+| gresdecl ';'
+{}
+| groomresdecl ';'
+{}
+| groomdecl ';'
 ;
 
 gvardecl: TYPE typemod SYM location
@@ -340,6 +341,8 @@ typemod: /* nothing */
 }
 ;
 
+// room must be put outside of globalres
+// otherwise it conflict with roombdecl
 groomdecl: ROOM SYM location
 {
   scc_ns_decl(scc_ns,NULL,$2,SCC_RES_ROOM,0,$3);
@@ -350,75 +353,58 @@ groomdecl: ROOM SYM location
 }
 ;
 
-actordecl: ACTOR SYM location
+gresdecl: globalres SYM location
 {
-  scc_ns_decl(scc_ns,NULL,$2,SCC_RES_ACTOR,0,$3);
+  scc_ns_decl(scc_ns,NULL,$2,$1,0,$3);
 }
-| actordecl ',' SYM location
+| gresdecl ',' SYM location
 {
-  scc_ns_decl(scc_ns,NULL,$3,SCC_RES_ACTOR,0,$4);
-}
-;
-
-verbdecl: VERB SYM location
-{
-  scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VERB,0,$3);
-}
-| verbdecl ',' SYM location
-{
-  scc_ns_decl(scc_ns,NULL,$3,SCC_RES_VERB,0,$4);
+  scc_ns_decl(scc_ns,NULL,$3,$1,0,$4);
 }
 ;
 
-classdecl: CLASS SYM location
-{
-  scc_ns_decl(scc_ns,NULL,$2,SCC_RES_CLASS,0,$3);
+globalres: ACTOR
+{ 
+  $$ = SCC_RES_ACTOR;
 }
-| classdecl ',' SYM location
-{
-  scc_ns_decl(scc_ns,NULL,$3,SCC_RES_CLASS,0,$4);
+| VERB
+{ 
+  $$ = SCC_RES_VERB;
 }
-; 
-
-objdecl: OBJECT SYM NS SYM location
-{
-  scc_ns_decl(scc_ns,$2,$4,SCC_RES_OBJ,0,$5);
-}
-| objdecl ',' SYM NS SYM location
-{
-  scc_ns_decl(scc_ns,$3,$5,SCC_RES_OBJ,0,$6);
+| CLASS
+{ 
+  $$ = SCC_RES_CLASS;
 }
 ;
 
-scrdecl: SCRIPT SYM NS SYM location
-{
-  scc_ns_decl(scc_ns,$2,$4,SCC_RES_SCR,0,$5);
-}
-| scrdecl ',' SYM NS SYM location
-{
-  scc_ns_decl(scc_ns,$3,$5,SCC_RES_SCR,0,$6);
-}
-;
-
-voicedecl: VOICE SYM NS SYM
-{
-  scc_ns_decl(scc_ns,$2,$4,SCC_RES_VOICE,0,-1);
-}
-| voicedecl ',' SYM NS SYM
-{
-  scc_ns_decl(scc_ns,$3,$5,SCC_RES_VOICE,0,-1);
-}
-;
-
-// cost, sound, chset
-gresdecl: RESTYPE SYM NS SYM location
+// cost, sound, chset, object, script, voice, cycl
+groomresdecl: roomres SYM NS SYM location
 {
   scc_ns_decl(scc_ns,$2,$4,$1,0,$5);
   $$ = $1; // hack to propagte the type
 }
-| gresdecl ',' SYM NS SYM location
+| groomresdecl ',' SYM NS SYM location
 {
   scc_ns_decl(scc_ns,$3,$5,$1,0,$6);
+}
+;
+
+roomres: RESTYPE
+| OBJECT
+{ 
+  $$ = SCC_RES_OBJ;
+}
+| SCRIPT
+{ 
+  $$ = SCC_RES_SCR;
+}
+| VOICE
+{ 
+  $$ = SCC_RES_VOICE;
+}
+| CYCL
+{ 
+  $$ = SCC_RES_CYCL;
 }
 ;
 
@@ -441,12 +427,17 @@ rooms: room
 room: roombdecl roombody
 {
   printf("Room done :)\n");
+  scc_local_scr = SCC_MAX_GLOB_SCR;
+  memset(&scc_ns->as[SCC_RES_LSCR],0,0x10000/8);
+  scc_cycl = 1;
+  scc_ns_clear(scc_ns,SCC_RES_CYCL);
   scc_ns_pop(scc_ns);
 
   if(!scc_roobj->scr &&
      !scc_roobj->lscr &&
      !scc_roobj->obj &&
      !scc_roobj->res &&
+     !scc_roobj->cycl &&
      !scc_roobj->image) {
     printf("Room is empty, only declarations.\n");
     scc_roobj_free(scc_roobj);
@@ -476,12 +467,14 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
     scc_roobj_add_scr(scc_roobj,$3);
   }
 
+  scc_ns_clear(scc_ns,SCC_RES_LVAR);
   scc_ns_pop(scc_ns);
 }
 // forward declaration
 | roomscrdecl ';'
 {
   // well :)
+  scc_ns_clear(scc_ns,SCC_RES_LVAR);
   scc_ns_pop(scc_ns);
 }
 // objects
@@ -497,33 +490,28 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
   scc_roobj_obj_free(scc_obj);
   scc_obj = NULL;
 }
+| voicedef ';'
+{}
+| voicedecl ';'
+{}
+| cycledef ';'
+{}
+| cycledecl ';'
+{}
 ;
 
 roomscrdecl: scripttype SCRIPT SYM  '(' scriptargs ')' location
 {
   scc_scr_arg_t* a = $5;
   scc_symbol_t* s;
-  int took_local = 0;
-
-  if($1 == SCC_RES_LSCR) {
-    if($7 >= 0) printf("Ignoring location for local scripts.\n");
-    if(strcmp($3,"entry") &&
-       strcmp($3,"exit") ) {
-      s = scc_ns_get_sym(scc_ns,NULL,$3);
-      if(!s) {
-	$7 = local_scr;
-	took_local = 1;
-      } else
-	$7 = -1;
-    } else
-      $7 = -1;
-  }
 
   s = scc_ns_decl(scc_ns,NULL,$3,$1,0,$7);
   if(!s) SCC_ABORT(@3,"Failed to declare script %s.\n",$3);
 
-  if(took_local)
-    local_scr++;
+  if($1 == SCC_RES_LSCR && s->addr < 0 &&
+     strcmp($3,"entry") && strcmp($3,"exit"))
+    if(!scc_ns_alloc_sym_addr(scc_ns,s,&scc_local_scr))
+      SCC_ABORT(@3,"Failed to allocate local script address.\n");
 
   if(!s->rid) scc_ns_get_rid(scc_ns,s);
 
@@ -585,40 +573,55 @@ roomdecl: resdecl ';'
   if(!scc_roobj_set_param(scc_roobj,scc_ns,$1,$3,$6))
     SCC_ABORT(@1,"Failed to set room parameter.\n");
 }
-| voicedef ';'
 ;
 
-voicedef: VOICE SYM ASSIGN '{' STRING ',' synclist '}'
+cycledef: cycledecl ASSIGN '{' INTEGER ',' INTEGER ',' INTEGER ',' INTEGER '}'
 {
-  scc_symbol_t* v;
+  if($2 != '=')
+    SCC_ABORT(@3,"Invalid operator for cycle declaration.\n");
 
-  if($3 != '=')
-    SCC_ABORT(@3,"Invalid operator for voice declaration.\n");
-
-  v = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VOICE,0,-1);
-  if(!v) SCC_ABORT(@1,"Declaration failed.\n");
-
-  if(!v->rid) scc_ns_get_rid(scc_ns,v);
-
-  if(!scc_roobj_add_voice(scc_roobj,v,$5,$7[0],$7+1))
-    SCC_ABORT(@1,"Failed to add voice.");
-
-  free($7);
+  if(!scc_roobj_add_cycl(scc_roobj,$1,$4,$6,$8,$10))
+    SCC_ABORT(@1,"Failed to add cycl.\n");
 }
-| VOICE SYM ASSIGN '{' STRING '}'
-{
-  scc_symbol_t* v;
+;
 
-  if($3 != '=')
+cycledecl: CYCL SYM location
+{
+  $$ = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_CYCL,0,$3);
+  if(!$$) SCC_ABORT(@1,"Cycl declaration failed.\n");
+  if($$->addr < 0 && !scc_ns_alloc_sym_addr(scc_ns,$$,&scc_cycl))
+      SCC_ABORT(@1,"Failed to allocate cycle address.\n");
+}
+;
+
+voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
+{
+  if($2 != '=')
+    SCC_ABORT(@2,"Invalid operator for voice declaration.\n");
+
+  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
+
+  if(!scc_roobj_add_voice(scc_roobj,$1,$4,$6[0],$6+1))
+    SCC_ABORT(@1,"Failed to add voice.");
+
+  free($6);
+}
+| voicedecl ASSIGN '{' STRING '}'
+{
+  if($2 != '=')
     SCC_ABORT(@3,"Invalid operator for voice declaration.\n");
 
-  v = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VOICE,0,-1);
-  if(!v) SCC_ABORT(@1,"Declaration failed.\n");
+  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
 
-  if(!v->rid) scc_ns_get_rid(scc_ns,v);
-
-  if(!scc_roobj_add_voice(scc_roobj,v,$5,0,NULL))
+  if(!scc_roobj_add_voice(scc_roobj,$1,$4,0,NULL))
     SCC_ABORT(@1,"Failed to add voice.");
+}
+;
+
+voicedecl: VOICE SYM
+{
+  $$ = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VOICE,0,-1);
+  if(!$$) SCC_ABORT(@1,"Declaration failed.\n");
 }
 ;
 
@@ -831,7 +834,7 @@ objectverbs: /* nothing */
     if(!scc_roobj_obj_add_verb(scc_obj,scr))
       SCC_ABORT(@1,"Failed to add verb %s.\n",v->sym ? v->sym->sym : "default");
   }    
-
+  scc_ns_clear(scc_ns,SCC_RES_LVAR);
   scc_ns_pop(scc_ns);
 }
 ;
@@ -1582,6 +1585,11 @@ call: SYM '(' cargs ')'
   if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
     SCC_ABORT(@1,"%s::%s is not a know function or script.\n",$1,$3);
 
+  if(s->type == SCC_RES_LSCR &&
+     s->parent != scc_roobj->sym)
+    SCC_ABORT(@1,"%s is a local script and %s is not the current room.\n",
+              $3,$1);
+
   f = scc_get_func("startScript0");
   if(!f)
     SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
@@ -1773,7 +1781,6 @@ int main (int argc, char** argv) {
   for(f = files ; f ; f = f->next) {
     src = malloc(sizeof(scc_source_t));
     src->ns = scc_ns = scc_ns_new();
-    local_scr = 0;
     scc_roobj = NULL;
     scc_roobj_list = NULL;
     if(!scc_lex_init(f->val)) return -1;
