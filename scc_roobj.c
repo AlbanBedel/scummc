@@ -360,13 +360,21 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
 }
 
 int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
-                       int freq, int flags, int start, int end) {
+                       int delay, int flags, int start, int end) {
   scc_roobj_cycl_t* c = scc_roobj_get_cycl(ro,sym);
+  int freq;
 
   if(c) {
     printf("Cycle %s is alredy defined.\n",sym->sym);
     return 0;
   }
+
+  if(delay < 0) {
+    printf("Cycl delay must be >= 0.\n");
+    return 0;
+  }
+
+  freq = 16384/delay;
 
   if(freq < 1 || freq > 0xffff) {
     printf("Error invalid cycle frequency.\n");

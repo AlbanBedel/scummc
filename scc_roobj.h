@@ -124,7 +124,7 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
                         int nsync, int* sync);
 
 int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
-                       int freq, int flags, int start, int end);
+                       int delay, int flags, int start, int end);
 
 int scc_roobj_write(scc_roobj_t* ro,scc_ns_t* ns, scc_fd_t* fd);
 
