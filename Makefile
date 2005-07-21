@@ -9,7 +9,9 @@ GTK_LDFLAGS=`pkg-config gtk+-2.0  --libs`
 FT_CFLAGS=`freetype-config --cflags`
 FT_LDFLAGS=`freetype-config --libs`
 
-## Newer readline need ncurse
+BISON=bison
+LEX=lex
+
 LDFLAGS = 
 
 .SUFFIXES: .c .o
@@ -41,13 +43,13 @@ rd: $(RD_OBJS)
 	$(CC) $(CFLAGS) $(RD_OBJS) -o rd $(LDFLAGS)
 
 scc_parse.tab.c: scc_parse.y scc_func.h
-	bison -v scc_parse.y
+	$(BISON) -v scc_parse.y
 
 scc_parse.tab.h: scc_parse.y
-	bison -v scc_parse.y
+	$(BISON) -v scc_parse.y
 
 scc_lex.c: scc_lex.y scc_parse.tab.h
-	lex -oscc_lex.c scc_lex.y
+	$(LEX) -oscc_lex.c scc_lex.y
 
 PARSER_SRCS= scc_parse.tab.c scc_util.c scc_ns.c scc_roobj.c scc_img.c scc_code.c code.c write.c scc_lex.c scc_fd.c scc_param.c
 PARSER_OBJS = $(PARSER_SRCS:.c=.o)
@@ -87,13 +89,13 @@ imgremap: imgremap.c scc_img.o scc_fd.o scc_param.o
 	$(CC) $(CFLAGS) -o $@ imgremap.c scc_img.o scc_fd.o scc_param.o
 
 cost_parse.tab.c: cost_parse.y
-	bison -v cost_parse.y
+	$(BISON) -v cost_parse.y
 
 cost_parse.tab.h: cost_parse.y
-	bison -v cost_parse.y
+	$(BISON) -v cost_parse.y
 
 cost_lex.c: cost_lex.y cost_parse.tab.h
-	lex -ocost_lex.c cost_lex.y
+	$(LEX) -ocost_lex.c cost_lex.y
 
 COST_SRCS= cost_lex.c cost_parse.tab.c scc_fd.c scc_param.c scc_img.c
 COST_OBJS=$(COST_SRCS:.c=.o)
