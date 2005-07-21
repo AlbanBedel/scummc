@@ -20,6 +20,9 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "scc_fd.h"
 #include "scc_util.h"
