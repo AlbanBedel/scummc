@@ -82,11 +82,31 @@ static int scc_parse_str(scc_param_t* param,char* val) {
   return 1;
 }
 
+static int scc_parse_str_list(scc_param_t* param,char* val) {
+  char*** p = param->ptr;
+  int i = 0;
+
+  if(val[0] == '\0') return SCC_PARAM_INVALID;
+
+  if(p[0]) {
+    for( ; p[0][i] ; i++);
+    p[0] = realloc(p[0],(i+2)*sizeof(char*));
+  } else
+    p[0] = malloc(2*sizeof(char*));
+
+  p[0][i] = strdup(val);
+  p[0][i+1] = NULL;
+
+  return 1;
+}
+    
+
 scc_param_parser_t scc_param_parser[] = {
   { SCC_PARAM_FLAG, SCC_PARAM_TYPE_NO_ARG, scc_parse_flag },
   { SCC_PARAM_INT, 0, scc_parse_int },
   { SCC_PARAM_DBL, 0, scc_parse_double },
   { SCC_PARAM_STR, 0, scc_parse_str },
+  { SCC_PARAM_STR_LIST, 0, scc_parse_str_list },
   { 0, 0, NULL }
 };
 
