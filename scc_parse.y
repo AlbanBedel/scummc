@@ -282,6 +282,7 @@
 
 %type <arg> scriptargs
 %type <sym> roomscrdecl
+%type <sym> roomobjdecl
 %type <sym> cycledecl
 %type <sym> voicedecl
 %type <strlist> zbufs
@@ -461,6 +462,7 @@ roombodyentries: roombodyentry
 // scripts, both local and global
 roombodyentry: roomscrdecl '{' scriptbody '}'
 {
+  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
   if($3) {
     $3->sym = $1;
     scc_roobj_add_scr(scc_roobj,$3);
@@ -479,6 +481,7 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
 // objects
 | roomobjdecl '{' objectparams objectverbs '}'
 {
+  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
   // add the obj to the room
   scc_roobj_add_obj(scc_roobj,scc_obj);
   scc_obj = NULL;
@@ -512,8 +515,6 @@ roomscrdecl: scripttype SCRIPT SYM  '(' scriptargs ')' location
     if(!scc_ns_alloc_sym_addr(scc_ns,s,&scc_local_scr))
       SCC_ABORT(@3,"Failed to allocate local script address.\n");
 
-  if(!s->rid) scc_ns_get_rid(scc_ns,s);
-
   scc_ns_push(scc_ns,s);
 
   // declare the arguments
@@ -539,9 +540,7 @@ roomobjdecl: OBJECT SYM location
   if(!sym) SCC_ABORT(@1,"Failed to declare object %s.\n",$2);
   
   scc_obj = scc_roobj_obj_new(sym);
-  //  scc_ns_push(scc_ns,sym);
-  if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
-
+  $$ = sym;
 }
 ;
 
@@ -1546,6 +1545,8 @@ call: SYM '(' cargs ')'
     if(!f)
       SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
 
+    if(!s->rid) scc_ns_get_rid(scc_ns,s);
+
     // create the arguments
     scr = calloc(1,sizeof(scc_statement_t));
     scr->type = SCC_ST_RES;
@@ -1592,6 +1593,8 @@ call: SYM '(' cargs ')'
   f = scc_get_func("startScript0");
   if(!f)
     SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
+
+  if(!s->rid) scc_ns_get_rid(scc_ns,s);
 
   // create the arguments
   scr = calloc(1,sizeof(scc_statement_t));
