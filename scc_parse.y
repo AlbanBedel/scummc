@@ -294,12 +294,15 @@
 %%
 
 srcfile: /* empty */
-| rooms
-| globdecl rooms
+| srcs
 ;
 
-globdecl: gdecl
-| globdecl gdecl
+srcs: src
+| srcs src
+;
+
+src: room
+| gdecl
 ;
 
 gdecl: gvardecl ';'
@@ -417,10 +420,6 @@ roombdecl: ROOM SYM location
   scc_ns_push(scc_ns,sym);
   scc_roobj = scc_roobj_new(sym);
 }
-;
-
-rooms: room
-| rooms room
 ;
 
 // Here we should have the whole room.
