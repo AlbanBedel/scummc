@@ -62,6 +62,8 @@ typedef union {
  static int strvar_first_line=0,strvar_first_column=0;
  static int strvar_last_line=0,strvar_last_column=0;
 
+ char** scc_include = NULL;
+
 #define SET_POS(len) yylloc.first_line = line;       \
                      yylloc.first_column = col;      \
                      yylloc.last_line = line;        \
@@ -85,6 +87,7 @@ typedef union {
 
 %x STR
 %x INCLUDE
+%x PATH_INCLUDE
 %x COMMENT
       
 DIGIT    [0-9]
@@ -137,6 +140,68 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
     BEGIN(INITIAL);
   }
 }
+
+^[ \t]*"#include"[ \t]+\< { 
+  col += strlen(yytext);
+  BEGIN(PATH_INCLUDE);
+}
+
+
+
+<PATH_INCLUDE>{
+  \n {
+    return ERROR;
+  }
+
+  [^>\n]+\> {
+    int i,ylen = strlen(yytext);
+    // count
+    col += ylen;
+    // end of file name
+    yytext[ylen-1] = '\0';
+
+    if(inc_ptr+1 >= MAX_INCLUDE_DEPTH) {
+      printf("Too deep includes.\n");
+      return ERROR;
+    }
+
+    // setup the buffer
+    inc_stack[inc_ptr].buf = YY_CURRENT_BUFFER;
+    inc_stack[inc_ptr].line = line;
+    inc_stack[inc_ptr].col = col;
+    inc_ptr++;
+
+    inc_stack[inc_ptr].name = NULL;
+    if(scc_include) {
+      for(i = 0 ; scc_include[i] ; i++) {
+        int l = strlen(scc_include[i]) + 1 + ylen + 1;
+        char name[l];
+        sprintf(name,"%s/%s",scc_include[i],yytext);
+        yyin = fopen(name,"r");
+        if(yyin) {
+          inc_stack[inc_ptr].name = strdup(name);
+          break;
+        }
+      }
+    }
+    if(!inc_stack[inc_ptr].name) {
+      yyin = fopen(yytext,"r");
+      if(!yyin) {
+        printf("Failed to open %s.\n",yytext);
+        return ERROR;
+      }
+      inc_stack[inc_ptr].name = strdup(yytext);
+    }
+    
+    yy_switch_to_buffer(yy_create_buffer( yyin, YY_BUF_SIZE ));
+
+    line = 1;
+    col = 0;
+
+    BEGIN(INITIAL);
+  }
+}
+
 
 <<EOF>> {
   if(!inc_ptr) {

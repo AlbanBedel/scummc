@@ -1754,8 +1754,11 @@ static void usage(char* prog) {
   exit(-1);
 }
 
+extern char** scc_include;
+
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &scc_output },
+  { "I", SCC_PARAM_STR_LIST, 0, 0, &scc_include },
   { NULL, 0, 0, 0, NULL }
 };
 
