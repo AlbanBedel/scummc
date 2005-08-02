@@ -953,7 +953,7 @@ static int scc_boxedit_undo_action(scc_boxedit_t* be,
     txt = b->name;
     gtk_entry_set_text(GTK_ENTRY(be->name_entry),(undo->box) ? (char*)undo->box : "");
     b->name = (char*)undo->box;
-    (char*)undo->box = txt;
+    undo->box = (scc_box_t*)txt;
 
     be->edit_box = b;
     break;
@@ -1937,7 +1937,7 @@ static void activate_name_cb(GtkEntry *entry,
   if(!be->edit_box) return;
   
   undo = scc_boxedit_get_undo(be,SCC_UNDO_NAME);
-  (char*)undo->box = be->edit_box->name;
+  undo->box = (scc_box_t*)be->edit_box->name;
 
   txt = gtk_entry_get_text(GTK_ENTRY(be->name_entry));
   if(txt[0] == '\0')
