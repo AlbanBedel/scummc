@@ -195,6 +195,14 @@ $(BUILDROOT)/%/build.log:
 PHONY_TARGETS+= log viewlog all_log all_viewlog
 
 ##
+## Include user defined targets.
+##
+
+ifneq ($(wildcard Makefile.user),)
+include Makefile.user
+endif
+
+##
 ## Useful for scripts and as a quick help
 ##
 
