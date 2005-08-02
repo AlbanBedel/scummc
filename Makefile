@@ -1,153 +1,274 @@
-
-
-INCLUDE = 
-CFLAGS  = -g -Wall
-
-GTK_CFLAGS=`pkg-config gtk+-2.0  --cflags`
-GTK_LDFLAGS=`pkg-config gtk+-2.0  --libs`
-
-FT_CFLAGS=`freetype-config --cflags`
-FT_LDFLAGS=`freetype-config --libs`
-
-BISON=bison
-LEX=lex
-
-LDFLAGS = 
-
-.SUFFIXES: .c .o
-
-BASE = code.c  decode.c  read.c write.c scc_util.c scc_fd.c scc_cost.c
-
-RD_SRCS = $(BASE) rd.c
-RD_OBJS = $(RD_SRCS:.c=.o)
-
-COSTVIEW_SRCS = $(BASE) costview.c scc_param.c
-COSTVIEW_OBJS = $(COSTVIEW_SRCS:.c=.o)
-
-# .PHONY: all clean
-
-all: scc sld costview boxedit cost char soun
-
-utils: imgsplit imgremap zpnn2bmp raw2voc
-
-.c.o:
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-costview.o: costview.c
-	$(CC) -c $(CFLAGS) $(GTK_CFLAGS) -o $@ $<
-
-costview: $(COSTVIEW_OBJS)
-	$(CC) $(CFLAGS) $(COSTVIEW_OBJS) -o costview $(LDFLAGS) $(GTK_LDFLAGS)
-
-rd: $(RD_OBJS)
-	$(CC) $(CFLAGS) $(RD_OBJS) -o rd $(LDFLAGS)
-
-scc_parse.tab.c: scc_parse.y scc_func.h
-	$(BISON) -v scc_parse.y
-
-scc_parse.tab.h: scc_parse.y
-	$(BISON) -v scc_parse.y
-
-scc_lex.c: scc_lex.y scc_parse.tab.h
-	$(LEX) -oscc_lex.c scc_lex.y
-
-PARSER_SRCS= scc_parse.tab.c scc_util.c scc_ns.c scc_roobj.c scc_img.c scc_code.c code.c write.c scc_lex.c scc_fd.c scc_param.c
-PARSER_OBJS = $(PARSER_SRCS:.c=.o)
-
-
-scc: $(PARSER_OBJS)
-	gcc -o scc $(PARSER_OBJS)
-
-LINKER_SCRS= scc_ld.c scc_ns.c scc_code.c scc_fd.c scc_param.c
-LINKER_OBJS= $(LINKER_SCRS:.c=.o)
-
-sld: $(LINKER_OBJS)
-	gcc -o sld $(LINKER_OBJS)
-
-ZPNN2BMP_SCRS= zpnn2bmp.c scc_fd.c scc_param.c decode.c scc_img.c
-ZPNN2BMP_OBJS= $(ZPNN2BMP_SCRS:.c=.o)
-
-zpnn2bmp: $(ZPNN2BMP_OBJS)
-	gcc -o zpnn2bmp $(ZPNN2BMP_OBJS)
-
-BE_SCRS= read.c write.c scc_fd.c scc_cost.c scc_img.c scc_param.c boxedit.c
-BE_OBJS= $(BE_SCRS:.c=.o)
-
-boxedit.o: boxedit.c
-	$(CC) -c $(CFLAGS) $(GTK_CFLAGS) -o $@ $<
-
-boxedit: $(BE_OBJS)
-	gcc -o boxedit $(BE_OBJS)  $(LDFLAGS) $(GTK_LDFLAGS)
-
-imgtest: scc_img.c scc_fd.o
-	$(CC) $(CFLAGS) -DSCC_IMG_TEST  -o $@ scc_img.c scc_fd.o
-
-imgsplit: imgsplit.c scc_img.o scc_fd.o scc_param.o
-	$(CC) $(CFLAGS) -o $@ imgsplit.c scc_img.o scc_fd.o scc_param.o
-
-imgremap: imgremap.c scc_img.o scc_fd.o scc_param.o
-	$(CC) $(CFLAGS) -o $@ imgremap.c scc_img.o scc_fd.o scc_param.o
-
-cost_parse.tab.c: cost_parse.y
-	$(BISON) -v cost_parse.y
-
-cost_parse.tab.h: cost_parse.y
-	$(BISON) -v cost_parse.y
-
-cost_lex.c: cost_lex.y cost_parse.tab.h
-	$(LEX) -ocost_lex.c cost_lex.y
-
-COST_SRCS= cost_lex.c cost_parse.tab.c scc_fd.c scc_param.c scc_img.c
-COST_OBJS=$(COST_SRCS:.c=.o)
-
-cost: $(COST_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(COST_OBJS) $(LDFLAGS)
-
-
-CHAR_SRCS= char.c scc_fd.c scc_param.c scc_img.c
-CHAR_OBJS=$(CHAR_SRCS:.c=.o)
-
-char.o: char.c
-	$(CC) -c $(CFLAGS) $(FT_CFLAGS) -o $@ $<
-
-char: $(CHAR_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(CHAR_OBJS) $(LDFLAGS) $(FT_LDFLAGS)
-
-SOUN_SRCS= soun.c scc_fd.c scc_param.c
-SOUN_OBJS=$(SOUN_SRCS:.c=.o)
-
-soun: $(SOUN_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(SOUN_OBJS) $(LDFLAGS)
-
-RAW2VOC_SRCS= raw2voc.c scc_fd.c scc_param.c
-RAW2VOC_OBJS=$(RAW2VOC_SRCS:.c=.o)
-
-raw2voc: $(RAW2VOC_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(RAW2VOC_OBJS) $(LDFLAGS)
-
-clean:
-	rm -f *.o *.a *~ *.tab.[ch] scc_lex.c cost_lex.c
-
-distclean: clean
-	rm -f Makefile.bak .depend
-
-dep:    depend
-
-depend: $(PARSER_SRCS)    \
-	$(LINKER_SCRS)    \
-	$(ZPNN2BMP_SCRS)  \
-	$(BE_SCRS)        \
-	$(COST_SRCS)      \
-	$(CHAR_SRCS)      \
-	$(SOUN_SRCS)      \
-	$(RAW2VOC_SRCS)   \
-
-	$(CC) -MM $(CFLAGS) $(GTK_CFLAGS) $(PARSER_SRCS) $(LINKER_SCRS) \
-	      $(ZPNN2BMP_SCRS) $(BE_SCRS) $(COST_SRCS) $(CHAR_SRCS) 1>.depend
-
 #
-# include dependency files if they exist
+#  ScummC Makefile
+#  Copyright (C) 2005  Alban Bedel
+# 
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
 #
-ifneq ($(wildcard .depend),)
-include .depend
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+##
+## If you need to add a new program or some sources to it, you just 
+## need to edit Makefile.defs.
+##
+## If you need to add a new external lib, first edit configure to
+## have it define the needed cflags and ldflags, then edit
+## Makefile.defs.
+##
+##
+## This build system has been designed to allow easy build with cross
+## compilers and on compile farms where a single home directory
+## is shared between many hosts. To allow this the top level config
+## and the build directory include the hostname in their name.
+## That way make can automatically use the right config for each host.
+## The build directory contain a directory for each build target
+## as defined by the compiler target system, the compiler name,
+## the compiler version and the build type (debug or release).
+##
+## All this allow parallel build of debug and release builds with
+## various compilers from various host.
+##
+## This makefile is mainly a front end to Makefile.target.
+## Except for distclean and the log stuff it just call
+## down make in the right target directory.
+##
+##
+
+##
+## Get the basic build config (builddir, etc)
+## and check that it is for the right host
+##
+
+host=$(shell uname -n)
+
+ifeq ($(wildcard config.$(host).mak),)
+$(error "config.$(host).mak not found. Please run configure first.")
 endif
+
+include config.$(host).mak
+
+ifneq ($(host),$(HOST))
+$(error "config.$(host).mak was generated for $(HOST). Don't rename the config.*.mak files, they are host dependent.")
+endif
+
+## Make a list of all the configured targets
+TARGET_LIST=$(patsubst $(BUILDROOT)/%/config.mak,%,$(wildcard $(BUILDROOT)/*/config.mak))
+
+## Check that the default target is valid
+ifeq ($(findstring $(TARGET),$(TARGET_LIST)),)
+$(error "Default target $(TARGET) is not a valid target. You can set the default target with: ./configure --set-default-target new-target")
+endif
+
+## Ensure that the default target is the first one
+TARGETS=$(TARGET) $(filter-out $(TARGET),$(TARGET_LIST))
+
+## Get the program defs
+include Makefile.defs
+
+## The basic subtargets
+## We keep these separated for the help output
+SUBTARGETS=                                      \
+	$(shell echo $(GROUPS) | tr [A-Z] [a-z]) \
+	all                                      \
+
+CLEAN_SUBTARGETS=                                \
+	cleanlog                                 \
+	clean                                    \
+	cleangen                                 \
+	cleanbin                                 \
+
+## All possible subtargets
+ALL_SUBTARGETS=                                  \
+	$(SUBTARGETS)                            \
+	$(CLEAN_SUBTARGETS)                      \
+	$(foreach grp,$(GROUPS),$($(grp)))       \
+
+##
+## Generate all our targets
+##
+
+## Template for a subtarget
+define TARGET_SUB_template
+$(1)_$(2):
+	@$$(MAKE) -C "$(BUILDROOT)/$(1)" $(2)
+
+PHONY_TARGETS+=$(1)_$(2)
+endef
+
+## For each target define a default and all subtargets
+define TARGET_template
+$(1):
+	@$$(MAKE) -C "$(BUILDROOT)/$(1)"
+
+$(foreach sub,$(ALL_SUBTARGETS),$(eval $(call TARGET_SUB_template,$(1),$(sub))))
+
+PHONY_TARGETS+=$(1)
+endef
+
+$(foreach target,$(TARGETS),$(eval $(call TARGET_template,$(target))))
+
+## Define the default subtargets, so that 'make utils' build
+## the utils for the last configured target.
+## Also define all_programs, all_utils, etc which build
+## for all targets.
+define DEF_ALL_TARGET_template
+$(1): $$(TARGET)_$(1)
+
+## Trick to go around the bug with
+## too bigs dependency list in templates
+all_$(1):
+	@$$(MAKE) $(TARGETS:%=%_$(1))
+
+PHONY_TARGETS+=$(1) all_$(1)
+
+endef
+
+$(foreach sub,$(ALL_SUBTARGETS),$(eval $(call DEF_ALL_TARGET_template,$(sub))))
+
+##
+## The targets implemented here: distclean and log
+##
+
+## We handle disclean from here because we might
+## need to change the default target if we distclean it.
+## If no other target is left then destroy the build
+## directory and config.$(HOST).mak.
+
+define DISTCLEAN_template
+$(1)_distclean:
+	@if [ -n "$(filter-out $(1),$(TARGETS))" ] ; then     \
+	   echo "rm -rf $(BUILDROOT)/$(1)" ;                  \
+	   rm -rf $(BUILDROOT)/$(1) ;                         \
+	   if [ "$(1)" = "$(TARGET)" ] ; then                 \
+	     ./configure --set-default-target                 \
+	        $(firstword $(filter-out $(1),$(TARGETS))) ;  \
+	   fi                                                 \
+	 else                                                 \
+	   echo "rm -rf $(BUILDROOT) config.$(HOST).mak" ;    \
+	   rm -rf $(BUILDROOT) config.$(HOST).mak ;           \
+	 fi
+
+$(1)_log:
+	@cat $(BUILDROOT)/$(1)/build.log 2> /dev/null ; true
+
+$(1)_viewlog: $(BUILDROOT)/$(1)/build.log
+	$$(if $(PAGER),,$$(error "You need a pager to view the logs."))
+	@$(PAGER) $(BUILDROOT)/$(1)/build.log
+
+PHONY_TARGETS+=$(1)_distclean $(1)_viewlog $(1)_log
+endef
+
+$(foreach target,$(TARGETS),$(eval $(call DISTCLEAN_template,$(target))))
+
+distclean: $(TARGET)_distclean
+
+all_distclean:
+	rm -rf $(BUILDROOT) config.$(HOST).mak
+
+PHONY_TARGETS+=distclean all_distclean
+
+log: $(TARGET)_log
+
+all_log:
+	@cat $(BUILDROOT)/*/build.log 2> /dev/null ; true
+
+viewlog: $(TARGET)_viewlog
+
+all_viewlog:
+	$(if $(wildcard $(BUILDROOT)/*/build.log),,$(error "No build log found."))
+	$(if $(PAGER),,$(error "You need a pager to view the logs."))
+	@cat $(BUILDROOT)/*/build.log | $(PAGER)
+
+$(BUILDROOT)/%/build.log:
+	$(error "No build log found for $(TARGET)")
+
+PHONY_TARGETS+= log viewlog all_log all_viewlog
+
+##
+## Useful for scripts and as a quick help
+##
+
+targets:
+	@for target in $(TARGETS) ; do   \
+	   echo "  $$target"  ;          \
+	 done
+
+subtargets:
+	@for sub in $(SUBTARGETS) viewlog log ; do              \
+	   echo "  $$sub"  ;                                    \
+	 done
+	@for list in $(foreach grp,$(GROUPS),'$($(grp))') ; do  \
+	   for sub in $$list ; do                               \
+	     echo "  $$sub" ;                                   \
+	   done                                                 \
+	 done
+	@for sub in $(CLEAN_SUBTARGETS) distclean ; do          \
+	   echo "  $$sub"  ;                                    \
+	 done
+
+##
+## Some help
+##
+
+help:
+	@echo
+	@echo "Usage:"
+	@echo
+	@echo "  $(MAKE)                   build for $(TARGET)"
+	@echo "  $(MAKE) SUBTARGET         build a subtarget for $(TARGET)"
+	@echo
+	@echo "  $(MAKE) TARGET            build for the given target"
+	@echo "  $(MAKE) TARGET_SUBTARGET  build a subtarget for the given target"
+	@echo
+	@echo "  $(MAKE) all_SUBTARGET     build a subtarget for all targets"
+	@echo
+	@echo "  $(MAKE) help              display this"
+	@echo "  $(MAKE) targets           show a list of the configured targets"
+	@echo "  $(MAKE) subtargets        show a list of the existing subtargets"
+	@echo
+	@echo "Targets:"
+	@echo
+	@for target in $(TARGETS) ; do   \
+	   echo "  $$target"  ;          \
+	 done
+	@echo
+	@echo "Subtargets:"
+	@echo
+	@echo "  $(strip $(SUBTARGETS)) viewlog log"
+	@for list in $(foreach grp,$(GROUPS),'$($(grp))') ; do \
+	   echo "  $$list" ;                                   \
+	 done
+	@echo "  $(strip $(CLEAN_SUBTARGETS)) distclean" 
+	@echo
+	@echo "Examples:"
+	@echo
+	@echo "  make $(word 2,$(SUBTARGETS)), make all_$(firstword $($(firstword $(GROUPS)))), make $(TARGET),"
+	@echo "  make $(TARGET)_log"
+	@echo
+
+##
+## Nearly everything is phony
+##
+
+.PHONY: $(PHONY_TARGETS)    \
+	targets             \
+	subtargets          \
+	help                \
+
+##
+## Be pedantic and refuse to build anything directly from this makefile
+##
+
+%:
+	$(error "Target $@ doesn't exist. Run '$(MAKE) help' for some help.")
+

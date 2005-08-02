@@ -1,0 +1,685 @@
+#!/bin/sh
+#
+#  ScummC configure
+#  Copyright (C) 2005  Alban Bedel
+# 
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+#
+# Get the current date
+#
+config_date=`date`
+
+#
+# Default config
+#
+
+debug=yes
+gtk=yes
+ft=yes
+
+##
+## Override head and tail
+##
+
+if [ "`(echo line1 ; echo line2) | tail -1 2>/dev/null`" = "line2" ] ; then
+    _tail() { tail -$1 2>/dev/null ; }
+else
+    _tail() { tail -n $1 2>/dev/null ; }
+fi
+if [ "`(echo line1 ; echo line2) | head -1 2>/dev/null`" = "line1" ] ; then
+    _head() { head -$1 2>/dev/null ; }
+else
+    _head() { head -n $1 2>/dev/null ; }
+fi
+
+##
+## Save the flags for --reconfigure
+##
+
+CONFIGURE_FLAGS=
+for a in "$@" ; do
+    CONFIGURE_FLAGS="$CONFIGURE_FLAGS '$a'"
+done
+
+##
+## Get the host name, we need it for some options
+##
+
+[ -z "$HOST" ] && HOST=`uname -n`
+
+##
+## Parse the command line options
+##
+
+while [ -n "$1" ] ; do
+    case "$1" in
+	--cc)
+	    CC=$2
+	    shift
+	    ;;
+	--make)
+	    MAKE=$2
+	    shift
+	    ;;
+	--bison)
+	    BISON=$2
+	    shift
+	    ;;
+	--lex)
+	    LEX=$2
+	    shift
+	    ;;
+	--target)
+	    TARGET=$2
+	    shift
+	    ;;
+	--hostname)
+	    HOST=$2
+	    shift
+	    ;;
+	--pkg-config)
+	    PKGCONFIG=$2
+	    shift
+	    ;;
+	--pkg-config-libdir)
+	    export PKG_CONFIG_LIBDIR=$2
+	    shift
+	    ;;
+	--disable-gtk)
+	    gtk=no
+	    ;;
+	--disable-freetype)
+	    ft=no
+	    ;;
+	--cflags)
+	    CFLAGS=$2
+	    shift
+	    ;;
+	--ldflags)
+	    LDFLAGS=$2
+	    shift
+	    ;;
+	--debug)
+	    debug=yes
+	    ;;
+	--release)
+	    debug=no
+	    ;;
+	--buildroot)
+	    BUILDROOT=$2
+	    shift
+	    ;;
+	--pager)
+	    PAGER=$2
+	    shift
+	    ;;
+	--set-default-target)
+	    shift
+	    if [ -z "$1" ] ; then
+		echo "You must specify a new default target."
+		exit 1
+	    fi
+	    cfg=`sed 's,^ *#.*,,; s,?=,=,' $HOST.config.mak 2> /dev/null`
+	    if [ $? -ne 0 ] ; then
+		echo "Failed to parse $HOST.config.mak."
+		exit 1
+	    fi
+	    eval $cfg
+	    if [ "$TARGET" = "$1" ] ; then
+		echo "$1 is already the default target."
+		exit
+	    fi
+	    found=false
+	    for t in "$BUILDROOT"/*/config.mak ; do
+		if [ "$t" = "$BUILDROOT/$1/config.mak" ] ; then
+		    found=true
+		    break
+		fi
+	    done
+	    if $found ; then
+		sed "s,TARGET?=.*,TARGET?=$1," $HOST.config.mak > $HOST.config.mak.new
+		mv $HOST.config.mak.new $HOST.config.mak
+	        echo "Default target set to $1."
+		exit
+	    else
+		echo "Target '$1' doesn't exist."
+		exit 1
+	    fi
+	    ;;
+	--reconfigure)
+	    cfg=`sed 's,^ *#.*,,; s,?=,=,' $HOST.config.mak 2> /dev/null`
+	    if [ $? -ne 0 ] ; then
+		echo "Failed to parse $HOST.config.mak."
+		exit 1
+	    fi
+	    eval $cfg
+	    shift
+	    eval $0 $CONFIGURE_FLAGS $@
+	    exit
+	    ;;
+	-h|--help)
+	    cat <<EOF
+
+Usage: $0 [OPTIONS]...
+
+
+  -h, --help                display this help and exit
+
+  --cc COMPILER             use this compiler
+  --make MAKE               use this make
+  --bison BISON             use this bison
+  --lex LEX                 use this (f)lex
+  --pager PAGER             use this pager to show the logs
+  
+  --target TARGET           override the target system
+  --hostname NAME           override the hostname
+
+  --debug                   configure a debug target
+  --release                 configure a release target
+
+  --buildroot DIR           set the build directory
+  --srcdir DIR              set the source directory
+
+  --cflags FLAGS            set the CFLAGS
+  --ldflags FLAGS           set the LDFLAGS
+
+  --disable-gtk             disable gtk
+  --disable-freetype        disable freetype
+
+  --pkg-config PKGCONFIG    use this pkg-config
+  --pkg-config-libdir DIR   set \$PKG_CONFIG_LIBDIR, useful for cross compile
+
+  --set-default-target TRG  change the default make target
+  --reconfigure OPTS        re-run this script with the last arguments.
+                            optionally appending some others.
+
+EOF
+	    exit
+	    ;;
+	*)
+	    echo "Unknown command line option: $1"
+	    exit 1
+	    ;;
+    esac
+    shift
+done
+
+##
+## Let's configure
+##
+
+echo
+echo "Configuring ScummC on $HOST"
+echo
+
+## We start by looking at the tools needed for the build
+
+## Look on what we are running, we need that later
+hostsys=`uname -s | tr [A-Z] [a-z]`
+echo "Host system: $hostsys"
+
+## And from where
+[ -z "$SRCDIR" ] && SRCDIR=`pwd`
+echo "Sources: $SRCDIR"
+
+##
+## Find the compiler
+##
+
+if [ -z "$CC" ] ; then
+    ## Try gcc first some system don't have cc
+    if type gcc 2> /dev/null >&2 ; then
+	CC=gcc
+    elif type cc 2> /dev/null >&2 ; then
+	CC=cc
+    else
+	echo "Failed to find the C compiler, use --cc or set \$CC."
+	exit 1
+    fi
+else
+    type $CC 2> /dev/null >&2
+    if [ $? -ne 0 ] ; then
+	echo "Can't run $CC"
+	exit 1
+    fi
+fi
+
+## Try to find what it is for a compiler
+$CC -v 2> /dev/null >&2
+if [ $? -ne 0 ] ; then
+    echo "Failed to run compiler $CC."
+    exit 1
+fi
+tmp=`$CC -v 2>&1 | _tail 1`
+## Apple compiler, take the gcc version it's based on
+if echo "$tmp" | grep "^Apple Computer, Inc." 2> /dev/null >&2 ; then
+    tmp=`echo "$tmp" | sed 's/.*based on //'`
+fi
+## Pickup the compiler name and version
+ccname=`echo "$tmp" | cut -d ' ' -f 1`
+ccver=`echo "$tmp" | cut -d ' ' -f 3`
+
+echo "Compiler: $CC ($ccname $ccver)"
+
+##
+## Check the compiler version
+##
+
+case "$ccname" in
+    gcc)
+	serie=`echo $ccver | cut -d . -f 1`
+	major=`echo $ccver | cut -d . -f 2`
+	minor=`echo $ccver | cut -d . -f 3`
+	if [ $serie -lt 2 ] ; then
+	    echo "GCC $ccver is way too old. Get at least 2.95.3."
+	    exit 1
+	elif [ $serie -eq 2 ] ; then
+	    if [ $major -lt 95 ] ; then
+		echo "GCC $ccver is way too old. Get at least 2.95.3."
+		exit 1
+	    elif [ $minor -lt 3 ] ; then
+		echo "GCC $ccver is too old. Get at least 2.95.3."
+		exit 1
+	    fi
+	fi
+	;;
+esac
+
+##
+## Look for the target
+##
+
+if [ -z "$TARGET" ] ; then
+    ## Some compiler can tell their target
+    case "$ccname" in
+	gcc)
+	    TARGET=`$CC -dumpmachine 2> /dev/null`
+	    ;;
+	tcc)
+	    ## Assume i386 with tcc
+	    TARGET="i386-unknown-$hostsys"
+	    ;;
+    esac
+    ## Otherwise take the host as target
+    if [ -z "$TARGET" ] ; then
+	TARGET=`uname -m`"-unknown-$hostsys"
+    fi
+fi
+
+cpu=`echo "$TARGET" | cut -d - -f 1`
+sys=`echo "$TARGET" | cut -d - -f 3`
+[ -z "$sys" ] && sys=`echo "$TARGET" | cut -d - -f 2`
+
+if [ -z "$cpu" -o -z "$sys" ] ; then
+    echo "Invalid target: $TARGET"
+    exit 1
+fi
+
+##
+## Define the cpu related stuff
+##
+
+case "$cpu" in 
+    i[3-9]86|x86_64|alpha)
+	endian=little
+	;;
+    ppc|sparc)
+	endian=big
+	;;
+    *)
+	echo "Unknown cpu: $cpu"
+	exit 1
+	;;
+esac
+
+if [ "$endian" = "little" ] ; then
+    little_endian_def='#define IS_LITTLE_ENDIAN 1'
+    big_endian_def='#undef IS_BIG_ENDIAN'
+else
+    little_endian_def='#undef IS_LITTLE_ENDIAN'
+    big_endian_def='#define IS_BIG_ENDIAN 1'
+fi
+
+##
+## Define the system related stuff
+##
+
+case $sys in
+    *mingw*)
+	EXESUF=.exe
+	;;
+esac
+sys_def='#define IS_'`echo $sys | tr [a-z] [A-Z] | tr -c -d [A-Z]`' 1'
+
+if [ "$debug" = 'yes' ] ; then
+    TARGET="$cpu-$sys-$ccname-$ccver-debug"
+else
+    TARGET="$cpu-$sys-$ccname-$ccver-release"
+fi
+
+echo "Target system: $TARGET ($endian endian)"
+
+## Set the base C/LDFLAGS
+## We need -I. for config.h and the other generated includes
+CFLAGS="$CFLAGS -Wall"
+if [ $debug = "yes" ] ; then
+    CFLAGS="$CFLAGS -g -I. -I$SRCDIR"
+    LDFLAGS="$LDFLAGS -g"
+else
+    CFLAGS="$CFLAGS -O3 -I. -I$SRCDIR"
+fi
+
+
+##
+## Look for make, BSD make will fail with -version
+##
+## We need at least 3.80
+##
+
+if [ -z "$MAKE" ] ; then
+    if make -version 2> /dev/null >&2 ; then
+	MAKE=make
+    elif  gmake -version 2> /dev/null >&2 ; then
+	MAKE=gmake
+    else
+	echo "Failed to find make"
+    fi
+else
+    type $MAKE 2> /dev/null >&2
+    if [ $? -ne 0 ] ; then
+	echo "Can't run $MAKE"
+	exit 1
+    fi
+fi
+
+makever=`$MAKE -version | _head 1 | sed 's/,.*//'`
+
+echo "$makever" | grep '^GNU Make' 2> /dev/null  >&2
+if [ $? -ne 0 ] ; then
+    echo "GNU Make is required."
+    exit 1
+fi
+makever=`echo "$makever" | sed 's/GNU Make *//; s/version *//; s/ *$//'`
+
+major=`echo $makever | cut -d . -f 1`
+minor=`echo $makever | cut -d . -f 2`
+
+if [ $major -lt 3 ] ; then
+    echo "GNU Make $makever is way too old, at least 3.80 is required."
+    exit 1
+elif [ $minor -lt 80 ] ; then
+    echo "GNU Make $makever is too old, at least 3.80 is required."
+    exit 1
+fi
+
+echo "GNU Make: $MAKE ($makever)"
+
+##
+## Look for bison
+##
+## TODO: Find minimal version
+## Oldest tested version: 1.28
+##
+
+if [ -z "$BISON" ] ; then
+    if type bison 2> /dev/null >&2 ; then
+	BISON=bison
+    else
+	echo "Failed to find bison."
+	exit 1
+    fi
+else
+    type $BISON 2> /dev/null >&2
+    if [ $? -ne 0 ] ; then
+	echo "Can't run $BISON"
+	exit 1
+    fi
+fi
+
+bisonver=`$BISON --version | _head 1 | tr -c -d '[[:digit:].]'`
+
+#if [ "`echo $bisonver | sed 's/\..*//'`" -le 1 ] && \
+#    [ "`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`" -lt 28 ] ; then
+#    echo "Bison ($bisonver) is too old, at least 1.28 is required."
+#    exit 1
+#fi
+
+echo "Bison: $BISON ($bisonver)"
+
+if [ $debug = "yes" ] ; then
+    BISONFLAGS="$BISONFLAGS -d -v"
+else
+    BISONFLAGS="$BISONFLAGS -d"
+fi
+
+##
+## Look for lex
+##
+## TODO: Find minimal version
+##
+
+if [ -z "$LEX" ] ; then
+    ## Try flex first
+    if type flex 2> /dev/null >&2 ; then
+	LEX=flex
+    elif type lex 2> /dev/null >&2 ; then
+	LEX=lex
+    else
+	echo "Lex not found."
+	exit 1
+    fi
+else
+    type $LEX 2> /dev/null >&2
+    if [ $? -ne 0 ] ; then
+	echo "Can't run $LEX"
+	exit 1
+    fi
+fi
+
+tmp=`$LEX --version`
+lexname=`echo "$tmp" | cut -d ' ' -f 1`
+lexver=`echo "$tmp" | tr -c -d '[[:digit:].]'`
+
+echo "Lex: $LEX ($lexname $lexver)"
+
+##
+## Pager for the log viewer
+##
+
+if [ -z "$PAGER" ] ; then
+    if type less 2> /dev/null >&2 ; then
+	PAGER=less
+    elif type more 2> /dev/null >&2 ; then
+	PAGER=more
+    fi
+else
+    type $PAGER 2> /dev/null >&2 || PAGER=
+fi
+[ -z "$PAGER" ] && echo "Pager: no"  || echo "Pager: $PAGER"	
+
+
+##
+## Setup the build directory
+##
+
+[ -z "$BUILDROOT" ] && BUILDROOT="build.$HOST"
+BUILDDIR="$BUILDROOT/$TARGET"
+
+echo
+echo "Setting up build directory $BUILDDIR"
+echo
+
+mkdir -p "$BUILDDIR"
+if [ $? -ne 0 ] ; then
+    echo "Failed to create build directory $BUILDDIR"
+    exit 1
+fi
+
+cat > config.$HOST.mak <<EOF
+## ScummC config.$HOST.mak
+## This file is generated, don't edit.
+## $config_date
+
+HOST=$HOST
+
+CONFIGURE_FLAGS="$CONFIGURE_FLAGS"
+
+SRCDIR?=$SRCDIR
+
+BUILDROOT?=$BUILDROOT
+
+TARGET?=$TARGET
+
+MAKE?=$MAKE
+
+PAGER?=$PAGER
+
+EOF
+
+## Put the makefile in there
+ln -sf "$SRCDIR/Makefile.target" "$BUILDDIR/Makefile"
+if [ $? -ne 0 ] ; then
+    echo "Failed to link Makefile.target to $BUILDDIR/Makefile"
+    exit 1
+fi
+
+
+##
+## Now look for the optional libs
+##
+
+
+##
+## Get pkg-config
+##
+[ -z "$PKGCONFIG" ] && PKGCONFIG=pkg-config
+
+##
+## GTK+ 2.4
+##
+
+gtk_def='#undef HAVE_GTK'
+if [ "$gtk" != "no" ] ; then
+    gtk=no
+    if ( $PKGCONFIG --exists gtk+-2.0 ) 2> /dev/null ; then
+	gtkver=`$PKGCONFIG --modversion gtk+-2.0`
+	if $PKGCONFIG --atleast-version=2.4 gtk+-2.0 ; then
+	    gtk=yes
+	    gtk_def='#define HAVE_GTK 1'
+	    gtk_cflags=`$PKGCONFIG --cflags gtk+-2.0`
+	    gtk_ldflags=`$PKGCONFIG --libs gtk+-2.0`
+	    echo "Gtk+2.4: yes ($gtkver)"
+	else
+	    echo "Gtk+2.4: no ($gtkver)"
+	fi
+    else
+	echo "Gtk+2.4: no"
+    fi
+else
+    echo "Gtk+2.4: disabled"
+fi
+
+##
+## Freetype
+##
+## TODO: Find minimal version
+##
+
+ft_def='#undef HAVE_FT'
+if [ "$ft" != "no" ] ; then
+    ft=no
+    ftver=`( $PKGCONFIG --modversion freetype2 ) 2> /dev/null`
+    if [ $? -eq 0 ] ; then
+	ft=yes
+	ft_def='#define HAVE_FT 1'
+	ft_cflags=`$PKGCONFIG  --cflags freetype2`
+	ft_ldflags=`$PKGCONFIG  --libs freetype2`
+	echo "Freetype: yes ($ftver)"
+    else
+	echo "Freetype: no"
+    fi
+else
+    echo "Freetype: disabled"
+fi
+
+##
+## Write out the whole config
+##
+
+echo
+echo "Writing $BUILDDIR/config.mak"
+cat > "$BUILDDIR/config.mak" <<EOF
+
+## ScummC $BUILDDIR/config.mak
+## This file is generated, don't edit.
+## $config_date
+
+HOST=$HOST
+TARGET=$TARGET
+SRCDIR=$SRCDIR
+BUILDDIR=$BUILDDIR
+
+CC=$CC
+MAKE=$MAKE
+BISON=$BISON
+LEX=$LEX
+
+EXESUF=$EXESUF
+
+DEBUG=$debug
+
+CFLAGS=$CFLAGS
+LDFLAGS=$LDFLAGS
+BISONFLAGS=$BISONFLAGS
+
+HAVE_GTK=$gtk
+GTK_CFLAGS=$gtk_cflags
+GTK_LDFLAGS=$gtk_ldflags
+
+HAVE_FT=$ft
+FT_CFLAGS=$ft_cflags
+FT_LDFLAGS=$ft_ldflags
+
+EOF
+
+echo "Writing $BUILDDIR/config.h"
+cat > "$BUILDDIR/config.h" <<EOF
+// ScummC $BUILDDIR/config.h
+// This file is generated, don't edit.
+// $config_date
+
+// Target system
+$sys_def
+
+// Target endianess
+$little_endian_def
+$big_endian_def
+
+// GTK
+$gtk_def
+
+// Freetype
+$ft_def
+
+EOF
+
+echo
+echo "Configured ScummC for $TARGET,"
+echo "you can now run '$MAKE' to build it."
+echo
+
+

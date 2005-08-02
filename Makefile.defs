@@ -1,0 +1,202 @@
+#
+#  ScummC Makefile.defs
+#  Copyright (C) 2005  Alban Bedel
+# 
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+##
+## This makefile define all the programs that can be built.
+## Some examples can be found at the end.
+## 
+## We start by defining the different groups. By default only the
+## first group is built. Group names MUST be in capital.
+##
+GROUPS=                         \
+	PROGS                   \
+	UTILS                   \
+
+## We make 2 groups, one for the really usefull stuff
+## and one with all the little utilities.
+PROGS=                          \
+	scc                     \
+	sld                     \
+	boxedit                 \
+	cost                    \
+	char                    \
+	soun                    \
+	costview                \
+
+UTILS=                          \
+	zpnn2bmp                \
+	rd                      \
+	imgsplit                \
+	imgremap                \
+	raw2voc                 \
+
+##
+## Each program must have a x_SRCS defined with all the source it
+## need. If the program requiere some libs they must be listed in
+##  x_LIBS.
+##
+## All the source needing special cflags must be put the
+## corresponding lib_SRCS
+##
+
+## If a program have many sources and make bork out with
+## 'virtual memory exhausted' look at Makefile.target.
+
+##
+## Example for a program that would require GTK and
+## could optionally use LIBOPT. For this we define a
+## "virtual" lib:
+##
+## myprog_SRCS = long.c list.c of.c sources.c
+## myprog_LIBS = LIBMYPROG
+##
+## HAVE_LIBMYPROG = $(HAVE_GTK)
+## 
+## LIBMYPROG_CFLAGS= $(GTK_CFLAGS) $(LIBOPT_CFLAGS)
+## LIBMYPROG_LDFLAGS = $(GTK_LDFLAGS) $(LIBOPT_LDFLAGS)
+##
+##
+## LIBMYPROG_SRCS = $(myprog_SRCS)
+##
+## LIBS = LIBMYPROG ... GTK LIBOPT ....
+##
+
+
+scc_SRCS=                       \
+	scc_parse.tab.c         \
+	scc_util.c              \
+	scc_ns.c                \
+	scc_roobj.c             \
+	scc_img.c               \
+	scc_code.c              \
+	code.c                  \
+	write.c                 \
+	scc_lex.c               \
+	scc_fd.c                \
+	scc_param.c             \
+
+sld_SRCS=                       \
+	scc_ld.c                \
+	scc_ns.c                \
+	scc_code.c              \
+	scc_fd.c                \
+	scc_param.c             \
+
+boxedit_SRCS=                   \
+	read.c                  \
+	write.c                 \
+	scc_fd.c                \
+	scc_cost.c              \
+	scc_img.c               \
+	scc_param.c             \
+	boxedit.c               \
+
+boxedit_LIBS=                   \
+	GTK                     \
+
+cost_SRCS=                      \
+	cost_parse.tab.c        \
+	cost_lex.c              \
+	scc_fd.c                \
+	scc_param.c             \
+	scc_img.c               \
+	scc_util.c              \
+
+char_SRCS=                      \
+	char.c                  \
+	scc_fd.c                \
+	scc_param.c             \
+	scc_img.c               \
+
+char_LIBS=                      \
+	FT                      \
+
+soun_SRCS=                      \
+	soun.c                  \
+	scc_fd.c                \
+	scc_param.c             \
+
+costview_SRCS=                  \
+	code.c                  \
+	decode.c                \
+	read.c                  \
+	write.c                 \
+	scc_util.c              \
+	scc_fd.c                \
+	scc_cost.c              \
+	costview.c              \
+	scc_param.c             \
+
+costview_LIBS=                  \
+	GTK                     \
+
+## Utils
+
+rd_SRCS=                        \
+	code.c                  \
+	decode.c                \
+	read.c                  \
+	write.c                 \
+	scc_util.c              \
+	scc_fd.c                \
+	scc_cost.c              \
+	rd.c                    \
+
+zpnn2bmp_SRCS=                  \
+	zpnn2bmp.c              \
+	scc_fd.c                \
+	scc_param.c             \
+	decode.c                \
+	scc_img.c               \
+
+imgsplit_SRCS=                  \
+	imgsplit.c              \
+	scc_img.c               \
+	scc_fd.c                \
+	scc_param.c             \
+
+imgremap_SRCS=                  \
+	imgremap.c              \
+	scc_img.c               \
+	scc_fd.c                \
+	scc_param.c             \
+
+raw2voc_SRCS=                   \
+	raw2voc.c               \
+	scc_fd.c                \
+	scc_param.c             \
+
+
+##
+## All the libs we have
+##
+
+LIBS =                          \
+	GTK                     \
+	FT                      \
+
+## Source needing gtk
+GTK_SRCS =                      \
+	costview.c              \
+	boxedit.c               \
+
+## Source needing freetype
+FT_SRCS =                       \
+	char.c                  \
+
