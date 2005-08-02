@@ -163,12 +163,12 @@ $(foreach lib,$(LIBS),$(eval $(call LIB_template,$(lib))))
 
 ## Normal sources
 %.o: $(SRCDIR)/%.c
-	@echo "Compiling $@ for $(TARGET)" $(LOG)
+	@echo "Compiling $@ for $(TARGET)" $(MSGLOG)
 	$(call CMD_template,$(CC) -c $(CFLAGS) -o $@ $<,$(LOG))
 
 ## Generated sources
 %.o: %.c
-	@echo "Compiling $@ for $(TARGET)" $(LOG)
+	@echo "Compiling $@ for $(TARGET)" $(MSGLOG)
 	$(call CMD_template,$(CC) -c $(CFLAGS) -o $@ $<,$(LOG))
 
 ## Deps
@@ -224,8 +224,9 @@ $(foreach prog,$(DO_ALL),$(eval $(call PROGRAM_template,$(prog))))
 define PROGRAM_MISS_LIB_template
 $(1)$(EXESUF):
 	@echo "Some libs are missing to build $$@ for $(TARGET):" \
-	 $(shell echo $($(1)_MISS) | tr [A-Z] [a-z])
+	 $(shell echo $($(1)_MISS) | tr [A-Z] [a-z])  $(MSGLOG)
 	@echo
+	@echo >> build.log
 
 PHONY_TARGETS+=$(1)$(EXESUF)
 
