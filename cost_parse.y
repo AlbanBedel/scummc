@@ -171,15 +171,15 @@
 %token <integer> INTEGER
 %token <str> STRING
 %token <str> SYM
-%token PATH,GLOB
+%token PATH GLOB
 %token POSITION
 %token MOVE
-%token START,STOP,HIDE,SKIP,SOUND
+%token START STOP HIDE SKIP SOUND
 %token ERROR
 
-%type <integer> number,location
+%type <integer> number location
 %type <intpair> numberpair
-%type <intlist> intlist,intlistitem,cmdlist,cmdlistitem
+%type <intlist> intlist intlistitem cmdlist cmdlistitem
 
 %defines
 %locations
