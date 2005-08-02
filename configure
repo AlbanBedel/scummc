@@ -133,9 +133,9 @@ while [ -n "$1" ] ; do
 		echo "You must specify a new default target."
 		exit 1
 	    fi
-	    cfg=`sed 's,^ *#.*,,; s,?=,=,' $HOST.config.mak 2> /dev/null`
+	    cfg=`sed 's,^ *#.*,,; s,?=,=,' config.$HOST.mak 2> /dev/null`
 	    if [ $? -ne 0 ] ; then
-		echo "Failed to parse $HOST.config.mak."
+		echo "Failed to parse config.$HOST.mak."
 		exit 1
 	    fi
 	    eval $cfg
@@ -151,8 +151,8 @@ while [ -n "$1" ] ; do
 		fi
 	    done
 	    if $found ; then
-		sed "s,TARGET?=.*,TARGET?=$1," $HOST.config.mak > $HOST.config.mak.new
-		mv $HOST.config.mak.new $HOST.config.mak
+		sed "s,TARGET?=.*,TARGET?=$1," config.$HOST.mak > config.$HOST.mak.new
+		mv config.$HOST.mak.new config.$HOST.mak
 	        echo "Default target set to $1."
 		exit
 	    else
@@ -161,9 +161,9 @@ while [ -n "$1" ] ; do
 	    fi
 	    ;;
 	--reconfigure)
-	    cfg=`sed 's,^ *#.*,,; s,?=,=,' $HOST.config.mak 2> /dev/null`
+	    cfg=`sed 's,^ *#.*,,; s,?=,=,' config.$HOST.mak 2> /dev/null`
 	    if [ $? -ne 0 ] ; then
-		echo "Failed to parse $HOST.config.mak."
+		echo "Failed to parse config.$HOST.mak."
 		exit 1
 	    fi
 	    eval $cfg
