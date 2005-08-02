@@ -19,10 +19,12 @@
       
 %{
   /* need this for the call to atof() below */
+#include "config.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 #include "scc_util.h"

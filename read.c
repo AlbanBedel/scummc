@@ -17,6 +17,8 @@
  *
  */
 
+#include "config.h"
+
 // We can probably kick some since the testing code left us.
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -306,7 +308,11 @@ int check_dir(char* path) {
 
   if(stat(path,&st) < 0) {
     if(errno == ENOENT) { // Try to create it
+#ifdef IS_MINGW
+      if(mkdir(path) < 0) {
+#else
       if(mkdir(path,0755) < 0) { // rwx r-x r-x
+#endif
 	printf("Failed to create dir %s: %s\n",path,strerror(errno));
 	return 0;
       }

@@ -34,6 +34,10 @@ scc_ns_t* scc_ns_new(void);
 
 void scc_ns_free(scc_ns_t* ns);
 
+void scc_symbol_free(scc_symbol_t* s);
+
+void scc_symbol_list_free(scc_symbol_t* s);
+
 scc_symbol_t* scc_ns_get_sym(scc_ns_t* ns, char* room, char* sym);
 
 scc_symbol_t* scc_ns_get_sym_with_id(scc_ns_t* ns,int type, int id);

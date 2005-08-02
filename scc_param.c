@@ -17,11 +17,12 @@
  *
  */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#include <stdint.h>
+#include <inttypes.h>
 
 #include "scc_util.h"
 #include "scc_param.h"
