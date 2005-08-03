@@ -127,13 +127,13 @@ static void scc_loop_fix_code(scc_code_t* c,int br, int cont) {
     if(c->fix != SCC_FIX_BRANCH) continue;
     if(c->data[1] != l->id) continue;
     
-    //c->data[0] = 0x73;
-    if(c->data[2] == SCC_BRANCH_BREAK)
+    if(c->data[2] == SCC_BRANCH_BREAK) {
       SCC_SET_S16LE(c->data,1,br - pos);
-    else if(cont >= 0 && c->data[2] == SCC_BRANCH_CONTINUE)
+    } else if(cont >= 0 && c->data[2] == SCC_BRANCH_CONTINUE) {
       SCC_SET_S16LE(c->data,1,cont - pos);
-    else
+    } else {
       SCC_SET_S16LE(c->data,1,pos);
+    }
     c->fix = SCC_FIX_NONE;
 
     printf("Branch fixed to 0x%hx\n",((int16_t*)&c->data[1])[0]);
