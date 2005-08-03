@@ -101,19 +101,19 @@ int main(int argc,char** argv) {
   if(files || !(midi_file || adl_file)) usage(argv[0]);
 
   data = malloc(size);
-  SCC_SET_32BE(data,0,MKID('S','O','U','N'));
+  SCC_SET_32(data,0,MKID('S','O','U','N'));
 
   if(midi_file) {
-    SCC_SET_32BE(data,8,MKID('M','I','D','I'));
+    SCC_SET_32(data,8,MKID('M','I','D','I'));
     pos = 16;
     if(!(s = load_file(midi_file,&data,&pos,&size))) return 1;
     SCC_SET_32BE(data,12,s + 8);
   } else {
 
-    SCC_SET_32BE(data,8,MKID('S','O','U',' '));
+    SCC_SET_32(data,8,MKID('S','O','U',' '));
     pos = 16;
 
-    SCC_SET_32BE(data,pos,MKID('A','D','L',' '));
+    SCC_SET_32(data,pos,MKID('A','D','L',' '));
     spos = pos + 4;
     pos += 8;
     if(!(s = load_file(adl_file,&data,&pos,&size))) return 1;
@@ -121,7 +121,7 @@ int main(int argc,char** argv) {
     ssize += s + 8;
 
     if(rol_file) {
-      SCC_SET_32BE(data,pos,MKID('R','O','L',' '));
+      SCC_SET_32(data,pos,MKID('R','O','L',' '));
       spos = pos + 4;
       pos += 8;
       if(!(s = load_file(rol_file,&data,&pos,&size))) return 1;

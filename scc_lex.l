@@ -619,7 +619,7 @@ ID       [a-zA-Z_][a-zA-Z0-9_]*
       }
       s->type = SCC_STR_COLOR;
       s->str = realloc(s->str,2);
-      SCC_AT_16(s->str,0) = val;
+      SCC_SET_16LE(s->str,0,val);
     } break;
     }
 

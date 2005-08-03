@@ -539,7 +539,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
     return NULL;
   }
 
-  type = SCC_AT_32BE(data,0);
+  type = SCC_AT_32(data,0);
   size = SCC_AT_32BE(data,4);
 
   // fix list
@@ -572,7 +572,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
       printf("Invalid scob block ????\n");
       return NULL;
     }
-    type = SCC_AT_32BE(data,pos);
+    type = SCC_AT_32(data,pos);
     size = SCC_AT_32BE(data,pos+4);
   }
 
@@ -619,7 +619,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
       scr_data[fix->off+12] = (v->vctl_size >> 16) & 0xFF;
       scr_data[fix->off+13] = (v->vctl_size >> 24) & 0xFF;
     } else {
-      SCC_AT_16(scr_data,fix->off) = fix->sym->addr;
+      SCC_SET_16LE(scr_data,fix->off,fix->sym->addr);
     }
   }
 
@@ -635,7 +635,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
 
 static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
 					 scc_ld_block_t* blk) {
-  uint32_t type = SCC_AT_32BE(blk->data,0);
+  uint32_t type = SCC_AT_32(blk->data,0);
   uint32_t  size = SCC_AT_32BE(blk->data,4);
   uint16_t id;
   scc_symbol_t* sym;
@@ -652,8 +652,8 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
     return NULL;
   }
   
-  SCC_AT_32(blk->data,0) = SCC_TO_32BE(MKID('I','M','H','D'));
-  SCC_AT_16(blk->data,8) = sym->addr;
+  SCC_SET_32(blk->data,0,MKID('I','M','H','D'));
+  SCC_SET_16LE(blk->data,8,sym->addr);
 
   blk->type = MKID('O','B','I','M');
   blk->asis = 1;
@@ -662,7 +662,7 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
 
 static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
 					 scc_ld_block_t* blk) {
-  uint32_t type = SCC_AT_32BE(blk->data,0);
+  uint32_t type = SCC_AT_32(blk->data,0);
   uint32_t  size = SCC_AT_32BE(blk->data,4);
   uint16_t vid,oid,cid,id,addr;
   scc_symbol_t* sym,*osym,*csym;
@@ -712,7 +712,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   
   pos = size;
   while(pos < blk->data_len) {
-    type = SCC_AT_32BE(blk->data,pos);
+    type = SCC_AT_32(blk->data,pos);
     len = SCC_AT_32BE(blk->data,pos+4);
 
     if(type == MKID('O','B','N','A')) {
@@ -762,14 +762,14 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   new->data_len = new_size;
   
   // make the cdhd header
-  SCC_SET_32BE(new->data,0,MKID('C','D','H','D'));
+  SCC_SET_32(new->data,0,MKID('C','D','H','D'));
   SCC_SET_32BE(new->data,4,25);
   SCC_SET_16LE(new->data,8,addr);
   // copy cdhd  
   memcpy(new->data + 8 + 2,blk->data + 8 + 2 + 1 + 2 + SCC_MAX_CLASS*2,15);
   // write VERB
-  SCC_AT_32(new->data,25) = SCC_TO_32BE(MKID('V','E','R','B'));
-  SCC_AT_32(new->data,29) = SCC_TO_32BE(8 + nverb*3+1+verb_size);
+  SCC_SET_32(new->data,25,MKID('V','E','R','B'));
+  SCC_SET_32BE(new->data,29,8 + nverb*3+1+verb_size);
   
   vpos = 33+nverb*3+1;
   vn = 0;
@@ -778,7 +778,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
       new->data[33+vn*3] = scr->sym->addr;
     else
       new->data[33+vn*3] = 0xFF;
-    SCC_AT_16(new->data,33+vn*3+1) = vpos-25;
+    SCC_SET_16LE(new->data,33+vn*3+1,vpos-25);
     if(scr->code_len) memcpy(&new->data[vpos],scr->code,scr->code_len);
     vpos += scr->code_len;
     vn++;

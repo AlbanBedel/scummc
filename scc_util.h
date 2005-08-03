@@ -25,11 +25,29 @@
 #define SCC_TO_32BE(x) SCC_SWAP_32(x)
 #define SCC_TO_16LE(x) (x)
 #define SCC_TO_32LE(x) (x)
+
+#define MKID(a,b,c,d) ((uint32_t) \
+			((a) & 0x000000FF) | \
+			(((b) << 8) & 0x0000FF00) | \
+			(((c) << 16) & 0x00FF0000) | \
+			(((d) << 24) & 0xFF000000))
+
+#define UNMKID(a) (a)&0xFF, ((a)>>8)&0xFF, ((a)>>16)&0xFF, ((a)>>24)&0xFF
+
 #elif defined IS_BIG_ENDIAN
 #define SCC_TO_16BE(x) (x)
 #define SCC_TO_32BE(x) (x)
 #define SCC_TO_16LE(x) SCC_SWAP_16(x)
 #define SCC_TO_32LE(x) SCC_SWAP_32(x)
+
+#define MKID(a,b,c,d) ((uint32_t) \
+			((d) & 0x000000FF) | \
+			(((c) << 8) & 0x0000FF00) | \
+			(((b) << 16) & 0x00FF0000) | \
+			(((a) << 24) & 0xFF000000))
+
+#define UNMKID(a) ((a)>>24)&0xFF, ((a)>>16)&0xFF, ((a)>>8)&0xFF, (a)&0xFF
+
 #else
 #error "Endianness is not defined !!!"
 #endif
@@ -76,13 +94,6 @@
 #define SCC_SET_S32BE(x,at,v) { int32_t tmp__ = (v);  \
                                 SCC_AT_S32(x,at) = SCC_TO_32BE(tmp__); }
 
-#define MKID(a,b,c,d) ((uint32_t) \
-			((d) & 0x000000FF) | \
-			((c << 8) & 0x0000FF00) | \
-			((b << 16) & 0x00FF0000) | \
-			((a << 24) & 0xFF000000))
-
-#define UNMKID(a) (a>>24)&0xFF, (a>>16)&0xFF, (a>>8)&0xFF, a&0xFF
 
 // needed by the room builder
 #define SCC_MAX_IM_PLANES 10

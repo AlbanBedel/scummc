@@ -55,14 +55,16 @@ int scc_fd_w32le(scc_fd_t*f,uint32_t a);
 int scc_fd_w16be(scc_fd_t*f,uint16_t a);
 int scc_fd_w32be(scc_fd_t*f,uint32_t a);
 
-#ifndef BIG_ENDIAN
+#ifdef IS_LITTLE_ENDIAN
 #define scc_fd_r16(f) scc_fd_r16le(f)
 #define scc_fd_r32(f) scc_fd_r32le(f)
 #define scc_fd_w16(f,a) scc_fd_w16le(f,a)
 #define scc_fd_w32(f,a) scc_fd_w32le(f,a)
-#else
+#elif defined IS_BIG_ENDIAN
 #define scc_fd_r16(f) scc_fd_r16be(f)
 #define scc_fd_r32(f) scc_fd_r32be(f)
 #define scc_fd_w16(f,a) scc_fd_w16be(f,a)
 #define scc_fd_w32(f,a) scc_fd_w32be(f,a)
+#else
+#error "Endianness is not defined !!!"
 #endif

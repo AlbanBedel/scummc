@@ -331,7 +331,7 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
   r->data = malloc(r->data_len);
 
   // write the sync point table
-  SCC_SET_32BE(r->data,0,MKID('V','C','T','L'));
+  SCC_SET_32(r->data,0,MKID('V','C','T','L'));
   SCC_SET_32BE(r->data,4,8 + 2*nsync);
   for(i = 0 ; i < nsync ; i++) {
     SCC_SET_16BE(r->data,8+2*i,sync[i]);
@@ -581,8 +581,8 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
 	}
 	ro->boxm = malloc(sizeof(scc_data_t)+len);
 	ro->boxm->size = len;
-	SCC_AT_32(ro->boxm->data,0) = SCC_TO_32BE(MKID('B','O','X','M'));
-	SCC_AT_32(ro->boxm->data,4) = SCC_TO_32BE(len);
+	SCC_SET_32(ro->boxm->data,0,MKID('B','O','X','M'));
+	SCC_SET_32BE(ro->boxm->data,4,len);
 	if(scc_fd_read(fd,&ro->boxm->data[8],len - 8) != len - 8) {
 	  printf("Error while reading the box matrix.\n");
 	  break;
@@ -596,8 +596,8 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
 	}
 	ro->scal = malloc(sizeof(scc_data_t)+len);
 	ro->scal->size = len;
-	SCC_AT_32(ro->scal->data,0) = SCC_TO_32BE(MKID('S','C','A','L'));
-	SCC_AT_32(ro->scal->data,4) = SCC_TO_32BE(len);
+	SCC_SET_32(ro->scal->data,0,MKID('S','C','A','L'));
+	SCC_SET_32BE(ro->scal->data,4,len);
 	if(scc_fd_read(fd,&ro->scal->data[8],len - 8) != len - 8) {
 	  printf("Error while reading the scal block.\n");
 	  break;

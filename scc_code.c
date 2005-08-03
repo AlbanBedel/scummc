@@ -367,7 +367,7 @@ static scc_code_t* scc_call_gen_code(scc_call_t* call, int ret_val) {
     // only hidden arg type atm
     if(call->func->argt[n] != SCC_FA_SELF_OFF) continue;
     c = scc_code_new(2);
-    SCC_AT_16(c->data,0) = -scc_code_size(code)-2;
+    SCC_SET_S16LE(c->data,0,-scc_code_size(code)-2);
     SCC_LIST_ADD(code,last,c);
   }
 
