@@ -59,7 +59,7 @@ done
 ## Get the host name, we need it for some options
 ##
 
-[ -z "$HOST" ] && HOST=`uname -n`
+[ -z "$HOST" ] && HOST=`uname -n | cut -d . -f 1`
 
 ##
 ## Parse the command line options

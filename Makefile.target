@@ -23,7 +23,7 @@
 include config.mak
 
 ## Verify that this target is for the current host.
-ifneq ($(shell uname -n),$(HOST))
+ifneq ($(shell uname -n | cut -d . -f 1),$(HOST))
 $(error "This build target is not for this host but for $(HOST).")
 endif
 

@@ -49,7 +49,7 @@
 ## and check that it is for the right host
 ##
 
-host=$(shell uname -n)
+host=$(shell uname -n | cut -d . -f 1)
 
 ifeq ($(wildcard config.$(host).mak),)
 $(error "config.$(host).mak not found. Please run configure first.")
