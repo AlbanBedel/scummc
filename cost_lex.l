@@ -27,14 +27,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-#ifndef YYSTYPE
-typedef union {
-  int integer;
-  char* str;
-} yystype;
-# define YYSTYPE yystype
-#endif
-
 #include "cost_parse.tab.h"
 
  extern YYLTYPE yylloc;

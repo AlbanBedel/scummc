@@ -30,16 +30,6 @@
 #include "scc_util.h"
 #include "scc_parse.h"
 
-
-#ifndef YYSTYPE
-typedef union {
-  int integer;
-  char* str;
-  scc_str_t* strvar;
-} yystype;
-# define YYSTYPE yystype
-#endif
-
 #include "scc_parse.tab.h"
 
  extern YYLTYPE yylloc;
