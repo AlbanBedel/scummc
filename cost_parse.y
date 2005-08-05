@@ -181,9 +181,6 @@
 %type <intpair> numberpair
 %type <intlist> intlist intlistitem cmdlist cmdlistitem
 
-%defines
-%locations
-
 %%
 
 srcfile: /* empty */
