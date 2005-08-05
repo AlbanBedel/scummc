@@ -346,7 +346,7 @@ int scc_code_image(uint8_t* src, int src_stride,
     // get the shr back
     shr = codecs[i] % 10;
     // put the offset table entry
-    ((uint32_t*)smap)[i] = pos+8;
+    SCC_SET_32LE(smap,i*4,pos+8);
     // code
     smap[pos] = ((transparentColor >= 0) ? coders[codecs[i]/10].trans :
 		 coders[codecs[i]/10].opaque) + shr;
@@ -508,7 +508,7 @@ int scc_code_zbuf(uint8_t* src, int src_stride,
 
   for(i = 0 ; i < strides ; i++) {
     slen = compMask(&smap[pos],&src[i],src_stride,height);
-    ((uint16_t*)smap)[i] = (slen) ? pos+8 : 0;
+    SCC_SET_16LE(smap,i*2,(slen) ? pos+8 : 0);
     pos += slen;
     if(pos > len) {
       printf("Big problem while coding zplane\n");

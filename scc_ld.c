@@ -846,7 +846,7 @@ static scc_ld_block_t* scc_ld_scrp_patch(scc_ld_room_t* room,
   scc_script_t* scr;
   scc_ld_block_t* new;
   scc_symbol_t* sym;
-  uint16_t id = SCC_AT_16(blk->data,0);
+  uint16_t id = SCC_AT_16LE(blk->data,0);
 
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_SCR,id);
   if(!sym) {
@@ -1138,7 +1138,7 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
       return 0;
     }
     room_no[a] = r->sym->addr;
-    room_off[a] = off;
+    room_off[a] = SCC_TO_32LE(off);
   }
   scc_fd_write(fd,room_no,n);
   scc_fd_write(fd,room_off,n*4);
@@ -1158,6 +1158,7 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
   int snd_n = scc_ns_res_max(scc_ns,SCC_RES_SOUND)+1;
   int var_n = scc_ns_res_max(scc_ns,SCC_RES_VAR)+1;
   int bvar_n = scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1;
+  int i;
   scc_ld_room_t* r;
 
 
@@ -1235,7 +1236,8 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
   scc_fd_w32be(fd,8 + 2 + obj_n*5);
   scc_fd_w16le(fd,obj_n);
   scc_fd_write(fd,obj_owner,obj_n);
-  scc_fd_write(fd,obj_class,obj_n*4);
+  for(i = 0 ; i < obj_n ; i++)
+    scc_fd_w32le(fd,obj_class[i]);
 
   scc_fd_w32(fd,MKID('A','A','R','Y'));
   scc_fd_w32be(fd,8 + 2);
