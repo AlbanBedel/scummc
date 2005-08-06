@@ -28,8 +28,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifdef HAVE_FT
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#endif
 
 #include "scc_util.h"
 #include "scc_fd.h"
@@ -72,6 +74,8 @@ uint8_t default_pal[] = {
     0xFF, 0x55, 0x55,
     0xFF, 0xFF, 0x52,
 };
+
+#ifdef HAVE_FT
 
 static FT_GlyphSlot ft_render_char(FT_Face face,int ch) {
   FT_ULong gidx;
@@ -204,6 +208,8 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
     
   return chmap;
 }
+
+#endif // HAVE_FT
 
 void import_char(scc_char_t* ch,char* src, int stride,int w, int h) {
     int x,y,s;
@@ -639,26 +645,30 @@ static char* obmp_file = NULL;
 static char* ibmp_file = NULL;
 static char* ochar_file = NULL;
 static char* ichar_file = NULL;
+#ifdef HAVE_FT
 static int char_width = 0;
 static int char_height = 24*64;
 static int hdpi = 30;
 static int vdpi = 30;
 static int vspace = 0;
+#endif
 static int palsize = 0;
 static int bmp_width = 800;
 static int bmp_space = 8;
 
 static scc_param_t scc_parse_params[] = {
-  { "font", SCC_PARAM_STR, 0, 0, &font_file },
   { "obmp", SCC_PARAM_STR, 0, 0, &obmp_file },
   { "ibmp", SCC_PARAM_STR, 0, 0, &ibmp_file },
   { "ochar", SCC_PARAM_STR, 0, 0, &ochar_file },
   { "ichar", SCC_PARAM_STR, 0, 0, &ichar_file },
+#ifdef HAVE_FT
+  { "font", SCC_PARAM_STR, 0, 0, &font_file },
   { "cw", SCC_PARAM_INT, 1, 1000*64, &char_width },
   { "ch", SCC_PARAM_INT, 1, 1000*64, &char_height },
   { "vdpi", SCC_PARAM_INT, 1, 1000, &vdpi },
   { "hdpi", SCC_PARAM_INT, 1, 1000, &hdpi },
   { "vspace", SCC_PARAM_INT, -1000, 1000, &vspace },
+#endif
   { "palsize", SCC_PARAM_INT, 0, 255, &palsize },
   { "bmp-width", SCC_PARAM_INT, 1, 10000, &bmp_width },
   { "bmp-space", SCC_PARAM_INT, 3, 10000, &bmp_space },
@@ -699,6 +709,7 @@ int main(int argc,char** argv) {
     chars[i] = i;
 #endif
 
+#ifdef HAVE_FT
   // size less than two dot don't make much sense
   if(char_width < 128) char_width *= 64;
   if(char_height < 128) char_height *= 64;
@@ -708,7 +719,9 @@ int main(int argc,char** argv) {
                                   font_file,0,
                                   char_width,char_height,
                                   hdpi,vdpi,vspace);
-  else if(ichar_file)
+  else 
+#endif
+  if(ichar_file)
       chmap = charmap_from_char(ichar_file);
   else
       chmap = new_charmap_from_bitmap(ibmp_file);
