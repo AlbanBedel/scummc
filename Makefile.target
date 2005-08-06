@@ -141,7 +141,9 @@ $(call DEP_template,$(1).d,$(SRCDIR)/$(1).c,$(2))
 endef
 
 define LIB_template
+ifdef HAVE_$(1)
 $(foreach src,$($(1)_SRCS),$(call C2O_template,$(src:%.c=%),$($(1)_CFLAGS)))
+endif
 endef
 
 ## Generate the targets for the sources needing special cflags
@@ -180,7 +182,8 @@ define PROGRAM_template
 
 $(1)_OBJS = $($(1)_SRCS:%.c=%.o)
 $(1)_DEPS = $($(1)_SRCS:%.c=%.d)
-$(1)_LDFLAGS = $(foreach lib,$($(1)_LIBS),$($(lib)_LDFLAGS))
+$(1)_LDFLAGS = $(foreach lib,$($(1)_LIBS),$($(lib)_LDFLAGS)) \
+		$(foreach lib,$($(1)_OPT_LIBS),$($(lib)_LDFLAGS))
 
 ## The current make have a bug with templates. It bork out with
 ## 'virtual memory exhausted' when a dependency list inside
