@@ -19,7 +19,6 @@
 
 ##
 ## This makefile define all the programs that can be built.
-## Some examples can be found at the end.
 ## 
 ## We start by defining the different groups. By default only the
 ## first group is built. Group names MUST be in capital.
@@ -49,19 +48,13 @@ UTILS=                          \
 ##
 ## Each program must have a x_SRCS defined with all the source it
 ## need. If the program requiere some libs they must be listed in
-##  x_LIBS.
+## x_LIBS. If the program can optionaly use some lib put them
+## in x_OPT_LIBS
 ##
 ## All the source needing special cflags must be put the
-## corresponding lib_SRCS
-##
-
-## If a program have many sources and make bork out with
-## 'virtual memory exhausted' look at Makefile.target.
-
-##
-## Example for a program that would require GTK and
-## could optionally use LIBOPT. For this we define a
-## "virtual" lib:
+## corresponding lib_SRCS. Be careful a source can't be
+## listed in several lib_SRCS at once. For more complexe
+## lib dependency one can use some "virtual" lib:
 ##
 ## myprog_SRCS = long.c list.c of.c sources.c
 ## myprog_LIBS = LIBMYPROG
@@ -77,6 +70,8 @@ UTILS=                          \
 ## LIBS = LIBMYPROG ... GTK LIBOPT ....
 ##
 
+## If a program have many sources and make bork out with
+## 'virtual memory exhausted' look at Makefile.target.
 
 scc_SRCS=                       \
 	scc_parse.tab.c         \
@@ -124,7 +119,7 @@ char_SRCS=                      \
 	scc_param.c             \
 	scc_img.c               \
 
-char_LIBS=                      \
+char_OPT_LIBS=                  \
 	FT                      \
 
 soun_SRCS=                      \
