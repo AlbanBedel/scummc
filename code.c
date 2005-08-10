@@ -359,6 +359,8 @@ int scc_code_image(uint8_t* src, int src_stride,
     }
   }
 
+  if(pos < len) memset(smap+pos,0,len-pos);
+
   smap_p[0] = smap;
 
   return len;
