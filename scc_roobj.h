@@ -118,7 +118,9 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj);
 scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym, 
 				   char* val);
 
-int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,char* p,int idx, char* val);
+int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,char* p, char* val);
+
+int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* file);
 
 int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
                         int nsync, int* sync);

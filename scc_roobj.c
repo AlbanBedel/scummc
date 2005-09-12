@@ -41,29 +41,19 @@
 #include "scc_code.h"
 
 
-static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,
-			       int idx,char* val);
-static int scc_roobj_set_zplane(scc_roobj_t* ro,scc_ns_t* ns,
-				int idx,char* val);
-static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
-			      int idx,char* val);
-static int scc_roobj_set_boxm(scc_roobj_t* ro,scc_ns_t* ns,
-			      int idx,char* val);
-static int scc_roobj_set_scal(scc_roobj_t* ro,scc_ns_t* ns,
-			      int idx,char* val);
-static int scc_roobj_set_trans(scc_roobj_t* ro,scc_ns_t* ns,
-			       int idx,char* val);
+static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val);
+static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* val);
+static int scc_roobj_set_boxm(scc_roobj_t* ro,scc_ns_t* ns,char* val);
+static int scc_roobj_set_scal(scc_roobj_t* ro,scc_ns_t* ns,char* val);
 
 struct {
   char* name;
-  int (*set)(scc_roobj_t* ro,scc_ns_t* ns,int idx,char* val);
+  int (*set)(scc_roobj_t* ro,scc_ns_t* ns,char* val);
 } roobj_params[] = {
   { "image", scc_roobj_set_image },
-  { "zplane", scc_roobj_set_zplane },
   { "boxd", scc_roobj_set_boxd },
   { "boxm", scc_roobj_set_boxm },
   { "scal", scc_roobj_set_scal },
-  { "trans", scc_roobj_set_trans },
   { NULL, NULL }
 };
 
@@ -408,13 +398,13 @@ int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
 }
 
 int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,
-			char* p,int idx, char* val) {
+			char* p,char* val) {
   int i;
   
   for(i = 0 ; roobj_params[i].name ; i++) {
     if(strcmp(roobj_params[i].name,p)) continue;
 
-    return roobj_params[i].set(ro,ns,idx,val);
+    return roobj_params[i].set(ro,ns,val);
   }
 
   printf("Rooms have no parameter named %s.\n",p);
@@ -422,8 +412,7 @@ int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,
 }
 
 
-static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,
-			       int idx,char* val) {
+static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
 
   if(ro->image) {
     printf("Room image has alredy been set.\n");
@@ -446,8 +435,7 @@ static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,
   return 1;
 }
 
-static int scc_roobj_set_zplane(scc_roobj_t* ro,scc_ns_t* ns,
-				int idx,char* val) {
+int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
 
   if(idx < 0) {
     printf("Z-planes need a subscript.\n");
@@ -495,8 +483,7 @@ static int scc_roobj_set_data_param(scc_data_t** ptr,char* name,char* val) {
   return (ptr[0] ? 1 : 0);
 }
 
-static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
-			      int idx,char* path) {
+static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
   scc_fd_t* fd;
   uint32_t type,len,named=1;
   int pos = 8, boxn = 0,nlen = 0;
@@ -613,26 +600,12 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,
   return 0;
 }
 
-static int scc_roobj_set_boxm(scc_roobj_t* ro,scc_ns_t* ns,int idx,char* val) {
+static int scc_roobj_set_boxm(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
   return scc_roobj_set_data_param(&ro->boxm,"boxm",val);
 }
 
-static int scc_roobj_set_scal(scc_roobj_t* ro,scc_ns_t* ns,int idx,char* val) {
+static int scc_roobj_set_scal(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
   return scc_roobj_set_data_param(&ro->scal,"scal",val);
-}
-
-static int scc_roobj_set_trans(scc_roobj_t* ro,scc_ns_t* ns,int idx,char* val) {
-  char* end = NULL;
-  int i = strtol(val,&end,0);
-
-  if(end[0] != '\0' || i < 0 || i > 255) {
-    printf("Invalid transparent color index: %s\n",val);
-    return 0;
-  }
-
-  ro->trans = i;
-
-  return 1;
 }
 
 ////////////////////////// objects ////////////////////////////

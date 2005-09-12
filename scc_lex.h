@@ -12,6 +12,7 @@ typedef struct scc_lexer scc_lexer_t;
 typedef struct scc_lex scc_lex_t;
 typedef int (*scc_lexer_f)(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
 typedef void (*scc_lexer_pos_f)(YYLTYPE *llocp,int line,int column);
+typedef void (*scc_lexer_opened_f)(void* userdata,char* file);
 
 // input files are read block wise in a buffer
 // location must also be tracked by buffer
@@ -28,6 +29,9 @@ struct scc_lex {
     scc_lexer_pos_f set_end_pos;
     // include paths
     char** include;
+    // callback to track deps
+    scc_lexer_opened_f opened;
+    void* userdata;
 };
 
 // Public interface

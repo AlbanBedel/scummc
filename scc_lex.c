@@ -157,7 +157,7 @@ void scc_lex_clear_error(scc_lex_t* lex) {
 
 // switch to another input file
 int scc_lex_push_buffer(scc_lex_t* lex,char* file) {
-    scc_fd_t* fd;
+    scc_fd_t* fd = NULL;
     scc_lexbuf_t* buf;
     // try in the include paths if any
     if(lex->include) {
@@ -179,6 +179,8 @@ int scc_lex_push_buffer(scc_lex_t* lex,char* file) {
     buf->fd = fd;
     buf->next = lex->buffer;
     lex->buffer = buf;
+
+    if(lex->opened) lex->opened(lex->userdata,fd->filename);
     return 1;
 }
 

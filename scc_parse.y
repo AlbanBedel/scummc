@@ -56,6 +56,10 @@ typedef struct scc_parser {
   int local_vars;
   int local_scr;
   int cycl;
+  // deps
+  char do_deps;
+  int num_deps;
+  char** deps;
 } scc_parser_t;
 
 #define YYPARSE_PARAM v_sccp
@@ -68,6 +72,7 @@ typedef struct scc_parser {
 #define yyerror(msg) scc_parser_error(sccp,&yyloc,msg)
 
 int scc_parser_error (scc_parser_t* p,YYLTYPE *llocp, const char *s);
+void scc_parser_add_dep(scc_parser_t* p, char* dep);
 
 #include "scc_func.h"
 
@@ -566,17 +571,37 @@ roomdecl: resdecl ';'
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_set_param(sccp->roobj,sccp->ns,$1,-1,$3))
-    SCC_ABORT(@1,"Failed to set room parameter.\n");
+  if(!scc_roobj_set_param(sccp->roobj,sccp->ns,$1,$3))
+    SCC_ABORT(@1,"Failed to set room %s.\n",$1);
 
+  // add dep
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$3);
 }
-| SYM '[' INTEGER ']' ASSIGN STRING ';'
+| SYM ASSIGN '{' zbufs '}' ';'
 {
-  if($5 != '=')
-    SCC_ABORT(@5,"Invalid operator for parameter setting.\n");
+  int i;
+  if($2 != '=')
+    SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_set_param(sccp->roobj,sccp->ns,$1,$3,$6))
-    SCC_ABORT(@1,"Failed to set room parameter.\n");
+  for(i = 0 ; $4[i] ; i++) {
+    if($4[i][0] == '\0') continue;
+    if(!scc_roobj_set_zplane(sccp->roobj,i+1,$4[i]))
+      SCC_ABORT(@1,"Failed to set room zplane %d.\n",i+1);
+    if(sccp->do_deps) scc_parser_add_dep(sccp,$4[i]);
+  }
+}
+| SYM ASSIGN INTEGER ';'
+{
+  if($2 != '=')
+    SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
+
+  if(strcmp($1,"trans"))
+    SCC_ABORT(@1,"Rooms have no parameter named %s.\n",$1);
+
+  if($3 < 0 || $3 > 255)
+    SCC_ABORT(@3,"Invalid transparent color index: %d\n",$3);
+
+  sccp->roobj->trans = $3;
 }
 ;
 
@@ -609,6 +634,8 @@ voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
   if(!scc_roobj_add_voice(sccp->roobj,$1,$4,$6[0],$6+1))
     SCC_ABORT(@1,"Failed to add voice.");
 
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$4);
+
   free($6);
 }
 | voicedecl ASSIGN '{' STRING '}'
@@ -620,6 +647,8 @@ voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
 
   if(!scc_roobj_add_voice(sccp->roobj,$1,$4,0,NULL))
     SCC_ABORT(@1,"Failed to add voice.");
+
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$4);
 }
 ;
 
@@ -657,6 +686,7 @@ resdecl: RESTYPE SYM location ASSIGN STRING
   r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
   // then we need to add that to the roobj
   scc_roobj_add_res(sccp->roobj,r,$5);
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$5);
   
   if(!r->rid) scc_ns_get_rid(sccp->ns,r);
   $$ = $1; // propagate type
@@ -671,6 +701,7 @@ resdecl: RESTYPE SYM location ASSIGN STRING
   r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
   // then we need to add that to the roobj
   scc_roobj_add_res(sccp->roobj,r,$6);
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 
   if(!r->rid) scc_ns_get_rid(sccp->ns,r);
   $$ = $1; // propagate type
@@ -798,11 +829,18 @@ imgdecl: '{' INTEGER ',' INTEGER ',' STRING '}'
 {
   if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,NULL))
     SCC_ABORT(@1,"Failed to add room state\n");
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 }
 | '{' INTEGER ',' INTEGER ',' STRING ',' '{' zbufs '}' '}'
 {
   if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,$9))
     SCC_ABORT(@2,"Failed to add room state.\n");
+  if(sccp->do_deps) {
+    int i;
+    scc_parser_add_dep(sccp,$6);
+    for(i = 0 ; $9[i] ; i++)
+      scc_parser_add_dep(sccp,$9[i]);
+  }
 }
 ;
 
@@ -831,7 +869,7 @@ objectverbs: /* nothing */
   scc_script_t* scr;
 
   for(v = $4 ; v ; l = v, v = v->next,free(l) ) {
-    if(v->inst)
+    if(!sccp->do_deps && v->inst)
       scr = scc_script_new(sccp->ns,v->inst,SCC_OP_VERB_RET,v->next ? 0 : 1);
     else
       scr = calloc(1,sizeof(scc_script_t));
@@ -966,9 +1004,13 @@ scriptbody:  /* empty */
 
 | vardecl instructions
 {
-  $$ = scc_script_new(sccp->ns,$2,SCC_OP_SCR_RET,1);
-  if(!$$)
-    SCC_ABORT(@1,"Code generation failed.\n");
+  if(sccp->do_deps)
+    $$ = NULL;
+  else {
+    $$ = scc_script_new(sccp->ns,$2,SCC_OP_SCR_RET,1);
+    if(!$$)
+      SCC_ABORT(@1,"Code generation failed.\n");
+  }
 }
 ;
 
@@ -1759,6 +1801,9 @@ struct scc_source_st {
   scc_source_t* next;
   scc_ns_t* ns;
   scc_roobj_t* roobj_list;
+  char* file;
+  int num_deps;
+  char** deps;
 };
 
 
@@ -1772,9 +1817,24 @@ static void set_end_pos(YYLTYPE *llocp,int line,int column) {
   llocp->last_column = column;
 }
 
+void scc_parser_add_dep(scc_parser_t* sccp, char* dep) {
+  int i;
+  if(!sccp->num_deps)
+    sccp->deps = malloc(sizeof(char*));
+  else {
+    for(i = 0 ; i < sccp->num_deps ; i++)
+      if(!strcmp(sccp->deps[i],dep)) return;
+    sccp->deps = realloc(sccp->deps,(sccp->num_deps+1)*sizeof(char*));
+  }
+  sccp->deps[sccp->num_deps] = strdup(dep);
+  sccp->num_deps++;
+}
 
-scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file) {
+scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
   scc_source_t* src;
+
+  if(do_deps) sccp->lex->opened = (scc_lexer_opened_f)scc_parser_add_dep;
+  else sccp->lex->opened = NULL;
 
   if(!scc_lex_push_buffer(sccp->lex,file)) return NULL;
 
@@ -1785,6 +1845,7 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file) {
   sccp->local_vars = 0;
   sccp->local_scr = SCC_MAX_GLOB_SCR;
   sccp->cycl = 1;
+  sccp->do_deps = do_deps;
 
   if(scc_parser_parse_internal(sccp)) return NULL;
 
@@ -1793,15 +1854,23 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file) {
     return NULL;
   }
 
-  src = malloc(sizeof(scc_source_t));
+  src = calloc(1,sizeof(scc_source_t));
   src->ns = sccp->ns;
   src->roobj_list = sccp->roobj_list;
+  src->file = file;
+  if(sccp->do_deps) {
+    src->num_deps = sccp->num_deps;
+    src->deps = sccp->deps;
+    sccp->num_deps = 0;
+    sccp->deps = NULL;
+  }
   return src;
 }
 
 scc_parser_t* scc_parser_new(char** include) {
   scc_parser_t* p = calloc(1,sizeof(scc_parser_t));
   p->lex = scc_lex_new(scc_main_lexer,set_start_pos,set_end_pos,include);
+  p->lex->userdata = p;
   return p;
 }
 
@@ -1818,11 +1887,13 @@ static void usage(char* prog) {
   exit(-1);
 }
 
-char** scc_include = NULL;
+static char** scc_include = NULL;
+static int scc_do_deps = 0;
 
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &scc_output },
   { "I", SCC_PARAM_STR_LIST, 0, 0, &scc_include },
+  { "d", SCC_PARAM_FLAG, 0, 1, &scc_do_deps },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1834,6 +1905,7 @@ int main (int argc, char** argv) {
   scc_source_t *src,*srcs = NULL;
   scc_roobj_t* scc_roobj;
   scc_fd_t* out_fd;
+  int i;
 
   if(argc < 2) usage(argv[0]);
 
@@ -1844,7 +1916,7 @@ int main (int argc, char** argv) {
   sccp = scc_parser_new(scc_include);
 
   for(f = files ; f ; f = f->next) {
-    src = scc_parser_parse(sccp,f->val);
+    src = scc_parser_parse(sccp,f->val,scc_do_deps);
     if(!src) return 1;
     src->next = srcs;
     srcs = src;
@@ -1855,6 +1927,19 @@ int main (int argc, char** argv) {
   if(!out_fd) {
     printf("Failed to open output file %s.\n",out);
     return -1;
+  }    
+
+  if(scc_do_deps) {
+    for(src = srcs ; src ; src = src->next) {
+      char* pt = strrchr(src->file,'.');
+      if(pt) pt[0] = '\0';
+      scc_fd_printf(out_fd,"%s.roobj:",src->file);
+      for(i = 0 ; i < src->num_deps ; i++)
+        scc_fd_printf(out_fd," %s",src->deps[i]);
+    }
+    scc_fd_printf(out_fd,"\n");
+    scc_fd_close(out_fd);
+    return 0;
   }
 
   for(src = srcs ; src ; src = src->next) {
