@@ -452,13 +452,19 @@ fi
 
 bisonver=`$BISON --version | _head 1 | tr -c -d '[[:digit:].]'`
 
-#if [ "`echo $bisonver | sed 's/\..*//'`" -le 1 ] && \
-#    [ "`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`" -lt 28 ] ; then
-#    echo "Bison ($bisonver) is too old, at least 1.28 is required."
-#    exit 1
-#fi
-
-echo "Bison: $BISON ($bisonver)"
+if [ "`echo $bisonver | sed 's/\..*//'`" -le 1 ] ; then
+    if [ "`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`" -le 28 ] ; then
+	echo "Bison ($bisonver) is too old, versions up to 1.28 are known to fail."
+	exit 1
+    fi
+    if [ "`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`" -lt 35 ] ; then
+	echo "Bison: $BISON ($bisonver) Untested version, please report the result."
+    else
+	echo "Bison: $BISON ($bisonver)"
+    fi
+else
+    echo "Bison: $BISON ($bisonver)"
+fi
 
 if [ $debug = "yes" ] ; then
     BISONFLAGS="$BISONFLAGS -d -v"
@@ -561,6 +567,43 @@ fi
 ##
 ## Now look for the optional libs
 ##
+
+##
+## Check if we run on gnu libc
+## 
+cat <<EOF | $CC -E -o /dev/null - 2> /dev/null
+#include <stdlib.h>
+#ifndef __GLIBC__
+#error "Not glibc"
+#endif
+EOF
+if [ $? -eq 0 ] ; then
+    CFLAGS="$CFLAGS -D_GNU_SOURCE"
+    echo "GNU C Library: yes"
+else
+    echo "GNU C Library: no"
+fi
+
+##
+## Check if we have asprintf()
+##
+cat <<EOF > $BUILDDIR/test.c
+#include <stdio.h>
+int main(void) {
+  char* str;
+  return asprintf(&str,"test");
+}
+EOF
+$CC -o $BUILDDIR/test.bin $CFLAGS $BUILDDIR/test.c 2> /dev/null
+if [ $? -eq 0 ] ; then
+    asprintf=yes
+    asprintf_def='#define HAVE_ASPRINTF 1'
+else
+    asprintf=no
+    asprintf_def='#undef HAVE_ASPRINTF'
+fi
+rm -f $BUILDDIR/test.c $BUILDDIR/test.bin
+echo "asprintf(): $asprintf"
 
 
 ##
@@ -668,6 +711,9 @@ $sys_def
 // Target endianess
 $little_endian_def
 $big_endian_def
+
+// allocate printf
+$asprintf_def
 
 // GTK
 $gtk_def
