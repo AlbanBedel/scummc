@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "scc_fd.h"
 
@@ -195,3 +196,18 @@ int scc_fd_w32be(scc_fd_t*f,uint32_t a) {
   return scc_fd_w16be(f,a & 0xFFFF);
 }
 
+int scc_fd_vprintf(scc_fd_t*f,const char *fmt, va_list ap) {
+    char* txt;
+    int n = vasprintf(&txt,fmt,ap);
+    if(n <= 0) return 0;
+    return scc_fd_write(f,txt,n);
+}
+
+int scc_fd_printf(scc_fd_t*f,const char *fmt, ...) {
+    va_list ap;
+    int n;
+    va_start(ap, fmt);
+    n = scc_fd_vprintf(f,fmt,ap);
+    va_end(ap);
+    return n;
+}        
