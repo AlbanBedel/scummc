@@ -83,6 +83,7 @@ scc_SRCS=                       \
 	code.c                  \
 	write.c                 \
 	scc_lex.c               \
+	scc_lexer.c             \
 	scc_fd.c                \
 	scc_param.c             \
 

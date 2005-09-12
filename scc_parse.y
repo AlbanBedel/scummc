@@ -41,10 +41,33 @@
 #include "scc_code.h"
 #include "scc_param.h"
 
+#include "scc_parse.tab.h"
+
+#include "scc_lex.h"
+
 #define YYERROR_VERBOSE 1
 
-  int yylex(void);
-  int yyerror (const char *s);
+typedef struct scc_parser {
+  scc_lex_t* lex;
+  scc_ns_t* ns;
+  scc_roobj_t* roobj_list;
+  scc_roobj_t* roobj;
+  scc_roobj_obj_t* obj;
+  int local_vars;
+  int local_scr;
+  int cycl;
+} scc_parser_t;
+
+#define YYPARSE_PARAM v_sccp
+#define sccp ((scc_parser_t*)v_sccp)
+#define YYLEX_PARAM sccp->lex
+
+// redefined the function names
+#define yyparse scc_parser_parse_internal
+#define yylex scc_lex_lex
+#define yyerror(msg) scc_parser_error(sccp,&yyloc,msg)
+
+int scc_parser_error (scc_parser_t* p,YYLTYPE *llocp, const char *s);
 
 #include "scc_func.h"
 
@@ -72,29 +95,13 @@
 }
 
 #define SCC_ABORT(at,msg, args...)  { \
-  printf("Line %d, column %d: ",at.first_line,at.first_column); \
+  printf("%s: ",scc_lex_get_file(sccp->lex)); \
   printf(msg, ## args); \
   YYABORT; \
 }
 
   // output filename
   static char* scc_output = NULL;
-  // output fd
-  static scc_fd_t* out_fd = NULL;
-
-  static scc_roobj_t* scc_roobj_list = NULL;
-
-  // the global namespace
-  // not static bcs of code gen, we'll see how to fix it
-  static scc_ns_t* scc_ns = NULL;
-  // current room
-  static scc_roobj_t* scc_roobj = NULL;
-  // current object
-  static scc_roobj_obj_t* scc_obj = NULL;
-
-  static int local_vars = 0;
-  static int scc_local_scr = SCC_MAX_GLOB_SCR;
-  static int scc_cycl = 1;
 
   scc_func_t* scc_get_func(char* sym) {
     int i;
@@ -155,6 +162,8 @@
   }
 
 %}
+
+%pure_parser
 
 %union {
   int integer;
@@ -316,18 +325,18 @@ gdecl: gvardecl ';'
 gvardecl: TYPE typemod SYM location
 {
   if($1 == SCC_VAR_BIT && !$2)
-    scc_ns_decl(scc_ns,NULL,$3,SCC_RES_BVAR,$1,$4);
+    scc_ns_decl(sccp->ns,NULL,$3,SCC_RES_BVAR,$1,$4);
   else
-    scc_ns_decl(scc_ns,NULL,$3,SCC_RES_VAR,$1 | $2,$4);
+    scc_ns_decl(sccp->ns,NULL,$3,SCC_RES_VAR,$1 | $2,$4);
 
   $$ = $1;
 }
 | gvardecl ',' typemod SYM location
 {
   if($1 == SCC_VAR_BIT && !$3)
-    scc_ns_decl(scc_ns,NULL,$4,SCC_RES_BVAR,$1,$5);
+    scc_ns_decl(sccp->ns,NULL,$4,SCC_RES_BVAR,$1,$5);
   else
-    scc_ns_decl(scc_ns,NULL,$4,SCC_RES_VAR,$1 | $3,$5);
+    scc_ns_decl(sccp->ns,NULL,$4,SCC_RES_VAR,$1 | $3,$5);
 
   $$ = $1;
 }
@@ -347,21 +356,21 @@ typemod: /* nothing */
 // otherwise it conflict with roombdecl
 groomdecl: ROOM SYM location
 {
-  scc_ns_decl(scc_ns,NULL,$2,SCC_RES_ROOM,0,$3);
+  scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_ROOM,0,$3);
 }
 | groomdecl ',' SYM location
 {
-  scc_ns_decl(scc_ns,NULL,$3,SCC_RES_ROOM,0,$4);
+  scc_ns_decl(sccp->ns,NULL,$3,SCC_RES_ROOM,0,$4);
 }
 ;
 
 gresdecl: globalres SYM location
 {
-  scc_ns_decl(scc_ns,NULL,$2,$1,0,$3);
+  scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
 }
 | gresdecl ',' SYM location
 {
-  scc_ns_decl(scc_ns,NULL,$3,$1,0,$4);
+  scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
 }
 ;
 
@@ -382,12 +391,12 @@ globalres: ACTOR
 // cost, sound, chset, object, script, voice, cycl
 groomresdecl: roomres SYM NS SYM location
 {
-  scc_ns_decl(scc_ns,$2,$4,$1,0,$5);
+  scc_ns_decl(sccp->ns,$2,$4,$1,0,$5);
   $$ = $1; // hack to propagte the type
 }
 | groomresdecl ',' SYM NS SYM location
 {
-  scc_ns_decl(scc_ns,$3,$5,$1,0,$6);
+  scc_ns_decl(sccp->ns,$3,$5,$1,0,$6);
 }
 ;
 
@@ -414,10 +423,10 @@ roomres: RESTYPE
 // At this point the roobj object is created.
 roombdecl: ROOM SYM location
 {
-  scc_symbol_t* sym = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_ROOM,0,$3);
-  scc_ns_get_rid(scc_ns,sym);
-  scc_ns_push(scc_ns,sym);
-  scc_roobj = scc_roobj_new(sym);
+  scc_symbol_t* sym = scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_ROOM,0,$3);
+  scc_ns_get_rid(sccp->ns,sym);
+  scc_ns_push(sccp->ns,sym);
+  sccp->roobj = scc_roobj_new(sym);
 }
 ;
 
@@ -425,25 +434,25 @@ roombdecl: ROOM SYM location
 room: roombdecl roombody
 {
   printf("Room done :)\n");
-  scc_local_scr = SCC_MAX_GLOB_SCR;
-  memset(&scc_ns->as[SCC_RES_LSCR],0,0x10000/8);
-  scc_cycl = 1;
-  scc_ns_clear(scc_ns,SCC_RES_CYCL);
-  scc_ns_pop(scc_ns);
+  sccp->local_scr = SCC_MAX_GLOB_SCR;
+  memset(&sccp->ns->as[SCC_RES_LSCR],0,0x10000/8);
+  sccp->cycl = 1;
+  scc_ns_clear(sccp->ns,SCC_RES_CYCL);
+  scc_ns_pop(sccp->ns);
 
-  if(!scc_roobj->scr &&
-     !scc_roobj->lscr &&
-     !scc_roobj->obj &&
-     !scc_roobj->res &&
-     !scc_roobj->cycl &&
-     !scc_roobj->image) {
+  if(!sccp->roobj->scr &&
+     !sccp->roobj->lscr &&
+     !sccp->roobj->obj &&
+     !sccp->roobj->res &&
+     !sccp->roobj->cycl &&
+     !sccp->roobj->image) {
     printf("Room is empty, only declarations.\n");
-    scc_roobj_free(scc_roobj);
+    scc_roobj_free(sccp->roobj);
   } else {
-    scc_roobj->next = scc_roobj_list;
-    scc_roobj_list = scc_roobj;
+    sccp->roobj->next = sccp->roobj_list;
+    sccp->roobj_list = sccp->roobj;
   }
-  scc_roobj = NULL;
+  sccp->roobj = NULL;
 }
 ;
 
@@ -460,35 +469,35 @@ roombodyentries: roombodyentry
 // scripts, both local and global
 roombodyentry: roomscrdecl '{' scriptbody '}'
 {
-  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
+  if(!$1->rid) scc_ns_get_rid(sccp->ns,$1);
   if($3) {
     $3->sym = $1;
-    scc_roobj_add_scr(scc_roobj,$3);
+    scc_roobj_add_scr(sccp->roobj,$3);
   }
 
-  scc_ns_clear(scc_ns,SCC_RES_LVAR);
-  scc_ns_pop(scc_ns);
+  scc_ns_clear(sccp->ns,SCC_RES_LVAR);
+  scc_ns_pop(sccp->ns);
 }
 // forward declaration
 | roomscrdecl ';'
 {
   // well :)
-  scc_ns_clear(scc_ns,SCC_RES_LVAR);
-  scc_ns_pop(scc_ns);
+  scc_ns_clear(sccp->ns,SCC_RES_LVAR);
+  scc_ns_pop(sccp->ns);
 }
 // objects
 | roomobjdecl '{' objectparams objectverbs '}'
 {
-  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
+  if(!$1->rid) scc_ns_get_rid(sccp->ns,$1);
   // add the obj to the room
-  scc_roobj_add_obj(scc_roobj,scc_obj);
-  scc_obj = NULL;
+  scc_roobj_add_obj(sccp->roobj,sccp->obj);
+  sccp->obj = NULL;
 }
 // forward declaration
 | roomobjdecl ';'
 {
-  scc_roobj_obj_free(scc_obj);
-  scc_obj = NULL;
+  scc_roobj_obj_free(sccp->obj);
+  sccp->obj = NULL;
 }
 | voicedef ';'
 {}
@@ -505,21 +514,21 @@ roomscrdecl: scripttype SCRIPT SYM  '(' scriptargs ')' location
   scc_scr_arg_t* a = $5;
   scc_symbol_t* s;
 
-  s = scc_ns_decl(scc_ns,NULL,$3,$1,0,$7);
+  s = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$7);
   if(!s) SCC_ABORT(@3,"Failed to declare script %s.\n",$3);
 
   if($1 == SCC_RES_LSCR && s->addr < 0 &&
      strcmp($3,"entry") && strcmp($3,"exit"))
-    if(!scc_ns_alloc_sym_addr(scc_ns,s,&scc_local_scr))
+    if(!scc_ns_alloc_sym_addr(sccp->ns,s,&sccp->local_scr))
       SCC_ABORT(@3,"Failed to allocate local script address.\n");
 
-  scc_ns_push(scc_ns,s);
+  scc_ns_push(sccp->ns,s);
 
   // declare the arguments
-  local_vars = 0;
+  sccp->local_vars = 0;
   while(a) {
-    scc_ns_decl(scc_ns,NULL,a->sym,SCC_RES_LVAR,a->type,local_vars);
-    local_vars++;
+    scc_ns_decl(sccp->ns,NULL,a->sym,SCC_RES_LVAR,a->type,sccp->local_vars);
+    sccp->local_vars++;
     a = a->next;
   }
   $$ = s;
@@ -530,14 +539,14 @@ roomobjdecl: OBJECT SYM location
 {
   scc_symbol_t* sym;
 
-  if(scc_obj)
+  if(sccp->obj)
     SCC_ABORT(@1,"Something went wrong with object declarations.\n");
 
 
-  sym = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_OBJ,0,$3);
+  sym = scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_OBJ,0,$3);
   if(!sym) SCC_ABORT(@1,"Failed to declare object %s.\n",$2);
   
-  scc_obj = scc_roobj_obj_new(sym);
+  sccp->obj = scc_roobj_obj_new(sym);
   $$ = sym;
 }
 ;
@@ -557,7 +566,7 @@ roomdecl: resdecl ';'
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_set_param(scc_roobj,scc_ns,$1,-1,$3))
+  if(!scc_roobj_set_param(sccp->roobj,sccp->ns,$1,-1,$3))
     SCC_ABORT(@1,"Failed to set room parameter.\n");
 
 }
@@ -566,7 +575,7 @@ roomdecl: resdecl ';'
   if($5 != '=')
     SCC_ABORT(@5,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_set_param(scc_roobj,scc_ns,$1,$3,$6))
+  if(!scc_roobj_set_param(sccp->roobj,sccp->ns,$1,$3,$6))
     SCC_ABORT(@1,"Failed to set room parameter.\n");
 }
 ;
@@ -576,16 +585,16 @@ cycledef: cycledecl ASSIGN '{' INTEGER ',' INTEGER ',' INTEGER ',' INTEGER '}'
   if($2 != '=')
     SCC_ABORT(@3,"Invalid operator for cycle declaration.\n");
 
-  if(!scc_roobj_add_cycl(scc_roobj,$1,$4,$6,$8,$10))
+  if(!scc_roobj_add_cycl(sccp->roobj,$1,$4,$6,$8,$10))
     SCC_ABORT(@1,"Failed to add cycl.\n");
 }
 ;
 
 cycledecl: CYCL SYM location
 {
-  $$ = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_CYCL,0,$3);
+  $$ = scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_CYCL,0,$3);
   if(!$$) SCC_ABORT(@1,"Cycl declaration failed.\n");
-  if($$->addr < 0 && !scc_ns_alloc_sym_addr(scc_ns,$$,&scc_cycl))
+  if($$->addr < 0 && !scc_ns_alloc_sym_addr(sccp->ns,$$,&sccp->cycl))
       SCC_ABORT(@1,"Failed to allocate cycle address.\n");
 }
 ;
@@ -595,9 +604,9 @@ voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for voice declaration.\n");
 
-  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
+  if(!$1->rid) scc_ns_get_rid(sccp->ns,$1);
 
-  if(!scc_roobj_add_voice(scc_roobj,$1,$4,$6[0],$6+1))
+  if(!scc_roobj_add_voice(sccp->roobj,$1,$4,$6[0],$6+1))
     SCC_ABORT(@1,"Failed to add voice.");
 
   free($6);
@@ -607,16 +616,16 @@ voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
   if($2 != '=')
     SCC_ABORT(@3,"Invalid operator for voice declaration.\n");
 
-  if(!$1->rid) scc_ns_get_rid(scc_ns,$1);
+  if(!$1->rid) scc_ns_get_rid(sccp->ns,$1);
 
-  if(!scc_roobj_add_voice(scc_roobj,$1,$4,0,NULL))
+  if(!scc_roobj_add_voice(sccp->roobj,$1,$4,0,NULL))
     SCC_ABORT(@1,"Failed to add voice.");
 }
 ;
 
 voicedecl: VOICE SYM
 {
-  $$ = scc_ns_decl(scc_ns,NULL,$2,SCC_RES_VOICE,0,-1);
+  $$ = scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_VOICE,0,-1);
   if(!$$) SCC_ABORT(@1,"Declaration failed.\n");
 }
 ;
@@ -645,11 +654,11 @@ resdecl: RESTYPE SYM location ASSIGN STRING
   if($4 != '=')
     SCC_ABORT(@4,"Invalid operator for ressource declaration.\n");
 
-  r = scc_ns_decl(scc_ns,NULL,$2,$1,0,$3);
+  r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
   // then we need to add that to the roobj
-  scc_roobj_add_res(scc_roobj,r,$5);
+  scc_roobj_add_res(sccp->roobj,r,$5);
   
-  if(!r->rid) scc_ns_get_rid(scc_ns,r);
+  if(!r->rid) scc_ns_get_rid(sccp->ns,r);
   $$ = $1; // propagate type
 }
 | resdecl ',' SYM location ASSIGN STRING
@@ -659,11 +668,11 @@ resdecl: RESTYPE SYM location ASSIGN STRING
   if($5 != '=')
     SCC_ABORT(@5,"Invalid operator for ressource declaration.\n");
 
-  r = scc_ns_decl(scc_ns,NULL,$3,$1,0,$4);
+  r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
   // then we need to add that to the roobj
-  scc_roobj_add_res(scc_roobj,r,$6);
+  scc_roobj_add_res(sccp->roobj,r,$6);
 
-  if(!r->rid) scc_ns_get_rid(scc_ns,r);
+  if(!r->rid) scc_ns_get_rid(sccp->ns,r);
   $$ = $1; // propagate type
 }
 ;
@@ -680,7 +689,7 @@ objectparam: SYM ASSIGN STRING
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_obj_set_param(scc_obj,$1,$3))
+  if(!scc_roobj_obj_set_param(sccp->obj,$1,$3))
     SCC_ABORT(@1,"Failed to set object parameter.\n");
 }
 | SYM ASSIGN INTEGER
@@ -688,7 +697,7 @@ objectparam: SYM ASSIGN STRING
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_obj_set_int_param(scc_obj,$1,$3))
+  if(!scc_roobj_obj_set_int_param(sccp->obj,$1,$3))
     SCC_ABORT(@1,"Failed to set object parameter.\n");
 
 }
@@ -697,7 +706,7 @@ objectparam: SYM ASSIGN STRING
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
-  if(!scc_roobj_obj_set_int_param(scc_obj,$1,-$4))
+  if(!scc_roobj_obj_set_int_param(sccp->obj,$1,-$4))
     SCC_ABORT(@1,"Failed to set object parameter.\n");
 
 }
@@ -717,24 +726,24 @@ objectparam: SYM ASSIGN STRING
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
   if(!strcmp($1,"owner")) {
-    sym = scc_ns_get_sym(scc_ns,NULL,$3);
+    sym = scc_ns_get_sym(sccp->ns,NULL,$3);
     if(!sym)
       SCC_ABORT(@3,"%s is not a declared actor.\n",$3);
     if(sym->type != SCC_RES_ACTOR)
       SCC_ABORT(@3,"%s is not an actor.\n",sym->sym);
   
-    scc_obj->owner = sym;
+    sccp->obj->owner = sym;
 
   } else if(!strcmp($1,"parent")) {
-    sym = scc_ns_get_sym(scc_ns,NULL,$3);
+    sym = scc_ns_get_sym(sccp->ns,NULL,$3);
     if(!sym)
       SCC_ABORT(@3,"%s is not a declared object.\n",$3);
     if(sym->type != SCC_RES_OBJ)
       SCC_ABORT(@3,"%s is not an object.\n",sym->sym);
-    if(sym->parent != scc_roobj->sym)
-      SCC_ABORT(@3,"%s doesn't belong to room %s.\n",sym->sym,scc_roobj->sym->sym);
+    if(sym->parent != sccp->roobj->sym)
+      SCC_ABORT(@3,"%s doesn't belong to room %s.\n",sym->sym,sccp->roobj->sym->sym);
 
-    scc_obj->parent = sym;
+    sccp->obj->parent = sym;
   } else
     SCC_ABORT(@1,"Expexted 'owner' or 'parent'.\n");
     
@@ -748,7 +757,7 @@ objectparam: SYM ASSIGN STRING
 
 classlist: SYM
 {
-  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$1);
+  scc_symbol_t* sym = scc_ns_get_sym(sccp->ns,NULL,$1);
 
   if(!sym)
     SCC_ABORT(@1,"%s is not a declared class.\n",$1);
@@ -757,15 +766,15 @@ classlist: SYM
     SCC_ABORT(@1,"%s is not a class in the current context.\n",$1);
 
   // allocate an rid
-  if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
+  if(!sym->rid) scc_ns_get_rid(sccp->ns,sym);
 
-  if(!scc_roobj_obj_set_class(scc_obj,sym))
+  if(!scc_roobj_obj_set_class(sccp->obj,sym))
     SCC_ABORT(@1,"Failed to set object class.\n");
 
 }
 | classlist ',' SYM
 {
-  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$3);
+  scc_symbol_t* sym = scc_ns_get_sym(sccp->ns,NULL,$3);
 
   if(!sym)
     SCC_ABORT(@3,"%s is not a declared class.\n",$3);
@@ -774,9 +783,9 @@ classlist: SYM
     SCC_ABORT(@3,"%s is not a class in the current context.\n",$3);
 
   // allocate an rid
-  if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
+  if(!sym->rid) scc_ns_get_rid(sccp->ns,sym);
 
-  if(!scc_roobj_obj_set_class(scc_obj,sym))
+  if(!scc_roobj_obj_set_class(sccp->obj,sym))
     SCC_ABORT(@3,"Failed to set object class.\n");
 }
 ;
@@ -787,12 +796,12 @@ imgdecls: imgdecl
 
 imgdecl: '{' INTEGER ',' INTEGER ',' STRING '}'
 {
-  if(!scc_roobj_obj_add_state(scc_obj,$2,$4,$6,NULL))
+  if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,NULL))
     SCC_ABORT(@1,"Failed to add room state\n");
 }
 | '{' INTEGER ',' INTEGER ',' STRING ',' '{' zbufs '}' '}'
 {
-  if(!scc_roobj_obj_add_state(scc_obj,$2,$4,$6,$9))
+  if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,$9))
     SCC_ABORT(@2,"Failed to add room state.\n");
 }
 ;
@@ -823,15 +832,15 @@ objectverbs: /* nothing */
 
   for(v = $4 ; v ; l = v, v = v->next,free(l) ) {
     if(v->inst)
-      scr = scc_script_new(scc_ns,v->inst,SCC_OP_VERB_RET,v->next ? 0 : 1);
+      scr = scc_script_new(sccp->ns,v->inst,SCC_OP_VERB_RET,v->next ? 0 : 1);
     else
       scr = calloc(1,sizeof(scc_script_t));
     scr->sym = v->sym;
-    if(!scc_roobj_obj_add_verb(scc_obj,scr))
+    if(!scc_roobj_obj_add_verb(sccp->obj,scr))
       SCC_ABORT(@1,"Failed to add verb %s.\n",v->sym ? v->sym->sym : "default");
   }    
-  scc_ns_clear(scc_ns,SCC_RES_LVAR);
-  scc_ns_pop(scc_ns);
+  scc_ns_clear(sccp->ns,SCC_RES_LVAR);
+  scc_ns_pop(sccp->ns);
 }
 ;
 
@@ -839,13 +848,13 @@ verbentrydecl: VERB '(' scriptargs ')'
 {
   scc_scr_arg_t* a = $3;
   // push the obj for the local vars
-  scc_ns_push(scc_ns,scc_obj->sym);
+  scc_ns_push(sccp->ns,sccp->obj->sym);
 
   // declare the arguments
-  local_vars = 0;
+  sccp->local_vars = 0;
   while(a) {
-    scc_ns_decl(scc_ns,NULL,a->sym,SCC_RES_LVAR,a->type,local_vars);
-    local_vars++;
+    scc_ns_decl(sccp->ns,NULL,a->sym,SCC_RES_LVAR,a->type,sccp->local_vars);
+    sccp->local_vars++;
     a = a->next;
   }
 }
@@ -883,7 +892,7 @@ verbcode: /* nothing */
 
 verbentry: CASE SYM ':'
 {
-  scc_symbol_t* sym = scc_ns_get_sym(scc_ns,NULL,$2);
+  scc_symbol_t* sym = scc_ns_get_sym(sccp->ns,NULL,$2);
   if(!sym)
     SCC_ABORT(@1,"%s is not a declared verb.\n",$2);
   
@@ -891,7 +900,7 @@ verbentry: CASE SYM ':'
     SCC_ABORT(@1,"%s is not a verb in the current context.\n",$2);
 
   // allocate an rid
-  if(!sym->rid) scc_ns_get_rid(scc_ns,sym);
+  if(!sym->rid) scc_ns_get_rid(sccp->ns,sym);
 
   $$ = sym;
 }
@@ -957,7 +966,7 @@ scriptbody:  /* empty */
 
 | vardecl instructions
 {
-  $$ = scc_script_new(scc_ns,$2,SCC_OP_SCR_RET,1);
+  $$ = scc_script_new(sccp->ns,$2,SCC_OP_SCR_RET,1);
   if(!$$)
     SCC_ABORT(@1,"Code generation failed.\n");
 }
@@ -981,16 +990,16 @@ vdecl: TYPE typemod SYM
   //if($1 == SCC_VAR_BIT)
   //  SCC_ABORT(@1,"Local bit variable are not possible.\n");
 
-  $$ = scc_ns_decl(scc_ns,NULL,$3,SCC_RES_LVAR,$1 | $2,local_vars);
+  $$ = scc_ns_decl(sccp->ns,NULL,$3,SCC_RES_LVAR,$1 | $2,sccp->local_vars);
   if(!$$) SCC_ABORT(@1,"Declaration failed.\n");
-  local_vars++;
+  sccp->local_vars++;
 }
 
 | vdecl ',' typemod SYM
 {
-  $$ = scc_ns_decl(scc_ns,NULL,$4,SCC_RES_LVAR,$1->subtype | $3,local_vars);
+  $$ = scc_ns_decl(sccp->ns,NULL,$4,SCC_RES_LVAR,$1->subtype | $3,sccp->local_vars);
   if(!$$) SCC_ABORT(@4,"Declaration failed.\n");
-  local_vars++;
+  sccp->local_vars++;
   $$ = $1;
 };
  
@@ -1489,7 +1498,7 @@ statement: dval
 
 var: SYM
 {
-  scc_symbol_t* v = scc_ns_get_sym(scc_ns,NULL,$1);
+  scc_symbol_t* v = scc_ns_get_sym(sccp->ns,NULL,$1);
 
   if(!v)
     SCC_ABORT(@1,"%s is not a declared ressource.\n",$1);
@@ -1503,11 +1512,11 @@ var: SYM
     $$->val.r = v;
   }
   // allocate rid
-  if(!v->rid) scc_ns_get_rid(scc_ns,v);
+  if(!v->rid) scc_ns_get_rid(sccp->ns,v);
 }
 | SYM NS SYM
 {
-  scc_symbol_t* v = scc_ns_get_sym(scc_ns,$1,$3);
+  scc_symbol_t* v = scc_ns_get_sym(sccp->ns,$1,$3);
 
   if(!v)
     SCC_ABORT(@1,"%s::%s is not a declared ressource.\n",$1,$3);
@@ -1521,7 +1530,7 @@ var: SYM
     $$->val.r = v;
   }
   // allocate rid
-  if(!v->rid) scc_ns_get_rid(scc_ns,v);
+  if(!v->rid) scc_ns_get_rid(sccp->ns,v);
 
 }
 ;
@@ -1535,7 +1544,7 @@ call: SYM '(' cargs ')'
 
   f = scc_get_func($1);
   if(!f) {
-    s = scc_ns_get_sym(scc_ns,NULL,$1);
+    s = scc_ns_get_sym(sccp->ns,NULL,$1);
     if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
       SCC_ABORT(@1,"%s is not a know function or script.\n",$1);
 
@@ -1543,7 +1552,7 @@ call: SYM '(' cargs ')'
     if(!f)
       SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
 
-    if(!s->rid) scc_ns_get_rid(scc_ns,s);
+    if(!s->rid) scc_ns_get_rid(sccp->ns,s);
 
     // create the arguments
     scr = calloc(1,sizeof(scc_statement_t));
@@ -1579,12 +1588,12 @@ call: SYM '(' cargs ')'
   scc_func_t* f;
   scc_symbol_t* s;
 
-  s = scc_ns_get_sym(scc_ns,$1,$3);
+  s = scc_ns_get_sym(sccp->ns,$1,$3);
   if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
     SCC_ABORT(@1,"%s::%s is not a know function or script.\n",$1,$3);
 
   if(s->type == SCC_RES_LSCR &&
-     s->parent != scc_roobj->sym)
+     s->parent != sccp->roobj->sym)
     SCC_ABORT(@1,"%s is a local script and %s is not the current room.\n",
               $3,$1);
 
@@ -1592,7 +1601,7 @@ call: SYM '(' cargs ')'
   if(!f)
     SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
 
-  if(!s->rid) scc_ns_get_rid(scc_ns,s);
+  if(!s->rid) scc_ns_get_rid(sccp->ns,s);
 
   // create the arguments
   scr = calloc(1,sizeof(scc_statement_t));
@@ -1675,7 +1684,7 @@ str: STRING
   $$ = $1;
   // for color we have a raw value in str
   if($$->type != SCC_STR_COLOR) {
-    $$->sym = scc_ns_get_sym(scc_ns,NULL,$$->str);
+    $$->sym = scc_ns_get_sym(sccp->ns,NULL,$$->str);
     if(!$$->sym) // fix me we leak str      
       SCC_ABORT(@1,"%s is not a declared variable.\n",$$->str);
 
@@ -1699,13 +1708,17 @@ str: STRING
       break;
     }
     // allocate rid
-    if(!$$->sym->rid) scc_ns_get_rid(scc_ns,$$->sym);
+    if(!$$->sym->rid) scc_ns_get_rid(sccp->ns,$$->sym);
   }
 }
 ;
 
 %%
 
+#undef yyparse
+#undef yylex
+#undef yyerror
+#undef sccp
 
 
 #if 0
@@ -1739,28 +1752,7 @@ int scc_code_write(scc_fd_t* fd) {
 
 #endif
 
-extern char* scc_lex_get_file(void);
-extern int scc_lex_init(char* file);
-
-int yyerror (const char *s)  /* Called by yyparse on error */
-{
-  printf ("In %s:\nline %d, column %d: %s\n",scc_lex_get_file(),
-	  yylloc.first_line,yylloc.first_column,s);
-  return 0;
-}
-
-static void usage(char* prog) {
-  printf("Usage: %s [-o output] input.scumm [input2.scumm ...]\n",prog);
-  exit(-1);
-}
-
-extern char** scc_include;
-
-static scc_param_t scc_parse_params[] = {
-  { "o", SCC_PARAM_STR, 0, 0, &scc_output },
-  { "I", SCC_PARAM_STR_LIST, 0, 0, &scc_include },
-  { NULL, 0, 0, 0, NULL }
-};
+extern int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
 
 typedef struct scc_source_st scc_source_t;
 struct scc_source_st {
@@ -1770,10 +1762,78 @@ struct scc_source_st {
 };
 
 
+static void set_start_pos(YYLTYPE *llocp,int line,int column) {
+  llocp->first_line = line+1;
+  llocp->first_column = column;
+}
+
+static void set_end_pos(YYLTYPE *llocp,int line,int column) {
+  llocp->last_line = line+1;
+  llocp->last_column = column;
+}
+
+
+scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file) {
+  scc_source_t* src;
+
+  if(!scc_lex_push_buffer(sccp->lex,file)) return NULL;
+
+  sccp->ns = scc_ns_new();
+  sccp->roobj_list = NULL;
+  sccp->roobj = NULL;
+  sccp->obj = NULL;
+  sccp->local_vars = 0;
+  sccp->local_scr = SCC_MAX_GLOB_SCR;
+  sccp->cycl = 1;
+
+  if(scc_parser_parse_internal(sccp)) return NULL;
+
+  if(sccp->lex->error) {
+    printf("%s: %s\n",scc_lex_get_file(sccp->lex),sccp->lex->error);
+    return NULL;
+  }
+
+  src = malloc(sizeof(scc_source_t));
+  src->ns = sccp->ns;
+  src->roobj_list = sccp->roobj_list;
+  return src;
+}
+
+scc_parser_t* scc_parser_new(char** include) {
+  scc_parser_t* p = calloc(1,sizeof(scc_parser_t));
+  p->lex = scc_lex_new(scc_main_lexer,set_start_pos,set_end_pos,include);
+  return p;
+}
+
+
+int scc_parser_error(scc_parser_t* sccp,YYLTYPE *loc, const char *s)  /* Called by yyparse on error */
+{
+  printf("%s: %s\n",scc_lex_get_file(sccp->lex),
+         sccp->lex->error ? sccp->lex->error : s);
+  return 0;
+}
+
+static void usage(char* prog) {
+  printf("Usage: %s [-o output] input.scumm [input2.scumm ...]\n",prog);
+  exit(-1);
+}
+
+char** scc_include = NULL;
+
+static scc_param_t scc_parse_params[] = {
+  { "o", SCC_PARAM_STR, 0, 0, &scc_output },
+  { "I", SCC_PARAM_STR_LIST, 0, 0, &scc_include },
+  { NULL, 0, 0, 0, NULL }
+};
+
+
 int main (int argc, char** argv) {
   scc_cl_arg_t* files,*f;
+  scc_parser_t* sccp;
   char* out;
   scc_source_t *src,*srcs = NULL;
+  scc_roobj_t* scc_roobj;
+  scc_fd_t* out_fd;
 
   if(argc < 2) usage(argv[0]);
 
@@ -1781,16 +1841,11 @@ int main (int argc, char** argv) {
 
   if(!files) usage(argv[0]);
 
+  sccp = scc_parser_new(scc_include);
+
   for(f = files ; f ; f = f->next) {
-    src = malloc(sizeof(scc_source_t));
-    src->ns = scc_ns = scc_ns_new();
-    scc_roobj = NULL;
-    scc_roobj_list = NULL;
-    if(!scc_lex_init(f->val)) return -1;
-
-    if(yyparse()) return -1;
-
-    src->roobj_list = scc_roobj_list;
+    src = scc_parser_parse(sccp,f->val);
+    if(!src) return 1;
     src->next = srcs;
     srcs = src;
   }
