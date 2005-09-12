@@ -25,6 +25,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <errno.h>
+#include <stdarg.h> 
 
 #ifdef IS_MINGW
 #include <windows.h>
@@ -36,6 +37,44 @@
 #include "scc_fd.h"
 
 #include "scc_util.h"
+
+// work around efficient libc's
+#ifndef HAVE_ASPRINTF
+
+int vasprintf(char **strp, const char *fmt, va_list ap) {
+    /* Guess we need no more than 100 bytes. */
+    int n, size = 100;
+    char *p;
+    if ((p = malloc (size)) == NULL)
+        return -1;
+    while (1) {
+        /* Try to print in the allocated space. */
+        n = vsnprintf (p, size, fmt, ap);
+        /* If that worked, return the string. */
+        if (n > -1 && n < size) {
+            strp[0] = p;
+            return n;
+        }
+        /* Else try again with more space. */
+        if (n > -1)    /* glibc 2.1 */
+            size = n+1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            size *= 2;  /* twice the old size */
+        if ((p = realloc (p, size)) == NULL)
+            return -1;
+    }
+}
+
+int asprintf(char **strp, const char *fmt, ...) {
+    va_list ap;
+    int n;
+    va_start(ap, fmt);
+    n = vasprintf(strp,fmt,ap);
+    va_end(ap);
+    return n;
+}        
+
+#endif
 
 // this should probably go into some common util stuff
 // or in scc_fd dunno

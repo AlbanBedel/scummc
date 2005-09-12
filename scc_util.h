@@ -126,6 +126,25 @@ struct scc_data {
   list = last;                                            \
 }
 
+// Locale independant char test
+#define SCC_ISALPHA(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z'))
+#define SCC_ISDIGIT(c) ((c) >= '0' && (c) <= '9')
+#define SCC_ISALNUM(c) (SCC_ISALPHA(c) || SCC_ISDIGIT(c))
+
+#ifndef HAVE_ASPRINTF
+#ifndef va_start
+#include <stdarg.h>
+#endif
+int vasprintf(char **strp, const char *fmt, va_list ap);
+int asprintf(char **strp, const char *fmt, ...);
+#endif
+
+#ifdef __GNUC__
+#define PRINTF_ATTRIB(fmt,args) __attribute__ ((format (printf, fmt, args)))
+#else
+#define PRINTF_ATTRIB(fmt,args)
+#endif
+
 scc_data_t* scc_data_load(char* path);
 
 
