@@ -69,6 +69,8 @@ int scc_fd_w32be(scc_fd_t*f,uint32_t a);
 #error "Endianness is not defined !!!"
 #endif
 
+#ifdef va_start
 int scc_fd_vprintf(scc_fd_t*f,const char *fmt, va_list ap);
+#endif
 
 int scc_fd_printf(scc_fd_t*f,const char *fmt, ...);

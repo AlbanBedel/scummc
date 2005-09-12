@@ -93,6 +93,7 @@ sld_SRCS=                       \
 	scc_code.c              \
 	scc_fd.c                \
 	scc_param.c             \
+	scc_util.c              \
 
 boxedit_SRCS=                   \
 	read.c                  \
@@ -102,6 +103,7 @@ boxedit_SRCS=                   \
 	scc_img.c               \
 	scc_param.c             \
 	boxedit.c               \
+	scc_util.c              \
 
 boxedit_LIBS=                   \
 	GTK                     \
@@ -119,6 +121,7 @@ char_SRCS=                      \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_img.c               \
+	scc_util.c              \
 
 char_OPT_LIBS=                  \
 	FT                      \
@@ -127,6 +130,7 @@ soun_SRCS=                      \
 	soun.c                  \
 	scc_fd.c                \
 	scc_param.c             \
+	scc_util.c              \
 
 costview_SRCS=                  \
 	code.c                  \
@@ -160,23 +164,27 @@ zpnn2bmp_SRCS=                  \
 	scc_param.c             \
 	decode.c                \
 	scc_img.c               \
+	scc_util.c              \
 
 imgsplit_SRCS=                  \
 	imgsplit.c              \
 	scc_img.c               \
 	scc_fd.c                \
 	scc_param.c             \
+	scc_util.c              \
 
 imgremap_SRCS=                  \
 	imgremap.c              \
 	scc_img.c               \
 	scc_fd.c                \
 	scc_param.c             \
+	scc_util.c              \
 
 raw2voc_SRCS=                   \
 	raw2voc.c               \
 	scc_fd.c                \
 	scc_param.c             \
+	scc_util.c              \
 
 
 ##
