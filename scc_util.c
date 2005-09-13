@@ -38,7 +38,17 @@
 
 #include "scc_util.h"
 
-// work around efficient libc's
+int scc_log_level = 2;
+
+void scc_log(int lvl,char* fmt, ...) {
+    va_list ap;
+    if(lvl > scc_log_level) return;
+    va_start(ap, fmt);
+    vfprintf(stderr,fmt,ap);
+    va_end(ap);
+}
+
+// work around incomplete libc's
 #ifndef HAVE_ASPRINTF
 
 int vasprintf(char **strp, const char *fmt, va_list ap) {
@@ -85,7 +95,7 @@ scc_data_t* scc_data_load(char* path) {
 
   fd = new_scc_fd(path,O_RDONLY,0);
   if(!fd) {
-    printf("Failed to open %s.\n",path);
+    scc_log(LOG_ERR,"Failed to open %s.\n",path);
     return NULL;
   }
   // get file size
@@ -97,7 +107,7 @@ scc_data_t* scc_data_load(char* path) {
   data->size = len;
 
   if(scc_fd_read(fd,data->data,len) != len) {
-    printf("Failed to load %s\n",path);
+    scc_log(LOG_ERR,"Failed to load %s\n",path);
     free(data);
     scc_fd_close(fd);
     return NULL;
@@ -119,13 +129,13 @@ int glob(const char *pattern, int flags,
     WIN32_FIND_DATA found_file;
 
     if(errfunc)
-        printf("glob():ERROR: Sorry errfunc not supported "
-               "by this implementation\n");
+        scc_log(LOG_ERR,"glob():ERROR: Sorry errfunc not supported "
+                "by this implementation\n");
     if(flags)
-        printf("glob():ERROR:Sorry no flags supported "
-               "by this globimplementation\n");
+        scc_log(LOG_ERR,"glob():ERROR:Sorry no flags supported "
+                "by this globimplementation\n");
 
-    //printf("PATTERN \"%s\"\n",pattern);
+    //scc_log(LOG_DBG,"PATTERN \"%s\"\n",pattern);
 
     pglob->gl_pathc = 0;
     searchhndl = FindFirstFile( pattern,&found_file);
@@ -133,10 +143,10 @@ int glob(const char *pattern, int flags,
     if(searchhndl == INVALID_HANDLE_VALUE) {
         if(GetLastError() == ERROR_FILE_NOT_FOUND) {
             pglob->gl_pathc = 0;
-            //printf("could not find a file matching your search criteria\n");
+            //scc_log(LOG_DBG,"could not find a file matching your search criteria\n");
             return 1;
         } else {
-            //printf("glob():ERROR:FindFirstFile: %i\n",GetLastError());
+            //scc_log(LOG_DBG,"glob():ERROR:FindFirstFile: %i\n",GetLastError());
             return 1;
         }
     }
@@ -148,14 +158,14 @@ int glob(const char *pattern, int flags,
     while(1) {
         if(!FindNextFile(searchhndl,&found_file)) {
             if(GetLastError()==ERROR_NO_MORE_FILES) {
-                //printf("glob(): no more files found\n");
+                //scc_log(LOG_DBG,"glob(): no more files found\n");
                 break;
             } else {
-                //printf("glob():ERROR:FindNextFile:%i\n",GetLastError());
+                //scc_log(LOG_DBG,"glob():ERROR:FindNextFile:%i\n",GetLastError());
                 return 1;
             }
         } else {
-            //printf("glob: found file %s\n",found_file.cFileName);
+            //scc_log(LOG_DBG,"glob: found file %s\n",found_file.cFileName);
             pglob->gl_pathc++;
             pglob->gl_pathv = realloc(pglob->gl_pathv,pglob->gl_pathc * sizeof(char*));
             pglob->gl_pathv[pglob->gl_pathc-1] = strdup(found_file.cFileName);

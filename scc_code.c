@@ -89,8 +89,8 @@ void scc_loop_push(int type, char* sym) {
   scc_loop_t* l;
 
   if(sym && scc_loop_get(SCC_BRANCH_BREAK,sym)) {
-    printf("Warning there is alredy a loop named %s in the loop stack.\n",
-	   sym);
+    scc_log(LOG_ERR,"Warning there is alredy a loop named %s in the loop stack.\n",
+            sym);
   }
 
   l = calloc(1,sizeof(scc_loop_t));
@@ -107,7 +107,7 @@ scc_loop_t* scc_loop_pop(void) {
   scc_loop_t* l;
 
   if(!loop_stack) {
-    printf("Can't pop empty loop stack.\n");
+    scc_log(LOG_ERR,"Can't pop empty loop stack.\n");
     return NULL;
   }
 
@@ -136,7 +136,7 @@ static void scc_loop_fix_code(scc_code_t* c,int br, int cont) {
     }
     c->fix = SCC_FIX_NONE;
 
-    printf("Branch fixed to 0x%hx\n",((int16_t*)&c->data[1])[0]);
+    scc_log(LOG_DBG,"Branch fixed to 0x%hx\n",((int16_t*)&c->data[1])[0]);
   }
 
   free(l);
@@ -215,7 +215,7 @@ static scc_code_t* scc_code_push_res(uint8_t op,scc_symbol_t* res) {
   if(res->addr >= 0) return scc_code_push_val(op,res->addr);
 
   if(!res->rid) {
-    printf("Ressource %s have no assigned rid !!!!\n",res->sym);
+    scc_log(LOG_ERR,"Ressource %s have no assigned rid !!!!\n",res->sym);
     return NULL;
   }
 
@@ -297,7 +297,7 @@ static scc_code_t* scc_str_gen_code(scc_str_t* s) {
       c->fix |= SCC_FIX_RES + s->sym->type;
       break;
     default:
-      printf("Got an unknow string type.\n");
+      scc_log(LOG_ERR,"Got an unknow string type.\n");
       break;
     }
     SCC_LIST_ADD(code,last,c);
@@ -448,7 +448,7 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
     // should not happend, alredy checked in the parser
     // or we should simply multiply both index ??
     if(a->val.v.x)
-      printf("Warning: Strings can't be assigned to 2-dim arrays, ignoring second index.\n");
+      scc_log(LOG_WARN,"Warning: Strings can't be assigned to 2-dim arrays, ignoring second index.\n");
 
     c = scc_statement_gen_code(a->val.v.y,1);
     SCC_LIST_ADD(code,last,c);
@@ -520,7 +520,7 @@ static scc_code_t* scc_bop_gen_code(scc_op_t* op, int ret_val) {
   scc_operator_t* oper = scc_get_bin_op(op->op);
   
   if(!oper) {
-    printf("Got unhandled binary operator.\n");
+    scc_log(LOG_ERR,"Got unhandled binary operator.\n");
     return NULL;
   }
 
@@ -661,7 +661,7 @@ static scc_code_t* scc_uop_gen_code(scc_op_t* op, int ret_val) {
     SCC_LIST_ADD(code,last,c);
     break;
   default:
-    printf("Got unhandled unary operator: %c\n",op->op);
+    scc_log(LOG_ERR,"Got unhandled unary operator: %c\n",op->op);
     return NULL;
   }
 
@@ -683,7 +683,7 @@ static scc_code_t* scc_top_gen_code(scc_op_t* op, int ret_val) {
 
   if(lb + lc == 0) {
     if(ret_val)
-      printf("Something went badly wrong.\n");
+      scc_log(LOG_ERR,"Something went badly wrong.\n");
     return NULL;
   }
 
@@ -726,7 +726,7 @@ static scc_code_t* scc_op_gen_code(scc_op_t* op, int ret_val) {
     code = scc_top_gen_code(op,ret_val);
     break;
   default:
-    printf("Got unhandled op %c (%d)\n",op->op,op->op);
+    scc_log(LOG_ERR,"Got unhandled op %c (%d)\n",op->op,op->op);
   }
 
   return code;
@@ -803,7 +803,7 @@ static scc_code_t* scc_statement_gen_code(scc_statement_t* st, int ret_val) {
     }
     break;
   default:
-    printf("Got unhandled statement type: %d\n",st->type);
+    scc_log(LOG_ERR,"Got unhandled statement type: %d\n",st->type);
   }
 
   return code;
@@ -986,19 +986,19 @@ static scc_code_t* scc_branch_gen_code(scc_instruct_t* inst) {
   }
 
   if(!loop_stack) {
-    printf("Branching instruction can't be used outside of loops.\n");
+    scc_log(LOG_ERR,"Branching instruction can't be used outside of loops.\n");
     return NULL;
   }
 
   l = scc_loop_get(inst->subtype,inst->sym);
   if(!l) {
-    printf("No loop named %s was found in the loop stack.\n",
+    scc_log(LOG_ERR,"No loop named %s was found in the loop stack.\n",
 	   inst->sym);
     return NULL;
   }
 
   if(l->type == SCC_INST_SWITCH && inst->subtype == SCC_BRANCH_CONTINUE) {
-    printf("Continue is not allowed in swith blocks.\n");
+    scc_log(LOG_ERR,"Continue is not allowed in swith blocks.\n");
     return NULL;
   }
 
@@ -1226,7 +1226,7 @@ static scc_code_t* scc_instruct_gen_code(scc_instruct_t* inst) {
       c = scc_override_gen_code(inst);
       break;
     default:
-      printf("Unsupported instruction type: %d\n",inst->type);
+      scc_log(LOG_ERR,"Unsupported instruction type: %d\n",inst->type);
       c = NULL;
     }
     SCC_LIST_ADD(code,last,c);
@@ -1259,8 +1259,8 @@ scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst,
       uint16_t rid = SCC_AT_16LE(data,p);
       sym = scc_ns_get_sym_with_id(ns,code->fix - SCC_FIX_RES,rid);
       if(!sym) {
-	printf("Unable to find ressource %d of type %d\n",
-	       rid,code->fix - SCC_FIX_RES);
+	scc_log(LOG_ERR,"Unable to find ressource %d of type %d\n",
+                rid,code->fix - SCC_FIX_RES);
 	continue;
       }
       r = calloc(1,sizeof(scc_sym_fix_t));

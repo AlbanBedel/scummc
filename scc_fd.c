@@ -32,6 +32,7 @@
 #include <stdarg.h>
 
 #include "scc_fd.h"
+#include "scc_util.h"
 
 scc_fd_t* new_scc_fd(char* path,int flags,uint8_t key) {
   int fd;
@@ -92,14 +93,14 @@ int scc_fd_dump(scc_fd_t* f,char* path,int size) {
   int r=0,w,dfd = open(path,O_CREAT|O_WRONLY,0644);
 
   if(dfd < 0) {
-    printf("Failed to open %s: %s\n",path,strerror(errno));
+    scc_log(LOG_ERR,"Failed to open %s: %s\n",path,strerror(errno));
     return 0;
   }
 
   while(size > 0) {
     r = scc_fd_read(f,buf,size > 2048 ? 2048 : size);
     if(r < 0) {
-      printf("Read error: %s\n",strerror(errno));
+      scc_log(LOG_ERR,"Read error: %s\n",strerror(errno));
       close(dfd);
       return 0;
     }
@@ -107,7 +108,7 @@ int scc_fd_dump(scc_fd_t* f,char* path,int size) {
     while(r > 0) {
       w = write(dfd,buf,r);
       if(w < 0) {
-	printf("Write error: %s\n",strerror(errno));
+	scc_log(LOG_ERR,"Write error: %s\n",strerror(errno));
 	close(dfd);
 	return 0;
       }

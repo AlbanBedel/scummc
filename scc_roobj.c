@@ -119,7 +119,7 @@ scc_script_t* scc_roobj_get_scr(scc_roobj_t* ro, scc_symbol_t* sym) {
 int scc_roobj_add_scr(scc_roobj_t* ro,scc_script_t* scr) {
 
   if(scc_roobj_get_scr(ro,scr->sym)) {
-    printf("Why are we trying to add a script we alredy have ????\n");
+    scc_log(LOG_ERR,"Why are we trying to add a script we alredy have ????\n");
     return 0;
   }
   
@@ -165,7 +165,7 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj) {
   scc_roobj_obj_t* o = scc_roobj_get_obj(ro,obj->sym);
 
   if(o) {
-    printf("%s is alredy defined.\n",obj->sym->sym);
+    scc_log(LOG_ERR,"%s is alredy defined.\n",obj->sym->sym);
     return 0;
   }
 
@@ -187,18 +187,18 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   }
 
   if(scc_res_types[rt].type < 0) {
-    printf("Unknow ressource type !!!!\n");
+    scc_log(LOG_ERR,"Unknow ressource type !!!!\n");
     return NULL;
   }    
 
   if(r) {
-    printf("Room symbol %s is alredy defined.\n",sym->sym);
+    scc_log(LOG_ERR,"Room symbol %s is alredy defined.\n",sym->sym);
     return NULL;
   }
 
   fd = new_scc_fd(val,O_RDONLY,0);
   if(!fd) {
-    printf("Failed to open %s.\n",val);
+    scc_log(LOG_ERR,"Failed to open %s.\n",val);
     return NULL;
   }
   // get file size
@@ -209,13 +209,13 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   // get the header
   ft = scc_fd_r32(fd);
   if(ft != scc_res_types[rt].id) {
-    printf("The file %s doesn't seems to contain what we want.\n",val);
+    scc_log(LOG_ERR,"The file %s doesn't seems to contain what we want.\n",val);
     scc_fd_close(fd);
     return NULL;
   }
   len = scc_fd_r32be(fd);
   if(len <= 8 || len < flen) {
-    printf("The file %s seems to be invalid.\n",val);
+    scc_log(LOG_ERR,"The file %s seems to be invalid.\n",val);
     scc_fd_close(fd);
     return NULL;
   }
@@ -237,7 +237,7 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
   int hsize,ver,magic,pos,type,len,pack;
 
   if(strncmp(data,"Creative Voice File",19)) {
-    printf("%s is not a creative voice file.\n",file);
+    scc_log(LOG_ERR,"%s is not a creative voice file.\n",file);
     return 0;
   }
 
@@ -245,12 +245,12 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
   ver = SCC_AT_16LE(data,22);
   magic = SCC_AT_16LE(data,24);
   if(hsize < 0x1A) {
-    printf("%s: Header is too small.\n",file);
+    scc_log(LOG_ERR,"%s: voc header is too small.\n",file);
     return 0;
   }
 
   if(~ver + 0x1234 != magic) {
-    printf("%s: Invalid voc header.\n",file);
+    scc_log(LOG_ERR,"%s: Invalid voc header.\n",file);
     return 0;
   }
 
@@ -261,7 +261,7 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
     // terminator
     if(type == 0) {
       if(pos != size)
-        printf("%s: Warning garbage after terminator ???\n",file);
+        scc_log(LOG_WARN,"%s: Warning garbage after terminator ???\n",file);
       return 1;
     }
 
@@ -276,21 +276,21 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
       len -= 2;
 
       if(pack != 0) {
-        printf("%s: Unssuported packing format: %x\n",file,pack);
+        scc_log(LOG_ERR,"%s: Unssuported packing format: %x\n",file,pack);
         return 0;
       }
     case 6:
     case 7:
       break;
     default:
-      printf("%s: Unsupported block type: %x\n",file,type);
+      scc_log(LOG_ERR,"%s: Unsupported block type: %x\n",file,type);
       return 0;
     }
 
     pos += len;
   }
 
-  printf("%s: Truncated file, or the terminator is missing.\n",file);
+  scc_log(LOG_ERR,"%s: Truncated file, or the terminator is missing.\n",file);
   return 0;
 }
 
@@ -302,13 +302,13 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
   int i;
   
   if(!fd) {
-    printf("Failed to open %s.\n",file);
+    scc_log(LOG_ERR,"Failed to open %s.\n",file);
     return 0;
   }
   // get the voc file size
   vsize = scc_fd_seek(fd,0,SEEK_END);
   if(vsize < 0x1A) {
-    printf("%s is too small to be voc file.\n",file);
+    scc_log(LOG_ERR,"%s is too small to be voc file.\n",file);
     scc_fd_close(fd);
     return 0;
   }
@@ -328,7 +328,7 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
   }
   // load the voc data
   if(scc_fd_read(fd,r->data+8+2*nsync,vsize) != vsize) {
-    printf("Error while reading voc file.\n");
+    scc_log(LOG_ERR,"Error while reading voc file.\n");
     free(r->data);
     free(r);
     scc_fd_close(fd);
@@ -356,31 +356,31 @@ int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
   int freq;
 
   if(c) {
-    printf("Cycle %s is alredy defined.\n",sym->sym);
+    scc_log(LOG_ERR,"Cycle %s is alredy defined.\n",sym->sym);
     return 0;
   }
 
   if(delay < 0) {
-    printf("Cycl delay must be >= 0.\n");
+    scc_log(LOG_ERR,"Cycl delay must be >= 0.\n");
     return 0;
   }
 
   freq = 16384/delay;
 
   if(freq < 1 || freq > 0xffff) {
-    printf("Error invalid cycle frequency.\n");
+    scc_log(LOG_ERR,"Error invalid cycle frequency.\n");
     return 0;
   }
   if(start < 0 || start > 0xFF) {
-    printf("Error invalid cycle start point.\n");
+    scc_log(LOG_ERR,"Error invalid cycle start point.\n");
     return 0;
   }
   if(end < 0 || end > 0xFF) {
-    printf("Error invalid cycle end point.\n");
+    scc_log(LOG_ERR,"Error invalid cycle end point.\n");
     return 0;
   }
   if(start > end) {
-    printf("Error cycle start point is after the end point.\n");
+    scc_log(LOG_ERR,"Error cycle start point is after the end point.\n");
     return 0;
   }
 
@@ -407,7 +407,7 @@ int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,
     return roobj_params[i].set(ro,ns,val);
   }
 
-  printf("Rooms have no parameter named %s.\n",p);
+  scc_log(LOG_ERR,"Rooms have no parameter named %s.\n",p);
   return 0;
 }
 
@@ -415,18 +415,18 @@ int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,
 static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
 
   if(ro->image) {
-    printf("Room image has alredy been set.\n");
+    scc_log(LOG_ERR,"Room image has alredy been set.\n");
     return 0;
   }
 
   ro->image = scc_img_open(val);
   if(!ro->image) {
-    printf("Failed to parse image %s.\n",val);
+    scc_log(LOG_ERR,"Failed to parse image %s.\n",val);
     return 0;
   }
 
   if(ro->image->w%8 != 0) {
-    printf("Images must have w%%8==0 !!!\n");
+    scc_log(LOG_ERR,"Images must have w%%8==0 !!!\n");
     scc_img_free(ro->image);
     ro->image = NULL;
     return 0;
@@ -438,34 +438,34 @@ static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
 int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
 
   if(idx < 0) {
-    printf("Z-planes need a subscript.\n");
+    scc_log(LOG_ERR,"Z-planes need a subscript.\n");
     return 0;
   }
   if(idx < 1 || idx >= SCC_MAX_IM_PLANES) {
-    printf("Z-plane index is out of range.\n");
+    scc_log(LOG_ERR,"Z-plane index is out of range.\n");
     return 0;
   }
 
   if(ro->zplane[idx]) {
-    printf("Z-plane %d has alredy been set.\n",idx);
+    scc_log(LOG_ERR,"Z-plane %d has alredy been set.\n",idx);
     return 0;
   }
 
   ro->zplane[idx] = scc_img_open(val);
   if(!ro->zplane[idx]) {
-    printf("Failed to open zplane image %s.\n",val);
+    scc_log(LOG_ERR,"Failed to open zplane image %s.\n",val);
     return 0;
   }
 
   if(ro->zplane[idx]->w%8 != 0) {
-    printf("Images must have w%%8==0 !!!\n");
+    scc_log(LOG_ERR,"Images must have w%%8==0 !!!\n");
     scc_img_free(ro->zplane[idx]);
     ro->zplane[idx] = NULL;
     return 0;
   }
 
   if(ro->zplane[idx]->ncol != 2)
-    printf("Warning zplanes should have only 2 colors.\n");
+    scc_log(LOG_WARN,"Warning zplanes should have only 2 colors.\n");
   
   return 1;
 }
@@ -474,7 +474,7 @@ int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
 static int scc_roobj_set_data_param(scc_data_t** ptr,char* name,char* val) {
   
   if(ptr[0]) {
-    printf("Room %s have alredy been set.\n",name);
+    scc_log(LOG_ERR,"Room %s have alredy been set.\n",name);
     return 0;
   }
 
@@ -491,7 +491,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
 
   fd = new_scc_fd(path,O_RDONLY,0);
   if(!fd) {
-    printf("Failed to open %s.\n",path);
+    scc_log(LOG_ERR,"Failed to open %s.\n",path);
     return 0;
   }
 
@@ -502,7 +502,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
     named = 0;
     scc_fd_r16(fd); pos += 2; // skip num box
   } else if(type != MKID('b','o','x','d')) {
-    printf("%s is not a boxd file.\n",path);
+    scc_log(LOG_ERR,"%s is not a boxd file.\n",path);
     scc_fd_close(fd);
     return 0;
   }
@@ -510,7 +510,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
   while(pos < len) {
     if(named) nlen = scc_fd_r8(fd), pos++;
     if(pos + nlen + 20 > len) {
-      printf("Invalid box entry.\n");
+      scc_log(LOG_ERR,"Invalid box entry.\n");
       break;
     }
     boxn++;
@@ -519,7 +519,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
       scc_fd_read(fd,name,nlen); pos += nlen;
       name[nlen] = '\0';
       if(!scc_ns_decl(ns,NULL,name,SCC_RES_BOX,0,boxn)) {
-	printf("Failed to declare room box %s.\n",name);
+	scc_log(LOG_ERR,"Failed to declare room box %s.\n",name);
 	break;
       }
     }
@@ -563,7 +563,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
 	type = scc_fd_r32(fd);
 	len = scc_fd_r32be(fd);
 	if(type != MKID('B','O','X','M') || len <= 8) {
-	  printf("The box file is missing the matrix ????\n");
+	  scc_log(LOG_ERR,"The box file is missing the matrix ????\n");
 	  break;
 	}
 	ro->boxm = malloc(sizeof(scc_data_t)+len);
@@ -571,14 +571,14 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
 	SCC_SET_32(ro->boxm->data,0,MKID('B','O','X','M'));
 	SCC_SET_32BE(ro->boxm->data,4,len);
 	if(scc_fd_read(fd,&ro->boxm->data[8],len - 8) != len - 8) {
-	  printf("Error while reading the box matrix.\n");
+	  scc_log(LOG_ERR,"Error while reading the box matrix.\n");
 	  break;
 	}
         
 	type = scc_fd_r32(fd);
 	len = scc_fd_r32be(fd);
 	if(type != MKID('S','C','A','L') || len != 40) {
-	  printf("The box file is missing the scal block ????\n");
+	  scc_log(LOG_ERR,"The box file is missing the scal block ????\n");
 	  break;
 	}
 	ro->scal = malloc(sizeof(scc_data_t)+len);
@@ -586,7 +586,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
 	SCC_SET_32(ro->scal->data,0,MKID('S','C','A','L'));
 	SCC_SET_32BE(ro->scal->data,4,len);
 	if(scc_fd_read(fd,&ro->scal->data[8],len - 8) != len - 8) {
-	  printf("Error while reading the scal block.\n");
+	  scc_log(LOG_ERR,"Error while reading the scal block.\n");
 	  break;
 	}
       } else
@@ -648,7 +648,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   if(!img) return 0;
 
   if(img->w%8 || img->h%8) {
-    printf("Image width and height must be multiple of 8.\n");
+    scc_log(LOG_ERR,"Image width and height must be multiple of 8.\n");
     scc_img_free(img);
     return 0;
   }
@@ -656,7 +656,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   if(!obj->w) obj->w = img->w;
   if(!obj->h) obj->h = img->h;
   if(obj->w != img->w || obj->h != img->h) {
-    printf("Image size is not matching the alredy defined size.\n");
+    scc_log(LOG_ERR,"Image size is not matching the alredy defined size.\n");
     scc_img_free(img);
     return 0;
   }
@@ -678,7 +678,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
         }
         if(st->zp[i]->w != img->w ||
            st->zp[i]->h != img->h) {
-          printf("ZPlane %d have a wrong size.\n",i+1);
+          scc_log(LOG_ERR,"ZPlane %d have a wrong size.\n",i+1);
           scc_roobj_obj_state_free(st);
           return 0;
         }
@@ -701,7 +701,7 @@ int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr) {
 
   for(s = obj->verb ; s ; s = s->next) {
     if(scr->sym == s->sym) {
-      printf("Why are we trying to add a verb we alredy have ????\n");
+      scc_log(LOG_ERR,"Why are we trying to add a verb we alredy have ????\n");
       return 0;
     }
     if(!s->next) break;
@@ -716,14 +716,14 @@ int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr) {
 int scc_roobj_obj_set_param(scc_roobj_obj_t* obj,char* sym, char* val) {
   if(!strcmp(sym,"name")) {
     if(obj->name) {
-      printf("Object name is alredy defined.\n");
+      scc_log(LOG_ERR,"Object name is alredy defined.\n");
       return 0;
     }
     obj->name = strdup(val);
     return 1;
   } 
   
-  printf("Unknow object parameter: %s\n",sym);
+  scc_log(LOG_ERR,"Unknow object parameter: %s\n",sym);
   return 0;
 }
 
@@ -747,7 +747,7 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
     scc_roobj_state_t* s;
     int i;
     if(val < 0) {
-      printf("Invalid object state: %d\n",val);
+      scc_log(LOG_ERR,"Invalid object state: %d\n",val);
       return 0;
     }
     if(!val) {
@@ -756,18 +756,18 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
     }
     for(i = 1, s = obj->states ; s && i != val ; i++, s = s->next);
     if(!s) {
-      printf("Invalid object state: %d\n",val);
+      scc_log(LOG_ERR,"Invalid object state: %d\n",val);
       return 0;
     }
     obj->state = val;
   } else if(!strcmp(sym,"parent_state")) {
     if(val < 0) {
-      printf("Invalid parent state: %d.\n",val);
+      scc_log(LOG_ERR,"Invalid parent state: %d.\n",val);
       return 0;
     }
     obj->parent_state = val;
   } else {
-    printf("Unknow integer object parameter: %s\n",sym);
+    scc_log(LOG_ERR,"Unknow integer object parameter: %s\n",sym);
     return 0;
   }
   
@@ -799,7 +799,7 @@ scc_pal_t* scc_roobj_gen_pals(scc_roobj_t* ro) {
   int i;
 
   if(!ro->image) {
-    printf("Room have no image, using dummy one !!!!\n");
+    scc_log(LOG_V,"Room have no image, using dummy one !!!!\n");
     ro->image = scc_img_new(8,8,256);
   }
 
@@ -820,7 +820,7 @@ scc_rmim_t* scc_roobj_gen_rmim(scc_roobj_t* ro) {
   uint8_t* zd;
 
   if(!ro->image) {
-    printf("Room have no image, using dummy one  !!!!\n");
+    scc_log(LOG_V,"Room have no image, using dummy one  !!!!\n");
     ro->image = scc_img_new(8,8,256);
   }
 
@@ -919,7 +919,7 @@ static int scc_roobj_make_obj_parent(scc_roobj_t* ro) {
         iter && iter->sym != obj->parent ;
         iter = iter->next, idx++);
     if(!iter) {
-      printf("Failed to find the parent of object %s\n",
+      scc_log(LOG_ERR,"Failed to find the parent of object %s\n",
              obj->sym->sym);
       return 0;
     }
@@ -1092,7 +1092,7 @@ int scc_write_lscr_block(scc_roobj_t* ro, scc_fd_t* fd) {
     else {
       n++;
       if(scr->sym->addr < 0)
-	printf("Warning: a local script is missing his adress.\n");
+	scc_log(LOG_WARN,"Warning: a local script is missing his adress.\n");
     }
   }
 
@@ -1297,7 +1297,7 @@ int scc_roobj_write_res(scc_roobj_res_t* res, scc_fd_t* fd) {
   }
 
   if(scc_res_types[rt].type < 0) {
-    printf("Unknow ressource type !!!!\n");
+    scc_log(LOG_ERR,"Unknow ressource type !!!!\n");
     return 0;
   }
   

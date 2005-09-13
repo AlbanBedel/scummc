@@ -100,8 +100,8 @@ void scc_parser_add_dep(scc_parser_t* p, char* dep);
 }
 
 #define SCC_ABORT(at,msg, args...)  { \
-  printf("%s: ",scc_lex_get_file(sccp->lex)); \
-  printf(msg, ## args); \
+  scc_log(LOG_ERR,"%s: ",scc_lex_get_file(sccp->lex));        \
+  scc_log(LOG_ERR,msg, ## args); \
   YYABORT; \
 }
 
@@ -438,7 +438,7 @@ roombdecl: ROOM SYM location
 // Here we should have the whole room.
 room: roombdecl roombody
 {
-  printf("Room done :)\n");
+  scc_log(LOG_DBG,"Room done :)\n");
   sccp->local_scr = SCC_MAX_GLOB_SCR;
   memset(&sccp->ns->as[SCC_RES_LSCR],0,0x10000/8);
   sccp->cycl = 1;
@@ -451,7 +451,7 @@ room: roombdecl roombody
      !sccp->roobj->res &&
      !sccp->roobj->cycl &&
      !sccp->roobj->image) {
-    printf("Room is empty, only declarations.\n");
+    scc_log(LOG_DBG,"Room is empty, only declarations.\n");
     scc_roobj_free(sccp->roobj);
   } else {
     sccp->roobj->next = sccp->roobj_list;
@@ -1699,7 +1699,6 @@ dval: INTEGER
   $$ = calloc(1,sizeof(scc_statement_t));
   $$->type = SCC_ST_STR;
   $$->val.s = $1;
-  //printf("Got string: %s\n",$1);
 };
 
 string: str
@@ -1763,37 +1762,6 @@ str: STRING
 #undef sccp
 
 
-#if 0
-
-int scc_code_write(scc_fd_t* fd) {
-  scc_code_t *c,*next;
-
-  c = scc_instruct_gen_code(scc_inst);
-
-  if(!c) {
-    printf("Warning instructions generated no code\n");
-    return 0;
-  }
-   
-  while(c) {
-    if(!c->len) {
-      printf("Warning statement generated has a 0 length.\n");
-      scc_code_free(c);
-      continue;
-    }
-
-    scc_fd_write(fd,c->data,c->len);
-    
-    next = c->next;
-    scc_code_free(c);
-    c = next;
-  }
-  
-  return 1;
-}
-
-#endif
-
 extern int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
 
 typedef struct scc_source_st scc_source_t;
@@ -1850,7 +1818,7 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
   if(scc_parser_parse_internal(sccp)) return NULL;
 
   if(sccp->lex->error) {
-    printf("%s: %s\n",scc_lex_get_file(sccp->lex),sccp->lex->error);
+    scc_log(LOG_ERR,"%s: %s\n",scc_lex_get_file(sccp->lex),sccp->lex->error);
     return NULL;
   }
 
@@ -1877,13 +1845,13 @@ scc_parser_t* scc_parser_new(char** include) {
 
 int scc_parser_error(scc_parser_t* sccp,YYLTYPE *loc, const char *s)  /* Called by yyparse on error */
 {
-  printf("%s: %s\n",scc_lex_get_file(sccp->lex),
-         sccp->lex->error ? sccp->lex->error : s);
+  scc_log(LOG_ERR,"%s: %s\n",scc_lex_get_file(sccp->lex),
+          sccp->lex->error ? sccp->lex->error : s);
   return 0;
 }
 
 static void usage(char* prog) {
-  printf("Usage: %s [-o output] input.scumm [input2.scumm ...]\n",prog);
+  scc_log(LOG_MSG,"Usage: %s [-o output] input.scumm [input2.scumm ...]\n",prog);
   exit(-1);
 }
 
@@ -1894,6 +1862,7 @@ static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &scc_output },
   { "I", SCC_PARAM_STR_LIST, 0, 0, &scc_include },
   { "d", SCC_PARAM_FLAG, 0, 1, &scc_do_deps },
+  { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1925,7 +1894,7 @@ int main (int argc, char** argv) {
   out = scc_output ? scc_output : "output.roobj";
   out_fd = new_scc_fd(out,O_WRONLY|O_CREAT|O_TRUNC,0);
   if(!out_fd) {
-    printf("Failed to open output file %s.\n",out);
+    scc_log(LOG_ERR,"Failed to open output file %s.\n",out);
     return -1;
   }    
 
@@ -1946,7 +1915,7 @@ int main (int argc, char** argv) {
     for(scc_roobj = src->roobj_list ; scc_roobj ; 
         scc_roobj = scc_roobj->next) {
       if(!scc_roobj_write(scc_roobj,src->ns,out_fd)) {
-        printf("Failed to write ROOM ????\n");
+        scc_log(LOG_ERR,"Failed to write ROOM ????\n");
         return 1;
       }
     }

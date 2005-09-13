@@ -160,3 +160,15 @@ void globfree(glob_t *pglob);
 int  glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *pglob);
 
 #endif
+
+#define LOG_ERR     0
+#define LOG_WARN    1
+#define LOG_MSG     2
+#define LOG_V       3
+#define LOG_DBG     4
+#define LOG_DBG1    5
+#define LOG_DBG2    6
+
+extern int scc_log_level;
+
+void scc_log(int lvl,char* msg, ...) PRINTF_ATTRIB(2,3);

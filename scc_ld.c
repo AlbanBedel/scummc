@@ -107,7 +107,7 @@ static scc_ld_block_t* scc_fd_read_block(scc_fd_t* fd,uint32_t type, int len) {
   blk->data_len = len;
   blk->asis = 0;
   if(scc_fd_read(fd,blk->data,len) != len) {
-    printf("Error while reading block.\n");
+    scc_log(LOG_ERR,"Error while reading block.\n");
     return NULL;
   }
 
@@ -120,7 +120,7 @@ static int scc_ld_write_block(scc_ld_block_t* blk,scc_fd_t* fd) {
   scc_fd_w32be(fd,blk->data_len + 8);
 
   if(scc_fd_write(fd,blk->data,blk->data_len) != blk->data_len) {
-    printf("Error while writing block.\n");
+    scc_log(LOG_ERR,"Error while writing block.\n");
     return 0;
   }
 
@@ -131,8 +131,8 @@ static int scc_ld_write_block_list(scc_ld_block_t* blk,scc_fd_t* fd) {
 
   while(blk) {
     if(!blk->asis) {
-      printf("Warning skipping non-patched block %c%c%c%c.\n",
-	     UNMKID(blk->type));
+      scc_log(LOG_WARN,"Warning skipping non-patched block %c%c%c%c.\n",
+              UNMKID(blk->type));
       blk = blk->next;
       continue;
     }
@@ -184,23 +184,23 @@ int scc_ld_parse_sym_block(scc_fd_t* fd, scc_ld_room_t* room, int len) {
   while(1) {
 
     if(pos + 2 >= len) {
-      printf("Invalid symbol definition.\n");
+      scc_log(LOG_ERR,"Invalid symbol definition.\n");
       return 0;
     }
 
     status = scc_fd_r8(fd); pos++;
     if(status != 'I' && status != 'E') {
-      printf("Invalid symbol status: %c\n",status);
+      scc_log(LOG_ERR,"Invalid symbol status: %c\n",status);
       return 0;
     }
     nlen = scc_fd_r8(fd); pos++;
     // check that all the data is there
     if(pos + nlen + 6 > len) {
-      printf("Invalid symbol definition.\n");
+      scc_log(LOG_ERR,"Invalid symbol definition.\n");
       return 0;
     }
     if(scc_fd_read(fd,name,nlen) != nlen) {
-      printf("Error while reading symbol name.\n");
+      scc_log(LOG_ERR,"Error while reading symbol name.\n");
       return 0;
     }
     pos += nlen;
@@ -224,7 +224,7 @@ int scc_ld_parse_sym_block(scc_fd_t* fd, scc_ld_room_t* room, int len) {
     // the first exported room should be ourself.
     if(type == SCC_RES_ROOM && status == 'E') {
       if(room->sym) 
-	printf("Warning several rooms are exported in the same STAB !!!!\n");
+	scc_log(LOG_WARN,"Warning several rooms are exported in the same STAB !!!!\n");
       else
 	room->sym = sym;
     }
@@ -243,7 +243,7 @@ int scc_ld_parse_stab(scc_fd_t* fd, scc_ld_room_t* room, int max_len) {
 
   len = scc_fd_get_block(fd,max_len,&type); pos += 8;
   if(len < 0 || type != MKID('G','S','Y','M')) {
-    printf("Invalid STAB block.\n");
+    scc_log(LOG_ERR,"Invalid STAB block.\n");
     return 0;
   }
   
@@ -254,25 +254,25 @@ int scc_ld_parse_stab(scc_fd_t* fd, scc_ld_room_t* room, int max_len) {
   while(pos < max_len) {
     len = scc_fd_get_block(fd,max_len-pos,&type); pos += 8;
     if(len < 2 || type != MKID('R','S','Y','M')) {
-      printf("Invalid STAB block.\n");
+      scc_log(LOG_ERR,"Invalid STAB block.\n");
       return 0;
     }
     // find the room
     rid = scc_fd_r16le(fd); pos += 2;
     sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_ROOM,rid);
     if(!sym) {
-      printf("Invalid RSYM block.\n");
+      scc_log(LOG_ERR,"Invalid RSYM block.\n");
       return 0;
     }
     gsym = scc_ns_get_sym(scc_ns,NULL,sym->sym);
     if(!gsym) {
-      printf("NS errror !!!!\n");
+      scc_log(LOG_ERR,"NS errror !!!!\n");
       return 0;
     }
     // push the room in the ns
     scc_ns_push(room->ns,sym);
     scc_ns_push(scc_ns,gsym);
-    printf("Loading symbols for room %s:\n",sym->sym);
+    scc_log(LOG_DBG,"Loading symbols for room %s:\n",sym->sym);
     // parse the syms
     if(!scc_ld_parse_sym_block(fd,room,len-2)) return 0;
     pos += len-2;
@@ -290,14 +290,14 @@ int scc_ld_parse_voice(scc_fd_t* fd, scc_ld_room_t* room, int len) {
   scc_ld_voice_t* v;
 
   if(len < 10) {
-    printf("Too small voic block.\n");
+    scc_log(LOG_ERR,"Too small voic block.\n");
     return 0;
   }
 
   rid = scc_fd_r16le(fd);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VOICE,rid);
   if(!sym) {
-    printf("Invalid voic block.\n");
+    scc_log(LOG_ERR,"Invalid voic block.\n");
     return 0;
   }
 
@@ -306,7 +306,7 @@ int scc_ld_parse_voice(scc_fd_t* fd, scc_ld_room_t* room, int len) {
   v = calloc(1,sizeof(scc_ld_voice_t) + len);
   v->data_len = len;
   if(scc_fd_read(fd,v->data,len) != len) {
-    printf("Error while reading voic block.\n");
+    scc_log(LOG_ERR,"Error while reading voic block.\n");
     return 0;
   }
 
@@ -333,11 +333,11 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
   while(pos < max_len) {
     len = scc_fd_get_block(fd,max_len-pos,&type); pos += 8;
     if(len < 0) {
-      printf("Invalid room block.\n");
+      scc_log(LOG_ERR,"Invalid room block.\n");
       scc_ld_room_free(room);
       return NULL;
     }
-    printf("Parsing %c%c%c%c block.\n",UNMKID(type));
+    scc_log(LOG_DBG,"Parsing %c%c%c%c block.\n",UNMKID(type));
 
     switch(type) {
     case MKID('S','T','A','B'):
@@ -436,7 +436,7 @@ int scc_ld_load_roobj(char* path) {
   scc_ld_room_t* ro;
 
   if(!fd) {
-    printf("Failed to open %s.\n",path);
+    scc_log(LOG_ERR,"Failed to open %s.\n",path);
     return 0;
   }
 
@@ -447,7 +447,7 @@ int scc_ld_load_roobj(char* path) {
   while(pos < flen) {
     len = scc_fd_get_block(fd,flen-pos,&type); pos += 8;
     if(type != MKID('r','o','o','m')) {
-      printf("Got unknow block %c%c%c%c in roobj file.\n",UNMKID(type));
+      scc_log(LOG_ERR,"Got unknow block %c%c%c%c in roobj file.\n",UNMKID(type));
       return 0;
     }
     ro = scc_ld_parse_room(fd,len);
@@ -474,10 +474,10 @@ int scc_ld_check_ns(scc_ns_t* ns,scc_symbol_t* sym) {
           sym->type == SCC_RES_CLASS)) &&
        sym->status == 'I') {
       if(sym->parent)
-	printf("Found unresolved symbol %s in room %s.\n",
-	       sym->sym,sym->parent->sym);
+	scc_log(LOG_ERR,"Found unresolved symbol %s in room %s.\n",
+                sym->sym,sym->parent->sym);
       else
-	printf("Found unresolved symbol: %s\n",sym->sym);
+	scc_log(LOG_ERR,"Found unresolved symbol: %s\n",sym->sym);
       r = 0;
     }
       
@@ -505,7 +505,7 @@ int scc_ld_find_main(scc_ns_t* ns) {
       // Found a script named main
       if(!strcmp(s->sym,"main")) {
 	if(m)
-	  printf("Warning several rooms have a main script !!!!\n");
+	  scc_log(LOG_WARN,"Warning several rooms have a main script !!!!\n");
 	else
 	  m = s;
       }
@@ -514,7 +514,7 @@ int scc_ld_find_main(scc_ns_t* ns) {
 
   if(m) {
     if(!scc_ns_set_sym_addr(scc_ns,m,1)) {
-      printf("Failed to set main script address ????\n");
+      scc_log(LOG_ERR,"Failed to set main script address ????\n");
       return 0;
     }
     return 1;
@@ -535,7 +535,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
   uint8_t* scr_data;
 
   if(len < 8) {
-    printf("Invalid scob block.\n");
+    scc_log(LOG_ERR,"Invalid scob block.\n");
     return NULL;
   }
 
@@ -545,12 +545,12 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
   // fix list
   if(type == MKID('S','F','I','X')) {
     if((size/8)*8 != size || size > len) {
-      printf("SFIX block have invalid length.\n");
+      scc_log(LOG_ERR,"SFIX block have invalid length.\n");
       return NULL;
     }
     for(pos = 8 ; pos < size ; pos += 8) {
       if(pos + 8 > size) {
-	printf("Invalid SFIX block.\n");
+	scc_log(LOG_ERR,"Invalid SFIX block.\n");
 	return NULL;
       }
       sym_type = data[pos];
@@ -558,7 +558,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
       off = SCC_AT_32LE(data,pos+4);
       s = scc_ns_get_sym_with_id(room->ns,sym_type,sym_id);
       if(!s) {
-	printf("SFIX entry with invalid id ????\n");
+	scc_log(LOG_ERR,"SFIX entry with invalid id ????\n");
 	return NULL;
       }
       fix = malloc(sizeof(scc_sym_fix_t));
@@ -569,7 +569,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
     }
 
     if(pos+8 > len) {
-      printf("Invalid scob block ????\n");
+      scc_log(LOG_ERR,"Invalid scob block ????\n");
       return NULL;
     }
     type = SCC_AT_32(data,pos);
@@ -577,7 +577,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
   }
 
   if(type != MKID('s','c','o','b') || size < 8 || pos+size != len) {
-    printf("Invalid scob block ????\n");
+    scc_log(LOG_ERR,"Invalid scob block ????\n");
     return NULL;
   }
 
@@ -594,13 +594,13 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
   memcpy(scr_data,&data[pos],size);
   for(fix = fix_list ; fix ; fix = fix->next) {
     if(fix->off >= size) {
-      printf("Got invalid fix offset.\n");
+      scc_log(LOG_ERR,"Got invalid fix offset.\n");
       return NULL;
     }
     if(fix->sym->type == SCC_RES_VOICE) {
       scc_ld_voice_t* v = scc_ld_get_voice(fix->sym);
       if(!v) {
-        printf("Got invalid voice sym fix ???.\n");
+        scc_log(LOG_ERR,"Got invalid voice sym fix ???.\n");
         return NULL;
       }
       scr_data[fix->off] = v->offset & 0xFF;
@@ -641,14 +641,14 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
   scc_symbol_t* sym;
 
   if(type != MKID('i','m','h','d') || size < 26) {
-    printf("Invalid obim block.\n");
+    scc_log(LOG_ERR,"Invalid obim block.\n");
     return NULL;
   }
 
   id = SCC_AT_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,id);
   if(!sym) {
-    printf("imhd block contain an invalid id ????\n");
+    scc_log(LOG_ERR,"imhd block contain an invalid id ????\n");
     return NULL;
   }
   
@@ -671,17 +671,17 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   scc_ld_block_t* new;
   
 
-  printf("Patching obcd.\n");
+  scc_log(LOG_DBG,"Patching obcd.\n");
 
   if(type != MKID('c','d','h','d') || size != 25 + 1 + 2 + SCC_MAX_CLASS*2) {
-    printf("Invalid cdhd block.\n");
+    scc_log(LOG_ERR,"Invalid cdhd block.\n");
     return NULL;
   }
   // find the object
   vid = SCC_AT_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,vid);
   if(!sym) {
-    printf("cdhd block contain an invalid id (0x%x) ????\n",vid);
+    scc_log(LOG_ERR,"cdhd block contain an invalid id (0x%x) ????\n",vid);
     return NULL;
   }
   addr = sym->addr;
@@ -692,7 +692,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   if(oid) {
     osym = scc_ns_get_sym_with_id(room->ns,SCC_RES_ACTOR,oid);
     if(!osym) {
-      printf("cdhd block contain an invalid owner id (0x%x) ????\n",oid);
+      scc_log(LOG_ERR,"cdhd block contain an invalid owner id (0x%x) ????\n",oid);
       return NULL;
     }
     obj_owner[sym->addr] = (st << 4) | osym->addr;
@@ -704,7 +704,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
     if(!cid) continue;
     csym = scc_ns_get_sym_with_id(room->ns,SCC_RES_CLASS,cid);
     if(!csym) {
-      printf("cdhd block contain an invalid class id (0x%x) ????\n",cid);
+      scc_log(LOG_ERR,"cdhd block contain an invalid class id (0x%x) ????\n",cid);
       return NULL;
     }
     obj_class[sym->addr] |= (1 << (csym->addr-1));
@@ -718,25 +718,25 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
     if(type == MKID('O','B','N','A')) {
       break;
     } else if(type != MKID('v','e','r','b')) {
-      printf("Got unknow block inside obcd block !!!!\n");
+      scc_log(LOG_ERR,"Got unknow block inside obcd block !!!!\n");
       return NULL;
     }
     id = SCC_AT_16LE(blk->data,pos + 8);
     if(id) {
       sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VERB,id);
       if(!sym) {
-        printf("verb block contain an invalid id: %d ????\n",id);
+        scc_log(LOG_ERR,"verb block contain an invalid id: %d ????\n",id);
         return NULL;
       }
     } else
       sym = NULL;
     new_scr = scc_ld_parse_scob(room,sym,&blk->data[pos+10],len-10);
     if(!new_scr) {
-      printf("Failed to create verb %s.\n",sym->sym);
+      scc_log(LOG_ERR,"Failed to create verb %s.\n",sym->sym);
       return NULL;
     }
     if(verb_size + new_scr->code_len > 0xFFFF) {
-      printf("verb block have too much code.");
+      scc_log(LOG_ERR,"verb block have too much code.");
       return NULL;
     }
 
@@ -747,12 +747,12 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   } 
   
   if(pos + len != blk->data_len) {
-    printf("Invalid obcd block: %d >= %d.\n",pos,size);
+    scc_log(LOG_ERR,"Invalid obcd block: %d >= %d.\n",pos,size);
     return NULL;
   }
   
   // build verb block
-  printf("Building the verb block: %d.\n",nverb*3+1+verb_size);  
+  scc_log(LOG_DBG,"Building the verb block: %d.\n",nverb*3+1+verb_size);  
   new_size = 25 + 8 + nverb*3+1+verb_size + len;
 
   new = malloc(sizeof(scc_ld_block_t) + new_size);
@@ -790,7 +790,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   vpos += len;
 
   if(vpos != new_size) {
-    printf("Smthg went wrong %d %d???\n",vpos,new_size);
+    scc_log(LOG_ERR,"Smthg went wrong %d %d???\n",vpos,new_size);
     return NULL;
   }
 
@@ -850,7 +850,7 @@ static scc_ld_block_t* scc_ld_scrp_patch(scc_ld_room_t* room,
 
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_SCR,id);
   if(!sym) {
-    printf("Invalid id in scrp block.\n");
+    scc_log(LOG_ERR,"Invalid id in scrp block.\n");
     return NULL;
   }
 
@@ -878,7 +878,7 @@ int scc_ld_res_patch(scc_ld_room_t* room, scc_ld_block_t* list,
   for(blk = list ; blk ; blk = blk->next) {
     scc_symbol_t* s = scc_ns_get_sym_with_id(room->ns,type,blk->addr);
     if(!s) {
-      printf("Got %s with invalid id !!!!\n",name);
+      scc_log(LOG_ERR,"Got %s with invalid id !!!!\n",name);
       return 0;
     }
     blk->type = newid;
@@ -892,7 +892,7 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
   scc_ld_block_t* blk,*new,*last = NULL;
 
   if(!scc_ns_get_addr_from(room->ns,scc_ns)) {
-    printf("Failed to import the address in the room ns.\n");
+    scc_log(LOG_ERR,"Failed to import the address in the room ns.\n");
     return 0;
   }
 
@@ -902,7 +902,7 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
       continue;
     }
 
-    printf("Patching %c%c%c%c block.\n",UNMKID(blk->type));
+    scc_log(LOG_DBG,"Patching %c%c%c%c block.\n",UNMKID(blk->type));
     switch(blk->type) {
     case MKID('o','b','i','m'):
       new = scc_ld_obim_patch(room,blk);
@@ -920,7 +920,7 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
       new = scc_ld_lscr_patch(room,blk);
       break;
     default:
-      printf("Got unhandeld room block !!!\n");
+      scc_log(LOG_ERR,"Got unhandeld room block !!!\n");
       return 0;
     }
 
@@ -937,13 +937,13 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
   for(blk = room->scr ; blk ; blk = blk->next) {
     if(blk->asis) continue;
 
-    printf("Patching %c%c%c%c block.\n",UNMKID(blk->type));
+    scc_log(LOG_DBG,"Patching %c%c%c%c block.\n",UNMKID(blk->type));
     switch(blk->type) {
       case MKID('s','c','r','p'):
 	new = scc_ld_scrp_patch(room,blk);
 	break;
     default:
-      printf("Got unhandeld script block !!!\n");
+      scc_log(LOG_ERR,"Got unhandeld script block !!!\n");
       return 0;
     }
 
@@ -1109,12 +1109,12 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
     if(!scc_ns_is_addr_alloc(scc_ns,rtype,a)) continue;
     s = scc_ns_get_sym_at(scc_ns,rtype,a);
     if(!s || !s->parent) {
-      printf("Error while writing %s index.\n",name);
+      scc_log(LOG_ERR,"Error while writing %s index.\n",name);
       return 0;
     }
     r = scc_ld_get_room(s->parent);
     if(!r) {
-      printf("Error while writing %s index.\n",name);
+      scc_log(LOG_ERR,"Error while writing %s index.\n",name);
       return 0;
     }
 
@@ -1134,7 +1134,7 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
 	blk && blk->addr != a ; blk = blk->next)
       off += 8 + blk->data_len;
     if(!blk) {
-      printf("Error while writing script index.\n");
+      scc_log(LOG_ERR,"Error while writing script index.\n");
       return 0;
     }
     room_no[a] = r->sym->addr;
@@ -1253,7 +1253,7 @@ int scc_ld_write_sou(scc_ld_voice_t* v,scc_fd_t* fd) {
 
   while(v) {
     if(scc_fd_write(fd,v->data,v->data_len) != v->data_len) {
-      printf("Write error.\n");
+      scc_log(LOG_ERR,"Write error.\n");
       return 0;
     }
     v = v->next;
@@ -1263,7 +1263,7 @@ int scc_ld_write_sou(scc_ld_voice_t* v,scc_fd_t* fd) {
 }
 
 static void usage(char* prog) {
-  printf("Usage: %s [-o basename] [-rooms] input.roobj [file2.roobj ...]\n",prog);
+  scc_log(LOG_MSG,"Usage: %s [-o basename] [-rooms] input.roobj [file2.roobj ...]\n",prog);
   exit(-1);
 }
 
@@ -1284,6 +1284,7 @@ static scc_param_t scc_ld_params[] = {
   { "max-array", SCC_PARAM_INT, 0, 0xFFFF, &max_array },
   { "max-flobj", SCC_PARAM_INT, 0, 0xFFFF, &max_flobj },
   { "max-inventory", SCC_PARAM_INT, 0, 0xFFFF, &max_inventory },
+  { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1301,26 +1302,26 @@ int main(int argc,char** argv) {
 
 
   for(f = files ; f ; f = f->next) {
-    printf("Loading %s.\n",f->val);
+    scc_log(LOG_V,"Loading %s.\n",f->val);
     if(!scc_ld_load_roobj(f->val))
       return 1;
   }
-  printf("All files loaded.\n");
+  scc_log(LOG_DBG,"All files loaded.\n");
 
   if(!scc_ld_check_ns(scc_ns,NULL)) {
-    printf("Some symbol are unresolved, aborting.\n");
+    scc_log(LOG_ERR,"Some symbol are unresolved, aborting.\n");
     return 2;
   }
 
   // Look for the main script, and set it's address
   if(!scc_ld_find_main(scc_ns)) {
-    printf("Unable to find a script suitable as main.\n");
+    scc_log(LOG_ERR,"Unable to find a script suitable as main.\n");
     return 3;
   }
 
   // allocate the other address
   if(!scc_ns_alloc_addr(scc_ns)) {
-    printf("Address allocation failed.\n");
+    scc_log(LOG_ERR,"Address allocation failed.\n");
     return 4;
   }
 
@@ -1331,7 +1332,7 @@ int main(int argc,char** argv) {
 
   // patch the rooms
   for(r = scc_room ; r ; r = r->next) {
-    printf("Patching room %s\n",r->sym->sym);
+    scc_log(LOG_V,"Patching room %s\n",r->sym->sym);
     if(!scc_ld_room_patch(r)) return 5;
   }
 
@@ -1345,14 +1346,14 @@ int main(int argc,char** argv) {
     else
       sprintf(name,"scummc.sou");
 
-    printf("Outputing voice file %s\n",name);
+    scc_log(LOG_V,"Outputing voice file %s\n",name);
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
     if(!fd) {
-      printf("Failed to open file %s\n",name);
+      scc_log(LOG_ERR,"Failed to open file %s\n",name);
       return 5;
     }
     if(!scc_ld_write_sou(scc_voice,fd)) {
-      printf("Failed to write SOU file %s\n",name);
+      scc_log(LOG_ERR,"Failed to write SOU file %s\n",name);
       return 6;
     }
     scc_fd_close(fd);
@@ -1367,15 +1368,15 @@ int main(int argc,char** argv) {
 	sprintf(name,"%s-%03d.lflf",out_file,r->sym->addr);
       else
 	sprintf(name,"%03d.lflf",r->sym->addr);
-      printf("Dumping room %s to %s\n",r->sym->sym,name);
+      scc_log(LOG_V,"Dumping room %s to %s\n",r->sym->sym,name);
       
       fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
       if(!fd) {
-	printf("Failed to open dump file %s\n",name);
+	scc_log(LOG_ERR,"Failed to open dump file %s\n",name);
 	continue;
       }
       if(!scc_ld_write_lflf(r,fd))
-	printf("Failed to write LFLF file %s\n",name);
+	scc_log(LOG_ERR,"Failed to write LFLF file %s\n",name);
       scc_fd_close(fd);
     }
   } else {
@@ -1388,14 +1389,14 @@ int main(int argc,char** argv) {
       sprintf(name,"scummc.001");
 
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
-    printf("Outputing data file %s\n",name);
+    scc_log(LOG_V,"Outputing data file %s\n",name);
 
     if(!fd) {
-      printf("Failed to open file %s\n",name);
+      scc_log(LOG_ERR,"Failed to open file %s\n",name);
       return 5;
     }
     if(!scc_ld_write_lecf(scc_room,fd)) {
-      printf("Failed to write data file.\n");
+      scc_log(LOG_ERR,"Failed to write data file.\n");
       return 6;
     }
     scc_fd_close(fd);
@@ -1404,14 +1405,14 @@ int main(int argc,char** argv) {
       sprintf(name,"%s.000",out_file);
     else
       sprintf(name,"scummc.000");
-    printf("Outputing index file %s\n",name);
+    scc_log(LOG_V,"Outputing index file %s\n",name);
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
     if(!fd) {
-      printf("Failed to open file %s\n",name);
+      scc_log(LOG_ERR,"Failed to open file %s\n",name);
       return 5;
     }
     if(!scc_ld_write_idx(scc_room,fd,max_local,max_array,max_flobj,max_inventory)) {
-      printf("Failed to write index file.\n");
+      scc_log(LOG_ERR,"Failed to write index file.\n");
       return 6;
     }
     scc_fd_close(fd);
