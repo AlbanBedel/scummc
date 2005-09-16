@@ -685,7 +685,8 @@ resdecl: RESTYPE SYM location ASSIGN STRING
 
   r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
   // then we need to add that to the roobj
-  scc_roobj_add_res(sccp->roobj,r,$5);
+  if(!scc_roobj_add_res(sccp->roobj,r,$5) && !sccp->do_deps)
+    SCC_ABORT(@2,"Failed to declare %s.\n",$2);
   if(sccp->do_deps) scc_parser_add_dep(sccp,$5);
   
   if(!r->rid) scc_ns_get_rid(sccp->ns,r);
@@ -700,7 +701,8 @@ resdecl: RESTYPE SYM location ASSIGN STRING
 
   r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
   // then we need to add that to the roobj
-  scc_roobj_add_res(sccp->roobj,r,$6);
+  if(!scc_roobj_add_res(sccp->roobj,r,$6) && !sccp->do_deps)
+    SCC_ABORT(@3,"Failed to declare %s.\n",$3);
   if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 
   if(!r->rid) scc_ns_get_rid(sccp->ns,r);
