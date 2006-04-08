@@ -29,6 +29,7 @@
 
 #include "scc_fd.h"
 #include "scc_util.h"
+#include "scc_cost.h"
 #include "scc.h"
 #include "scc_param.h"
 

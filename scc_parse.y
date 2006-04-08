@@ -36,6 +36,7 @@
 #include "scc_parse.h"
 #include "scc_ns.h"
 #include "scc_img.h"
+#include "scc_cost.h"
 #include "scc.h"
 #include "scc_roobj.h"
 #include "scc_code.h"

@@ -27,7 +27,6 @@
 
 #include "scc_fd.h"
 #include "scc_util.h"
-#include "scc.h"
 
 static int compute_shr(uint8_t* src,int src_stride,
 		       int width,int height) {

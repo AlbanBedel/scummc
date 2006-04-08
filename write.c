@@ -31,6 +31,7 @@
 
 #include "scc_fd.h"
 #include "scc_util.h"
+#include "scc_cost.h"
 #include "scc.h"
 
 int scc_res_list_size(scc_res_list_t* list) {

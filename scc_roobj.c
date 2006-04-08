@@ -36,6 +36,8 @@
 
 #include "scc_img.h"
 
+#include "scc_cost.h"
+#include "scc_codec.h"
 #include "scc.h"
 #include "scc_roobj.h"
 #include "scc_code.h"

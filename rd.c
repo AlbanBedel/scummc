@@ -30,7 +30,27 @@
 
 #include "scc_fd.h"
 #include "scc_util.h"
+#include "scc_cost.h"
+#include "scc_codec.h"
 #include "scc.h"
+
+int scc_image_2_rgb(uint8_t* dst,int dst_stride,
+		    uint8_t* src, int src_stride,
+		    int width,int height,
+		    scc_pal_t* pal) {
+  int r,c;
+
+  for(r = 0 ; r < height ; r++) {
+    for(c = 0 ; c < width ; c++) {
+      dst[3*c+0] = pal->r[src[c]];
+      dst[3*c+1] = pal->g[src[c]];
+      dst[3*c+2] = pal->b[src[c]];
+    }
+    src += src_stride;
+    dst += dst_stride;
+  }
+  return 1;
+}
 
 
 int main(int argc,char** argv) {

@@ -184,56 +184,6 @@ typedef struct scc_room {
   scc_data_t *scal;           // SCAL
 } scc_room_t;
 
-typedef struct scc_cost_pic scc_cost_pic_t;
-struct scc_cost_pic {
-  scc_cost_pic_t* next;
-
-  uint8_t id;
-
-  uint16_t width,height;
-  int16_t rel_x,rel_y;
-  int16_t move_x,move_y;
-  uint8_t redir_limb,redir_pic;
-  uint8_t* data;
-  uint32_t data_size;
-};
-
-#define SCC_COST_ANIM_LOOP 0x1
-#define SCC_COST_HAS_SIZE 0x1
-
-typedef struct scc_cost_anim_def {
-  uint16_t start;
-  uint16_t end;
-  uint8_t flags;
-} scc_cost_anim_def_t;
-
-typedef struct scc_cost_anim scc_cost_anim_t;
-struct scc_cost_anim {
-  scc_cost_anim_t* next;
-
-  uint8_t id;
-  uint8_t redir;
-  uint16_t mask;
-  scc_cost_anim_def_t limb[16];
-};
-
-
-
-typedef struct scc_cost scc_cost_t;
-struct scc_cost {
-  scc_cost_t* next;
-
-  uint8_t format;
-  uint8_t flags;
-  uint8_t pal_size;
-  uint8_t* pal;
-  uint16_t cmds_size;
-  uint8_t* cmds; // finish with 0xFF
-  
-  scc_cost_pic_t* limb_pic[16];
-
-  scc_cost_anim_t* anims;
-};
 
 typedef struct scc_lfl scc_lfl_t;
 struct scc_lfl {
@@ -345,43 +295,4 @@ scc_boxd_t* scc_parse_boxd(scc_fd_t* fd,int len);
 scc_cost_t* scc_parse_cost(scc_fd_t* fd,int len);
 
 
-// code.c
 
-// create an smap out from a bitmap. It simply try every codec for each
-// stripe and take the best one. Note that in the doot data at least some
-// room aren't using the best encoding.
-int scc_code_image(uint8_t* src, int src_stride,
-		   int width,int height,int transparentColor,
-		   uint8_t** smap_p);
-
-int scc_code_zbuf(uint8_t* src, int src_stride,
-		  int width,int height,
-		  uint8_t** smap_p);
-
-
-// decode.c
-
-int scc_decode_image(uint8_t* dst, int dst_stride,
-		     int width,int height,
-		     uint8_t* smap,uint32_t smap_size,
-		     int transparentColor);
-
-int scc_decode_zbuf(uint8_t* dst, int dst_stride,
-		    int width,int height,
-		    uint8_t* zmap,uint32_t zmap_size,int or);
-
-// scc_cost.c
-
-scc_cost_anim_t* scc_cost_new_anim(scc_cost_t* cost,uint8_t id);
-
-int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic);
-
-int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
-			uint8_t* dst,int dst_stride, 
-			int x_min,int x_max,int y_min,int y_max,
-			int trans);
-
-int scc_read_cost_pic(scc_fd_t* fd,scc_cost_t* cost,scc_cost_pic_t* pic,int len,int* posp);
-
-scc_cost_pic_t* scc_cost_get_limb_pic(scc_cost_t* cost,uint8_t limb, 
-				      uint8_t pic,int max_depth);

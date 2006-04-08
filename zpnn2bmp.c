@@ -33,7 +33,7 @@
 #include "scc_util.h"
 
 #include "scc_param.h"
-#include "scc.h"
+#include "scc_codec.h"
 #include "scc_img.h"
 
 static int w = -1, h = -1;
