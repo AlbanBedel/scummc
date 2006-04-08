@@ -37,24 +37,7 @@
 #include "scc_fd.h"
 #include "scc_img.h"
 #include "scc_param.h"
-
-typedef struct scc_char_st {
-  uint8_t w,h;
-  int8_t  x,y;
-  uint8_t* data;
-} scc_char_t;
-
-
-#define SCC_MAX_CHAR 8192
-
-typedef struct scc_charmap_st {
-  uint8_t    pal[15];             // palette used
-  uint8_t    bpp;                 // bpp used for coding
-  uint8_t    height;              // font height
-  uint8_t    width;               // max width
-  uint16_t   max_char;            // index of the last good char
-  scc_char_t chars[SCC_MAX_CHAR];
-} scc_charmap_t;
+#include "scc_char.h"
 
 uint8_t default_pal[] = {
     0x00, 0x00, 0x00, // 0
@@ -340,12 +323,7 @@ scc_charmap_t* new_charmap_from_bitmap(char* path) {
 scc_charmap_t* charmap_from_char(char* path) {
     scc_fd_t* fd = new_scc_fd(path,O_RDONLY,0);
     uint32_t size,fmt;
-    uint32_t size2,unk,bpp,height,num_char;
-    uint8_t pal[15],byte,mask,bits,step;
-    off_t font_ptr;
-    uint32_t* char_off,x,i;
     scc_charmap_t* chmap;
-    scc_char_t *ch;
 
     if(!fd) {
         printf("Failed to open %s\n",path);
@@ -361,89 +339,8 @@ scc_charmap_t* charmap_from_char(char* path) {
         scc_fd_close(fd);
         return NULL;
     }
-
-    // read the charset header
-    size2 = scc_fd_r32le(fd);
-    if(size2 != size-8-15)
-        printf("Warning size2 is invalid: %d != %d\n",size2,size-8-15);
-    
-    unk = scc_fd_r16le(fd);
-    if(scc_fd_read(fd,pal,15) != 15) {
-        printf("Failed to read the palette.\n");
-        scc_fd_close(fd);
-        return NULL;
-    }
-    font_ptr = scc_fd_pos(fd);
-    bpp = scc_fd_r8(fd);
-    switch(bpp) {
-    case 1:
-        mask = 0x1;
-        break;
-    case 2:
-        mask = 0x3;
-        break;
-    case 4:
-        mask = 0xF;
-        break;
-    default:
-        printf("Invalid bpp: %d\n",bpp);
-        scc_fd_close(fd);
-        return NULL;
-    }
-    height = scc_fd_r8(fd);
-    if(!height) {
-        printf("Charset have 0 height ??\n");
-        scc_fd_close(fd);
-        return NULL;
-    }
-    num_char = scc_fd_r16le(fd);
-    if(!num_char) {
-        printf("Charset have no char ???\n");
-        scc_fd_close(fd);
-        return NULL;
-    }
-    if(size < 8 + 25 + 4*num_char) {
-        printf("Charset is too small.\n");
-        scc_fd_close(fd);
-        return NULL;
-    }
-    // read the offset table
-    char_off = malloc(num_char*4);
-    for(i = 0 ; i < num_char ; i++)
-        char_off[i] = scc_fd_r32le(fd);
-    
-    chmap = calloc(1,sizeof(scc_charmap_t));
-    chmap->bpp = bpp;
-    chmap->height = height;
-
-    // read the chars
-    printf("Reading %d chars\n",num_char);
-    for(i = 0 ; i < num_char ; i++) {
-        if(!char_off[i]) continue;
-        scc_fd_seek(fd,font_ptr + char_off[i],SEEK_SET);
-        ch = &chmap->chars[i];
-        ch->w = scc_fd_r8(fd);
-        ch->h = scc_fd_r8(fd);
-        ch->x = scc_fd_r8(fd);
-        ch->y = scc_fd_r8(fd);
-        if(ch->w + ch->x > chmap->width) chmap->width = ch->w + ch->x;
-        if(!ch->w || !ch->h) continue;
-        ch->data = malloc(ch->w*ch->h);
-        bits = 0;
-        step = 8/bpp;
-        x = 0;
-        while(x < ch->w*ch->h) {
-            if(!bits) {
-                byte = scc_fd_r8(fd);
-                bits = 8;
-            }
-            ch->data[x] = (byte >> (8-bpp)) & mask;
-            byte <<= bpp;
-            bits -= bpp;
-            x++;
-        }
-        chmap->max_char = i;
-    }
+    chmap = scc_parse_charmap(fd,size-8);
+    scc_fd_close(fd);
     return chmap;
 }
 

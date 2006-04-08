@@ -122,6 +122,7 @@ char_SRCS=                      \
 	scc_param.c             \
 	scc_img.c               \
 	scc_util.c              \
+	scc_char.c              \
 
 char_OPT_LIBS=                  \
 	FT                      \
