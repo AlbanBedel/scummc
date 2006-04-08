@@ -17,3 +17,4 @@ typedef struct scc_charmap_st {
   scc_char_t chars[SCC_MAX_CHAR];
 } scc_charmap_t;
 
+scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size);

@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "scc_util.h"
 #include "scc_fd.h"
