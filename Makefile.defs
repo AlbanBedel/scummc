@@ -37,6 +37,7 @@ PROGS=                          \
 	char                    \
 	soun                    \
 	costview                \
+	scvm                    \
 
 UTILS=                          \
 	zpnn2bmp                \
@@ -146,6 +147,18 @@ costview_SRCS=                  \
 
 costview_LIBS=                  \
 	GTK                     \
+
+scvm_SRCS=                      \
+	scvm.c                  \
+	scvm_res.c              \
+	scvm_thread.c           \
+	scvm_op.c               \
+	scc_fd.c                \
+	scc_util.c              \
+	scc_param.c             \
+	scc_cost.c              \
+	scc_char.c              \
+	decode.c                \
 
 ## Utils
 
