@@ -109,6 +109,8 @@ typedef struct scvm_actor {
 
 #define SCVM_VIEW_SHAKE 1
 
+#define SCVM_VIEW_PALETTE_CHANGED (1<<16)
+
 typedef struct scvm_view {
   // room position on the screen
   int room_start,room_end;
@@ -118,6 +120,10 @@ typedef struct scvm_view {
   // palette used with the current room
   scvm_palette_t palette;
 } scvm_view_t;
+
+int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
+                   uint8_t* buffer, int stride,
+                   unsigned width, unsigned height);
 
 // variables used for communication between the scripts
 // and the VM.

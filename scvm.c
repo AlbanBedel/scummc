@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <SDL/SDL.h>
+
 #include "scc_fd.h"
 #include "scc_util.h"
 #include "scc_param.h"
@@ -346,6 +348,11 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         // load room
         if(!room) return SCVM_ERR_BAD_RESOURCE;
         // cleanup the old room
+        // copy the room palette
+        if(room->num_palette > 0) {
+          memcpy(vm->view->palette,room->palette[0],sizeof(scvm_palette_t));
+          vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
+        }
         vm->room = room;
         vm->state = SCVM_RUN_ENCD;
       }
@@ -370,6 +377,17 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
   return 0;    
 }
 
+static void sdl_scvm_update_palette(SDL_Surface* screen, scvm_palette_t pal) {
+  SDL_Color colors[256];
+  int i;
+  for(i = 0 ; i < 256 ; i++) {
+    colors[i].r = pal[i].r;
+    colors[i].g = pal[i].g;
+    colors[i].b = pal[i].b;
+  }
+  SDL_SetPalette(screen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+}
+
 static char* basedir = NULL;
 static int file_key = 0;
 
@@ -383,7 +401,8 @@ static scc_param_t scc_parse_params[] = {
 int main(int argc,char** argv) {
   scvm_t* vm;
   scc_cl_arg_t* files;
-  int r;
+  int r,n;
+  SDL_Surface* screen;
   
   if(argc < 2) {
     scc_log(LOG_ERR,"Usage: scvm [-dir dir] [-key nn] basename\n");
@@ -400,20 +419,48 @@ int main(int argc,char** argv) {
     return 1;
   }
   scc_log(LOG_MSG,"VM created.\n");
+
+  if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0) {
+    scc_log(LOG_ERR,"SDL init failed.\n");
+    return 1;
+  }
+  
+  screen = SDL_SetVideoMode(320,200,8,SDL_HWPALETTE);
+  if(!screen) {
+    scc_log(LOG_ERR,"Failed to create SDL screen.\n");
+    return 1;
+  }
+  
+  
   
   if((r=scvm_start_script(vm,0,1,NULL)) < 0) {
     scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_error[-r]);
     return 1;
   }
-  r = scvm_run_threads(vm,10);
-  if(r < 0) {
-    if(vm->current_thread)
-      scc_log(LOG_MSG,"Failed to run boot script: %s @ %03d:0x%04X\n",
-              scvm_error[-r],vm->current_thread->script->id,
-              vm->current_thread->op_start);
-    else
-      scc_log(LOG_MSG,"Failed to run boot script: %s\n",scvm_error[-r]);
-    return 1;
+  // only run some cycles for now
+  for(n = 0 ; n < 100 ; n++) {
+    r = scvm_run_threads(vm,1);
+    if(r < 0) {
+      if(vm->current_thread)
+        scc_log(LOG_MSG,"Script error: %s @ %03d:0x%04X\n",
+                scvm_error[-r],vm->current_thread->script->id,
+                vm->current_thread->op_start);
+      else
+        scc_log(LOG_MSG,"Script error: %s\n",scvm_error[-r]);
+      return 1;
+    }
+    
+    if(vm->view->flags & SCVM_VIEW_PALETTE_CHANGED) {
+      sdl_scvm_update_palette(screen,vm->view->palette);
+      vm->view->flags &= ~SCVM_VIEW_PALETTE_CHANGED;
+    }
+    
+    if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
+    scvm_view_draw(vm,vm->view,screen->pixels,screen->pitch,
+                   screen->w,screen->h);
+    if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
+    SDL_Flip(screen);
+    SDL_Delay(100);
   }
   
   return 0;

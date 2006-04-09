@@ -153,12 +153,16 @@ scvm_SRCS=                      \
 	scvm_res.c              \
 	scvm_thread.c           \
 	scvm_op.c               \
+	scvm_view.c             \
 	scc_fd.c                \
 	scc_util.c              \
 	scc_param.c             \
 	scc_cost.c              \
 	scc_char.c              \
 	decode.c                \
+
+scvm_LIBS=                      \
+	SDL                     \
 
 ## Utils
 
@@ -208,6 +212,7 @@ raw2voc_SRCS=                   \
 LIBS =                          \
 	GTK                     \
 	FT                      \
+	SDL                     \
 
 ## Source needing gtk
 GTK_SRCS =                      \
@@ -218,3 +223,5 @@ GTK_SRCS =                      \
 FT_SRCS =                       \
 	char.c                  \
 
+SDL_SRCS =                      \
+	scvm.c                  \
