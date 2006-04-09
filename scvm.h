@@ -270,16 +270,20 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 
 // VM states
 
-#define SCVM_START_SCRIPT 1
-#define SCVM_RUNNING      2
+#define SCVM_BEGIN_CYCLE      10
+#define SCVM_RUNNING          20
 
-#define SCVM_OPEN_ROOM    3
-#define SCVM_RUN_EXCD     4
-#define SCVM_SETUP_ROOM   5
-#define SCVM_RUN_ENCD     6
-#define SCVM_OPENED_ROOM  7
+#define SCVM_START_SCRIPT     100
 
-#define SCVM_BEGIN_CYCLE  10
+#define SCVM_OPEN_ROOM        200
+#define SCVM_RUN_PRE_EXIT     210
+#define SCVM_RUN_EXCD         220
+#define SCVM_RUN_POST_EXIT    230
+#define SCVM_SETUP_ROOM       240
+#define SCVM_RUN_PRE_ENTRY    250
+#define SCVM_RUN_ENCD         260
+#define SCVM_RUN_POST_ENTRY   270
+#define SCVM_OPENED_ROOM      280
 
 struct scvm {
   // variables

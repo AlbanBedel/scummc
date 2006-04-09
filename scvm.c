@@ -272,6 +272,13 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   return vm;
 }
 
+static void scvm_switch_to_thread(scvm_t* vm,unsigned thid, unsigned next_state) {
+  vm->current_thread->state = SCVM_THREAD_PENDED;
+  vm->thread[thid].parent = vm->current_thread;
+  vm->thread[thid].next_state = next_state;
+  vm->current_thread = &vm->thread[thid];
+  vm->state = SCVM_RUNNING;
+}
 
 int scvm_run_threads(scvm_t* vm,unsigned cycles) {
   int i=0,r;
@@ -361,15 +368,27 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       break;
       
     case SCVM_OPEN_ROOM:
+    case SCVM_RUN_PRE_EXIT:
+      if(vm->var->pre_exit_script) {
+        if((r = scvm_start_script(vm,0,vm->var->pre_exit_script,NULL)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,SCVM_RUN_EXCD);
+        break;
+      }
+      vm->state = SCVM_RUN_EXCD;
     case SCVM_RUN_EXCD:
       if(vm->room && vm->room->exit) {
         if((r = scvm_start_thread(vm,vm->room->exit,0,0,NULL)) < 0)
           return r;
-        vm->current_thread->state = SCVM_THREAD_PENDED;
-        vm->thread[r].parent = vm->current_thread;
-        vm->thread[r].next_state = SCVM_SETUP_ROOM;
-        vm->current_thread = &vm->thread[r];
-        vm->state = SCVM_RUNNING;
+        scvm_switch_to_thread(vm,r,SCVM_RUN_POST_EXIT);
+        break;
+      }
+      vm->state = SCVM_RUN_POST_EXIT;
+    case SCVM_RUN_POST_EXIT:
+      if(vm->var->post_exit_script) {
+        if((r = scvm_start_script(vm,0,vm->var->post_exit_script,NULL)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,SCVM_SETUP_ROOM);
         break;
       }
       vm->state = SCVM_SETUP_ROOM;
@@ -388,17 +407,31 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
           vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
         }
         vm->room = room;
-        vm->state = SCVM_RUN_ENCD;
+        vm->state = SCVM_RUN_PRE_ENTRY;
       }
+    case SCVM_RUN_PRE_ENTRY:
+      if(vm->var->pre_entry_script) {
+        if((r = scvm_start_script(vm,0,vm->var->pre_entry_script,NULL)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,SCVM_RUN_ENCD);
+        break;
+      }
+      vm->state = SCVM_RUN_ENCD;
     case SCVM_RUN_ENCD:
       if(vm->room->entry) {
         if((r = scvm_start_thread(vm,vm->room->exit,0,0,NULL)) < 0)
           return r;
-        vm->current_thread->state = SCVM_THREAD_PENDED;
-        vm->thread[r].parent = vm->current_thread;
-        //vm->thread[r].next_state = SCVM_RUNNING;
-        vm->current_thread = &vm->thread[r];
+        scvm_switch_to_thread(vm,r,SCVM_RUN_POST_ENTRY);
+        break;
       }
+      vm->state = SCVM_RUN_POST_ENTRY;
+    case SCVM_RUN_POST_ENTRY:
+      if(vm->var->post_exit_script) {
+        if((r = scvm_start_script(vm,0,vm->var->post_exit_script,NULL)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,0);
+        break;
+      }      
       vm->state = SCVM_RUNNING;
       break;
       
