@@ -53,6 +53,8 @@ static char* scvm_error[0x100] = {
   "bad VM state",
   "bad actor",
   "bad costume",
+  "override overflow",
+  "override underflow",
   NULL
 };
 

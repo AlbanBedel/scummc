@@ -210,3 +210,5 @@ struct scvm {
 #define SCVM_ERR_BAD_STATE       -13
 #define SCVM_ERR_BAD_ACTOR       -14
 #define SCVM_ERR_BAD_COSTUME     -15
+#define SCVM_ERR_OVERRIDE_OVERFLOW  -16
+#define SCVM_ERR_OVERRIDE_UNDERFLOW -17

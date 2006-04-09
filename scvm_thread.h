@@ -34,6 +34,8 @@ typedef struct scvm_script {
 #define SCVM_THREAD_NO_FREEZE 1
 #define SCVM_THREAD_RECURSIVE 2
 
+#define SCVM_MAX_OVERRIDE 8
+
 typedef struct scvm_thread scvm_thread_t;
 
 struct scvm_thread {
@@ -55,6 +57,9 @@ struct scvm_thread {
   // thread variables
   unsigned num_var;
   int *var;
+  // override stack
+  unsigned override_ptr;
+  unsigned override[SCVM_MAX_OVERRIDE];
 };
 
 typedef int (*scvm_op_f)(struct scvm* vm, scvm_thread_t* thread);

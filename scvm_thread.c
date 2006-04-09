@@ -80,6 +80,20 @@ int scvm_thread_strlen(scvm_thread_t* thread,unsigned *ret) {
   return 0;
 }
 
+int scvm_thread_begin_override(scvm_t* vm, scvm_thread_t* thread) {
+  if(thread->override_ptr >= SCVM_MAX_OVERRIDE)
+    return SCVM_ERR_OVERRIDE_OVERFLOW;
+  thread->override[thread->override_ptr] = thread->code_ptr;
+  thread->override_ptr++;
+  return 0;
+}
+
+int scvm_thread_end_override(scvm_t* vm, scvm_thread_t* thread) {
+  if(thread->override_ptr < 1)
+    return SCVM_ERR_OVERRIDE_UNDERFLOW;
+  thread->override_ptr--;
+  return 0;
+}
 
 int scvm_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
   thread->state = SCVM_THREAD_STOPPED;
