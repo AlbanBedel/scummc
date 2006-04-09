@@ -46,6 +46,8 @@ struct scvm_thread {
   scvm_thread_t* parent;
   unsigned flags;
   unsigned cycle;
+  // delay left in ticks
+  unsigned delay;
   // script beeing run
   scvm_script_t* script;
   // position in the code

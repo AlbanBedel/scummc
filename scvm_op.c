@@ -618,6 +618,12 @@ static int scvm_op_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x6C
+static int scvm_op_break_script(scvm_t* vm, scvm_thread_t* thread) {
+  thread->cycle = vm->cycle+1;
+  return 0;
+}
+
 // 0x73
 static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
   int r,ptr;
@@ -813,6 +819,36 @@ static int scvm_op_sound_kludge(scvm_t* vm, scvm_thread_t* thread) {
   return r;
 }
 
+// 0xB0
+static int scvm_op_delay(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned d;
+  if((r=scvm_pop(vm,&d))) return r;
+  thread->delay = d;
+  thread->state = SCVM_THREAD_DELAYED;
+  return 0;
+}
+
+// 0xB1
+static int scvm_op_delay_seconds(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned d;
+  if((r=scvm_pop(vm,&d))) return r;
+  thread->delay = d*60;
+  thread->state = SCVM_THREAD_DELAYED;
+  return 0;
+}
+
+// 0xB2
+static int scvm_op_delay_minutes(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned d;
+  if((r=scvm_pop(vm,&d))) return r;
+  thread->delay = d*3600;
+  thread->state = SCVM_THREAD_DELAYED;
+  return 0;
+}
+
 // 0xBC
 static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
   int r,addr;
@@ -850,6 +886,15 @@ static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
   }
   if(addr < 0) return addr;
   return scvm_thread_write_var(vm,thread,vaddr,addr);
+}
+
+// 0xCA
+static int scvm_op_break_script_n_times(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned n;
+  if((r=scvm_pop(vm,&n))) return r;
+  thread->cycle = vm->cycle+n;
+  return 0;
 }
 
 static int scvm_op_dummy(scvm_t* vm, scvm_thread_t* thread) {
@@ -1073,7 +1118,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_subop, "interface op" },
   // 6C
-  { NULL, NULL },
+  { scvm_op_break_script, "break script" },
   { NULL, NULL },
   { NULL, NULL },
   { scvm_op_dummy_v, "set object state" },
@@ -1158,9 +1203,9 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // B0
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_delay, "delay" },
+  { scvm_op_delay_seconds, "delay seconds" },
+  { scvm_op_delay_minutes, "delay minutes"  },
   { NULL, NULL },
   // B4
   { scvm_op_dummy_print, "print" },
@@ -1190,7 +1235,7 @@ scvm_op_t scvm_optable[0x100] = {
   // C8
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_break_script_n_times, "break script n times" },
   { NULL, NULL },
   // CC
   { NULL, NULL },
