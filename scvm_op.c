@@ -645,6 +645,24 @@ static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_OPEN_ROOM;
 }
 
+// 0x95
+static int scvm_op_begin_override(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  // there should be a jump there
+  if(thread->code_ptr + 3 >= thread->script->size)
+    return SCVM_ERR_SCRIPT_BOUND;
+  if((r=scvm_thread_begin_override(vm,thread)))
+    return r;
+  // skip the jump
+  thread->code_ptr += 3;
+  return 0;
+}
+
+// 0x96
+static int scvm_op_end_override(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_thread_end_override(vm,thread);
+}
+
 // 0x9B
 static int scvm_op_resource(scvm_t* vm, scvm_thread_t* thread) {
   int r,res;
@@ -1169,8 +1187,8 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   // 94
   { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_begin_override, "begin override" },
+  { scvm_op_end_override, "end override" },
   { NULL, NULL },
   // 98
   { NULL, NULL },

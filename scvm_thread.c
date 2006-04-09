@@ -85,6 +85,7 @@ int scvm_thread_begin_override(scvm_t* vm, scvm_thread_t* thread) {
     return SCVM_ERR_OVERRIDE_OVERFLOW;
   thread->override[thread->override_ptr] = thread->code_ptr;
   thread->override_ptr++;
+  vm->var->override = 0;
   return 0;
 }
 
@@ -92,6 +93,7 @@ int scvm_thread_end_override(scvm_t* vm, scvm_thread_t* thread) {
   if(thread->override_ptr < 1)
     return SCVM_ERR_OVERRIDE_UNDERFLOW;
   thread->override_ptr--;
+  vm->var->override = 0;
   return 0;
 }
 
