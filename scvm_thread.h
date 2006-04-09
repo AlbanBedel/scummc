@@ -54,6 +54,8 @@ struct scvm_thread {
   scvm_script_t* script;
   // position in the code
   unsigned code_ptr;
+  // code_ptr is saved here when a new op is started
+  unsigned op_start;
   // thread variables
   unsigned num_var;
   int *var;

@@ -400,13 +400,12 @@ int main(int argc,char** argv) {
   }
   r = scvm_run_threads(vm,1);
   if(r < 0) {
-    scc_log(LOG_MSG,"Failed to run boot script: %s\n",scvm_error[-r]);
-    if(r == SCVM_ERR_NO_OP &&
-       vm->current_thread &&
-       vm->current_thread->code_ptr > 0)
-      scc_log(LOG_MSG,"Last op: 0x%x @ %x\n",
-              vm->current_thread->script->code[vm->current_thread->code_ptr-1],
-              vm->current_thread->code_ptr-1);
+    if(vm->current_thread)
+      scc_log(LOG_MSG,"Failed to run boot script: %s @ %03d:0x%04X\n",
+              scvm_error[-r],vm->current_thread->script->id,
+              vm->current_thread->op_start);
+    else
+      scc_log(LOG_MSG,"Failed to run boot script: %s\n",scvm_error[-r]);
     return 1;
   }
   

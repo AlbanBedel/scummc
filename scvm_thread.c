@@ -186,6 +186,7 @@ int scvm_thread_run(scvm_t* vm, scvm_thread_t* thread) {
   int r=0;
   while(thread->state == SCVM_THREAD_RUNNING &&
         thread->cycle <= vm->cycle) {
+    thread->op_start = thread->code_ptr;
     r = scvm_thread_do_op(vm,thread,vm->optable);
     if(r < 0) return r;
     if(r > 0) break;
