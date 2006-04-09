@@ -30,6 +30,7 @@ config_date=`date`
 debug=yes
 gtk=yes
 ft=yes
+sdl=yes
 
 ##
 ## Override head and tail
@@ -104,6 +105,9 @@ while [ -n "$1" ] ; do
 	    ;;
 	--disable-freetype)
 	    ft=no
+	    ;;
+	--disable-sdl)
+	    sdl=no
 	    ;;
 	--cflags)
 	    CFLAGS=$2
@@ -199,9 +203,11 @@ Usage: $0 [OPTIONS]...
 
   --disable-gtk             disable gtk
   --disable-freetype        disable freetype
+  --disable-sdl             disable SDL
 
   --pkg-config PKGCONFIG    use this pkg-config
   --pkg-config-libdir DIR   set \$PKG_CONFIG_LIBDIR, useful for cross compile
+  --sdl-config SDL_CONFIG   use this sdl-config
 
   --set-default-target TRG  change the default make target
   --reconfigure OPTS        re-run this script with the last arguments.
@@ -660,6 +666,30 @@ else
 fi
 
 ##
+## SDL
+##
+
+[ -z "$SDL_CONFIG" ] && SDL_CONFIG=sdl-config
+
+sdl_def='#undef HAVE_SDL'
+if [ "$sdl" != "no" ] ; then
+    sdl=no
+    sdlver=`( $SDL_CONFIG --version ) 2> /dev/null`
+    if [ $? -eq 0 ] ; then
+	sdl=yes
+	sdl_def='#define HAVE_SDL 1'
+	sdl_cflags=`$SDL_CONFIG --cflags`
+	sdl_ldflags=`$SDL_CONFIG --libs`
+	echo "SDL: yes ($sdlver)"
+    else
+	echo "SDL: no"
+    fi
+else
+    echo "SDL: disabled"
+fi
+
+
+##
 ## Write out the whole config
 ##
 
@@ -697,13 +727,17 @@ HAVE_FT=$ft
 FT_CFLAGS=$ft_cflags
 FT_LDFLAGS=$ft_ldflags
 
+HAVE_SDL=$sdl
+SDL_CFLAGS=$sdl_cflags
+SDL_LDFLAGS=$sdl_ldflags
+
 EOF
 
 echo "Writing $BUILDDIR/config.h"
 cat > "$BUILDDIR/config.h" <<EOF
-// ScummC $BUILDDIR/config.h
-// This file is generated, don't edit.
-// $config_date
+//# ScummC $BUILDDIR/config.h
+//# This file is generated, don't edit.
+//# $config_date
 
 // Target system
 $sys_def
@@ -720,6 +754,9 @@ $gtk_def
 
 // Freetype
 $ft_def
+
+// SDL
+$sdl_def
 
 EOF
 
