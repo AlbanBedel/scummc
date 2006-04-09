@@ -102,6 +102,18 @@ int scvm_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+int scvm_is_script_running(scvm_t* vm, unsigned id) {
+  int i;
+  for(i = 0 ; i < vm->num_thread ; i++) {
+    if(vm->thread[i].state == SCVM_THREAD_STOPPED ||
+       !vm->thread[i].script ||
+       vm->thread[i].script->id != id)
+      continue;
+    return 1;
+  }
+  return 0;
+}
+
 int scvm_stop_script(scvm_t* vm, unsigned id) {
   int i,n=0;
   for(i = 0 ; i < vm->num_thread ; i++) {

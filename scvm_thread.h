@@ -95,3 +95,5 @@ int scvm_thread_run(scvm_t* vm, scvm_thread_t* thread);
 int scvm_start_script(scvm_t* vm, unsigned flags, unsigned num, unsigned* args);
 
 int scvm_stop_script(scvm_t* vm, unsigned id);
+
+int scvm_is_script_running(scvm_t* vm, unsigned id);

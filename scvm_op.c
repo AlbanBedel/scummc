@@ -645,6 +645,14 @@ static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_OPEN_ROOM;
 }
 
+// 0x8B
+static int scvm_op_is_script_running(scvm_t* vm, scvm_thread_t* thread) {
+  int r,id;
+  if((r=scvm_pop(vm,&id))) return r;
+  r = scvm_is_script_running(vm,id);
+  return scvm_push(vm,r);
+}
+
 // 0x95
 static int scvm_op_begin_override(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -1174,7 +1182,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_is_script_running, "is script running" },
   // 8C
   { NULL, NULL },
   { NULL, NULL },
