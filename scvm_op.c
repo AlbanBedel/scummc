@@ -85,7 +85,7 @@ int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
     if(addr < 0x100 && vm->get_var[addr])
       *val = vm->get_var[addr](vm,addr);
     else
-      *val = vm->var[addr];
+      *val = vm->var_mem[addr];
   }
   return 0;
 }
@@ -108,7 +108,7 @@ int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
     if(addr < 0x100 && vm->set_var[addr])
       vm->set_var[addr](vm,addr,val);
     else
-      vm->var[addr] = val;
+      vm->var_mem[addr] = val;
   }
   return 0;
 }

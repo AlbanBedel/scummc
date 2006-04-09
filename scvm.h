@@ -36,7 +36,7 @@ typedef struct scvm_array {
 
 typedef struct scvm_color {
   uint8_t r,g,b;
-} __attribute__ ((__packed__)) scvm_color_t;
+} PACKED_ATTRIB scvm_color_t;
 
 typedef scvm_color_t scvm_palette_t[256];
 
@@ -119,6 +119,136 @@ typedef struct scvm_view {
   scvm_palette_t palette;
 } scvm_view_t;
 
+// variables used for communication between the scripts
+// and the VM.
+typedef struct scvm_vars {
+  // 000
+  int keypress;
+  int ego;
+  int camera_pos_x;
+  int have_msg;
+  int room;
+  int override;
+  int machine_speed;
+  int me;
+  int num_actor;
+  int sound_mode;
+  // 010
+  int current_drive;
+  int timer1;
+  int timer2;
+  int timer3;
+  int music_timer;
+  int actor_range_min;
+  int actor_range_max;
+  int camera_min_x;
+  int camera_max_x;
+  int timer_next;
+  // 020
+  int virtual_mouse_x;
+  int virtual_mouse_y;
+  int room_resource;
+  int last_sound;
+  int cutscene_exit_key;
+  int talk_actor;
+  int camera_fast_x;
+  int camera_script;
+  int pre_entry_script;
+  int post_entry_script;
+  // 030
+  int pre_exit_script;
+  int post_exit_script;
+  int verb_script;
+  int sentence_script;
+  int inventory_script;
+  int cutscene_start_script;
+  int cutscene_end_script;
+  int charinc;
+  int walk_to_object;
+  int debug_mode;
+  // 040
+  int heap_space;
+  int room_width;
+  int restart_key;
+  int pause_key;
+  int mouse_x;
+  int mouse_y;
+  int timer;
+  int timer4;
+  int soundcard;
+  int videomode;
+  // 050
+  int mainmenu_key;
+  int fixed_disk;
+  int cursor_state;
+  int userput;
+  int room_height;
+  int unknown1;
+  int sound_result;
+  int talk_stop_key;
+  int unknown2;
+  int fade_delay;
+  // 060
+  int no_subtitles;
+  int gui_entry_script;
+  int gui_exit_script;
+  int unknown3;
+  int sound_param[3];
+  int mouse_present;
+  int memory_performance;
+  int video_performance;
+  // 070
+  int room_flag;
+  int game_loaded;
+  int new_room;
+  int unknown4;
+  int left_button_hold;
+  int right_button_hold;
+  int ems_space;
+  int unknown5[13];
+  // 090
+  int game_disk_msg;
+  int open_failed_msg;
+  int read_error_msg;
+  int pause_msg;
+  int restart_msg;
+  int quit_msg;
+  int save_button;
+  int load_button;
+  int play_button;
+  int cancel_button;
+  // 100
+  int quit_button;
+  int ok_button;
+  int save_disk_msg;
+  int enter_name_msg;
+  int not_saved_msg;
+  int not_loaded_msg;
+  int save_msg;
+  int load_msg;
+  int save_menu_title;
+  int load_menu_title;
+  // 110
+  int gui_colors;
+  int debug_password;
+  int unknown6[5];
+  int main_menu_title;
+  int random_num;
+  int timedate_year;
+  // 120
+  int unknown7[2];
+  int game_version;
+  int charset_mask;
+  int unknown8;
+  int timedate_hour;
+  int timedate_minute;
+  int unknown9;
+  int timedate_day;
+  int timedate_month;
+  // 130
+  //int padding[126];
+} PACKED_ATTRIB scvm_vars_t;
+
 // Don't change the first 4 as they match the
 // v6 resouces opcodes.
 #define SCVM_RES_SCRIPT  0
@@ -146,7 +276,8 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 struct scvm {
   // variables
   unsigned num_var;
-  int *var;
+  int *var_mem;
+  scvm_vars_t* var;
   scvm_get_var_f get_var[0x100];
   scvm_set_var_f set_var[0x100];
   // bit variables

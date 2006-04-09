@@ -101,7 +101,8 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   vm = calloc(1,sizeof(scvm_t));
   // vars
   vm->num_var = scc_fd_r16le(fd);
-  vm->var = calloc(vm->num_var,sizeof(int));
+  vm->var_mem = calloc(vm->num_var,sizeof(int));
+  vm->var = (scvm_vars_t*)vm->var_mem;
   // unknown
   scc_fd_r16le(fd);
   // bit vars, don't be so stupid as the original vm, round up

@@ -141,8 +141,10 @@ int asprintf(char **strp, const char *fmt, ...);
 
 #ifdef __GNUC__
 #define PRINTF_ATTRIB(fmt,args) __attribute__ ((format (printf, fmt, args)))
+#define PACKED_ATTRIB __attribute__ ((__packed__))
 #else
 #define PRINTF_ATTRIB(fmt,args)
+#define PACKED_ATTRIB
 #endif
 
 scc_data_t* scc_data_load(char* path);
