@@ -653,6 +653,23 @@ static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_OPEN_ROOM;
 }
 
+// 0x87
+static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
+  int r,max;
+  if((r=scvm_pop(vm,&max))) return r;
+  vm->var->random_num = vm->random(vm,0,max);
+  return scvm_push(vm,vm->var->random_num);
+}
+
+// 0x88
+static int scvm_op_get_random_number_range(scvm_t* vm, scvm_thread_t* thread) {
+  int r,min,max;
+  if((r=scvm_pop(vm,&max)) ||
+     (r=scvm_pop(vm,&min))) return r;
+  vm->var->random_num = vm->random(vm,min,max);
+  return scvm_push(vm,vm->var->random_num);
+}
+
 // 0x8B
 static int scvm_op_is_script_running(scvm_t* vm, scvm_thread_t* thread) {
   int r,id;
@@ -1185,9 +1202,9 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_dummy_vv, "pickup object" },
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_get_random_number, "get random number" },
   // 88
-  { NULL, NULL },
+  { scvm_op_get_random_number_range, "get random number range" },
   { NULL, NULL },
   { NULL, NULL },
   { scvm_op_is_script_running, "is script running" },

@@ -63,6 +63,12 @@ static char* scvm_error[0x100] = {
 extern scvm_op_t scvm_optable[0x100];
 extern scvm_op_t scvm_suboptable[0x100];
 
+static int scvm_default_random(scvm_t* vm,int min,int max) {
+  int diff = max-min;
+  int r = (int)((diff+1.0)*rand()/(RAND_MAX+1.0));
+  return min+r;
+}
+
 scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   scc_fd_t* fd;
   scvm_t* vm;
@@ -258,7 +264,11 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   vm->stack = calloc(vm->stack_size,sizeof(int));
 
   // close fd
-  scvm_close_file(vm,0);  
+  scvm_close_file(vm,0);
+  
+  // set default system callbacks
+  vm->random = scvm_default_random;
+  
   return vm;
 }
 
@@ -312,11 +322,13 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         }
         vm->current_thread = &vm->thread[i];
       }
-      scc_log(LOG_MSG,"\n == VM enter thread %d / script %d ==\n",
-              vm->current_thread->id,vm->current_thread->script->id);
+      scc_log(LOG_MSG,"\n == VM enter thread %d / script %d @ 0x%x ==\n",
+              vm->current_thread->id,vm->current_thread->script->id,
+              vm->current_thread->code_ptr);
       r = scvm_thread_run(vm,vm->current_thread);
-      scc_log(LOG_MSG," == VM leave thread %d / script %d ==\n\n",
-              vm->current_thread->id,vm->current_thread->script->id);
+      scc_log(LOG_MSG," == VM leave thread %d / script %d @ 0x%x ==\n\n",
+              vm->current_thread->id,vm->current_thread->script->id,
+              vm->current_thread->code_ptr);
       if(r < 0) return r; // error
       if(r > 0) {         // switch state
         vm->state = r;

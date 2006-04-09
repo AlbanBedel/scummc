@@ -336,6 +336,7 @@ struct scvm {
   
   // system callback
   unsigned (*get_time)(scvm_t* vm);
+  int (*random)(scvm_t* vm,int min,int max);
 };
 
 #define SCVM_ERR_SCRIPT_BOUND    -1
