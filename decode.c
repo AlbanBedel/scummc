@@ -295,7 +295,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
   uint32_t decomp_shr,decomp_mask;
   int stripe_size;
 
-  printf("\nDecode image: %dx%d smap: %d\n",width,height,smap_size);
+  scc_log(LOG_V,"\nDecode image: %dx%d smap: %d\n",width,height,smap_size);
 
   for(i = 0 ; i < offs ; i++) {
     int o = ((uint32_t*)smap)[i]-8;
@@ -304,13 +304,13 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
     else
       stripe_size = smap_size-o;
     stripe_size -= 1;
-    //printf("Stripe %d: 0x%x\n",i,o);
+    //scc_log(LOG_V,"Stripe %d: 0x%x\n",i,o);
     type = smap[o];
-    printf("SMAP type: %d (0x%x)\n",type,type);
+    scc_log(LOG_V,"SMAP type: %d (0x%x)\n",type,type);
     decomp_shr = type % 10;
     decomp_mask = 0xFF >> (8 - decomp_shr);
 
-    printf("Decomp_shr: %d (0x%x)\n",decomp_shr,decomp_mask);
+    scc_log(LOG_V,"Decomp_shr: %d (0x%x)\n",decomp_shr,decomp_mask);
 
     switch(type) {
     case 14:
@@ -409,7 +409,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
       //check_coder(dst + i*8,dst_stride,&smap[o+1],stripe_size,height,unkCodeA,unkDecodeA);
       break;
     default:
-      printf("Unknow image coding: %d\n",type);
+      scc_log(LOG_ERR,"Unknow image coding: %d\n",type);
       break;
     }
   }
@@ -478,7 +478,7 @@ int scc_decode_zbuf(uint8_t* dst, int dst_stride,
   int i;
 
   if(width != stripes*8) {
-    printf("Can't decode zbuf if width %% 8 != 0 !!\n");
+    scc_log(LOG_V,"Can't decode zbuf if width %% 8 != 0 !!\n");
     return 0;
   }
 
