@@ -281,20 +281,26 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
           if(vm->thread[i].state == SCVM_THREAD_RUNNING &&
              vm->thread[i].cycle <= vm->cycle) break;
         if(i >= vm->num_thread) {
+          scc_log(LOG_MSG,"\n == VM finished cycle %d == \n\n",vm->cycle);
           cycles--;
           vm->cycle++;
           break;
         }
         vm->current_thread = &vm->thread[i];
       }
+      scc_log(LOG_MSG,"\n == VM enter thread %d / script %d ==\n",
+              vm->current_thread->id,vm->current_thread->script->id);
       r = scvm_thread_run(vm,vm->current_thread);
+      scc_log(LOG_MSG," == VM leave thread %d / script %d ==\n\n",
+              vm->current_thread->id,vm->current_thread->script->id);
       if(r < 0) return r; // error
       if(r > 0) {         // switch state
         vm->state = r;
         break;
       }
       // Done with this thread for this cycle
-      vm->current_thread->cycle = vm->cycle+1;
+      if(vm->current_thread->cycle <= vm->cycle)
+        vm->current_thread->cycle = vm->cycle+1;
       // Continue a job
       if(vm->current_thread->next_state) {
         vm->state = vm->current_thread->next_state;
@@ -399,7 +405,7 @@ int main(int argc,char** argv) {
     scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_error[-r]);
     return 1;
   }
-  r = scvm_run_threads(vm,1);
+  r = scvm_run_threads(vm,10);
   if(r < 0) {
     if(vm->current_thread)
       scc_log(LOG_MSG,"Failed to run boot script: %s @ %03d:0x%04X\n",
