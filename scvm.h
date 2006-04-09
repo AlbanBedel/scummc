@@ -279,6 +279,8 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 #define SCVM_RUN_ENCD     6
 #define SCVM_OPENED_ROOM  7
 
+#define SCVM_BEGIN_CYCLE  10
+
 struct scvm {
   // variables
   unsigned num_var;
@@ -325,11 +327,15 @@ struct scvm {
   scvm_thread_t *thread;
   scvm_op_t* optable;
   scvm_op_t* suboptable;
+  unsigned time;
 
   // stack
   unsigned stack_size;
   unsigned stack_ptr;
   int *stack;
+  
+  // system callback
+  unsigned (*get_time)(scvm_t* vm);
 };
 
 #define SCVM_ERR_SCRIPT_BOUND    -1

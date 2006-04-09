@@ -858,7 +858,7 @@ static int scvm_op_delay(scvm_t* vm, scvm_thread_t* thread) {
   int r;
   unsigned d;
   if((r=scvm_pop(vm,&d))) return r;
-  thread->delay = d;
+  thread->delay = d*16;
   thread->state = SCVM_THREAD_DELAYED;
   return 0;
 }
@@ -868,7 +868,7 @@ static int scvm_op_delay_seconds(scvm_t* vm, scvm_thread_t* thread) {
   int r;
   unsigned d;
   if((r=scvm_pop(vm,&d))) return r;
-  thread->delay = d*60;
+  thread->delay = d*1000;
   thread->state = SCVM_THREAD_DELAYED;
   return 0;
 }
@@ -878,7 +878,7 @@ static int scvm_op_delay_minutes(scvm_t* vm, scvm_thread_t* thread) {
   int r;
   unsigned d;
   if((r=scvm_pop(vm,&d))) return r;
-  thread->delay = d*3600;
+  thread->delay = d*60000;
   thread->state = SCVM_THREAD_DELAYED;
   return 0;
 }

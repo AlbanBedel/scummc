@@ -245,7 +245,7 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   vm->view = calloc(1,sizeof(scvm_view_t));
   
   // threads
-  vm->state = SCVM_RUNNING;
+  vm->state = SCVM_BEGIN_CYCLE;
   vm->num_thread = 16;
   vm->current_thread = NULL;
   vm->thread = calloc(vm->num_thread,sizeof(scvm_thread_t));
@@ -265,11 +265,32 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
 
 int scvm_run_threads(scvm_t* vm,unsigned cycles) {
   int i=0,r;
+  unsigned delta,now;
   scvm_thread_t* parent;
   
   while(cycles > 0) {
     scc_log(LOG_MSG,"VM run threads state: %d\n",vm->state);
     switch(vm->state) {
+    case SCVM_BEGIN_CYCLE:
+      // Reschedule the delayed threads
+      now = vm->get_time(vm);
+      if(now < vm->time) now = vm->time;
+      delta = now - vm->time;
+      for(i = 0 ; i < vm->num_thread ; i++) {
+        if(vm->thread[i].state != SCVM_THREAD_DELAYED) continue;
+        if(!(vm->thread[i].flags & SCVM_THREAD_DELAY))
+          vm->thread[i].flags |= SCVM_THREAD_DELAY;
+        else if(vm->thread[i].delay > delta)
+          vm->thread[i].delay -= delta;
+        else {
+          vm->thread[i].delay = 0;
+          vm->thread[i].flags &= ~SCVM_THREAD_DELAY;
+          vm->thread[i].state = SCVM_THREAD_RUNNING;
+        }
+      }
+      vm->state = SCVM_RUNNING;
+      vm->time = now;
+      break;
     case SCVM_START_SCRIPT:
       parent = vm->current_thread;
       vm->current_thread = vm->next_thread;
@@ -286,6 +307,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
           scc_log(LOG_MSG,"\n == VM finished cycle %d == \n\n",vm->cycle);
           cycles--;
           vm->cycle++;
+          vm->state = SCVM_BEGIN_CYCLE;
           break;
         }
         vm->current_thread = &vm->thread[i];
@@ -388,6 +410,10 @@ static void sdl_scvm_update_palette(SDL_Surface* screen, scvm_palette_t pal) {
   SDL_SetPalette(screen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
 }
 
+static unsigned sdl_scvm_get_time(scvm_t* vm) {
+  return SDL_GetTicks();
+}
+
 static char* basedir = NULL;
 static int file_key = 0;
 
@@ -413,6 +439,7 @@ int main(int argc,char** argv) {
   if(!files) return -1;
   
   vm = scvm_new(basedir,files->val,file_key);
+  vm->get_time = sdl_scvm_get_time;
   
   if(!vm) {
     scc_log(LOG_ERR,"Failed to create VM.\n");

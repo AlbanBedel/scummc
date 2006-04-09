@@ -34,6 +34,8 @@ typedef struct scvm_script {
 #define SCVM_THREAD_NO_FREEZE 1
 #define SCVM_THREAD_RECURSIVE 2
 
+#define SCVM_THREAD_DELAY (1<<16)
+
 #define SCVM_MAX_OVERRIDE 8
 
 typedef struct scvm_thread scvm_thread_t;
@@ -48,7 +50,7 @@ struct scvm_thread {
   scvm_thread_t* parent;
   unsigned flags;
   unsigned cycle;
-  // delay left in ticks
+  // delay left in ms
   unsigned delay;
   // script beeing run
   scvm_script_t* script;
