@@ -31,6 +31,7 @@
 #include "scc_fd.h"
 #include "scc_util.h"
 #include "scc_param.h"
+#include "scc_cost.h"
 #include "scvm_res.h"
 #include "scvm_thread.h"
 #include "scvm.h"
@@ -50,10 +51,13 @@ static char* scvm_error[0x100] = {
   "bad resource",
   "bad thread",
   "bad VM state",
+  "bad actor",
+  "bad costume",
   NULL
 };
 
 extern scvm_op_t scvm_optable[0x100];
+extern scvm_op_t scvm_suboptable[0x100];
 
 scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   scc_fd_t* fd;
@@ -227,6 +231,11 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   
   // arrays
 
+  // actors
+  vm->num_actor = 16;
+  vm->actor = calloc(vm->num_actor,sizeof(scvm_actor_t));
+  vm->current_actor = vm->actor;
+  
   // view
   vm->view = calloc(1,sizeof(scvm_view_t));
   
@@ -238,6 +247,7 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   for(i = 0 ; i < vm->num_thread ; i++)
     vm->thread[i].id = i;
   vm->optable = scvm_optable;
+  vm->suboptable = scvm_suboptable;
   // stack
   vm->stack_size = 1024;
   vm->stack = calloc(vm->stack_size,sizeof(int));
@@ -392,8 +402,9 @@ int main(int argc,char** argv) {
     if(r == SCVM_ERR_NO_OP &&
        vm->current_thread &&
        vm->current_thread->code_ptr > 0)
-      scc_log(LOG_MSG,"Last op: 0x%x\n",
-              vm->current_thread->script->code[vm->current_thread->code_ptr-1]);
+      scc_log(LOG_MSG,"Last op: 0x%x @ %x\n",
+              vm->current_thread->script->code[vm->current_thread->code_ptr-1],
+              vm->current_thread->code_ptr-1);
     return 1;
   }
   

@@ -77,6 +77,7 @@ struct scvm_object {
 
 
 typedef struct scvm_room {
+  unsigned id;
   // graphics
   unsigned width,height;  
   unsigned num_zplane;
@@ -95,6 +96,16 @@ typedef struct scvm_room {
   unsigned num_script;
   scvm_script_t** script;
 } scvm_room_t;
+
+typedef struct scvm_actor {
+  unsigned id;
+  char* name;
+  scc_cost_t* costume;
+  unsigned room;
+  int x,y;
+  unsigned direction;
+  unsigned flags;
+} scvm_actor_t;
 
 #define SCVM_VIEW_SHAKE 1
 
@@ -157,6 +168,11 @@ struct scvm {
   unsigned num_object, num_local_object;
   scvm_object_pdata_t* object_pdata;
   
+  // actors
+  unsigned num_actor;
+  scvm_actor_t* actor;
+  scvm_actor_t* current_actor;
+  
   // current room
   scvm_room_t* room;
   unsigned next_room;
@@ -171,6 +187,7 @@ struct scvm {
   scvm_thread_t* next_thread;
   scvm_thread_t *thread;
   scvm_op_t* optable;
+  scvm_op_t* suboptable;
 
   // stack
   unsigned stack_size;
@@ -191,4 +208,5 @@ struct scvm {
 #define SCVM_ERR_BAD_RESOURCE    -11
 #define SCVM_ERR_BAD_THREAD      -12
 #define SCVM_ERR_BAD_STATE       -13
-
+#define SCVM_ERR_BAD_ACTOR       -14
+#define SCVM_ERR_BAD_COSTUME     -15

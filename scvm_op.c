@@ -30,6 +30,7 @@
 
 #include "scc_fd.h"
 #include "scc_util.h"
+#include "scc_cost.h"
 #include "scvm_res.h"
 #include "scvm_thread.h"
 #include "scvm.h"
@@ -235,7 +236,7 @@ static int scvm_op_push_byte(scvm_t* vm, scvm_thread_t* thread) {
 // 0x01
 static int scvm_op_push_word(scvm_t* vm, scvm_thread_t* thread) {
   int r;
-  uint16_t word;
+  int16_t word;
   if((r=scvm_thread_r16(thread,&word))) return r;
   return scvm_push(vm,word);
 }
@@ -617,25 +618,18 @@ static int scvm_op_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
-// 0x6B
-static int scvm_op_interface(scvm_t* vm, scvm_thread_t* thread) {
-  int r,res;
-  uint8_t op;
-  
-  if((r=scvm_thread_r8(thread,&op))) return r;
-  // no args, just ignore atm
-  scc_log(LOG_MSG,"Cursor op 0x%x\n",op);
-  if(op >= 0x90 && op <= 0x97)
-    return 0;
-  switch(op) {
-  case 0x9C: // init charset
-    if((r=scvm_pop(vm,&res))) return r;
-    //vm->charset = scvm_load_res(vm,SCVM_RES_CHARSET);
-    return 0;
-  }
-  
-  return SCVM_ERR_NO_OP;
+// 0x73
+static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
+  int r,ptr;
+  int16_t off;
+  if((r=scvm_thread_r16(thread,&off))) return r;
+  ptr = thread->code_ptr+off;
+  if(ptr < 0 || ptr >= thread->script->size)
+    return SCVM_ERR_JUMP_BOUND;
+  thread->code_ptr = ptr;
+  return 0;
 }
+
 
 // 0x7B
 static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
@@ -677,118 +671,131 @@ static int scvm_op_resource(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_ERR_NO_OP;
 }
 
-// 0x9C
-static int scvm_op_view(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a,b,c,d,e;
-  uint8_t op;
-  
-  if((r=scvm_thread_r8(thread,&op))) return r;
-  switch(op) {
-  case 0xAC: // scrolling
-    if((r=scvm_pop(vm,&vm->view->scroll_right)) ||
-       (r=scvm_pop(vm,&vm->view->scroll_left))) return r;
-    return 0;
-  case 0xAE: // screen pos
-    if((r=scvm_pop(vm,&vm->view->room_end)) ||
-       (r=scvm_pop(vm,&vm->view->room_start))) return r;
-    return 0;
-  case 0xAF: // room color
-    if((r=scvm_pop(vm,&d)) ||
-       (r=scvm_pop(vm,&c)) ||
-       (r=scvm_pop(vm,&b)) ||
-       (r=scvm_pop(vm,&a))) return r;
-    return 0;
-  case 0xB0: // shake on
-    vm->view->flags |= SCVM_VIEW_SHAKE;
-    return 0;
-  case 0xB1: // shake off
-    vm->view->flags &= ~SCVM_VIEW_SHAKE;
-    return 0;
-  case 0xB3: // room intensity
-    if((r=scvm_pop(vm,&c)) ||
-       (r=scvm_pop(vm,&b)) ||
-       (r=scvm_pop(vm,&a))) return r;
-    return 0;
-  case 0xB4: // save load thing
-    if((r=scvm_pop(vm,&b)) ||
-       (r=scvm_pop(vm,&a))) return r;
-    return 0;
-  case 0xB5: // screen effect
-    return scvm_pop(vm,&vm->view->effect);
-  case 0xB6: // rgb intensity
-  case 0xB7: // room shadow
-    if((r=scvm_pop(vm,&e)) ||
-       (r=scvm_pop(vm,&d)) ||
-       (r=scvm_pop(vm,&c)) ||
-       (r=scvm_pop(vm,&b)) ||
-       (r=scvm_pop(vm,&a))) return r;
-    return 0;
-  case 0xBA: // pal manip
-    if((r=scvm_pop(vm,&d)) ||
-       (r=scvm_pop(vm,&c)) ||
-       (r=scvm_pop(vm,&b)) ||
-       (r=scvm_pop(vm,&a))) return r;
-    return 0;
-  case 0xBB: // cycle delay
-    if((r=scvm_pop(vm,&b)) ||
-       (r=scvm_pop(vm,&a))) return r;
-  case 0xD5: // room palette
-    if((r=scvm_pop(vm,&a))) return r;
-    return 0;
-  }
-  return SCVM_ERR_NO_OP;
+// 0x9CAC
+static int scvm_op_set_scrolling(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,&vm->view->scroll_right)) ||
+     (r=scvm_pop(vm,&vm->view->scroll_left))) return r;
+  return 0;
 }
 
-// 0xA4
-static int scvm_op_array_write(scvm_t* vm, scvm_thread_t* thread) {
-  int r,val,addr;
-  uint8_t op;
+// 0x9CAE
+static int scvm_op_set_screen(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,&vm->view->room_end)) ||
+     (r=scvm_pop(vm,&vm->view->room_start))) return r;
+  return 0;
+}
+
+// 0x9CB0
+static int scvm_op_shake_on(scvm_t* vm, scvm_thread_t* thread) {
+  vm->view->flags |= SCVM_VIEW_SHAKE;
+  return 0;
+}
+
+// 0x9CB1
+static int scvm_op_shake_off(scvm_t* vm, scvm_thread_t* thread) {
+  vm->view->flags &= ~SCVM_VIEW_SHAKE;
+  return 0;
+}
+
+// 0x9CB5
+static int scvm_op_set_transition_effect(scvm_t* vm, scvm_thread_t* thread) {
+    return scvm_pop(vm,&vm->view->effect);
+}
+
+// 0x9DC5
+static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(r >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  vm->current_actor = &vm->actor[a];
+  return 0;
+}
+
+// 0x9D4C
+static int scvm_op_set_actor_costume(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(!(vm->current_actor->costume = scvm_load_res(vm,SCVM_RES_COSTUME,a)))
+    return SCVM_ERR_BAD_COSTUME;
+  return 0;
+}
+
+// 0x9D58
+static int scvm_op_set_actor_name(scvm_t* vm, scvm_thread_t* thread) {
+  int r,len;
+  if((r = scvm_thread_strlen(thread,&len))) return r;
+  if(vm->current_actor->name)
+    free(vm->current_actor->name);
+  vm->current_actor->name = malloc(len+1);
+  if(len > 0)
+    memcpy(vm->current_actor->name,
+           &thread->script->code[thread->code_ptr],len);
+  thread->code_ptr += len+1;
+  vm->current_actor->name[len] = 0;
+  return 0;
+}
+
+// 0xA4CD
+static int scvm_op_array_write_string(scvm_t* vm, scvm_thread_t* thread) {
+  int r,addr;
   uint16_t vaddr;
-  unsigned len,x,y = 0;
+  unsigned len,x;
   
-  if((r=scvm_thread_r8(thread,&op)) ||
-     (r=scvm_pop(vm,&x)) ||
-     (r=scvm_thread_r16(thread,&vaddr))) return r;
-  switch(op) {
-  case 0xCD: // STRING
-    if((r = scvm_thread_strlen(thread,&len))) return r;
-    if((addr = scvm_alloc_array(vm,SCVM_ARRAY_BYTE,
-                                x+len+1,0)) < 0)
-      return addr;
-    if(len > 0)
-      memcpy(vm->array[addr].data.byte+x,
-             thread->script->code+thread->code_ptr,len);
-    thread->code_ptr += len+1;
-    vm->array[addr].data.byte[len] = 0;
-    return scvm_thread_write_var(vm,thread,vaddr,addr);
-    
-  case 0xD0: // LIST
-    if((r = scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-       (r = scvm_pop(vm,&len))) return r;
-    if(addr <= 0 && (addr = scvm_alloc_array(vm,SCVM_ARRAY_WORD,
-                                             x+len,0)) <= 0)
-      return addr;
-    while(len > 0) {
-      if((r = scvm_pop(vm,&val)) ||
-         (r=scvm_write_array(vm,addr,x,0,val))) return r;
-      len--, x++;
-    }
-    return 0;
-  case 0xD4: // LIST 2D
-    if((r = scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-       (r = scvm_pop(vm,&len))) return r;
-    if(!addr || addr >= vm->num_array) return SCVM_ERR_BAD_ADDR;
-    else {
-      int i,list[len];
-      for(i = 0 ; i < len ; i++)
-        if((r = scvm_pop(vm,list+i))) return r;
-      if((r = scvm_pop(vm,&y))) return r;
-      for(i = 0 ; i < len ; i++)
-        if((r = scvm_write_array(vm,addr,x+i,y,list[i]))) return r;
-    }
-    return 0;
-  default:
-    return SCVM_ERR_NO_OP;
+  if((r=scvm_pop(vm,&x)) ||
+     (r=scvm_thread_r16(thread,&vaddr)) ||
+     (r = scvm_thread_strlen(thread,&len))) return r;
+  if((addr = scvm_alloc_array(vm,SCVM_ARRAY_BYTE,
+                              x+len+1,0)) < 0)
+    return addr;
+  if(len > 0)
+    memcpy(vm->array[addr].data.byte+x,
+           thread->script->code+thread->code_ptr,len);
+  thread->code_ptr += len+1;
+  vm->array[addr].data.byte[len] = 0;
+  return scvm_thread_write_var(vm,thread,vaddr,addr);
+}
+
+// 0xA4D0
+static int scvm_op_array_write_list(scvm_t* vm, scvm_thread_t* thread) {
+  int r,val,addr;
+  uint16_t vaddr;
+  unsigned len,x;
+  
+  if((r=scvm_pop(vm,&x)) ||
+     (r=scvm_thread_r16(thread,&vaddr)) ||
+     (r = scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
+     (r = scvm_pop(vm,&len))) return r;
+  if(addr <= 0 && (addr = scvm_alloc_array(vm,SCVM_ARRAY_WORD,
+                                           x+len,0)) <= 0)
+    return addr;
+  while(len > 0) {
+    if((r = scvm_pop(vm,&val)) ||
+       (r=scvm_write_array(vm,addr,x,0,val))) return r;
+    len--, x++;
+  }
+  return 0;
+}
+
+// 0xA4D4
+static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
+  int r,addr;
+  uint16_t vaddr;
+  unsigned len,x,y;
+  
+  if((r=scvm_pop(vm,&x)) ||
+     (r=scvm_thread_r16(thread,&vaddr)) ||
+     (r = scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
+     (r = scvm_pop(vm,&len))) return r;
+  if(!addr || addr >= vm->num_array) return SCVM_ERR_BAD_ADDR;
+  else {
+    int i,list[len];
+    for(i = 0 ; i < len ; i++)
+      if((r = scvm_pop(vm,list+i))) return r;
+    if((r = scvm_pop(vm,&y))) return r;
+    for(i = 0 ; i < len ; i++)
+      if((r = scvm_write_array(vm,addr,x+i,y,list[i]))) return r;
   }
   return 0;
 }
@@ -845,6 +852,89 @@ static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_thread_write_var(vm,thread,vaddr,addr);
 }
 
+static int scvm_op_dummy(scvm_t* vm, scvm_thread_t* thread) {
+  return 0;
+}
+
+static int scvm_op_dummy_v(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,NULL);
+}
+
+static int scvm_op_dummy_vv(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,NULL))) return r;
+  return scvm_pop(vm,NULL);
+}
+
+static int scvm_op_dummy_vvv(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,NULL)) ||
+     (r=scvm_pop(vm,NULL))) return r;
+  return scvm_pop(vm,NULL);
+}
+
+static int scvm_op_dummy_vvvv(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,NULL)) ||
+     (r=scvm_pop(vm,NULL)) ||
+     (r=scvm_pop(vm,NULL))) return r;
+  return scvm_pop(vm,NULL);
+}
+
+static int scvm_op_dummy_vvvvv(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,NULL)) ||
+     (r=scvm_pop(vm,NULL)) ||
+     (r=scvm_pop(vm,NULL)) ||
+     (r=scvm_pop(vm,NULL))) return r;
+  return scvm_pop(vm,NULL);
+}
+
+static int scvm_op_dummy_l(scvm_t* vm, scvm_thread_t* thread) {
+  int r,len;
+  if((r=scvm_pop(vm,&len))) return r;
+  while(len > 0) {
+    if((r=scvm_pop(vm,NULL))) return r;
+    len--;
+  }
+  return 0;
+}
+
+static int scvm_op_dummy_s(scvm_t* vm, scvm_thread_t* thread) {
+  int r,len;
+  if((r = scvm_thread_strlen(thread,&len))) return r;
+  thread->code_ptr += len+1;
+  return 0;
+}
+
+static int scvm_op_dummy_print(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  uint8_t op;
+  if((r = scvm_thread_r8(thread,&op))) return r;
+  switch(op) {
+  case 0x41: // at
+    return scvm_op_dummy_vv(vm,thread);
+  case 0x42: // color
+  case 0x43: // clipped
+    return scvm_op_dummy_v(vm,thread);
+  case 0x45: // center
+  case 0x47: // left
+  case 0x48: // overhead
+  case 0x4A: // mumble
+  case 0xFE: // begin
+  case 0xFF: // end
+    return 0;
+  case 0x4B:
+    return scvm_op_dummy_s(vm,thread);
+  }
+  return SCVM_ERR_NO_OP;
+}
+
+
+
+static int scvm_op_subop(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_thread_do_op(vm,thread,vm->suboptable);
+}
 
 scvm_op_t scvm_optable[0x100] = {
   // 00
@@ -981,39 +1071,39 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
-  { scvm_op_interface, "interface op" },
+  { scvm_op_subop, "interface op" },
   // 6C
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_v, "set object state" },
   // 70
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_vv, "set object state" },
+  { scvm_op_dummy_vv, "set object owner" },
+  { scvm_op_dummy_v, "get object owner" },
+  { scvm_op_jmp, "jump" },
   // 74
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_v, "start sound" },
+  { scvm_op_dummy_v, "stop sound" },
+  { scvm_op_dummy_v, "start music" },
   { NULL, NULL },
   // 78
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_v, "pan camera to" },
+  { scvm_op_dummy_v, "camera follow actor" },
+  { scvm_op_dummy_v, "set camera at" },
   { scvm_op_start_room, "start room" },
   // 7C
   { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_vvv, "walk actor to object" },
+  { scvm_op_dummy_vvv, "walk actor to" },
+  { scvm_op_dummy_vvvv, "put actor at" },
   // 80
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_vvv,  "put actor at object" },
+  { scvm_op_dummy_vv, "actor face" },
+  { scvm_op_dummy_vv, "animate actor" },
+  { scvm_op_dummy_vvvv, "do sentence" },
   // 84
-  { NULL, NULL },
+  { scvm_op_dummy_vv, "pickup object" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
@@ -1043,9 +1133,9 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_resource, "resource op" },
   // 9C
-  { scvm_op_view, "view op" },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_subop, "view op" },
+  { scvm_op_subop, "actor op" },
+  { scvm_op_subop, "verb op" },
   { NULL, NULL },
   // A0
   { NULL, NULL },
@@ -1053,7 +1143,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // A4
-  { scvm_op_array_write, "array write" },
+  { scvm_op_subop, "array write" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
@@ -1073,13 +1163,13 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // B4
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_print, "print" },
+  { scvm_op_dummy_print, "cursor print" },
+  { scvm_op_dummy_print, "debug print" },
+  { scvm_op_dummy_print, "sys print" },
   // B8
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_print, "actor print" },
+  { scvm_op_dummy_print, "ego print" },
   { NULL, NULL },
   { NULL, NULL },
   // BC
@@ -1087,6 +1177,26 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   { scvm_op_start_script_recursive, "start script recursive" },
+  // C0
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // C4
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // C8
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // CC
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
   // D0
   { NULL, NULL },
   { NULL, NULL },
@@ -1147,4 +1257,327 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL }
+};
+
+scvm_op_t scvm_suboptable[0x100] = {
+  // 00
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 04
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 08
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 0C
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 10
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 14
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 18
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 1C
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 20
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 24
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 28
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 2C
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 30
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 34
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 38
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 3C
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 40
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 44
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 48
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 4C
+  { scvm_op_set_actor_costume, "set costume" },
+  { scvm_op_dummy_vv, "set walk speed" },
+  { scvm_op_dummy_l, "set sounds" },
+  { scvm_op_dummy_v, "set walk frame" },
+  // 50
+  { scvm_op_dummy_vv, "set talk frame" },
+  { scvm_op_dummy_v, "set stand frame" },
+  { NULL, NULL },
+  { scvm_op_dummy, "init" },
+  // 54
+  { scvm_op_dummy_v, "set elevation" },
+  { scvm_op_dummy, "default frames" },
+  { NULL, NULL },
+  { scvm_op_dummy_v, "set talk color" },
+  // 58
+  { scvm_op_set_actor_name, "set name" },
+  { scvm_op_dummy_v, "set init frame" },
+  { NULL, NULL },
+  { scvm_op_dummy_v, "set width" },
+  // 5C
+  { scvm_op_dummy_v, "set scale" },
+  { scvm_op_dummy, "never z clip" },
+  { NULL, NULL },
+  { scvm_op_dummy, "ignore boxes" },
+  // 60
+  { scvm_op_dummy, "follow boxes" },
+  { scvm_op_dummy_v, "set anim speed" },
+  { scvm_op_dummy_v, "set shadow mode" },
+  { scvm_op_dummy_vv, "set talk pos" },
+  // 64
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 68
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 6C
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 70
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 74
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 78
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 7C
+  { scvm_op_dummy_v, "set image" },
+  { scvm_op_dummy_s, "set name" },
+  { scvm_op_dummy_v, "set color" },
+  { scvm_op_dummy_v, "set hi-color" },
+  // 80
+  { scvm_op_dummy_vv, "set XY" },
+  { scvm_op_dummy, "set on" },
+  { scvm_op_dummy, "set off" },
+  { scvm_op_dummy, "kill" },
+  // 84
+  { scvm_op_dummy, "init" },
+  { scvm_op_dummy_v, "set dim-color" },
+  { scvm_op_dummy, "dim" },
+  { scvm_op_dummy_v, "set key" },
+  // 88
+  { scvm_op_dummy, "set center" },
+  { scvm_op_dummy_v, "set name string" },
+  { NULL, NULL },
+  { scvm_op_dummy_vv, "set object" },
+  // 8C
+  { scvm_op_dummy_v, "set back color" },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // 90
+  { scvm_op_dummy, "cursor on" },
+  { scvm_op_dummy, "cursor off" },
+  { scvm_op_dummy, "user put on" },
+  { scvm_op_dummy, "user put off" },
+  // 94
+  { scvm_op_dummy, "soft cursor on" },
+  { scvm_op_dummy, "soft curosr off" },
+  { scvm_op_dummy, "soft user put on" },
+  { scvm_op_dummy, "soft user put off" },
+  // 98
+  { NULL, NULL },
+  { scvm_op_dummy_vv, "set cursor image" },
+  { scvm_op_dummy_vv, "set cursor hotspot" },
+  { NULL, NULL },
+  // 9C
+  { scvm_op_dummy_v, "init charset" },
+  { scvm_op_dummy_l, "set charset colors" },
+  { NULL, NULL },
+  { NULL, NULL },
+  // A0
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // A4
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // A8
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // AC
+  { scvm_op_set_scrolling, "set scrolling" },
+  { NULL, NULL },
+  { scvm_op_set_screen, "set screen" },
+  { scvm_op_dummy_vvvv, "room color" },
+  // B0
+  { scvm_op_shake_on, "shake on" },
+  { scvm_op_shake_off, "shake off" },
+  { NULL, NULL },
+  { scvm_op_dummy_vvv, "room intensity" },
+  // B4
+  { scvm_op_dummy_vv, "save/load thing" },
+  { scvm_op_set_transition_effect, "transition effect" },
+  { scvm_op_dummy_vvvvv, "rgb intensitiy" },
+  { scvm_op_dummy_vvvvv, "room shadow" },
+  // B8
+  { NULL, NULL },
+  { NULL, NULL },
+  { scvm_op_dummy_vvvv, "pal manip" },
+  { scvm_op_dummy_vv, "cycle delay" },
+  // BC
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // C0
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // C4
+  { scvm_op_dummy_v, "set current verb" },
+  { scvm_op_set_current_actor, "set current actor" },
+  { scvm_op_dummy_vv, "set anim var" },
+  { NULL, NULL },
+  // C8
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // CC
+  { NULL, NULL },
+  { scvm_op_array_write_string, "array write string" },
+  { NULL, NULL },
+  { NULL, NULL },
+  // D0
+  { scvm_op_array_write_list, "array write list" },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // D4
+  { scvm_op_array_write_list2, "array write list2" },
+  { scvm_op_dummy_v, "room palette" },
+  { NULL, NULL },
+  { scvm_op_dummy_v, "set cursor transparency" },
+  // D8
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // DC
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // E0
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { scvm_op_dummy_v, "set layer" },
+  // E4
+  { scvm_op_dummy_v, "set walk script" },
+  { scvm_op_dummy, "set standing" },
+  { scvm_op_dummy_v, "set direction" },
+  { scvm_op_dummy_v, "turn to direction" },
+  // E8
+  { scvm_op_dummy_v, "set talk script" },
+  { scvm_op_dummy, "freeze" },
+  { scvm_op_dummy, "unfreeze" },
+  { NULL, NULL },
+  // EC
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // F0
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // F4
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // F8
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  // FC
+  { NULL, NULL },
+  { NULL, NULL },
+  { NULL, NULL },
+  { scvm_op_dummy, "redraw" }
 };
