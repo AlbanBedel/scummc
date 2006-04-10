@@ -71,8 +71,8 @@ int scvm_thread_strlen(scvm_thread_t* thread,unsigned *ret) {
       len += 2;
       if((type < 1 || type > 3) && type != 8)
         len += 2;
-    }
-    len++;
+    } else
+      len++;
   }
   *ret = len;
   if(len >= thread->script->size-thread->code_ptr)
