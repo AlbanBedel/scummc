@@ -103,8 +103,27 @@ typedef struct scvm_actor {
   scc_cost_t* costume;
   unsigned room;
   int x,y;
+  unsigned width,height;
   unsigned direction;
   unsigned flags;
+  
+  unsigned anim_speed;
+  unsigned scale_x,scale_y;
+  unsigned layer;
+  
+  unsigned walk_speed_x,walk_speed_y;
+  unsigned walk_script;
+  unsigned elevation;
+
+  unsigned init_frame;
+  unsigned walk_frame;
+  unsigned talk_start_frame, talk_end_frame;
+  unsigned stand_frame;
+  
+  
+  unsigned talk_color;
+  int talk_x,talk_y;
+  unsigned talk_script;
 } scvm_actor_t;
 
 #define SCVM_VIEW_SHAKE 1

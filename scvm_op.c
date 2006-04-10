@@ -790,6 +790,40 @@ static int scvm_op_set_actor_costume(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x9D4D
+static int scvm_op_set_actor_walk_speed(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,&vm->current_actor->walk_speed_y))) return r;
+  return scvm_pop(vm,&vm->current_actor->walk_speed_x);
+}
+
+// 0x9D4F
+static int scvm_op_set_actor_walk_frame(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->walk_frame);
+}
+
+// 0x9D50
+static int scvm_op_set_actor_talk_frame(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,&vm->current_actor->talk_end_frame))) return r;
+  return scvm_pop(vm,&vm->current_actor->talk_start_frame);
+}
+
+// 0x9D51
+static int scvm_op_set_actor_stand_frame(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->stand_frame);
+}
+
+// 0x9D54
+static int scvm_op_set_actor_elevation(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->elevation);
+}
+
+// 0x9D57
+static int scvm_op_set_actor_talk_color(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->talk_color);
+}
+
 // 0x9D58
 static int scvm_op_set_actor_name(scvm_t* vm, scvm_thread_t* thread) {
   int r,len;
@@ -804,6 +838,58 @@ static int scvm_op_set_actor_name(scvm_t* vm, scvm_thread_t* thread) {
   vm->current_actor->name[len] = 0;
   return 0;
 }
+
+// 0x9D59
+static int scvm_op_set_actor_init_frame(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->init_frame);
+}
+
+// 0x9D5B
+static int scvm_op_set_actor_width(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->width);
+}
+
+// 0x9D5C
+static int scvm_op_set_actor_scale(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,&vm->current_actor->scale_x))) return r;
+  vm->current_actor->scale_y = vm->current_actor->scale_x;
+  return 0;
+}
+
+// 0x9D61
+static int scvm_op_set_actor_anim_speed(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->anim_speed);
+}
+
+// 0x9D63
+static int scvm_op_set_actor_talk_pos(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  if((r=scvm_pop(vm,&vm->current_actor->talk_y))) return r;
+  return scvm_pop(vm,&vm->current_actor->talk_x);
+}
+
+
+// 0x9DE3
+static int scvm_op_set_actor_layer(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->layer);
+}
+
+// 0x9DE4
+static int scvm_op_set_actor_walk_script(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->walk_script);
+}
+
+// 0x9DE6
+static int scvm_op_set_actor_direction(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->direction);
+}
+
+// 0x9DEB
+static int scvm_op_set_actor_talk_script(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,&vm->current_actor->talk_script);
+}
+
 
 // 0xA4CD
 static int scvm_op_array_write_string(scvm_t* vm, scvm_thread_t* thread) {
@@ -1464,34 +1550,34 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   // 4C
   { scvm_op_set_actor_costume, "set costume" },
-  { scvm_op_dummy_vv, "set walk speed" },
+  { scvm_op_set_actor_walk_speed, "set walk speed" },
   { scvm_op_dummy_l, "set sounds" },
-  { scvm_op_dummy_v, "set walk frame" },
+  { scvm_op_set_actor_walk_frame, "set walk frame" },
   // 50
-  { scvm_op_dummy_vv, "set talk frame" },
-  { scvm_op_dummy_v, "set stand frame" },
+  { scvm_op_set_actor_talk_frame, "set talk frame" },
+  { scvm_op_set_actor_stand_frame, "set stand frame" },
   { NULL, NULL },
   { scvm_op_dummy, "init" },
   // 54
-  { scvm_op_dummy_v, "set elevation" },
+  { scvm_op_set_actor_elevation, "set elevation" },
   { scvm_op_dummy, "default frames" },
   { NULL, NULL },
-  { scvm_op_dummy_v, "set talk color" },
+  { scvm_op_set_actor_talk_color, "set talk color" },
   // 58
   { scvm_op_set_actor_name, "set name" },
-  { scvm_op_dummy_v, "set init frame" },
+  { scvm_op_set_actor_init_frame, "set init frame" },
   { NULL, NULL },
-  { scvm_op_dummy_v, "set width" },
+  { scvm_op_set_actor_width, "set width" },
   // 5C
-  { scvm_op_dummy_v, "set scale" },
+  { scvm_op_set_actor_scale, "set scale" },
   { scvm_op_dummy, "never z clip" },
   { NULL, NULL },
   { scvm_op_dummy, "ignore boxes" },
   // 60
   { scvm_op_dummy, "follow boxes" },
-  { scvm_op_dummy_v, "set anim speed" },
+  { scvm_op_set_actor_anim_speed, "set anim speed" },
   { scvm_op_dummy_v, "set shadow mode" },
-  { scvm_op_dummy_vv, "set talk pos" },
+  { scvm_op_set_actor_talk_pos, "set talk pos" },
   // 64
   { NULL, NULL },
   { NULL, NULL },
@@ -1651,17 +1737,17 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
-  { scvm_op_dummy_v, "set layer" },
+  { scvm_op_set_actor_layer, "set layer" },
   // E4
-  { scvm_op_dummy_v, "set walk script" },
+  { scvm_op_set_actor_walk_script, "set walk script" },
   { scvm_op_dummy, "set standing" },
-  { scvm_op_dummy_v, "set direction" },
+  { scvm_op_set_actor_direction, "set direction" },
   { scvm_op_dummy_v, "turn to direction" },
   // E8
-  { scvm_op_dummy_v, "set talk script" },
+  { NULL, NULL },
   { scvm_op_dummy, "freeze" },
   { scvm_op_dummy, "unfreeze" },
-  { NULL, NULL },
+  { scvm_op_set_actor_talk_script, "set talk script" },
   // EC
   { NULL, NULL },
   { NULL, NULL },
