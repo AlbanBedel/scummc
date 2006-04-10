@@ -403,6 +403,24 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
       room->num_object = scc_fd_r16le(fd);
       break;
       
+    case MKID('C','Y','C','L'):
+      if(block_size < 1+8) goto bad_block;
+      room->num_cycle = 17;
+      room->cycle = calloc(room->num_cycle,sizeof(scvm_cycle_t));
+      while(1) {
+        unsigned freq,id = scc_fd_r8(fd);
+        if(!id) break;
+        if(id >= room->num_cycle) goto bad_block;
+        room->cycle[id].id = id;
+        scc_fd_r16(fd); // unknown
+        freq = scc_fd_r16be(fd);
+        room->cycle[id].delay = freq ? 0x4000/freq : 0;
+        room->cycle[id].flags = scc_fd_r16be(fd);
+        room->cycle[id].start = scc_fd_r8(fd);
+        room->cycle[id].end = scc_fd_r8(fd);
+      }
+      break;
+      
     case MKID('P','A','L','S'):
       if(block_size < 16) goto bad_block;
       type = scc_fd_r32(fd);

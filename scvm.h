@@ -75,6 +75,13 @@ struct scvm_object {
   scvm_object_pdata_t* pdata;
 };
 
+typedef struct scvm_cycle {
+  unsigned id;
+  unsigned delay;
+  unsigned flags;
+  unsigned start,end;
+  unsigned counter;
+} scvm_cycle_t;
 
 typedef struct scvm_room {
   unsigned id;
@@ -84,6 +91,9 @@ typedef struct scvm_room {
   scvm_image_t image;
   unsigned num_palette;
   scvm_palette_t* palette;
+  scvm_color_t* current_palette;
+  unsigned num_cycle;
+  scvm_cycle_t* cycle;
   unsigned trans;
   
   // objects
@@ -145,6 +155,9 @@ typedef struct scvm_view {
 int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                    uint8_t* buffer, int stride,
                    unsigned width, unsigned height);
+void scvm_view_scale_palette(scvm_view_t* view,scvm_color_t* palette,
+                             unsigned red, unsigned green, unsigned blue,
+                             unsigned start, unsigned end);
 
 // variables used for communication between the scripts
 // and the VM.

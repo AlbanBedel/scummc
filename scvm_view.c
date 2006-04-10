@@ -70,3 +70,32 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
   
   return 1;
 }
+
+void scvm_view_scale_palette(scvm_view_t* view, scvm_color_t* palette,
+                             unsigned red, unsigned green, unsigned blue,
+                             unsigned start, unsigned end) {
+  if(start > 0xFF) return;
+  if(start < 0) start = 0;
+  if(end > 0xFF) end = 0xFF;
+  
+  while(start <= end) {
+    int color = palette[start].r;
+    color = color * red / 0xFF;
+    if(color > 0xFF) color = 0xFF;
+    view->palette[start].r = color;
+    
+    color = palette[start].g;
+    color = color * green / 0xFF;
+    if(color > 0xFF) color = 0xFF;
+    view->palette[start].g = color;
+    
+    color = palette[start].b;
+    color = color * blue / 0xFF;
+    if(color > 0xFF) color = 0xFF;
+    view->palette[start].b = color;
+    
+    view->flags |= SCVM_VIEW_PALETTE_CHANGED;
+    start++;
+  }
+  
+}

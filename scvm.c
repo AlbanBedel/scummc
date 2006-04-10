@@ -308,6 +308,12 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
           vm->thread[i].state = SCVM_THREAD_RUNNING;
         }
       }
+      // Update the timers
+      vm->var->timer = 0;
+      vm->var->timer1 += vm->var->timer_next;
+      vm->var->timer2 += vm->var->timer_next;
+      vm->var->timer2 += vm->var->timer_next;
+      // Run the scripts      
       vm->state = SCVM_RUNNING;
       vm->time = now;
       break;
@@ -406,6 +412,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         // cleanup the old room
         // copy the room palette
         if(room->num_palette > 0) {
+          room->current_palette = room->palette[0];
           memcpy(vm->view->palette,room->palette[0],sizeof(scvm_palette_t));
           vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
         }
@@ -450,7 +457,40 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
   return 0;    
 }
 
-static void sdl_scvm_update_palette(SDL_Surface* screen, scvm_palette_t pal) {
+void scvm_cycle_palette(scvm_t* vm) {
+  int i,step,add;
+  scvm_color_t color;
+  scvm_cycle_t* cycle;
+  if(!vm->room || !vm->room->cycle) return;
+  step = vm->var->timer;
+  if(step < vm->var->timer_next)
+    step = vm->var->timer_next;
+  for(i = 0 ; i < vm->room->num_cycle ; i++) {
+    cycle = &vm->room->cycle[i];
+    if(!cycle->delay) continue;
+    cycle->counter += add;
+    if(cycle->counter < cycle->delay) continue;
+    // backward
+    if(cycle->flags & 2) {
+      color = vm->view->palette[cycle->start];
+      if(cycle->end-cycle->start > 0)
+        memmove(&vm->view->palette[cycle->start],
+                &vm->view->palette[cycle->start+1],
+                (cycle->end-cycle->start-1)*sizeof(scvm_color_t));
+      vm->view->palette[cycle->end] = color;
+    } else { // forward
+      color = vm->view->palette[cycle->end];
+      if(cycle->end-cycle->start > 0)
+        memmove(&vm->view->palette[cycle->start+1],
+                &vm->view->palette[cycle->start],
+                (cycle->end-cycle->start-1)*sizeof(scvm_color_t));
+      vm->view->palette[cycle->start] = color;
+    }
+    vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
+  }
+}
+
+static void sdl_scvm_update_palette(SDL_Surface* screen, scvm_color_t* pal) {
   SDL_Color colors[256];
   int i;
   for(i = 0 ; i < 256 ; i++) {
@@ -479,6 +519,7 @@ int main(int argc,char** argv) {
   scvm_t* vm;
   scc_cl_arg_t* files;
   int r,n;
+  unsigned start,end,delay;
   SDL_Surface* screen;
   
   if(argc < 2) {
@@ -518,6 +559,7 @@ int main(int argc,char** argv) {
   }
   // only run some cycles for now
   for(n = 0 ; n < 200 ; n++) {
+    start = vm->get_time(vm);
     r = scvm_run_threads(vm,1);
     if(r < 0) {
       if(vm->current_thread)
@@ -528,7 +570,8 @@ int main(int argc,char** argv) {
         scc_log(LOG_MSG,"Script error: %s\n",scvm_error[-r]);
       return 1;
     }
-    
+
+    scvm_cycle_palette(vm);
     if(vm->view->flags & SCVM_VIEW_PALETTE_CHANGED) {
       sdl_scvm_update_palette(screen,vm->view->palette);
       vm->view->flags &= ~SCVM_VIEW_PALETTE_CHANGED;
@@ -539,7 +582,11 @@ int main(int argc,char** argv) {
                    screen->w,screen->h);
     if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
     SDL_Flip(screen);
-    SDL_Delay(100);
+    end = vm->get_time(vm);
+    if(end < start) end = start;
+    delay = vm->var->timer_next*15;
+    if(delay > end-start)
+      SDL_Delay(delay+start-end);
   }
   
   return 0;

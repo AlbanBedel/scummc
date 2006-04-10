@@ -808,6 +808,21 @@ static int scvm_op_set_screen(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x9CAF
+static int scvm_op_set_room_color(scvm_t* vm, scvm_thread_t* thread) {
+  int r,red,green,blue,color;
+  if((r=scvm_pop(vm,&color)) ||
+     (r=scvm_pop(vm,&blue)) ||
+     (r=scvm_pop(vm,&green)) ||
+     (r=scvm_pop(vm,&red))) return r;
+  if(color < 0 || color > 0xFF) return 0;
+  vm->view->palette[color].r = red;
+  vm->view->palette[color].g = green;
+  vm->view->palette[color].b = blue;
+  vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
+  return 0;
+}
+
 // 0x9CB0
 static int scvm_op_shake_on(scvm_t* vm, scvm_thread_t* thread) {
   vm->view->flags |= SCVM_VIEW_SHAKE;
@@ -820,9 +835,33 @@ static int scvm_op_shake_off(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x9CB3
+static int scvm_op_set_room_intensity(scvm_t* vm, scvm_thread_t* thread) {
+  int r,scale,start,end;
+  if((r=scvm_pop(vm,&end)) ||
+     (r=scvm_pop(vm,&start)) ||
+     (r=scvm_pop(vm,&scale))) return r;
+  scvm_view_scale_palette(vm->view,vm->room->current_palette,
+                          scale,scale,scale,start,end);
+  return 0;
+}
+
 // 0x9CB5
 static int scvm_op_set_transition_effect(scvm_t* vm, scvm_thread_t* thread) {
     return scvm_pop(vm,&vm->view->effect);
+}
+
+// 0x9CB6
+static int scvm_op_set_rgb_intensity(scvm_t* vm, scvm_thread_t* thread) {
+  int r,red,green,blue,start,end;
+  if((r=scvm_pop(vm,&end)) ||
+     (r=scvm_pop(vm,&start)) ||
+     (r=scvm_pop(vm,&blue)) ||
+     (r=scvm_pop(vm,&green)) ||
+     (r=scvm_pop(vm,&red))) return r;
+  scvm_view_scale_palette(vm->view,vm->room->current_palette,
+                          red,green,blue,start,end);
+  return 0;
 }
 
 // 0x9DC5
@@ -1733,16 +1772,16 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_set_scrolling, "set scrolling" },
   { NULL, NULL },
   { scvm_op_set_screen, "set screen" },
-  { scvm_op_dummy_vvvv, "room color" },
+  { scvm_op_set_room_color, "room color" },
   // B0
   { scvm_op_shake_on, "shake on" },
   { scvm_op_shake_off, "shake off" },
   { NULL, NULL },
-  { scvm_op_dummy_vvv, "room intensity" },
+  { scvm_op_set_room_intensity, "room intensity" },
   // B4
   { scvm_op_dummy_vv, "save/load thing" },
   { scvm_op_set_transition_effect, "transition effect" },
-  { scvm_op_dummy_vvvvv, "rgb intensitiy" },
+  { scvm_op_set_rgb_intensity, "rgb intensitiy" },
   { scvm_op_dummy_vvvvv, "room shadow" },
   // B8
   { NULL, NULL },
