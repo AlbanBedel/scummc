@@ -101,7 +101,7 @@ typedef struct scvm_actor {
   unsigned id;
   char* name;
   scc_cost_t* costume;
-  unsigned room;
+  scvm_room_t* room;
   int x,y;
   unsigned width,height;
   unsigned direction;
@@ -381,3 +381,4 @@ struct scvm {
 #define SCVM_ERR_BAD_COSTUME     -15
 #define SCVM_ERR_OVERRIDE_OVERFLOW  -16
 #define SCVM_ERR_OVERRIDE_UNDERFLOW -17
+#define SCVM_ERR_BAD_OBJECT         -18

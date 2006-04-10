@@ -703,6 +703,42 @@ static int scvm_op_is_script_running(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,r);
 }
 
+// 0x8C
+static int scvm_op_get_actor_room(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  if(!vm->actor[a].room)
+    return scvm_push(vm,0);
+  else
+    return scvm_push(vm,vm->actor[a].room->id);
+}
+
+// 0x8D
+static int scvm_op_get_object_x(scvm_t* vm, scvm_thread_t* thread) {
+  int r,o;
+  scvm_object_t* obj;
+  if((r=scvm_pop(vm,&o))) return r;
+  if(o >= vm->res[SCVM_RES_OBJECT].num)
+    return SCVM_ERR_BAD_OBJECT;
+  if(!(obj = vm->res[SCVM_RES_OBJECT].idx[o].data))
+    return scvm_push(vm,0);
+  return scvm_push(vm,obj->x);
+}
+
+// 0x8E
+static int scvm_op_get_object_y(scvm_t* vm, scvm_thread_t* thread) {
+  int r,o;
+  scvm_object_t* obj;
+  if((r=scvm_pop(vm,&o))) return r;
+  if(o >= vm->res[SCVM_RES_OBJECT].num)
+    return SCVM_ERR_BAD_OBJECT;
+  if(!(obj = vm->res[SCVM_RES_OBJECT].idx[o].data))
+    return scvm_push(vm,0);
+  return scvm_push(vm,obj->y);
+}
+
+
 // 0x95
 static int scvm_op_begin_override(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -969,6 +1005,14 @@ static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
       if((r = scvm_write_array(vm,addr,x+i,y,list[i]))) return r;
   }
   return 0;
+}
+
+// 0xAA
+static int scvm_op_get_actor_x_scale(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a;
+  if((r=scvm_pop(vm,&a))) return a;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  return scvm_push(vm,vm->actor[a].scale_x);
 }
 
 // 0xAC
@@ -1269,7 +1313,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_start_script0, "start script0" },
   // 60
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_vv, "draw object" },
   { NULL, NULL },
   { NULL, NULL },
   // 64
@@ -1323,9 +1367,9 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_is_script_running, "is script running" },
   // 8C
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_get_actor_room, "get actor room" },
+  { scvm_op_get_object_x, "get object x" },
+  { scvm_op_get_object_y, "get object y" },
   { NULL, NULL },
   // 90
   { NULL, NULL },
@@ -1360,7 +1404,7 @@ scvm_op_t scvm_optable[0x100] = {
   // A8
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_get_actor_x_scale, "get actor x scale" },
   { NULL, NULL },
   // AC
   { scvm_op_sound_kludge, "sound kludge" },

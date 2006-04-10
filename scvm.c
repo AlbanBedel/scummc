@@ -57,6 +57,7 @@ static char* scvm_error[0x100] = {
   "bad costume",
   "override overflow",
   "override underflow",
+  "bad object",
   NULL
 };
 
@@ -516,7 +517,7 @@ int main(int argc,char** argv) {
     return 1;
   }
   // only run some cycles for now
-  for(n = 0 ; n < 100 ; n++) {
+  for(n = 0 ; n < 200 ; n++) {
     r = scvm_run_threads(vm,1);
     if(r < 0) {
       if(vm->current_thread)

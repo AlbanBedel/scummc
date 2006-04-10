@@ -389,6 +389,7 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
     return NULL;
   }
   room = calloc(1,sizeof(scvm_room_t));
+  room->id = num;
   while(len < size) {
     type = scc_fd_r32(fd);
     block_size = scc_fd_r32be(fd);
