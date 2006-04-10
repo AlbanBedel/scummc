@@ -712,6 +712,8 @@ static int scvm_op_resource(scvm_t* vm, scvm_thread_t* thread) {
   if((r=scvm_thread_r8(thread,&op)) ||
      (r=scvm_pop(vm,&res))) return r;
   
+  if(op == 0x65) return 0; // ignore sounds for now
+  
   if(op >= 0x64 && op <= 0x67) {
     if(!scvm_load_res(vm,op-0x64,res))
       return SCVM_ERR_BAD_RESOURCE;
@@ -731,7 +733,8 @@ static int scvm_op_resource(scvm_t* vm, scvm_thread_t* thread) {
     if(!scvm_load_res(vm,SCVM_RES_CHARSET,res))
       return SCVM_ERR_BAD_RESOURCE;
     return 0;
-
+  case 0x77: // load fl object
+    return scvm_pop(vm,NULL);
   }
   return SCVM_ERR_NO_OP;
 }
@@ -1265,7 +1268,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_delay, "delay" },
   { scvm_op_delay_seconds, "delay seconds" },
   { scvm_op_delay_minutes, "delay minutes"  },
-  { NULL, NULL },
+  { scvm_op_dummy, "stop sentence" },
   // B4
   { scvm_op_dummy_print, "print" },
   { scvm_op_dummy_print, "cursor print" },
