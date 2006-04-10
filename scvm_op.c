@@ -653,6 +653,14 @@ static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_OPEN_ROOM;
 }
 
+// 0x7C
+static int scvm_op_stop_script(scvm_t* vm, scvm_thread_t* thread) {
+  int r,id;
+  if((r=scvm_pop(vm,&id))) return r;
+  scvm_stop_script(vm,id);
+  return 0;
+}
+
 // 0x87
 static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
   int r,max;
@@ -1189,7 +1197,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_dummy_v, "set camera at" },
   { scvm_op_start_room, "start room" },
   // 7C
-  { NULL, NULL },
+  { scvm_op_stop_script, "stop script" },
   { scvm_op_dummy_vvv, "walk actor to object" },
   { scvm_op_dummy_vvv, "walk actor to" },
   { scvm_op_dummy_vvvv, "put actor at" },
