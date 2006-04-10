@@ -57,7 +57,7 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     w = vm->room->width;
     if(w > width) w = width;
   
-    sx = vm->var->camera_pos_x-w/2;
+    sx = vm->view->camera_x-w/2;
     if(sx + w/2 > vm->room->width) sx = vm->room->width-w;
     if(sx < 0) sx = 0;
   

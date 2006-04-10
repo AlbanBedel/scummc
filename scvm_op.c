@@ -644,6 +644,23 @@ static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x7A
+static int scvm_op_set_camera_at(scvm_t* vm, scvm_thread_t* thread) {
+  int r,x;
+  if((r=scvm_pop(vm,&x))) return r;
+  if(x < vm->var->camera_min_x)
+    x = vm->var->camera_min_x;
+  if(x > vm->var->camera_max_x)
+    x = vm->var->camera_max_x;
+  vm->view->camera_x = x;
+  if(vm->var->camera_script) {
+    if((r=scvm_start_script(vm,0,vm->var->camera_script,NULL))) return r;
+    vm->next_thread = &vm->thread[r];
+    vm->var->camera_pos_x = vm->view->camera_x;
+    return SCVM_START_SCRIPT;
+  }
+  return 0;
+}
 
 // 0x7B
 static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
@@ -1283,7 +1300,7 @@ scvm_op_t scvm_optable[0x100] = {
   // 78
   { scvm_op_dummy_v, "pan camera to" },
   { scvm_op_dummy_v, "camera follow actor" },
-  { scvm_op_dummy_v, "set camera at" },
+  { scvm_op_set_camera_at, "set camera at" },
   { scvm_op_start_room, "start room" },
   // 7C
   { scvm_op_stop_script, "stop script" },

@@ -134,6 +134,8 @@ typedef struct scvm_view {
   // room position on the screen
   int room_start,room_end;
   int scroll_left,scroll_right;
+  int camera_x;
+  int screen_width, screen_height;
   int effect;
   unsigned flags;
   // palette used with the current room

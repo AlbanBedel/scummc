@@ -249,6 +249,8 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   
   // view
   vm->view = calloc(1,sizeof(scvm_view_t));
+  vm->view->screen_width = 320;
+  vm->view->screen_height = 200;
   
   // threads
   vm->state = SCVM_BEGIN_CYCLE;
@@ -406,6 +408,9 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
           memcpy(vm->view->palette,room->palette[0],sizeof(scvm_palette_t));
           vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
         }
+        // set the camera min/max
+        vm->var->camera_min_x = vm->view->screen_width/2;
+        vm->var->camera_max_x = room->width - vm->var->camera_min_x;
         vm->room = room;
         vm->state = SCVM_RUN_PRE_ENTRY;
       }
@@ -497,7 +502,8 @@ int main(int argc,char** argv) {
     return 1;
   }
   
-  screen = SDL_SetVideoMode(320,200,8,SDL_HWPALETTE);
+  screen = SDL_SetVideoMode(vm->view->screen_width,vm->view->screen_height,
+                            8,SDL_HWPALETTE);
   if(!screen) {
     scc_log(LOG_ERR,"Failed to create SDL screen.\n");
     return 1;
