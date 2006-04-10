@@ -419,15 +419,15 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       vm->state = SCVM_RUN_ENCD;
     case SCVM_RUN_ENCD:
       if(vm->room->entry) {
-        if((r = scvm_start_thread(vm,vm->room->exit,0,0,NULL)) < 0)
+        if((r = scvm_start_thread(vm,vm->room->entry,0,0,NULL)) < 0)
           return r;
         scvm_switch_to_thread(vm,r,SCVM_RUN_POST_ENTRY);
         break;
       }
       vm->state = SCVM_RUN_POST_ENTRY;
     case SCVM_RUN_POST_ENTRY:
-      if(vm->var->post_exit_script) {
-        if((r = scvm_start_script(vm,0,vm->var->post_exit_script,NULL)) < 0)
+      if(vm->var->post_entry_script) {
+        if((r = scvm_start_script(vm,0,vm->var->post_entry_script,NULL)) < 0)
           return r;
         scvm_switch_to_thread(vm,r,0);
         break;
