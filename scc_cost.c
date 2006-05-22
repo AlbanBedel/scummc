@@ -91,8 +91,9 @@ int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic) {
 int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			uint8_t* dst,int dst_stride, 
 			int x_min,int x_max,int y_min,int y_max,
-			int trans) {
+			int trans, int x_scale, int y_scale) {
   int shr,mask,x = 0,y = 0,end = 0,pos = 0;
+  int yerr = 0, xerr = 0, xskip = 0, yskip = 0, dx = 0, dy = 0;
   uint8_t color,rep;
 
   switch(cost->pal_size) {
@@ -125,17 +126,32 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
       rep = pic->data[pos]; pos++;
     }
     while(rep) {
-      if(!(x < x_min || x > x_max || 
-	   y < y_min || y > y_max || 
-	   trans == color))
-	dst[dst_stride*y+x] = color;
+      if(dx >= x_min && dx < x_max &&
+         dy >= y_min && dy < y_max &&
+         xskip == 0 && yskip == 0 &&
+         trans != color)
+	dst[dst_stride*dy+dx] = color;
       y++;
+      yerr += y_scale;
+      if(yerr<<1 >= 255) {
+        yerr -= 255;
+        dy++;
+        yskip = 0;
+      } else
+        yskip = 1;
       if(y >= pic->height) {
-	y = 0; x++;
+	y = 0, dy = 0, x++;
 	if(x >= pic->width) {
 	  end = 1;
 	  break;
 	}
+        xerr += x_scale;
+        if(xerr<<1 >= 255) {
+          xerr -= 255;
+          dx++;
+          xskip = 0;
+        } else
+          xskip = 1;
       }
       rep--;
     }
@@ -566,8 +582,9 @@ int scc_cost_dec_bbox(scc_cost_dec_t* dec,int* x1p,int* y1p,
 int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
 		       int x, int y,
 		       int dst_width, int dst_height,
-		       int dst_stride) {
-  int i,l,c,c_min,l_max,c_max;
+		       int dst_stride,
+                       int x_scale, int y_scale) {
+  int i,l,c,l_max,c_max,rel_x,rel_y,width,height;
   scc_cost_pic_t* pic;
   uint8_t cmd,trans = dec->cost->pal[0];
 
@@ -590,24 +607,27 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
 
     if(!pic->data) continue;
   
+    rel_x = pic->rel_x*x_scale/255;
+    rel_y = pic->rel_y*y_scale/255;
+    width = pic->width*x_scale/255;
+    height = pic->width*y_scale/255;
     l = c = 0;
-    if(x+pic->rel_x < 0) c = -x-pic->rel_x;
-    if(y+pic->rel_y < 0) l = -y-pic->rel_y;
-    c_min = c;
-    c_max = pic->width;
-    l_max = pic->height;
-    if(x+pic->rel_x + pic->width > dst_width)
-      c_max = dst_width-x-pic->rel_x;
-    if(y+pic->rel_y + pic->height > dst_height)
-      l_max = dst_height-y-pic->rel_y;
+    if(x+rel_x < 0) c = -x-rel_x;
+    if(y+rel_y < 0) l = -y-rel_y;
+    c_max = width;
+    l_max = height;
+    if(x+rel_x + width > dst_width)
+      c_max = dst_width-x-rel_x;
+    if(y+rel_y + height > dst_height)
+      l_max = dst_height-y-rel_y;
 
     if(c_max < 0 || l_max < 0) continue;
 
     
     scc_cost_decode_pic(dec->cost,pic,
-			&dst[dst_stride*(y+pic->rel_y)+x+pic->rel_x],
+			&dst[dst_stride*(y+rel_y)+x+rel_x],
 			dst_stride,
-			c,c_max,l,l_max,trans);
+			c,c_max,l,l_max,trans,x_scale,y_scale);
   }
 
   return 1;

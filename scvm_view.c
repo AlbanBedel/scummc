@@ -76,7 +76,8 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     scc_cost_dec_frame(&vm->actor[a].costdec,
                        buffer + view->room_start*stride + dx,
                        vm->actor[a].x,vm->actor[a].y,
-                       w,h,stride);
+                       w,h,stride,
+                       vm->actor[a].scale_x,vm->actor[a].scale_y);
   }
   
   return 1;
