@@ -24,6 +24,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -56,6 +57,16 @@ int scvm_pop(scvm_t* vm,int* val) {
   vm->stack_ptr--;
   scc_log(LOG_MSG,"Pop %d\n",vm->stack[vm->stack_ptr]);
   if(val) *val = vm->stack[vm->stack_ptr];
+  return 0;
+}
+
+int scvm_vpop(scvm_t* vm, ...) {
+  va_list ap;
+  int* val,r;
+  va_start(ap,vm);
+  while((val = va_arg(ap,int*)))
+    if((r = scvm_pop(vm,val))) return r;
+  va_end(ap);
   return 0;
 }
 
@@ -300,8 +311,7 @@ static int scvm_op_array2_read_byte(scvm_t* vm, scvm_thread_t* thread) {
   uint8_t vaddr;
   if((r=scvm_thread_r8(thread,&vaddr)) ||
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-     (r=scvm_pop(vm,&x)) ||
-     (r=scvm_pop(vm,&y)) ||
+     (r=scvm_vpop(vm,&x,&y,NULL)) ||
      (r=scvm_read_array(vm,addr,x,y,&val)))
     return r;
   return scvm_push(vm,val);
@@ -314,8 +324,7 @@ static int scvm_op_array2_read_word(scvm_t* vm, scvm_thread_t* thread) {
   uint16_t vaddr;
   if((r=scvm_thread_r16(thread,&vaddr)) ||
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-     (r=scvm_pop(vm,&x)) ||
-     (r=scvm_pop(vm,&y)) ||
+     (r=scvm_vpop(vm,&x,&y,NULL)) ||
      (r=scvm_read_array(vm,addr,x,y,&val)))
     return r;
   return scvm_push(vm,val);
@@ -338,8 +347,8 @@ static int scvm_op_not(scvm_t* vm, scvm_thread_t* thread) {
 #define SCVM_BIN_OP(name,op) \
 static int scvm_op_ ##name (scvm_t* vm, scvm_thread_t* thread) { \
   int r,a,b;                                              \
-  if((r=scvm_pop(vm,&b)) ||                               \
-     (r=scvm_pop(vm,&a))) return r;                       \
+  if((r=scvm_vpop(vm,&b,&a,NULL)))                        \
+    return r;                                             \
   return scvm_push(vm,(a op b));                          \
 }
 
@@ -390,8 +399,7 @@ static int scvm_op_array_write_byte(scvm_t* vm, scvm_thread_t* thread) {
   uint8_t vaddr;
   if((r=scvm_thread_r8(thread,&vaddr)) ||
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-     (r=scvm_pop(vm,&val)) ||
-     (r=scvm_pop(vm,&x)))
+     (r=scvm_vpop(vm,&val,&x,NULL)))
     return r;
   return scvm_write_array(vm,addr,x,0,val);
 }
@@ -403,8 +411,7 @@ static int scvm_op_array_write_word(scvm_t* vm, scvm_thread_t* thread) {
   uint16_t vaddr;
   if((r=scvm_thread_r16(thread,&vaddr)) ||
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-     (r=scvm_pop(vm,&val)) ||
-     (r=scvm_pop(vm,&x)))
+     (r=scvm_vpop(vm,&val,&x,NULL)))
     return r;
   return scvm_write_array(vm,addr,x,0,val);
 }
@@ -416,9 +423,7 @@ static int scvm_op_array2_write_byte(scvm_t* vm, scvm_thread_t* thread) {
   uint8_t vaddr;
   if((r=scvm_thread_r8(thread,&vaddr)) ||
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-     (r=scvm_pop(vm,&val)) ||
-     (r=scvm_pop(vm,&x)) ||
-     (r=scvm_pop(vm,&y)))
+     (r=scvm_vpop(vm,&val,&x,&y,NULL)))
     return r;
   return scvm_write_array(vm,addr,x,0,val);
 }
@@ -430,9 +435,7 @@ static int scvm_op_array2_write_word(scvm_t* vm, scvm_thread_t* thread) {
   uint16_t vaddr;
   if((r=scvm_thread_r16(thread,&vaddr)) ||
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
-     (r=scvm_pop(vm,&val)) ||
-     (r=scvm_pop(vm,&x)) ||
-     (r=scvm_pop(vm,&y)))
+     (r=scvm_vpop(vm,&val,&x,&y,NULL)))
     return r;
   return scvm_write_array(vm,addr,x,0,val);
 }
@@ -571,8 +574,7 @@ static int scvm_op_start_script(scvm_t* vm, scvm_thread_t* thread) {
       if((r=scvm_pop(vm,&args[num_args]))) return r;
       num_args--;
     }
-    if((r=scvm_pop(vm,&script)) ||
-       (r=scvm_pop(vm,&flags)) ||
+    if((r=scvm_vpop(vm,&script,&flags,NULL)) ||
        (r=scvm_start_script(vm,flags,script,args)) < 0)
       return r;
     vm->next_thread = &vm->thread[r];
@@ -683,10 +685,8 @@ static int scvm_op_put_actor_at(scvm_t* vm, scvm_thread_t* thread) {
   int r,a,x,y,room;
   scvm_actor_t* actor;
   
-  if((r=scvm_pop(vm,&room)) ||
-     (r=scvm_pop(vm,&y)) ||
-     (r=scvm_pop(vm,&x)) ||
-     (r=scvm_pop(vm,&a))) return r;
+  if((r=scvm_vpop(vm,&room,&y,&x,&a,NULL)))
+    return r;
   
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   if(room == 0xFF) room = actor->room;
@@ -697,8 +697,8 @@ static int scvm_op_put_actor_at(scvm_t* vm, scvm_thread_t* thread) {
 // 0x82
 static int scvm_op_actor_animate(scvm_t* vm, scvm_thread_t* thread) {
   int r,a,f;
-  if((r = scvm_pop(vm,&f)) ||
-     (r = scvm_pop(vm,&a))) return r;
+  if((r = scvm_vpop(vm,&f,&a,NULL)))
+    return r;
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   scvm_actor_animate(&vm->actor[a],f);
   return 0;
@@ -715,8 +715,8 @@ static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
 // 0x88
 static int scvm_op_get_random_number_range(scvm_t* vm, scvm_thread_t* thread) {
   int r,min,max;
-  if((r=scvm_pop(vm,&max)) ||
-     (r=scvm_pop(vm,&min))) return r;
+  if((r=scvm_vpop(vm,&max,&min,NULL)))
+    return r;
   vm->var->random_num = vm->random(vm,min,max);
   return scvm_push(vm,vm->var->random_num);
 }
@@ -818,26 +818,26 @@ static int scvm_op_resource(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9CAC
 static int scvm_op_set_scrolling(scvm_t* vm, scvm_thread_t* thread) {
   int r;
-  if((r=scvm_pop(vm,&vm->view->scroll_right)) ||
-     (r=scvm_pop(vm,&vm->view->scroll_left))) return r;
+  if((r=scvm_vpop(vm,&vm->view->scroll_right,
+                  &vm->view->scroll_left,NULL)))
+    return r;
   return 0;
 }
 
 // 0x9CAE
 static int scvm_op_set_screen(scvm_t* vm, scvm_thread_t* thread) {
   int r;
-  if((r=scvm_pop(vm,&vm->view->room_end)) ||
-     (r=scvm_pop(vm,&vm->view->room_start))) return r;
+  if((r=scvm_vpop(vm,&vm->view->room_end,
+                  &vm->view->room_start,NULL)))
+    return r;
   return 0;
 }
 
 // 0x9CAF
 static int scvm_op_set_room_color(scvm_t* vm, scvm_thread_t* thread) {
   int r,red,green,blue,color;
-  if((r=scvm_pop(vm,&color)) ||
-     (r=scvm_pop(vm,&blue)) ||
-     (r=scvm_pop(vm,&green)) ||
-     (r=scvm_pop(vm,&red))) return r;
+  if((r=scvm_vpop(vm,&color,&blue,&green,&red,NULL)))
+    return r;
   if(color < 0 || color > 0xFF) return 0;
   vm->view->palette[color].r = red;
   vm->view->palette[color].g = green;
@@ -861,9 +861,8 @@ static int scvm_op_shake_off(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9CB3
 static int scvm_op_set_room_intensity(scvm_t* vm, scvm_thread_t* thread) {
   int r,scale,start,end;
-  if((r=scvm_pop(vm,&end)) ||
-     (r=scvm_pop(vm,&start)) ||
-     (r=scvm_pop(vm,&scale))) return r;
+  if((r=scvm_vpop(vm,&end,&start,&scale,NULL)))
+    return r;
   scvm_view_scale_palette(vm->view,vm->room->current_palette,
                           scale,scale,scale,start,end);
   return 0;
@@ -877,11 +876,8 @@ static int scvm_op_set_transition_effect(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9CB6
 static int scvm_op_set_rgb_intensity(scvm_t* vm, scvm_thread_t* thread) {
   int r,red,green,blue,start,end;
-  if((r=scvm_pop(vm,&end)) ||
-     (r=scvm_pop(vm,&start)) ||
-     (r=scvm_pop(vm,&blue)) ||
-     (r=scvm_pop(vm,&green)) ||
-     (r=scvm_pop(vm,&red))) return r;
+  if((r=scvm_vpop(vm,&end,&start,&blue,&green,&red,NULL)))
+    return r;
   scvm_view_scale_palette(vm->view,vm->room->current_palette,
                           red,green,blue,start,end);
   return 0;
@@ -910,9 +906,8 @@ static int scvm_op_set_actor_costume(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9D4D
 static int scvm_op_set_actor_walk_speed(scvm_t* vm, scvm_thread_t* thread) {
-  int r;
-  if((r=scvm_pop(vm,&vm->current_actor->walk_speed_y))) return r;
-  return scvm_pop(vm,&vm->current_actor->walk_speed_x);
+  return scvm_vpop(vm,&vm->current_actor->walk_speed_y,
+                   &vm->current_actor->walk_speed_x,NULL);
 }
 
 // 0x9D4F
@@ -922,9 +917,8 @@ static int scvm_op_set_actor_walk_frame(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9D50
 static int scvm_op_set_actor_talk_frame(scvm_t* vm, scvm_thread_t* thread) {
-  int r;
-  if((r=scvm_pop(vm,&vm->current_actor->talk_end_frame))) return r;
-  return scvm_pop(vm,&vm->current_actor->talk_start_frame);
+  return scvm_vpop(vm,&vm->current_actor->talk_end_frame,
+                   &vm->current_actor->talk_start_frame,NULL);
 }
 
 // 0x9D51
@@ -989,9 +983,8 @@ static int scvm_op_set_actor_anim_speed(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9D63
 static int scvm_op_set_actor_talk_pos(scvm_t* vm, scvm_thread_t* thread) {
-  int r;
-  if((r=scvm_pop(vm,&vm->current_actor->talk_y))) return r;
-  return scvm_pop(vm,&vm->current_actor->talk_x);
+  return scvm_vpop(vm,&vm->current_actor->talk_y,
+                   &vm->current_actor->talk_x,NULL);
 }
 
 
