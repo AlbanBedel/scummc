@@ -68,6 +68,15 @@ struct scc_cost {
   scc_cost_anim_t* anims;
 };
 
+typedef struct scc_cost_dec {
+  scc_cost_t* cost;
+  scc_cost_anim_t* anim;
+
+  uint16_t pc[16]; // limb pc
+  uint8_t stopped;
+} scc_cost_dec_t;
+
+
 scc_cost_anim_t* scc_cost_new_anim(scc_cost_t* cost,uint8_t id);
 
 int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic);
@@ -83,3 +92,17 @@ scc_cost_pic_t* scc_cost_get_limb_pic(scc_cost_t* cost,uint8_t limb,
 				      uint8_t pic,int max_depth);
 
 scc_cost_t* scc_parse_cost(scc_fd_t* fd,int len);
+
+void scc_cost_dec_init(scc_cost_dec_t* dec);
+
+int scc_cost_dec_load_anim(scc_cost_dec_t* dec,uint16_t aid);
+
+int scc_cost_dec_step(scc_cost_dec_t* dec);
+
+int scc_cost_dec_bbox(scc_cost_dec_t* dec,int* x1p,int* y1p,
+		      int* x2p,int* y2p);
+
+int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
+		       int x, int y,
+		       int dst_width, int dst_height,
+		       int dst_stride);
