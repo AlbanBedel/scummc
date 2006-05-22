@@ -110,8 +110,9 @@ typedef struct scvm_room {
 typedef struct scvm_actor {
   unsigned id;
   char* name;
-  scc_cost_t* costume;
-  scvm_room_t* room;
+  scc_cost_dec_t costdec;
+  //scvm_room_t* room;
+  int room;
   int x,y;
   unsigned width,height;
   unsigned direction;
@@ -135,6 +136,11 @@ typedef struct scvm_actor {
   int talk_x,talk_y;
   unsigned talk_script;
 } scvm_actor_t;
+
+void scvm_actor_init(scvm_actor_t* a);
+void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room);
+void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost);
+void scvm_actor_animate(scvm_actor_t* a, int anim);
 
 #define SCVM_VIEW_SHAKE 1
 

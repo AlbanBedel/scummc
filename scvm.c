@@ -246,6 +246,10 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   // actors
   vm->num_actor = 16;
   vm->actor = calloc(vm->num_actor,sizeof(scvm_actor_t));
+  for(i = 0 ; i < vm->num_actor ; i++) {
+    vm->actor[i].id = i;
+    scc_cost_dec_init(&vm->actor[i].costdec);
+  }
   vm->current_actor = vm->actor;
   
   // view

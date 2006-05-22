@@ -678,6 +678,32 @@ static int scvm_op_stop_script(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x7F
+static int scvm_op_put_actor_at(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a,x,y,room;
+  scvm_actor_t* actor;
+  
+  if((r=scvm_pop(vm,&room)) ||
+     (r=scvm_pop(vm,&y)) ||
+     (r=scvm_pop(vm,&x)) ||
+     (r=scvm_pop(vm,&a))) return r;
+  
+  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  if(room == 0xFF) room = actor->room;
+  scvm_actor_put_at(&vm->actor[a],x,y,room);
+  return 0;
+}
+
+// 0x82
+static int scvm_op_actor_animate(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a,f;
+  if((r = scvm_pop(vm,&f)) ||
+     (r = scvm_pop(vm,&a))) return r;
+  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  scvm_actor_animate(&vm->actor[a],f);
+  return 0;
+}
+
 // 0x87
 static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
   int r,max;
@@ -707,11 +733,8 @@ static int scvm_op_is_script_running(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_get_actor_room(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
   if((r=scvm_pop(vm,&a))) return r;
-  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
-  if(!vm->actor[a].room)
-    return scvm_push(vm,0);
-  else
-    return scvm_push(vm,vm->actor[a].room->id);
+  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  return scvm_push(vm,vm->actor[a].room);
 }
 
 // 0x8D
@@ -876,9 +899,12 @@ static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9D4C
 static int scvm_op_set_actor_costume(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
+  scc_cost_t* cost;
   if((r=scvm_pop(vm,&a))) return r;
-  if(!(vm->current_actor->costume = scvm_load_res(vm,SCVM_RES_COSTUME,a)))
+  if(!(cost = scvm_load_res(vm,SCVM_RES_COSTUME,a)))
     return SCVM_ERR_BAD_COSTUME;
+  if(vm->current_actor)
+    scvm_actor_set_costume(vm->current_actor,cost);
   return 0;
 }
 
@@ -904,6 +930,13 @@ static int scvm_op_set_actor_talk_frame(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9D51
 static int scvm_op_set_actor_stand_frame(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_pop(vm,&vm->current_actor->stand_frame);
+}
+
+// 0x9D53
+static int scvm_op_actor_init(scvm_t* vm, scvm_thread_t* thread) {
+  if(vm->current_actor)
+    scvm_actor_init(vm->current_actor);
+  return 0;
 }
 
 // 0x9D54
@@ -1389,11 +1422,11 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_stop_script, "stop script" },
   { scvm_op_dummy_vvv, "walk actor to object" },
   { scvm_op_dummy_vvv, "walk actor to" },
-  { scvm_op_dummy_vvvv, "put actor at" },
+  { scvm_op_put_actor_at, "put actor at" },
   // 80
   { scvm_op_dummy_vvv,  "put actor at object" },
   { scvm_op_dummy_vv, "actor face" },
-  { scvm_op_dummy_vv, "animate actor" },
+  { scvm_op_actor_animate, "actor animate" },
   { scvm_op_dummy_vvvv, "do sentence" },
   // 84
   { scvm_op_dummy_vv, "pickup object" },
@@ -1657,7 +1690,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_set_actor_talk_frame, "set talk frame" },
   { scvm_op_set_actor_stand_frame, "set stand frame" },
   { NULL, NULL },
-  { scvm_op_dummy, "init" },
+  { scvm_op_actor_init, "init" },
   // 54
   { scvm_op_set_actor_elevation, "set elevation" },
   { scvm_op_dummy, "default frames" },

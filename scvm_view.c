@@ -41,7 +41,7 @@
 int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                    uint8_t* buffer, int stride,
                    unsigned width, unsigned height) {
-  int sx,dx,w,h,y;
+  int sx,dx,w,h,y,a;
 
   if(width < 320 || height < 200 ||
      !vm->room) return 0;
@@ -66,6 +66,17 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     for(y = 0 ; y < h ; y++)
       memcpy(buffer + (view->room_start+y)*stride + dx,
              vm->room->image.data + y*vm->room->width + sx,w);
+  }
+  
+  for(a = 0 ; a < vm->num_actor ; a++) {
+    if(!vm->actor[a].room ||
+       vm->actor[a].room != vm->room->id ||
+       !vm->actor[a].costdec.cost) continue;
+    scc_log(LOG_MSG,"Draw actor %d at %dx%d\n",a,vm->actor[a].x,vm->actor[a].y);
+    scc_cost_dec_frame(&vm->actor[a].costdec,
+                       buffer + view->room_start*stride + dx,
+                       vm->actor[a].x,vm->actor[a].y,
+                       w,h,stride);
   }
   
   return 1;

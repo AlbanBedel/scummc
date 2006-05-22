@@ -154,6 +154,7 @@ scvm_SRCS=                      \
 	scvm_thread.c           \
 	scvm_op.c               \
 	scvm_view.c             \
+	scvm_actor.c            \
 	scc_fd.c                \
 	scc_util.c              \
 	scc_param.c             \
