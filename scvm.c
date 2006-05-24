@@ -342,13 +342,15 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         }
         vm->current_thread = &vm->thread[i];
       }
-      scc_log(LOG_MSG,"\n == VM enter thread %d / script %d @ 0x%x ==\n",
+      scc_log(LOG_MSG,"\n == VM enter thread %d / script %d @ 0x%x / room %d ==\n",
               vm->current_thread->id,vm->current_thread->script->id,
-              vm->current_thread->code_ptr);
+              vm->current_thread->code_ptr,
+              vm->room ? vm->room->id : -1);
       r = scvm_thread_run(vm,vm->current_thread);
-      scc_log(LOG_MSG," == VM leave thread %d / script %d @ 0x%x ==\n\n",
+      scc_log(LOG_MSG," == VM leave thread %d / script %d @ 0x%x / room %d ==\n\n",
               vm->current_thread->id,vm->current_thread->script->id,
-              vm->current_thread->code_ptr);
+              vm->current_thread->code_ptr,
+              vm->room ? vm->room->id : -1);
       if(r < 0) return r; // error
       if(r > 0) {         // switch state
         vm->state = r;
