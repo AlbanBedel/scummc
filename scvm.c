@@ -381,6 +381,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       break;
       
     case SCVM_OPEN_ROOM:
+      vm->var->new_room = vm->next_room;
     case SCVM_RUN_PRE_EXIT:
       if(vm->var->pre_exit_script) {
         if((r = scvm_start_script(vm,0,vm->var->pre_exit_script,NULL)) < 0)
