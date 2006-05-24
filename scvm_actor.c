@@ -86,3 +86,22 @@ void scvm_actor_animate(scvm_actor_t* a, int anim) {
   }
   scc_cost_dec_load_anim(&a->costdec,anim);
 }
+
+void scvm_actor_step_anim(scvm_actor_t* a) {
+  a->anim_cycle++;
+  if(a->anim_cycle >= a->anim_speed) {
+    scc_cost_dec_step(&a->costdec);
+    a->anim_cycle = 0;
+  }
+}
+
+void scvm_step_actors(scvm_t* vm) {
+  int a;
+  for(a = 0 ; a < vm->num_actor ; a++) {
+    if(!vm->actor[a].room ||
+       vm->actor[a].room != vm->room->id ||
+       !vm->actor[a].costdec.cost ||
+       !vm->actor[a].costdec.anim) continue;
+    scvm_actor_step_anim(&vm->actor[a]);
+  }
+}

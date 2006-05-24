@@ -583,6 +583,7 @@ int main(int argc,char** argv) {
       sdl_scvm_update_palette(screen,vm->view->palette);
       vm->view->flags &= ~SCVM_VIEW_PALETTE_CHANGED;
     }
+    scvm_step_actors(vm);
     
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
     scvm_view_draw(vm,vm->view,screen->pixels,screen->pitch,

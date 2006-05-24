@@ -118,7 +118,8 @@ typedef struct scvm_actor {
   unsigned direction;
   unsigned flags;
   
-  unsigned anim_speed;
+  // the anim step every anim_speed cycles
+  unsigned anim_speed, anim_cycle;
   unsigned scale_x,scale_y;
   unsigned layer;
   
@@ -141,6 +142,8 @@ void scvm_actor_init(scvm_actor_t* a);
 void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room);
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost);
 void scvm_actor_animate(scvm_actor_t* a, int anim);
+void scvm_actor_step_anim(scvm_actor_t* a);
+void scvm_step_actors(scvm_t* vm);
 
 #define SCVM_VIEW_SHAKE 1
 
