@@ -53,19 +53,53 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
   if(view->room_start + h > height)
     h = height - view->room_start;
   
-  if(h > 0) {  
-    w = vm->room->width;
-    if(w > width) w = width;
+  if(h <= 0) return 0;  
+  w = vm->room->width;
+  if(w > width) w = width;
   
-    sx = vm->view->camera_x-w/2;
-    if(sx + w/2 > vm->room->width) sx = vm->room->width-w;
-    if(sx < 0) sx = 0;
+  sx = vm->view->camera_x-w/2;
+  if(sx + w/2 > vm->room->width) sx = vm->room->width-w;
+  if(sx < 0) sx = 0;
   
-    dx = (width-w)/2;
+  dx = (width-w)/2;
 
-    for(y = 0 ; y < h ; y++)
-      memcpy(buffer + (view->room_start+y)*stride + dx,
-             vm->room->image.data + y*vm->room->width + sx,w);
+  for(y = 0 ; y < h ; y++)
+    memcpy(buffer + (view->room_start+y)*stride + dx,
+           vm->room->image.data + y*vm->room->width + sx,w);
+  
+  for(a = 0 ; a < vm->room->num_object ; a++) {
+    scvm_object_t* obj = vm->room->object[a];
+    scvm_image_t* img;
+    int obj_w,obj_h;
+    uint8_t *src,*dst;
+    if(!obj->pdata->state ||
+       obj->pdata->state > obj->num_image)
+      continue;
+    img = &obj->image[obj->pdata->state];
+    obj_w = obj->width;
+    obj_h = obj->height;
+    if(obj->x >= sx + vm->room->width ||
+       obj->x + obj->width < sx ||
+       obj->y >= h ||
+       obj->y + obj_h < 0)
+      continue;
+    src = img->data;
+    dst = buffer +  (view->room_start+obj->y)*stride + dx + obj->x;
+    if(obj->x-sx + obj_w >= w)
+      obj_w = w - (obj->x-sx);
+    if(obj->x < sx) {
+      int off = sx - obj->x;
+      src += off;
+      dst += off;
+      obj_w -= off;
+    }
+    
+    if(obj->y + obj_h >= h)
+      obj_h = h - obj->y;
+    for(y = 0 ; y < obj_h ; y++)
+      memcpy(dst + y*stride,
+             src + y*obj->width,
+             obj_w);
   }
   
   for(a = 0 ; a < vm->num_actor ; a++) {

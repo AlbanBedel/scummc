@@ -622,6 +622,20 @@ static int scvm_op_start_script_recursive(scvm_t* vm, scvm_thread_t* thread) {
   }    
 }
 
+// 0x61
+static int scvm_op_draw_object(scvm_t* vm, scvm_thread_t* thread) {
+  int r,obj_id,state;
+  if((r = scvm_vpop(vm,&state,&obj_id,NULL)))
+    return r;
+  // return some error ?
+  if(!vm->room) return 0;
+  // the lower address are actors
+  if(obj_id < 0x10 || obj_id >= vm->num_object)
+    return SCVM_ERR_BAD_OBJECT;
+  vm->object_pdata[obj_id].state = state > 0 ? state : 1;
+  return 0;
+}
+
 // 0x65, 0x66
 static int scvm_op_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
   scvm_stop_thread(vm,thread);
@@ -1378,7 +1392,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_start_script0, "start script0" },
   // 60
   { NULL, NULL },
-  { scvm_op_dummy_vv, "draw object" },
+  { scvm_op_draw_object, "draw object" },
   { NULL, NULL },
   { NULL, NULL },
   // 64
