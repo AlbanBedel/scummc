@@ -53,6 +53,7 @@ fi
 
 CONFIGURE_FLAGS=
 for a in "$@" ; do
+    a=`echo "$a" | sed "s/'/'\"'\"'/g"`
     CONFIGURE_FLAGS="$CONFIGURE_FLAGS '$a'"
 done
 
