@@ -81,7 +81,7 @@ int main(int argc,char** argv) {
     return -1;
   }
 
-  type = scc_fd_r32(in_fd);
+  type = scc_fd_r32be(in_fd);
   len = scc_fd_r32be(in_fd) - 8;
 
   if(((type>>24)&0xFF) != 'Z' ||
