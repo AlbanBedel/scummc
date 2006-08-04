@@ -64,7 +64,7 @@ int main(int argc,char** argv) {
   if(!files) return -1;
 
   if(w < 0 || h < 0) {
-    printf("You must specify the width, height of the zplanes.");
+    printf("You must specify the width, height of the zplanes.\n");
     return -1;
   }
 
