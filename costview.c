@@ -30,6 +30,7 @@
 #include "scc_fd.h"
 #include "scc_util.h"
 #include "scc_cost.h"
+#include "scc_img.h"
 #include "scc.h"
 #include "scc_param.h"
 
@@ -844,14 +845,16 @@ static scc_cost_t* open_cost_file(char * path) {
 }
 
 static void usage(char* prog) {
-  printf("Usage: %s -pals file.pals file.cost\n",prog);
+  printf("Usage: %s [-pals file.pals] [-bmp palette.bmp] file.cost\n",prog);
   exit(-1);
 }
 
 static char* pals_path = NULL;
+static char* bmp_path = NULL;
 
 static scc_param_t costview_params[] = {
   { "pals", SCC_PARAM_STR, 0, 0, &pals_path },
+  { "bmp", SCC_PARAM_STR, 0, 0, &bmp_path },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -871,10 +874,29 @@ int main(int argc,char** argv) {
 
   cv = create_win();
 
-  if(!pals_path) pals_path = "default.pals";
-  pal = open_pals_file(pals_path);
-  if(!pal) return -1;
-
+  if(bmp_path) {
+    int i;
+    scc_img_t* img = scc_img_open(bmp_path);
+    if(!img) {
+      scc_log(LOG_ERR,"Failed to open %s.\n",bmp_path);
+      return -1;
+    }
+    pal = calloc(1,sizeof(scc_pal_t));
+    for(i = 0 ; i < img->ncol && i < 256 ; i++) {
+      pal->r[i] = img->pal[3*i];
+      pal->g[i] = img->pal[3*i+1];
+      pal->b[i] = img->pal[3*i+2];
+    }
+    scc_img_free(img);
+  } else {
+    if(!pals_path) {
+      scc_log(LOG_WARN,"No palette given on the command line, using default.pals.\n");
+      pals_path = "default.pals";
+    }
+    pal = open_pals_file(pals_path);
+    if(!pal) return -1;
+  }
+  
   cost = open_cost_file(files->val);
   if(!cost) return -1;
    

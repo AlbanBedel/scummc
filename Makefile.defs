@@ -143,6 +143,7 @@ costview_SRCS=                  \
 	scc_fd.c                \
 	scc_cost.c              \
 	costview.c              \
+	scc_img.c               \
 	scc_param.c             \
 
 costview_LIBS=                  \
