@@ -2144,10 +2144,10 @@ static int leave_btn_cb(GtkWidget *btn,
 // when shift is pressed go to the alt state
 static int key_press_btn_cb(GtkWidget *btn,GdkEventKey *ev,
 			    scc_boxedit_t* be) {
-  if(be->save_as) return 0;
+  int* ptr = g_object_get_data(G_OBJECT(btn),"flag");
+  if(ptr[0]) return 0;
   if(ev->keyval == GDK_Shift_L ||
      ev->keyval == GDK_Shift_R) {
-    int* ptr = g_object_get_data(G_OBJECT(btn),"flag");
     char* txt = g_object_get_data(G_OBJECT(btn),"alt_label");
     ptr[0] = 1;
     gtk_container_remove(GTK_CONTAINER(btn),gtk_bin_get_child(GTK_BIN(btn)));
@@ -2161,10 +2161,10 @@ static int key_press_btn_cb(GtkWidget *btn,GdkEventKey *ev,
 // return to normal on release
 static int key_release_btn_cb(GtkWidget *btn, GdkEventKey *ev,
 			      scc_boxedit_t* be) {
-  if(!be->save_as) return 0;
+  int* ptr = g_object_get_data(G_OBJECT(btn),"flag");
+  if(!ptr[0]) return 0;
   if(ev->keyval == GDK_Shift_L ||
      ev->keyval == GDK_Shift_R) {
-    int* ptr = g_object_get_data(G_OBJECT(btn),"flag");
     char* txt = g_object_get_data(G_OBJECT(btn),"label");
     ptr[0] = 0;
     gtk_container_remove(GTK_CONTAINER(btn),gtk_bin_get_child(GTK_BIN(btn)));
