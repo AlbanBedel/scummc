@@ -32,6 +32,9 @@ gtk=yes
 ft=yes
 sdl=yes
 
+CF_HOST=cf-shell.sf.net
+CF_PATH=scummc/trunk
+
 ##
 ## Override head and tail
 ##
@@ -132,6 +135,18 @@ while [ -n "$1" ] ; do
 	    PAGER=$2
 	    shift
 	    ;;
+	--cf-user)
+	    CF_USER=$2
+	    shift
+	    ;;
+	--cf-host)
+	    CF_HOST=$2
+	    shift
+	    ;;
+	--cf-path)
+	    CF_PATH=$2
+	    shift
+	    ;;
 	--set-default-target)
 	    shift
 	    if [ -z "$1" ] ; then
@@ -209,6 +224,11 @@ Usage: $0 [OPTIONS]...
   --pkg-config PKGCONFIG    use this pkg-config
   --pkg-config-libdir DIR   set \$PKG_CONFIG_LIBDIR, useful for cross compile
   --sdl-config SDL_CONFIG   use this sdl-config
+  
+  --cf-user NAME            set the username to use for the compile farm
+  --cf-host HOST            override the compile farm host
+  --cf-path PATH            set the path to the sources on the compile farm,
+                            the path must be relatif to home.
 
   --set-default-target TRG  change the default make target
   --reconfigure OPTS        re-run this script with the last arguments.
@@ -524,6 +544,15 @@ else
 fi
 [ -z "$PAGER" ] && echo "Pager: no"  || echo "Pager: $PAGER"	
 
+##
+## Enable the compile farm support
+##
+
+if [ -n "$CF_USER" ] ; then
+    echo "Compile farm: ${CF_USER}@${CF_HOST}:${CF_PATH}"
+else
+    echo "Compile farm: no"
+fi
 
 ##
 ## Setup the build directory
@@ -560,6 +589,10 @@ TARGET?=$TARGET
 MAKE?=$MAKE
 
 PAGER?=$PAGER
+
+CF_USER?=$CF_USER
+CF_HOST?=$CF_HOST
+CF_PATH?="$CF_PATH"
 
 EOF
 

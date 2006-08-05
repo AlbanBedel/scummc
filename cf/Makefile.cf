@@ -1,0 +1,81 @@
+#
+#  ScummC Makefile.cf
+#  Copyright (C) 2006  Alban Bedel
+# 
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+
+all_src=*.[chyl] scummVars6.s \
+	configure \
+	Makefile Makefile.defs Makefile.target \
+	cf/Makefile.cf cf/*.sh
+
+CF_ADDR=$(CF_USER)@$(CF_HOST)
+
+CF_SSH=ssh -C $(CF_ADDR) 'HOST_LIST="$(HOST_LIST)" SRCDIR=$(CF_PATH) TERM=$(TERM) $(CF_PATH)/cf/$(1)'
+CF_RSYNC=rsync -zu --rsh="ssh -l $(CF_USER)"
+
+cf_rsync: $(all_src)
+	@echo "Synching the sources on $(CF_HOST)"
+	@$(CF_RSYNC) -R $^ "$(CF_ADDR):$(CF_PATH)"
+	@touch $@
+	@echo
+
+cf_check:
+	@$(call CF_SSH,checkhosts.sh)
+
+cf_all: cf_rsync
+	@echo "Lauching builds on cf.sf.net"
+	@touch $@
+	@$(call CF_SSH,cfbuild.sh all_all) ; r=$$? ; \
+	   echo "Getting the logs back" ; \
+	   $(CF_RSYNC) $(CF_ADDR):$(CF_PATH)/cf.build.logs/*.log cf.build.logs/ ; [ $$(($$?+$$r)) -eq 0 ]
+
+rm_cf_all:
+	@rm -f cf_all
+
+cf_all_force: rm_cf_all cf_all
+
+cf_log:
+	@cat cf.build.logs/*.log 2> /dev/null
+
+cf_viewlog:
+	@cat cf.build.logs/*.log 2> /dev/null | $(PAGER)
+
+cf_cleanlog: cf_rsync
+	@$(call CF_SSH,cfbuild.sh all_cleanlog)
+
+cf_clean: cf_rsync
+	@$(call CF_SSH,cfbuild.sh all_clean)
+	@rm cf_all
+
+cf_cleanbin: cf_rsync
+	@$(call CF_SSH,cfbuild.sh all_cleanbin)
+	@rm cf_all
+
+cf_distclean: cf_rsync
+	@$(call CF_SSH,cfbuild.sh all_distclean)
+	@rm cf_all
+
+PHONY_TARGETS+= cf_cleanlog   \
+	cf_clean              \
+	cf_all_force          \
+	rm_cf_all             \
+	cf_check              \
+        cf_cleanbin           \
+	cf_distclean          \
+	cf_log                \
+	cf_viewlog diff       \
+

@@ -195,6 +195,14 @@ $(BUILDROOT)/%/build.log:
 PHONY_TARGETS+= log viewlog all_log all_viewlog
 
 ##
+## Include the compile farm makefile if a username is defined
+##
+
+ifneq ($(CF_USER),)
+include cf/Makefile.cf
+endif
+
+##
 ## Include user defined targets.
 ##
 
