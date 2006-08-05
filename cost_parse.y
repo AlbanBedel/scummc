@@ -44,9 +44,9 @@
   int yylex(void);
   int yyerror (const char *s);
 
-#define COST_ABORT(at,msg, args...)  { \
+#define COST_ABORT(at,msg...)  { \
   printf("Line %d, column %d: ",at.first_line,at.first_column); \
-  printf(msg, ## args); \
+  printf(msg); \
   YYABORT; \
 }
 

@@ -100,9 +100,9 @@ void scc_parser_add_dep(scc_parser_t* p, char* dep);
   }                                                           \
 }
 
-#define SCC_ABORT(at,msg, args...)  { \
+#define SCC_ABORT(at,msg...)  { \
   scc_log(LOG_ERR,"%s: ",scc_lex_get_file(sccp->lex));        \
-  scc_log(LOG_ERR,msg, ## args); \
+  scc_log(LOG_ERR,msg); \
   YYABORT; \
 }
 
