@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 #include "scc_fd.h"
 #include "scc_util.h"
