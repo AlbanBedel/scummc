@@ -344,7 +344,7 @@ case "$cpu" in
     i[3-9]86|x86_64|alpha)
 	endian=little
 	;;
-    ppc|sparc)
+    ppc|powerpc|sparc)
 	endian=big
 	;;
     *)
