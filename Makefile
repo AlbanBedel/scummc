@@ -248,6 +248,7 @@ help:
 	@echo
 	@echo "  $(MAKE) all_SUBTARGET     build a subtarget for all targets"
 	@echo
+	@$(CF_HELP)
 	@echo "  $(MAKE) help              display this"
 	@echo "  $(MAKE) targets           show a list of the configured targets"
 	@echo "  $(MAKE) subtargets        show a list of the existing subtargets"
