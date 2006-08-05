@@ -1367,10 +1367,10 @@ int scc_parse_loff(scc_fd_t* fd,scc_res_idx_t* idx,int len) {
     printf("Too short LOFF block ???\n");
     return 0;
   } else {
-    struct  __attribute__((__packed__)) {
+    struct {
       uint8_t idx;
       uint32_t off;
-    } offs[num];
+    } PACKED_ATTRIB offs[num];
     uint32_t max_idx = 0;
     int r,w=0;
 
