@@ -467,7 +467,7 @@ int scc_boxedit_save(scc_boxedit_t* be, char* path) {
     return 0;
   }
 
-  scc_fd_w32be(fd,MKID('b','o','x','d'));
+  scc_fd_w32(fd,MKID('b','o','x','d'));
   scc_fd_w32be(fd,8 + scc_box_size(be->boxes));
 
   for(box = be->boxes ; box ; box = box->next) {
