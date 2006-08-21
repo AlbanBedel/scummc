@@ -80,7 +80,7 @@ CF_SUBTARGETS=                                   \
 	
 $(foreach sub,$(CF_SUBTARGETS),$(eval $(call DEF_CF_TARGET_template,$(sub))))
 
-$(foreach sub,$(CLEAN_SUBTARGETS),$(eval $(call DEF_CF_CLEAN_TARGET_template,$(sub))))
+$(foreach sub,$(CLEAN_SUBTARGETS) distclean,$(eval $(call DEF_CF_CLEAN_TARGET_template,$(sub))))
 
 cf_viewlog:
 	@cat cf.build.logs/*.log 2> /dev/null | $(PAGER)
