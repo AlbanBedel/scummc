@@ -57,6 +57,8 @@ typedef struct scc_parser {
   int local_vars;
   int local_scr;
   int cycl;
+  // ressources include paths
+  char** res_path;
   // deps
   char do_deps;
   int num_deps;
@@ -74,6 +76,8 @@ typedef struct scc_parser {
 
 int scc_parser_error (scc_parser_t* p,YYLTYPE *llocp, const char *s);
 void scc_parser_add_dep(scc_parser_t* p, char* dep);
+
+static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 
 #include "scc_func.h"
 
@@ -572,6 +576,7 @@ roomdecl: resdecl ';'
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
+  scc_parser_find_res(sccp,&$3);
   if(!scc_roobj_set_param(sccp->roobj,sccp->ns,$1,$3))
     SCC_ABORT(@1,"Failed to set room %s.\n",$1);
 
@@ -588,7 +593,6 @@ roomdecl: resdecl ';'
     if($4[i][0] == '\0') continue;
     if(!scc_roobj_set_zplane(sccp->roobj,i+1,$4[i]))
       SCC_ABORT(@1,"Failed to set room zplane %d.\n",i+1);
-    if(sccp->do_deps) scc_parser_add_dep(sccp,$4[i]);
   }
 }
 | SYM ASSIGN INTEGER ';'
@@ -632,6 +636,7 @@ voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
 
   if(!$1->rid) scc_ns_get_rid(sccp->ns,$1);
 
+  scc_parser_find_res(sccp,&$4);
   if(!scc_roobj_add_voice(sccp->roobj,$1,$4,$6[0],$6+1))
     SCC_ABORT(@1,"Failed to add voice.");
 
@@ -646,6 +651,7 @@ voicedef: voicedecl ASSIGN '{' STRING ',' synclist '}'
 
   if(!$1->rid) scc_ns_get_rid(sccp->ns,$1);
 
+  scc_parser_find_res(sccp,&$4);
   if(!scc_roobj_add_voice(sccp->roobj,$1,$4,0,NULL))
     SCC_ABORT(@1,"Failed to add voice.");
 
@@ -685,8 +691,9 @@ resdecl: RESTYPE SYM location ASSIGN STRING
     SCC_ABORT(@4,"Invalid operator for ressource declaration.\n");
 
   r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
+  scc_parser_find_res(sccp,&$5);
   // then we need to add that to the roobj
-  if(!scc_roobj_add_res(sccp->roobj,r,$5) && !sccp->do_deps)
+  if(!sccp->do_deps && !scc_roobj_add_res(sccp->roobj,r,$5))
     SCC_ABORT(@2,"Failed to declare %s.\n",$2);
   if(sccp->do_deps) scc_parser_add_dep(sccp,$5);
   
@@ -701,8 +708,9 @@ resdecl: RESTYPE SYM location ASSIGN STRING
     SCC_ABORT(@5,"Invalid operator for ressource declaration.\n");
 
   r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
+  scc_parser_find_res(sccp,&$6);
   // then we need to add that to the roobj
-  if(!scc_roobj_add_res(sccp->roobj,r,$6) && !sccp->do_deps)
+  if(!sccp->do_deps && !scc_roobj_add_res(sccp->roobj,r,$6))
     SCC_ABORT(@3,"Failed to declare %s.\n",$3);
   if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 
@@ -830,25 +838,24 @@ imgdecls: imgdecl
 
 imgdecl: '{' INTEGER ',' INTEGER ',' STRING '}'
 {
+  scc_parser_find_res(sccp,&$6);
   if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,NULL))
     SCC_ABORT(@1,"Failed to add room state\n");
   if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 }
 | '{' INTEGER ',' INTEGER ',' STRING ',' '{' zbufs '}' '}'
 {
+  scc_parser_find_res(sccp,&$6);
   if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,$9))
     SCC_ABORT(@2,"Failed to add room state.\n");
-  if(sccp->do_deps) {
-    int i;
-    scc_parser_add_dep(sccp,$6);
-    for(i = 0 ; $9[i] ; i++)
-      scc_parser_add_dep(sccp,$9[i]);
-  }
+  if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 }
 ;
 
 zbufs: STRING
 {
+  scc_parser_find_res(sccp,&$1);
+  scc_parser_add_dep(sccp,$1);
   $$ = malloc(2*sizeof(char*));
   $$[0] = $1;
   $$[1] = NULL;
@@ -856,6 +863,8 @@ zbufs: STRING
 | zbufs ',' STRING
 {
   int l;
+  scc_parser_find_res(sccp,&$3);
+  scc_parser_add_dep(sccp,$3);
   for(l = 0 ; $1[l] ; l++);
   $$ = realloc($1,(l+2)*sizeof(char*));
   $$[l] = $3;
@@ -1788,6 +1797,30 @@ static void set_end_pos(YYLTYPE *llocp,int line,int column) {
   llocp->last_column = column;
 }
 
+// WARNING: This function realloc the file to fit the new path in
+static void scc_parser_find_res(scc_parser_t* sccp, char** file_ptr) {
+  int i;
+  char* file;
+  
+  if(!file_ptr || !file_ptr[0]) return;
+  file = file_ptr[0];
+  
+  if(sccp->res_path) {
+    int file_len = strlen(file);
+    struct stat st;
+    for(i = 0 ; sccp->res_path[i] ; i++) {
+      int path_len = strlen(sccp->res_path[i]) + 1 + file_len + 1;
+      char path[path_len];
+      sprintf(path,"%s/%s",sccp->res_path[i],file);
+      if(stat(path,&st) || !S_ISREG(st.st_mode)) continue;
+      file_ptr[0] = realloc(file,path_len);
+      strcpy(file_ptr[0],path);
+      return;
+    }
+  }
+}
+    
+      
 void scc_parser_add_dep(scc_parser_t* sccp, char* dep) {
   int i;
   if(!sccp->num_deps)
@@ -1838,10 +1871,11 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
   return src;
 }
 
-scc_parser_t* scc_parser_new(char** include) {
+scc_parser_t* scc_parser_new(char** include, char** res_path) {
   scc_parser_t* p = calloc(1,sizeof(scc_parser_t));
   p->lex = scc_lex_new(scc_main_lexer,set_start_pos,set_end_pos,include);
   p->lex->userdata = p;
+  p->res_path = res_path;
   return p;
 }
 
@@ -1859,11 +1893,13 @@ static void usage(char* prog) {
 }
 
 static char** scc_include = NULL;
+static char** scc_res_path = NULL;
 static int scc_do_deps = 0;
 
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &scc_output },
   { "I", SCC_PARAM_STR_LIST, 0, 0, &scc_include },
+  { "R", SCC_PARAM_STR_LIST, 0, 0, &scc_res_path },
   { "d", SCC_PARAM_FLAG, 0, 1, &scc_do_deps },
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { NULL, 0, 0, 0, NULL }
@@ -1885,7 +1921,7 @@ int main (int argc, char** argv) {
 
   if(!files) usage(argv[0]);
 
-  sccp = scc_parser_new(scc_include);
+  sccp = scc_parser_new(scc_include,scc_res_path);
 
   for(f = files ; f ; f = f->next) {
     src = scc_parser_parse(sccp,f->val,scc_do_deps);
@@ -1904,8 +1940,11 @@ int main (int argc, char** argv) {
   if(scc_do_deps) {
     for(src = srcs ; src ; src = src->next) {
       char* pt = strrchr(src->file,'.');
+      char* start = strrchr(src->file,'/');
       if(pt) pt[0] = '\0';
-      scc_fd_printf(out_fd,"%s.roobj:",src->file);
+      if(start) start++;
+      else start = src->file;
+      scc_fd_printf(out_fd,"%s.roobj:",start);
       for(i = 0 ; i < src->num_deps ; i++)
         scc_fd_printf(out_fd," %s",src->deps[i]);
     }

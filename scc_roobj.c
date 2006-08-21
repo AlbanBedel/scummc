@@ -642,25 +642,27 @@ void scc_roobj_obj_free(scc_roobj_obj_t* obj) {
 
 int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
 			    char *img_path,char** zp_paths) {
-  scc_img_t* img;
+  scc_img_t* img = NULL;
   scc_roobj_state_t* st,*s;
   int i;
 
-  img = scc_img_open(img_path);
-  if(!img) return 0;
+  if(img_path) {
+    img = scc_img_open(img_path);
+    if(!img) return 0;
 
-  if(img->w%8 || img->h%8) {
-    scc_log(LOG_ERR,"Image width and height must be multiple of 8.\n");
-    scc_img_free(img);
-    return 0;
-  }
+    if(img->w%8 || img->h%8) {
+      scc_log(LOG_ERR,"Image width and height must be multiple of 8.\n");
+      scc_img_free(img);
+      return 0;
+    }
 
-  if(!obj->w) obj->w = img->w;
-  if(!obj->h) obj->h = img->h;
-  if(obj->w != img->w || obj->h != img->h) {
-    scc_log(LOG_ERR,"Image size is not matching the alredy defined size.\n");
-    scc_img_free(img);
-    return 0;
+    if(!obj->w) obj->w = img->w;
+    if(!obj->h) obj->h = img->h;
+    if(obj->w != img->w || obj->h != img->h) {
+      scc_log(LOG_ERR,"Image size is not matching the alredy defined size.\n");
+      scc_img_free(img);
+      return 0;
+    }
   }
 
   st = calloc(1,sizeof(scc_roobj_state_t));
