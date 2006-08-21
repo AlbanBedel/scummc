@@ -243,9 +243,9 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
     return 0;
   }
 
-  hsize = SCC_AT_16LE(data,20);
-  ver = SCC_AT_16LE(data,22);
-  magic = SCC_AT_16LE(data,24);
+  hsize = SCC_GET_16LE(data,20);
+  ver = SCC_GET_16LE(data,22);
+  magic = SCC_GET_16LE(data,24);
   if(hsize < 0x1A) {
     scc_log(LOG_ERR,"%s: voc header is too small.\n",file);
     return 0;

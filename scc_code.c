@@ -136,7 +136,7 @@ static void scc_loop_fix_code(scc_code_t* c,int br, int cont) {
     }
     c->fix = SCC_FIX_NONE;
 
-    scc_log(LOG_DBG,"Branch fixed to 0x%hx\n",((int16_t*)&c->data[1])[0]);
+    scc_log(LOG_DBG,"Branch fixed to 0x%hx\n",SCC_GET_16LE(c->data,1));
   }
 
   free(l);
@@ -1256,7 +1256,7 @@ scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst,
       continue;
     }
     if(code->fix >= SCC_FIX_RES) {
-      uint16_t rid = SCC_AT_16LE(data,p);
+      uint16_t rid = SCC_GET_16LE(data,p);
       sym = scc_ns_get_sym_with_id(ns,code->fix - SCC_FIX_RES,rid);
       if(!sym) {
 	scc_log(LOG_ERR,"Unable to find ressource %d of type %d\n",

@@ -34,6 +34,12 @@
 
 #define UNMKID(a) (a)&0xFF, ((a)>>8)&0xFF, ((a)>>16)&0xFF, ((a)>>24)&0xFF
 
+#define SCC_GET_16(x,at) SCC_GET_16LE(x,at)
+#define SCC_GET_32(x,at) SCC_GET_32LE(x,at)
+
+#define SCC_SET_16(x,at,v) SCC_SET_16LE(x,at,v)
+#define SCC_SET_32(x,at,v) SCC_SET_32LE(x,at,v)
+
 #elif defined IS_BIG_ENDIAN
 #define SCC_TO_16BE(x) (x)
 #define SCC_TO_32BE(x) (x)
@@ -48,52 +54,81 @@
 
 #define UNMKID(a) ((a)>>24)&0xFF, ((a)>>16)&0xFF, ((a)>>8)&0xFF, (a)&0xFF
 
+#define SCC_GET_16(x,at) SCC_GET_16BE(x,at)
+#define SCC_GET_32(x,at) SCC_GET_32BE(x,at)
+
+#define SCC_SET_16(x,at,v) SCC_SET_16BE(x,at,v)
+#define SCC_SET_32(x,at,v) SCC_SET_32BE(x,at,v)
+
 #else
 #error "Endianness is not defined !!!"
 #endif
 
-#define SCC_AT_32(x,at)    (*((uint32_t*)&x[at]))
-#define SCC_AT_S32(x,at)   (*((int32_t*)&x[at]))
-
-#define SCC_AT_32BE(x,at)  SCC_TO_32BE( (*((uint32_t*)&x[at])) )
-#define SCC_AT_S32BE(x,at) SCC_TO_32BE( (*((int32_t*)&x[at])) )
-
-#define SCC_AT_32LE(x,at)  SCC_TO_32LE( (*((uint32_t*)&x[at])) )
-#define SCC_AT_S32LE(x,at) SCC_TO_32LE( (*((int32_t*)&x[at])) )
-
-#define SCC_AT_16(x,at)    (*((uint16_t*)&x[at]))
-#define SCC_AT_S16(x,at)   (*((int16_t*)&x[at]))
-
-#define SCC_AT_16BE(x,at)  SCC_TO_16BE( (*((uint16_t*)&x[at])) )
-#define SCC_AT_S16BE(x,at) SCC_TO_16BE( (*((int16_t*)&x[at])) )
-
-#define SCC_AT_16LE(x,at)  SCC_TO_16LE( (*((uint16_t*)&x[at])) )
-#define SCC_AT_S16LE(x,at) SCC_TO_16LE( (*((int16_t*)&x[at])) )
-
-#define SCC_SET_16(x,at,v)    SCC_AT_16(x,at) = (v)
-#define SCC_SET_32(x,at,v)    SCC_AT_32(x,at) = (v)
-
 #define SCC_SET_16LE(x,at,v)  { uint16_t tmp__ = (v); \
-                                SCC_AT_16(x,at) = SCC_TO_16LE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[0] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[1] = (tmp__>>8) & 0xFF; }
 #define SCC_SET_S16LE(x,at,v) { int16_t tmp__ = (v); \
-                                SCC_AT_S16(x,at) = SCC_TO_16LE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[0] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[1] = (tmp__>>8) & 0xFF; }
 
 #define SCC_SET_16BE(x,at,v)  { uint16_t tmp__ = (v); \
-                                SCC_AT_16(x,at) = SCC_TO_16BE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[1] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[0] = (tmp__>>8) & 0xFF; }
 #define SCC_SET_S16BE(x,at,v) { int16_t tmp__ = (v); \
-                                SCC_AT_S16(x,at) = SCC_TO_16BE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[1] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[0] = (tmp__>>8) & 0xFF; }
 
 
 #define SCC_SET_32LE(x,at,v)  { uint32_t tmp__ = (v); \
-                                SCC_AT_32(x,at) = SCC_TO_32LE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[0] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[1] = (tmp__>>8) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[2] = (tmp__>>16) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[3] = (tmp__>>24) & 0xFF; }
 #define SCC_SET_S32LE(x,at,v) { int32_t tmp__ = (v);  \
-                                SCC_AT_S32(x,at) = SCC_TO_32LE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[0] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[1] = (tmp__>>8) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[2] = (tmp__>>16) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[3] = (tmp__>>24) & 0xFF; }
 
 #define SCC_SET_32BE(x,at,v)  { uint32_t tmp__ = (v);  \
-                                SCC_AT_32(x,at) =  SCC_TO_32BE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[3] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[2] = (tmp__>>8) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[1] = (tmp__>>16) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[0] = (tmp__>>24) & 0xFF; }
 #define SCC_SET_S32BE(x,at,v) { int32_t tmp__ = (v);  \
-                                SCC_AT_S32(x,at) = SCC_TO_32BE(tmp__); }
+                                ((uint8_t*)((x)+(at)))[3] = tmp__ & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[2] = (tmp__>>8) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[1] = (tmp__>>16) & 0xFF; \
+                                ((uint8_t*)((x)+(at)))[0] = (tmp__>>24) & 0xFF; }
 
+
+#define SCC_GET_16LE(x,at)  ((uint16_t) (  ((uint8_t*)((x)+(at)))[0] | \
+                                          (((uint8_t*)((x)+(at)))[1] << 8) ) )
+#define SCC_GET_S16LE(x,at)  ((int16_t) (  ((uint8_t*)((x)+(at)))[0] | \
+                                          (((uint8_t*)((x)+(at)))[1] << 8) ) )
+
+#define SCC_GET_16BE(x,at)  ((uint16_t) (  ((uint8_t*)((x)+(at)))[1] | \
+                                          (((uint8_t*)((x)+(at)))[0] << 8) ) )
+#define SCC_GET_S16BE(x,at)  ((int16_t) (  ((uint8_t*)((x)+(at)))[1] | \
+                                          (((uint8_t*)((x)+(at)))[0] << 8) ) )
+
+#define SCC_GET_32LE(x,at)  ((uint32_t) (  ((uint8_t*)((x)+(at)))[0] | \
+                                          (((uint8_t*)((x)+(at)))[1] << 8) | \
+                                          (((uint8_t*)((x)+(at)))[2] << 16) | \
+                                          (((uint8_t*)((x)+(at)))[3] << 24) ) )
+#define SCC_GET_S32LE(x,at)  ((int32_t) (  ((uint8_t*)((x)+(at)))[0] | \
+                                          (((uint8_t*)((x)+(at)))[1] << 8) | \
+                                          (((uint8_t*)((x)+(at)))[2] << 16) | \
+                                          (((uint8_t*)((x)+(at)))[3] << 24) ) )
+
+#define SCC_GET_32BE(x,at)  ((uint32_t) (  ((uint8_t*)((x)+(at)))[3] | \
+                                          (((uint8_t*)((x)+(at)))[2] << 8) | \
+                                          (((uint8_t*)((x)+(at)))[1] << 16) | \
+                                          (((uint8_t*)((x)+(at)))[0] << 24) ) )
+#define SCC_GET_S32BE(x,at)  ((int32_t) (  ((uint8_t*)((x)+(at)))[3] | \
+                                          (((uint8_t*)((x)+(at)))[2] << 8) | \
+                                          (((uint8_t*)((x)+(at)))[1] << 16) | \
+                                          (((uint8_t*)((x)+(at)))[0] << 24) ) )
 
 // needed by the room builder
 #define SCC_MAX_IM_PLANES 10

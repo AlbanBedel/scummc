@@ -313,7 +313,7 @@ int scc_ld_parse_voice(scc_fd_t* fd, scc_ld_room_t* room, int len) {
   v->sym = sym;
   v->offset = scc_voice_off;
   scc_voice_off += len;
-  v->vctl_size = SCC_AT_32BE(v->data,4);
+  v->vctl_size = SCC_GET_32BE(v->data,4);
 
   SCC_LIST_ADD(scc_voice,scc_last_voice,v);
 
@@ -539,8 +539,8 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
     return NULL;
   }
 
-  type = SCC_AT_32(data,0);
-  size = SCC_AT_32BE(data,4);
+  type = SCC_GET_32(data,0);
+  size = SCC_GET_32BE(data,4);
 
   // fix list
   if(type == MKID('S','F','I','X')) {
@@ -554,8 +554,8 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
 	return NULL;
       }
       sym_type = data[pos];
-      sym_id = SCC_AT_16LE(data,pos+2);
-      off = SCC_AT_32LE(data,pos+4);
+      sym_id = SCC_GET_16LE(data,pos+2);
+      off = SCC_GET_32LE(data,pos+4);
       s = scc_ns_get_sym_with_id(room->ns,sym_type,sym_id);
       if(!s) {
 	scc_log(LOG_ERR,"SFIX entry with invalid id ????\n");
@@ -572,8 +572,8 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
       scc_log(LOG_ERR,"Invalid scob block ????\n");
       return NULL;
     }
-    type = SCC_AT_32(data,pos);
-    size = SCC_AT_32BE(data,pos+4);
+    type = SCC_GET_32(data,pos);
+    size = SCC_GET_32BE(data,pos+4);
   }
 
   if(type != MKID('s','c','o','b') || size < 8 || pos+size != len) {
@@ -635,8 +635,8 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
 
 static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
 					 scc_ld_block_t* blk) {
-  uint32_t type = SCC_AT_32(blk->data,0);
-  uint32_t  size = SCC_AT_32BE(blk->data,4);
+  uint32_t type = SCC_GET_32(blk->data,0);
+  uint32_t  size = SCC_GET_32BE(blk->data,4);
   uint16_t id;
   scc_symbol_t* sym;
 
@@ -645,7 +645,7 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
     return NULL;
   }
 
-  id = SCC_AT_16LE(blk->data,8);
+  id = SCC_GET_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,id);
   if(!sym) {
     scc_log(LOG_ERR,"imhd block contain an invalid id ????\n");
@@ -662,8 +662,8 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
 
 static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
 					 scc_ld_block_t* blk) {
-  uint32_t type = SCC_AT_32(blk->data,0);
-  uint32_t  size = SCC_AT_32BE(blk->data,4);
+  uint32_t type = SCC_GET_32(blk->data,0);
+  uint32_t  size = SCC_GET_32BE(blk->data,4);
   uint16_t vid,oid,cid,id,addr;
   scc_symbol_t* sym,*osym,*csym;
   int nverb=0,verb_size=0,len,pos = 0,new_size,vpos,vn,st,i;
@@ -678,7 +678,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
     return NULL;
   }
   // find the object
-  vid = SCC_AT_16LE(blk->data,8);
+  vid = SCC_GET_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,vid);
   if(!sym) {
     scc_log(LOG_ERR,"cdhd block contain an invalid id (0x%x) ????\n",vid);
@@ -688,7 +688,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   // initial state
   st = blk->data[10];
   // owner
-  oid = SCC_AT_16LE(blk->data,11);
+  oid = SCC_GET_16LE(blk->data,11);
   if(oid) {
     osym = scc_ns_get_sym_with_id(room->ns,SCC_RES_ACTOR,oid);
     if(!osym) {
@@ -700,7 +700,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
     obj_owner[sym->addr] = (st << 4) | 0x0F;
 
   for(i = 0 ; i < SCC_MAX_CLASS ; i++) {
-    cid = SCC_AT_16LE(blk->data,8+2+1+2+2*i);
+    cid = SCC_GET_16LE(blk->data,8+2+1+2+2*i);
     if(!cid) continue;
     csym = scc_ns_get_sym_with_id(room->ns,SCC_RES_CLASS,cid);
     if(!csym) {
@@ -712,8 +712,8 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   
   pos = size;
   while(pos < blk->data_len) {
-    type = SCC_AT_32(blk->data,pos);
-    len = SCC_AT_32BE(blk->data,pos+4);
+    type = SCC_GET_32(blk->data,pos);
+    len = SCC_GET_32BE(blk->data,pos+4);
 
     if(type == MKID('O','B','N','A')) {
       break;
@@ -721,7 +721,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
       scc_log(LOG_ERR,"Got unknow block inside obcd block !!!!\n");
       return NULL;
     }
-    id = SCC_AT_16LE(blk->data,pos + 8);
+    id = SCC_GET_16LE(blk->data,pos + 8);
     if(id) {
       sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VERB,id);
       if(!sym) {
@@ -846,7 +846,7 @@ static scc_ld_block_t* scc_ld_scrp_patch(scc_ld_room_t* room,
   scc_script_t* scr;
   scc_ld_block_t* new;
   scc_symbol_t* sym;
-  uint16_t id = SCC_AT_16LE(blk->data,0);
+  uint16_t id = SCC_GET_16LE(blk->data,0);
 
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_SCR,id);
   if(!sym) {
