@@ -107,6 +107,7 @@
   static unsigned pal_size = 0;
   static uint8_t pal[COST_MAX_PALETTE_SIZE];
 
+  static char* img_path = NULL;
   static char* cost_output = NULL;
   static scc_fd_t* out_fd = NULL;
 
@@ -313,7 +314,10 @@ picparam: PATH '=' STRING
   if(cur_pic->path)
     COST_ABORT(@1,"This picture already have a path defined.\n");
 
-  cur_pic->path = $3;
+  if(img_path)
+    asprintf(&cur_pic->path,"%s/%s",img_path,$3);
+  else
+    cur_pic->path = $3;
 }
 | GLOB '=' STRING
 {
@@ -323,7 +327,10 @@ picparam: PATH '=' STRING
   if(cur_pic->ref)
     COST_ABORT(@1,"This picture have alredy been referenced, we can't expand it to a glob anymore.\n");
 
-  cur_pic->path = $3;
+  if(img_path)
+    asprintf(&cur_pic->path,"%s/%s",img_path,$3);
+  else
+    cur_pic->path = $3;
   cur_pic->is_glob = 1;
 }
 | POSITION '=' numberpair
@@ -882,6 +889,7 @@ static void usage(char* prog) {
 
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &cost_output },
+  { "I", SCC_PARAM_STR, 0, 0, &img_path },
   { NULL, 0, 0, 0, NULL }
 };
 
