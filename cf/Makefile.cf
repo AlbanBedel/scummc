@@ -24,14 +24,22 @@ echo
 endef
 
 # Use a mask to copy the sources to allow testing stuff not yet commited.
-all_src=*.[chyl]          \
-	scummVars6.s      \
-	configure         \
-	Makefile          \
-	Makefile.defs     \
-	Makefile.target   \
-	cf/Makefile.cf    \
-	cf/*.sh           \
+all_src=*.[chyl]             \
+	scummVars6.s         \
+	configure            \
+	Makefile             \
+	Makefile.defs        \
+	Makefile.target      \
+	cf/Makefile.cf       \
+	cf/*.sh              \
+	examples/*/*.scumm   \
+	examples/*/*.bmp     \
+	examples/*/*/*.bmp   \
+	examples/*/*.voc     \
+	examples/*/*.box     \
+	examples/*/*.scost   \
+	examples/*/Makefile  \
+	examples/*/*.md5     \
 
 CF_ADDR=$(CF_USER)@$(CF_HOST)
 
