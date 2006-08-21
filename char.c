@@ -280,7 +280,7 @@ scc_charmap_t* new_charmap_from_bitmap(char* path) {
         x = 0;
         while(x < img->w) {
             // look for the start of a border
-            if(src[x] != bcol || src[x-img->w] == bcol) {
+            if(src[x] != bcol || src[x-(int)img->w] == bcol) {
                 x++;
                 continue;
             }
