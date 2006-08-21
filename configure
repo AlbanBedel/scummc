@@ -84,10 +84,6 @@ while [ -n "$1" ] ; do
 	    BISON=$2
 	    shift
 	    ;;
-	--lex)
-	    LEX=$2
-	    shift
-	    ;;
 	--target)
 	    TARGET=$2
 	    shift
@@ -206,7 +202,6 @@ Usage: $0 [OPTIONS]...
   --cc COMPILER             use this compiler
   --make MAKE               use this make
   --bison BISON             use this bison
-  --lex LEX                 use this (f)lex
   --pager PAGER             use this pager to show the logs
   --md5sum MD5SUM           use this md5 sum
   
@@ -504,35 +499,6 @@ else
     BISONFLAGS="$BISONFLAGS -d"
 fi
 
-##
-## Look for lex
-##
-## TODO: Find minimal version
-##
-
-if [ -z "$LEX" ] ; then
-    ## Try flex first
-    if type flex 2> /dev/null >&2 ; then
-	LEX=flex
-    elif type lex 2> /dev/null >&2 ; then
-	LEX=lex
-    else
-	echo "Lex not found."
-	exit 1
-    fi
-else
-    type $LEX 2> /dev/null >&2
-    if [ $? -ne 0 ] ; then
-	echo "Can't run $LEX"
-	exit 1
-    fi
-fi
-
-tmp=`$LEX --version`
-lexname=`echo "$tmp" | cut -d ' ' -f 1`
-lexver=`echo "$tmp" | tr -c -d '[[:digit:].]'`
-
-echo "Lex: $LEX ($lexname $lexver)"
 
 ##
 ## Pager for the log viewer
@@ -796,7 +762,6 @@ BUILDDIR=$BUILDDIR
 CC=$CC
 MAKE=$MAKE
 BISON=$BISON
-LEX=$LEX
 
 EXESUF=$EXESUF
 
