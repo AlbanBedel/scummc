@@ -135,6 +135,10 @@ while [ -n "$1" ] ; do
 	    PAGER=$2
 	    shift
 	    ;;
+	--md5sum)
+	    MD5SUM=$2
+	    shift
+	    ;;
 	--cf-user)
 	    CF_USER=$2
 	    shift
@@ -204,6 +208,7 @@ Usage: $0 [OPTIONS]...
   --bison BISON             use this bison
   --lex LEX                 use this (f)lex
   --pager PAGER             use this pager to show the logs
+  --md5sum MD5SUM           use this md5 sum
   
   --target TARGET           override the target system
   --hostname NAME           override the hostname
@@ -545,6 +550,21 @@ fi
 [ -z "$PAGER" ] && echo "Pager: no"  || echo "Pager: $PAGER"	
 
 ##
+## md5sum for the tests
+##
+
+if [ -z "$MD5SUM" ] ; then
+    if type md5sum 2> /dev/null >&2 ; then
+	MD5SUM=md5sum
+    elif type md5 2> /dev/null >&2 ; then
+	MD5SUM=md5
+    fi
+else
+    type $MD5SUM 2> /dev/null >&2 || MD5SUM=
+fi
+[ -z "$MD5SUM" ] && echo "Md5sum: no"  || echo "Md5sum: $MD5SUM"	
+
+##
 ## Enable the compile farm support
 ##
 
@@ -571,6 +591,37 @@ if [ $? -ne 0 ] ; then
     exit 1
 fi
 
+##
+## Check if we can run the binaries built
+##
+
+cat <<EOF > $BUILDDIR/test.c
+int main(void) {
+  return 0;
+}
+EOF
+$CC -o $BUILDDIR/test.bin $CFLAGS $BUILDDIR/test.c 2> /dev/null && \
+ $BUILDDIR/test.bin 2> /dev/null
+if [ $? -eq 0 ] ; then
+    CAN_EXEC=yes
+    echo "Can execute built binaries: yes"
+else
+    CAN_EXEC=no
+    echo "Can execute built binaries: no"
+fi
+
+##
+## Check if we can run the test suite
+##
+
+if [ -n "$MD5SUM" -a "$CAN_EXEC" = yes ] ; then
+    CAN_TEST=yes
+    echo "Can run the tests: yes"
+else
+    CAN_TEST=no
+    echo "Can run the tests: no"
+fi
+
 cat > config.$HOST.mak <<EOF
 ## ScummC config.$HOST.mak
 ## This file is generated, don't edit.
@@ -589,6 +640,8 @@ TARGET?=$TARGET
 MAKE?=$MAKE
 
 PAGER?=$PAGER
+
+MD5SUM?=$MD5SUM
 
 CF_USER?=$CF_USER
 CF_HOST?=$CF_HOST
@@ -748,6 +801,9 @@ LEX=$LEX
 EXESUF=$EXESUF
 
 DEBUG=$debug
+
+CAN_EXEC=$CAN_EXEC
+CAN_TEST=$CAN_TEST
 
 CFLAGS=$CFLAGS
 LDFLAGS=$LDFLAGS
