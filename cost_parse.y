@@ -38,6 +38,8 @@
 #include "scc_util.h"
 #include "scc_param.h"
 #include "scc_img.h"
+#include "cost_parse.tab.h"
+#include "scc_lex.h"
 
 #define YYERROR_VERBOSE 1
 
@@ -872,13 +874,27 @@ static int cost_write(scc_fd_t* fd) {
   return 1;
 }
 
-char* cost_lex_get_file(void);
-int cost_lex_init(char* file);
+static scc_lex_t* cost_lex;
+extern int cost_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
+
+static void set_start_pos(YYLTYPE *llocp,int line,int column) {
+  llocp->first_line = line+1;
+  llocp->first_column = column;
+}
+
+static void set_end_pos(YYLTYPE *llocp,int line,int column) {
+  llocp->last_line = line+1;
+  llocp->last_column = column;
+}
+
+int yylex(void) {
+  return scc_lex_lex(&yylval,&yylloc,cost_lex);
+}
 
 int yyerror (const char *s)  /* Called by yyparse on error */
 {
-  printf ("In %s:\nline %d, column %d: %s\n",cost_lex_get_file(),
-	  yylloc.first_line,yylloc.first_column,s);
+  scc_log(LOG_ERR,"%s: %s\n",scc_lex_get_file(cost_lex),
+          cost_lex->error ? cost_lex->error : s);
   return 0;
 }
 
@@ -910,7 +926,8 @@ int main (int argc, char** argv) {
     return -1;
   }
 
-  if(!cost_lex_init(files->val)) return -1;
+  cost_lex = scc_lex_new(cost_main_lexer,set_start_pos,set_end_pos,NULL);
+  if(!scc_lex_push_buffer(cost_lex,files->val)) return -1;
 
   if(yyparse()) return -1;
  

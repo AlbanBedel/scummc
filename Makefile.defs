@@ -114,11 +114,12 @@ boxedit_LIBS=                   \
 
 cost_SRCS=                      \
 	cost_parse.tab.c        \
-	cost_lex.c              \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_img.c               \
 	scc_util.c              \
+	scc_lex.c               \
+	cost_lexer.c            \
 
 char_SRCS=                      \
 	char.c                  \
