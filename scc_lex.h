@@ -31,6 +31,7 @@ typedef struct scc_lex scc_lex_t;
 typedef int (*scc_lexer_f)(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
 typedef void (*scc_lexer_pos_f)(YYLTYPE *llocp,int line,int column);
 typedef void (*scc_lexer_opened_f)(void* userdata,char* file);
+typedef struct scc_keyword scc_keyword_t;
 
 // input files are read block wise in a buffer
 // location must also be tracked by buffer
@@ -50,6 +51,11 @@ struct scc_lex {
     // callback to track deps
     scc_lexer_opened_f opened;
     void* userdata;
+};
+
+struct scc_keyword {
+    char* name;
+    int type, val;
 };
 
 // Public interface
@@ -108,3 +114,5 @@ int scc_lex_push_lexer(scc_lex_t* lex, scc_lexer_f lexf);
 // Pop a lexer
 int scc_lex_pop_lexer(scc_lex_t* lex);
 
+// Find a keyword, the array MUST be sorted
+scc_keyword_t* scc_is_keyword(char* s,scc_keyword_t* kw,unsigned num_kw);

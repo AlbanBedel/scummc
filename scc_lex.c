@@ -433,3 +433,27 @@ int scc_lex_pop_lexer(scc_lex_t* lex) {
     return 1;
 }
 
+// Do a binary search of the given (sorted) keyword array
+scc_keyword_t* scc_is_keyword(char* s,scc_keyword_t* kw,unsigned num_kw) {
+    unsigned min = 0,max,m;
+    int c;
+
+    if(num_kw < 1) return NULL;
+    max = num_kw-1;
+
+    while(1) {
+        // check the middle element
+        m = (max + min) >> 1;
+        c = strcmp(kw[m].name,s);
+        // ok
+        if(c == 0) return &kw[m];
+        // we are at the last step, check max if it doesn't match
+        if(m == min)
+            return m != max ?
+                (strcmp(kw[max].name,s) ?
+                 NULL : &kw[max]) : 0;
+        // move in the array
+        if(c < 0) min = m;
+        else max = m;
+    }
+}

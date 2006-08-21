@@ -29,11 +29,6 @@
 #include "scc_lex.h"
 
 
-typedef struct scc_keyword {
-    char* name;
-    int type, val;
-} scc_keyword_t;
-
 // List of all the keywords
 // it must be kept sorted bcs a binary search is used on it
 static scc_keyword_t scc_keywords[] = {
@@ -78,32 +73,6 @@ static scc_keyword_t scc_keywords[] = {
     { "word",       TYPE,      SCC_VAR_WORD },
     { NULL, -1, -1 },
 };
-
-// Do a binary search of the given (sorted) keyword array
-static scc_keyword_t* scc_is_keyword(char* s,scc_keyword_t* kw,unsigned num_kw) {
-    unsigned min = 0,max,m;
-    int c;
-
-    if(num_kw < 1) return NULL;
-    max = num_kw-1;
-
-    while(1) {
-        // check the middle element
-        m = (max + min) >> 1;
-        c = strcmp(kw[m].name,s);
-        // ok
-        if(c == 0) return &kw[m];
-        // we are at the last step, check max if it doesn't match
-        if(m == min)
-            return m != max ?
-                (strcmp(kw[max].name,s) ?
-                 NULL : &kw[max]) : 0;
-        // move in the array
-        if(c < 0) min = m;
-        else max = m;
-    }
-}
-
 
 
 #define CHECK_EOF(lx,ch)                               \
