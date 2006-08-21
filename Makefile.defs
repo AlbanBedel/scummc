@@ -46,6 +46,9 @@ UTILS=                          \
 	imgremap                \
 	raw2voc                 \
 
+TESTS=                          \
+	road                    \
+
 ##
 ## Each program must have a x_SRCS defined with all the source it
 ## need. If the program requiere some libs they must be listed in

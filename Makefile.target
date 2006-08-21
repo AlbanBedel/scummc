@@ -249,6 +249,33 @@ imgtest: $(SRCDIR)/scc_img.c scc_fd.o
 	@echo "Linking $@ for $(TARGET)"  $(MSGLOG)
 	$(call CMD_template,$(CC) $(CFLAGS) -DSCC_IMG_TEST  -o $@ $^,$(LOG))
 
+## Testing
+ifeq ($(CAN_TEST),yes)
+define TEST_template
+test_$(1): progs
+	@echo "Testing $(1) for $(TARGET)"  $(MSGLOG)
+	@$$(MAKE) -f $(SRCDIR)/examples/$(1)/Makefile SRCDIR=$(SRCDIR) clean 2> /dev/null >&2
+	$(call CMD_template,$$(MAKE) -f $(SRCDIR)/examples/$(1)/Makefile SRCDIR=$(SRCDIR) test,$(LOG))
+
+PHONY_TARGETS+= test_$(1)
+
+endef
+else
+define TEST_template
+test_$(1):
+	@echo "Can't run test for $(TARGET)"  $(MSGLOG)
+	
+PHONY_TARGETS+= test_$(1)
+
+endef
+endif
+
+$(foreach tst,$(TESTS),$(eval $(call TEST_template,$(tst))))
+
+test: $(TESTS:%=test_%)
+
+PHONY_TARGETS+= test
+
 ## Clean the log
 cleanlog:
 	@echo "Cleaning the build logs for $(TARGET)"

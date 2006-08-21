@@ -80,6 +80,7 @@ include Makefile.defs
 SUBTARGETS=                                      \
 	$(shell echo $(GROUPS) | tr [A-Z] [a-z]) \
 	all                                      \
+	test $(TESTS:%=test_%)                   \
 
 CLEAN_SUBTARGETS=                                \
 	cleanlog                                 \
