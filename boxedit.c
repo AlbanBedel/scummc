@@ -525,7 +525,7 @@ int scc_boxedit_save(scc_boxedit_t* be, char* path) {
   }
 #endif
 
-  scc_fd_w32be(fd,MKID('B','O','X','M'));
+  scc_fd_w32(fd,MKID('B','O','X','M'));
   scc_fd_w32be(fd,8 + scc_boxm_size_from_matrix(boxm,len));
 
   for(i = 0 ; i < len ; i++) {
@@ -542,7 +542,7 @@ int scc_boxedit_save(scc_boxedit_t* be, char* path) {
   scc_fd_w8(fd,0xFF);
 
   // scal
-  scc_fd_w32be(fd,MKID('S','C','A','L'));
+  scc_fd_w32(fd,MKID('S','C','A','L'));
   scc_fd_w32be(fd,8 + 8*SCC_NUM_SCALE_SLOT);
   
   for(i = 0 ; i < SCC_NUM_SCALE_SLOT ; i++) {
