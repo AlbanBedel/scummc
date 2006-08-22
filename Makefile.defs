@@ -45,6 +45,7 @@ UTILS=                          \
 	imgsplit                \
 	imgremap                \
 	raw2voc                 \
+	palcat                  \
 
 TESTS=                          \
 	road                    \
@@ -210,6 +211,12 @@ raw2voc_SRCS=                   \
 	scc_param.c             \
 	scc_util.c              \
 
+palcat_SRCS=                    \
+	palcat.c                \
+	scc_img.c               \
+	scc_fd.c                \
+	scc_param.c             \
+	scc_util.c              \
 
 ##
 ## All the libs we have
