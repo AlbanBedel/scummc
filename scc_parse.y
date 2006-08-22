@@ -1947,8 +1947,8 @@ int main (int argc, char** argv) {
       scc_fd_printf(out_fd,"%s.roobj:",start);
       for(i = 0 ; i < src->num_deps ; i++)
         scc_fd_printf(out_fd," %s",src->deps[i]);
+        scc_fd_printf(out_fd,"\n");
     }
-    scc_fd_printf(out_fd,"\n");
     scc_fd_close(out_fd);
     return 0;
   }
