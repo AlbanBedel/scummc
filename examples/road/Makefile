@@ -17,6 +17,9 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+
+SRCS= common.scc road.scc
+
 host=$(shell uname -n | cut -d . -f 1)
 
 SRCDIR?=../..
@@ -36,6 +39,10 @@ CHAR=$(BIN_PATH)/char
 
 SCC_FLAGS= -I $(SRCDIR) -I $(EXP_DIR) -R $(EXP_DIR)
 
+OBJS=$(SRCS:%.scc=%.roobj)
+EXP_SRCS=$(SRCS:%=$(EXP_DIR)/%)
+
+
 all: scummc.000 scummc.001 scummc.sou
 
 
@@ -45,13 +52,13 @@ all: scummc.000 scummc.001 scummc.sou
 %.char: $(EXP_DIR)/%.bmp $(CHAR)
 	$(CHAR) -ochar $@ -ibmp $<
 
-%.roobj: $(EXP_DIR)/%.scumm $(SCC)
+%.roobj: $(EXP_DIR)/%.scc $(SCC)
 	$(SCC) -o $@ $(SCC_FLAGS) $<
 
-scummc.000: road.roobj $(SLD)
-	$(SLD) -v $<
+scummc.000: $(OBJS)
+	$(SLD) -v $^
 
-scummc.001 scummc.sou: scummc.000
+scummc.001 scummc.sou: scummc.000 ;
 
 clean:
 	rm -f road.dep scummc.0?? *.char scummc.sou *.roobj *.cost
@@ -59,8 +66,8 @@ clean:
 distclean: clean
 
 
-road.dep: $(EXP_DIR)/road.scumm $(SCC)
-	$(SCC) -d -o $@ $(SCC_FLAGS) $<
+road.dep: $(EXP_SRCS)
+	$(SCC) -d -o $@ $(SCC_FLAGS) $^
 
 -include road.dep
 
