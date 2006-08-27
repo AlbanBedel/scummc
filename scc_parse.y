@@ -308,6 +308,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 %type <strlist> zbufs
 %type <intlist> synclist
 %type <integer> typemod
+%type <integer> natural
 
 %%
 
@@ -734,21 +735,12 @@ objectparam: SYM ASSIGN STRING
   if(!scc_roobj_obj_set_param(sccp->obj,$1,$3))
     SCC_ABORT(@1,"Failed to set object parameter.\n");
 }
-| SYM ASSIGN INTEGER
+| SYM ASSIGN natural
 {
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
 
   if(!scc_roobj_obj_set_int_param(sccp->obj,$1,$3))
-    SCC_ABORT(@1,"Failed to set object parameter.\n");
-
-}
-| SYM ASSIGN '-' INTEGER
-{
-  if($2 != '=')
-    SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
-
-  if(!scc_roobj_obj_set_int_param(sccp->obj,$1,-$4))
     SCC_ABORT(@1,"Failed to set object parameter.\n");
 
 }
@@ -836,14 +828,14 @@ imgdecls: imgdecl
 | imgdecls ',' imgdecl
 ;
 
-imgdecl: '{' INTEGER ',' INTEGER ',' STRING '}'
+imgdecl: '{' natural ',' natural ',' STRING '}'
 {
   scc_parser_find_res(sccp,&$6);
   if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,NULL))
     SCC_ABORT(@1,"Failed to add room state\n");
   if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
 }
-| '{' INTEGER ',' INTEGER ',' STRING ',' '{' zbufs '}' '}'
+| '{' natural ',' natural ',' STRING ',' '{' zbufs '}' '}'
 {
   scc_parser_find_res(sccp,&$6);
   if(!scc_roobj_obj_add_state(sccp->obj,$2,$4,$6,$9))
@@ -1763,6 +1755,16 @@ str: STRING
     // allocate rid
     if(!$$->sym->rid) scc_ns_get_rid(sccp->ns,$$->sym);
   }
+}
+;
+
+natural: INTEGER
+{
+  $$ = $1;
+}
+| '-' INTEGER
+{
+  $$ = -$2;
 }
 ;
 
