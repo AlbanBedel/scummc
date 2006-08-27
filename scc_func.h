@@ -263,8 +263,8 @@ static scc_func_t scc_func[] = {
     "pickupObject", 0x84, 0, 2, 0,  // z
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "startRoomWithEgo", 0x85, 0, 3, 0,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
+    "startRoomWithEgo", 0x85, 0, 4, 0,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "getRandomNumber", 0x87, 1, 1, 0,
     { SCC_FA_VAL }
