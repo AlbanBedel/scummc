@@ -1285,6 +1285,7 @@ static scc_param_t scc_ld_params[] = {
   { "max-flobj", SCC_PARAM_INT, 0, 0xFFFF, &max_flobj },
   { "max-inventory", SCC_PARAM_INT, 0, 0xFFFF, &max_inventory },
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
+  { "vv", SCC_PARAM_FLAG, LOG_MSG, LOG_DBG, &scc_log_level },
   { NULL, 0, 0, 0, NULL }
 };
 

@@ -1904,6 +1904,7 @@ static scc_param_t scc_parse_params[] = {
   { "R", SCC_PARAM_STR_LIST, 0, 0, &scc_res_path },
   { "d", SCC_PARAM_FLAG, 0, 1, &scc_do_deps },
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
+  { "vv", SCC_PARAM_FLAG, LOG_MSG, LOG_DBG, &scc_log_level },
   { NULL, 0, 0, 0, NULL }
 };
 
