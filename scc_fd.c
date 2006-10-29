@@ -199,9 +199,11 @@ int scc_fd_w32be(scc_fd_t*f,uint32_t a) {
 
 int scc_fd_vprintf(scc_fd_t*f,const char *fmt, va_list ap) {
     char* txt;
-    int n = vasprintf(&txt,fmt,ap);
+    int ret, n = vasprintf(&txt,fmt,ap);
     if(n <= 0) return 0;
-    return scc_fd_write(f,txt,n);
+    ret = scc_fd_write(f,txt,n);
+    free(txt);
+    return ret;
 }
 
 int scc_fd_printf(scc_fd_t*f,const char *fmt, ...) {
