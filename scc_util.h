@@ -130,6 +130,12 @@
                                           (((uint8_t*)((x)+(at)))[1] << 16) | \
                                           (((uint8_t*)((x)+(at)))[0] << 24) ) )
 
+// Some lib c (OpenBSD at least) miss the PRI stuff.
+// We might need a configure check for that.
+#ifndef PRIu64
+#define PRIu64 "llu"
+#endif
+
 // needed by the room builder
 #define SCC_MAX_IM_PLANES 10
 #define SCC_MAX_GLOB_SCR  200

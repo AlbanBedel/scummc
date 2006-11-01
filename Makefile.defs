@@ -35,6 +35,7 @@ PROGS=                          \
 	boxedit                 \
 	cost                    \
 	char                    \
+	midi                    \
 	soun                    \
 	costview                \
 	scvm                    \
@@ -132,6 +133,13 @@ char_SRCS=                      \
 
 char_OPT_LIBS=                  \
 	FT                      \
+
+midi_SRCS=                      \
+	midi.c                  \
+	scc_smf.c               \
+	scc_fd.c                \
+	scc_param.c             \
+	scc_util.c              \
 
 soun_SRCS=                      \
 	soun.c                  \

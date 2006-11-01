@@ -100,6 +100,31 @@ static int scc_parse_str_list(scc_param_t* param,char* val) {
 
   return 1;
 }
+
+static int scc_parse_int_list(scc_param_t* param,char* val) {
+  int** p = param->ptr;
+  char* end = NULL;
+  int n;
+  
+  n = strtol(val,&end,0);
+
+  if(!end || end[0] != '\0') return SCC_PARAM_INVALID;
+  if(n < param->min || n > param->max) return SCC_PARAM_OUT_OF_RANGE;
+
+  if(val[0] == '\0') return SCC_PARAM_INVALID;
+
+  if(p[0]) {
+    p[0] = realloc(p[0],(p[0][0]+2)*sizeof(int));
+  } else {
+    p[0] = malloc(2*sizeof(int));
+    p[0][0] = 0;
+  }
+
+  p[0][p[0][0]+1] = n;
+  p[0][0]++;
+
+  return 1;
+}
     
 
 scc_param_parser_t scc_param_parser[] = {
@@ -108,6 +133,7 @@ scc_param_parser_t scc_param_parser[] = {
   { SCC_PARAM_DBL, 0, scc_parse_double },
   { SCC_PARAM_STR, 0, scc_parse_str },
   { SCC_PARAM_STR_LIST, 0, scc_parse_str_list },
+  { SCC_PARAM_INT_LIST, 0, scc_parse_int_list },
   { 0, 0, NULL }
 };
 
