@@ -137,7 +137,7 @@ endef
 $(foreach sub,$(ALL_SUBTARGETS),$(eval $(call DEF_ALL_TARGET_template,$(sub))))
 
 ##
-## The targets implemented here: distclean and log
+## The targets implemented here: distclean, log and dox
 ##
 
 ## We handle disclean from here because we might
@@ -196,6 +196,24 @@ $(BUILDROOT)/%/build.log:
 PHONY_TARGETS+= log viewlog all_log all_viewlog
 
 ##
+## Doxygen
+##
+
+ifneq ($(DOXYGEN),)
+
+dox:
+	$(DOXYGEN)
+
+PHONY_TARGETS+= dox
+
+define DOX_HELP
+echo "  $(MAKE) dox               build the Doxygen documentation"
+echo
+endef
+
+endif
+
+##
 ## Include the compile farm makefile if a username is defined
 ##
 
@@ -250,6 +268,7 @@ help:
 	@echo "  $(MAKE) all_SUBTARGET     build a subtarget for all targets"
 	@echo
 	@$(CF_HELP)
+	@$(DOX_HELP)
 	@echo "  $(MAKE) help              display this"
 	@echo "  $(MAKE) targets           show a list of the configured targets"
 	@echo "  $(MAKE) subtargets        show a list of the existing subtargets"

@@ -135,6 +135,10 @@ while [ -n "$1" ] ; do
 	    MD5SUM=$2
 	    shift
 	    ;;
+	--doxygen)
+	    DOXYGEN=$2
+	    shift
+	    ;;
 	--cf-user)
 	    CF_USER=$2
 	    shift
@@ -204,6 +208,7 @@ Usage: $0 [OPTIONS]...
   --bison BISON             use this bison
   --pager PAGER             use this pager to show the logs
   --md5sum MD5SUM           use this md5 sum
+  --doxygen DOXYGEN         use this doxygen
   
   --target TARGET           override the target system
   --hostname NAME           override the hostname
@@ -541,6 +546,20 @@ else
 fi
 
 ##
+## Doxygen
+##
+
+if [ -z "$DOXYGEN" ] ; then
+    if type doxygen 2> /dev/null >&2 ; then
+        DOXYGEN=doxygen
+    fi
+else
+    type $DOXYGEN 2> /dev/null >&2 || DOXYGEN=
+fi
+[ -z "$DOXYGEN" ] && echo "Doxygen: no"  || echo "Doxygen: $DOXYGEN"
+
+
+##
 ## Setup the build directory
 ##
 
@@ -608,6 +627,8 @@ MAKE?=$MAKE
 PAGER?=$PAGER
 
 MD5SUM?=$MD5SUM
+
+DOXYGEN?=$DOXYGEN
 
 CF_USER?=$CF_USER
 CF_HOST?=$CF_HOST
