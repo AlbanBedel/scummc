@@ -551,6 +551,66 @@ void scc_smf_dump(scc_smf_t* smf) {
         case 0x00:
         case 0x07:
           scc_log(LOG_MSG,"SysEx");
+          switch(ev->args[0]) {
+          case 0x41:
+              scc_log(LOG_MSG," - Roland");
+              break;
+          case 0x7C:
+              scc_log(LOG_MSG," - YM2612");
+              break;
+          case 0x7D:
+              scc_log(LOG_MSG," - iMUSE - ");
+              switch(ev->args[1]) {
+              case 0x00:
+                  scc_log(LOG_MSG,"Allocate new part");
+                  break;
+              case 0x01:
+                  scc_log(LOG_MSG,"Shut down a part");
+                  break;
+              case 0x02:
+                  scc_log(LOG_MSG,"Start of song");
+                  break;
+              case 0x10:
+                  scc_log(LOG_MSG,"Adlib instrument definition (Part)");
+                  break;
+              case 0x11:
+                  scc_log(LOG_MSG,"Adlib instrument definition (Global)");
+                  break;
+              case 0x21:
+                  scc_log(LOG_MSG,"Parameter adjust");
+                  break;
+              case 0x30:
+                  scc_log(LOG_MSG,"Hook - jump");
+                  break;
+              case 0x31:
+                  scc_log(LOG_MSG,"Hook - global transpose");
+                  break;
+              case 0x32:
+                  scc_log(LOG_MSG,"Hook - part on/off");
+                  break;
+              case 0x33:
+                  scc_log(LOG_MSG,"Hook - set volume");
+                  break;
+              case 0x34:
+                  scc_log(LOG_MSG,"Hook - set program");
+                  break;
+              case 0x35:
+                  scc_log(LOG_MSG,"Hook - set transpose");
+                  break;
+              case 0x40:
+                  scc_log(LOG_MSG,"Marker");
+                  break;
+              case 0x50:
+                  scc_log(LOG_MSG,"Set loop");
+                  break;
+              case 0x51:
+                  scc_log(LOG_MSG,"Clear loop");
+                  break;
+              case 0x60:
+                  scc_log(LOG_MSG,"Set instrument");
+                  break;
+              }
+          }
           break;
         case 0x08:
           scc_log(LOG_MSG,"Timing clock");
