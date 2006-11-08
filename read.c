@@ -75,11 +75,7 @@ scc_res_idx_t* scc_read_res_idx(scc_fd_t* fd) {
     itemsize -= 8;
 
     printf("Found item %c%c%c%c (%d bytes)\n",
-	   (uint8_t)(blocktype >> 24),
-	   (uint8_t)(blocktype >> 16),
-	   (uint8_t)(blocktype >> 8),
-	   (uint8_t)(blocktype >> 0),
-	   itemsize);
+           UNMKID(blocktype),itemsize);
 
     switch(blocktype) {
       // This is the first block in dott index
@@ -225,10 +221,7 @@ scc_res_idx_t* scc_read_res_idx(scc_fd_t* fd) {
       break;
     default:
       printf("Bad ID %c%c%c%c found in directory!\n",
-	    (uint8_t)(blocktype >> 0),
-	    (uint8_t)(blocktype >> 8),
-	    (uint8_t)(blocktype >> 16),
-	    (uint8_t)(blocktype >> 24));
+             UNMKID(blocktype));
       return NULL;
       
     }
@@ -981,11 +974,7 @@ scc_obcd_t* scc_parse_obcd(scc_fd_t* fd,int len) {
     } break;
     default:
       printf("Got unknow block in OBCD %c%c%c%c\n",
-	     (uint8_t)(type >> 24),
-	     (uint8_t)(type >> 16),
-	     (uint8_t)(type >> 8),
-	     (uint8_t)(type >> 0)
-	     );
+	     UNMKID(type));
     }
   }
 
@@ -1097,11 +1086,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
 
 #if 0
        printf("ROOM block : %c%c%c%c (%d)\n",
-	      (uint8_t)(type >> 24),
-	      (uint8_t)(type >> 16),
-	      (uint8_t)(type >> 8),
-	      (uint8_t)(type >> 0),
-	      size);
+	      UNMKID(type));
 #endif
 
     switch(type) {
@@ -1223,11 +1208,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
        printf("Warning failed to parse SCAL block\n");
      break;
     default:
-      printf("Skeeping %c%c%c%c block\n",
-	     (uint8_t)(type >> 24),
-	     (uint8_t)(type >> 16),
-	     (uint8_t)(type >> 8),
-	     (uint8_t)(type >> 0));
+      printf("Skeeping %c%c%c%c block\n", UNMKID(type));
       scc_fd_seek(fd,size,SEEK_CUR);
       break;
     }
@@ -1301,11 +1282,7 @@ scc_lfl_t* scc_parse_lfl(scc_fd_t* fd,scc_res_idx_t* idx,int len) {
 
     l = scc_get_res_idx_list(idx,type);
     if(!l) {
-      printf("Got unknow block in lfl: %c%c%c%c \n",
-	     (uint8_t)(type >> 24),
-	     (uint8_t)(type >> 16),
-	     (uint8_t)(type >> 8),
-	     (uint8_t)(type >> 0));
+      printf("Got unknow block in lfl: %c%c%c%c \n",UNMKID(type));
       scc_fd_seek(fd,size,SEEK_CUR);
       continue;
     }
@@ -1342,11 +1319,7 @@ scc_lfl_t* scc_parse_lfl(scc_fd_t* fd,scc_res_idx_t* idx,int len) {
       break;
     default:
       printf("Got unknow block in lfl %c%c%c%c  (but type is indexed)\n",
-	     (uint8_t)(type >> 24),
-	     (uint8_t)(type >> 16),
-	     (uint8_t)(type >> 8),
-	     (uint8_t)(type >> 0));
-	     
+	     UNMKID(type));     
       free(item);
       break;
     }
@@ -1490,19 +1463,25 @@ void scc_dump_res(scc_res_t* res) {
   uint32_t type,size;
   int pos = 0;
   scc_res_cont_t* stack = NULL;
-  int room = -1,idx,rid = 0;
+  int room = -1,idx,rid = 0,sound_idx;
   char path[255];
 
   scc_fd_seek(res->fd,0,SEEK_SET);
   
+  check_dir("dump");
+
   while(1) {
-    if(stack && stack->pos + stack->size <= pos) {
+    if(stack && stack->type == MKID('S','O','U','N')) {
+      //stack->pos + stack->size - 8 <= pos) {
+      // Skip the trailer
+      //scc_fd_seek(res->fd,8,SEEK_CUR);
+      //pos += 8;
+    }
+
+    if(stack && stack->pos + stack->size <= pos){
       scc_res_cont_t* c = stack->prev;
       printf("%c%c%c%c end\n\n",
-	     (uint8_t)(stack->type >> 24),
-	     (uint8_t)(stack->type >> 16),
-	     (uint8_t)(stack->type >> 8),
-	     (uint8_t)(stack->type >> 0));
+             UNMKID(stack->type));
       if(stack->type == MKID('L','F','L','F')) room = -1;
       free(stack);
       stack = c;
@@ -1537,6 +1516,18 @@ void scc_dump_res(scc_res_t* res) {
       //scc_fd_seek(res->fd,size,SEEK_CUR);
       //break;
 
+    case MKID('S','O','U','N'):
+      if(type == MKID('S','O','U','N')) {
+      	scc_res_list_t* l = scc_get_res_idx_list(res->idx,type);
+        sound_idx = scc_res_idx_pos2idx(res->idx,l,room,pos-8);
+        sprintf(path,"dump/lfl.%3.3d/soun.%3.3d",room,sound_idx);
+        check_dir(path);
+        // Skip the SOU header
+        scc_fd_seek(res->fd,8,SEEK_CUR);
+        pos += 8;
+        size -= 8;
+      }
+
     case MKID('L','F','L','F'):
       
 
@@ -1556,11 +1547,7 @@ void scc_dump_res(scc_res_t* res) {
       stack = c;
 
       printf("Container block %c%c%c%c (%d bytes @ 0x%x)\n",
-	     (uint8_t)(type >> 24),
-	     (uint8_t)(type >> 16),
-	     (uint8_t)(type >> 8),
-	     (uint8_t)(type >> 0),
-	     size,pos-8);
+             UNMKID(type),size,pos-8);
       
     } break;
     default:
@@ -1578,28 +1565,17 @@ void scc_dump_res(scc_res_t* res) {
           rid++;
         }
         printf("Found %c%c%c%c %3.3d (%d bytes)\n",
-               (uint8_t)(type >> 24),
-               (uint8_t)(type >> 16),
-               (uint8_t)(type >> 8),
-               (uint8_t)(type >> 0),
-               idx,
-               size);
+               UNMKID(type),idx,size);
         if(stack && stack->type == MKID('R','O','O','M')) {
           sprintf(path,"dump/lfl.%3.3d/room/%c%c%c%c.%3.3d",
-                  room,
-                  (uint8_t)(type >> 24),
-                  (uint8_t)(type >> 16),
-                  (uint8_t)(type >> 8),
-                  (uint8_t)(type >> 0),
-                  idx);
+                  room,UNMKID(type),idx);
+        } else if(stack && stack->type == MKID('S','O','U','N')) {
+          sprintf(path,"dump/lfl.%3.3d/soun.%3.3d/%c%c%c%c.mid",
+                  room,sound_idx,UNMKID(type));
+          size += 8;
         } else {
           sprintf(path,"dump/lfl.%3.3d/%c%c%c%c.%3.3d",
-                  room,
-                  (uint8_t)(type >> 24),
-                  (uint8_t)(type >> 16),
-                  (uint8_t)(type >> 8),
-		      (uint8_t)(type >> 0),
-                  idx);
+                  room,UNMKID(type),idx);
         }
         
         scc_fd_seek(res->fd,-8,SEEK_CUR);
@@ -1612,11 +1588,7 @@ void scc_dump_res(scc_res_t* res) {
         }
       } else 
         printf("Found item %c%c%c%c (%d bytes)\n",
-               (uint8_t)(type >> 24),
-               (uint8_t)(type >> 16),
-               (uint8_t)(type >> 8),
-               (uint8_t)(type >> 0),
-               size);
+               UNMKID(type),size);
       pos += size;
       scc_fd_seek(res->fd,size,SEEK_CUR);
     }
