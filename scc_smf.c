@@ -79,13 +79,18 @@ static int scc_smf_parse_track(scc_fd_t* fd, scc_smf_track_t* track,
     // Meta and sysex events
     switch(cmd) {
     case SMF_META_EVENT:
-      if(pos + 2 > size) return 0;
+      if(pos + 2 > size) {
+        scc_log(LOG_ERR,"Invalid Meta Event size.\n");
+        return 0;
+      }
       meta = scc_fd_r8(fd), pos++;
     case SMF_SYSEX_EVENT:
     case SMF_SYSEX_CONTINUATION:
       // Read the event length
-      if(!(n = scc_fd_read_smf_int(fd,size-pos,&arg_size)))
+      if(!(n = scc_fd_read_smf_int(fd,size-pos,&arg_size))) {
+        scc_log(LOG_ERR,"Failed to read SysEx length.\n");
         return 0;
+      }
       pos += n;
       break;
     default:
@@ -106,7 +111,10 @@ static int scc_smf_parse_track(scc_fd_t* fd, scc_smf_track_t* track,
       }
     }
 
-    if(pos + arg_size > size) return 0;
+    if(pos + arg_size > size) {
+      scc_log(LOG_ERR,"Invalid argument size.\n");
+      return 0;
+    }
 
     ev = malloc(sizeof(scc_smf_event_t) + runaway + arg_size);
     ev->next = NULL;
@@ -119,6 +127,7 @@ static int scc_smf_parse_track(scc_fd_t* fd, scc_smf_track_t* track,
     ev->meta = meta;
     ev->args_size = runaway + arg_size;
     if(arg_size > 0 && scc_fd_read(fd,&ev->args[runaway],arg_size) != arg_size) {
+      scc_log(LOG_ERR,"Failed to read arguments.\n");
       free(ev);
       return 0;
     }
@@ -136,11 +145,30 @@ static int scc_smf_parse_track(scc_fd_t* fd, scc_smf_track_t* track,
 
 scc_smf_t* scc_smf_parse(scc_fd_t* fd) {
   scc_smf_t* smf;
-  
-  if(scc_fd_r32(fd) != MKID('M','T','h','d') ||
-     scc_fd_r32be(fd) != 6) {
-    scc_log(LOG_ERR,"%s doesn't seems to be a valid MIDI file.\n",fd->filename);
-    return 0;
+  uint32_t chunk, size;
+
+  while(1) {
+      chunk = scc_fd_r32(fd);
+      // Skip scumm chunk headers
+      if(chunk == MKID('A','D','L',' ') ||
+         chunk == MKID('R','O','L',' ') ||
+         chunk == MKID('G','M','D',' ')) {
+          scc_fd_r32(fd);
+          continue;
+      }
+      if(chunk == MKID('M','D','h','d') ||
+         chunk == MKID('M','D','p','g')) {
+          size = scc_fd_r32be(fd);
+          scc_fd_seek(fd,size,SEEK_CUR);
+          continue;
+      }
+
+      if(chunk != MKID('M','T','h','d') ||
+         scc_fd_r32be(fd) != 6) {
+          scc_log(LOG_ERR,"%s doesn't seems to be a valid MIDI file.\n",fd->filename);
+          return 0;
+      }
+      break;
   }
   
   smf = calloc(1,sizeof(scc_smf_t));
@@ -151,8 +179,8 @@ scc_smf_t* scc_smf_parse(scc_fd_t* fd) {
 
   // Read the tracks
   while(1) {
-    uint32_t chunk = scc_fd_r32(fd);
-    uint32_t size = scc_fd_r32be(fd);
+    chunk = scc_fd_r32(fd);
+    size = scc_fd_r32be(fd);
   
     // EOF
     if(!chunk || !size) break;
