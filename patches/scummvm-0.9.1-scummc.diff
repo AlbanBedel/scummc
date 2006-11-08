@@ -1,0 +1,39 @@
+diff -Naur --exclude='*~' scummvm-0.9.1/engines/scumm/plugin.cpp scummvm-0.9.1-scummc/engines/scumm/plugin.cpp
+--- scummvm-0.9.1/engines/scumm/plugin.cpp	2006-10-24 10:15:50.000000000 +0200
++++ scummvm-0.9.1-scummc/engines/scumm/plugin.cpp	2006-11-07 13:38:11.000000000 +0100
+@@ -85,6 +85,7 @@
+ 	{ "samnmax", "Sam & Max Hit the Road" },
+ 	{ "tentacle", "Day of the Tentacle" },
+ 	{ "zak", "Zak McKracken and the Alien Mindbenders" },
++	{ "scummc", "ScummC games" },
+ 
+ #ifndef DISABLE_SCUMM_7_8
+ 	{ "ft", "Full Throttle" },
+@@ -246,6 +247,7 @@
+ 
+ 	{"samnmax",  0, GID_SAMNMAX, 6, 0, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_MIDI, GF_USE_KEY, UNK},
+ 
++	{"scummc", 0, GID_SCUMMC, 6, 0, /*MDT_PCSPK |*/ MDT_ADLIB | MDT_MIDI, 0, UNK},
+ #ifndef DISABLE_SCUMM_7_8
+ 	{"ft", "",       GID_FT,  7, 0, MDT_NONE, GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE, UNK},
+ 	{"ft", "Demo",   GID_FT,  7, 0, MDT_NONE, GF_NEW_COSTUMES | GF_NEW_CAMERA | GF_DIGI_IMUSE | GF_DEMO, UNK},
+@@ -449,6 +451,8 @@
+ 	{ "samnmax", "snmidemo.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ 	{ "samnmax", "sdemo.sm%d", kGenDiskNum, Common::DE_DEU, UNK, 0 },
+ 
++	{ "scummc", "scummc.%03d",  kGenDiskNum, UNK_LANG, UNK, 0 },
++
+ #ifndef DISABLE_SCUMM_7_8
+ 	{ "dig", "dig.la%d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ 	{ "dig", "The Dig Data", kGenUnchanged, UNK_LANG, Common::kPlatformMacintosh, 0 },
+diff -Naur --exclude='*~' scummvm-0.9.1/engines/scumm/scumm.h scummvm-0.9.1-scummc/engines/scumm/scumm.h
+--- scummvm-0.9.1/engines/scumm/scumm.h	2006-10-22 22:57:28.000000000 +0200
++++ scummvm-0.9.1-scummc/engines/scumm/scumm.h	2006-11-07 13:38:11.000000000 +0100
+@@ -228,6 +228,7 @@
+ 	GID_SAMNMAX,
+ 	GID_TENTACLE,
+ 	GID_ZAK,
++	GID_SCUMMC,
+ 
+ 	GID_HEGAME,      // Generic name for all HE games with default behaviour
+ 	GID_PUTTDEMO,
