@@ -98,7 +98,8 @@ int main(int argc,char** argv) {
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
-  if(files || !(midi_file || adl_file)) usage(argv[0]);
+  if(files || !(midi_file || adl_file || rol_file || gmd_file))
+    usage(argv[0]);
 
   data = malloc(size);
   SCC_SET_32(data,0,MKID('S','O','U','N'));
@@ -113,12 +114,14 @@ int main(int argc,char** argv) {
     SCC_SET_32(data,8,MKID('S','O','U',' '));
     pos = 16;
 
-    SCC_SET_32(data,pos,MKID('A','D','L',' '));
-    spos = pos + 4;
-    pos += 8;
-    if(!(s = load_file(adl_file,&data,&pos,&size))) return 1;
-    SCC_SET_32BE(data,spos,s + 8);
-    ssize += s + 8;
+    if(adl_file) {
+      SCC_SET_32(data,pos,MKID('A','D','L',' '));
+      spos = pos + 4;
+      pos += 8;
+      if(!(s = load_file(adl_file,&data,&pos,&size))) return 1;
+      SCC_SET_32BE(data,spos,s + 8);
+      ssize += s + 8;
+    }
 
     if(rol_file) {
       SCC_SET_32(data,pos,MKID('R','O','L',' '));
@@ -128,6 +131,16 @@ int main(int argc,char** argv) {
       SCC_SET_32BE(data,spos,s + 8);
       ssize += s + 8;
     }
+
+    if(gmd_file) {
+      SCC_SET_32(data,pos,MKID('G','M','D',' '));
+      spos = pos + 4;
+      pos += 8;
+      if(!(s = load_file(gmd_file,&data,&pos,&size))) return 1;
+      SCC_SET_32BE(data,spos,s + 8);
+      ssize += s + 8;
+    }
+
     SCC_SET_32BE(data,12,ssize + 8);
   }
 
