@@ -338,13 +338,32 @@ static scc_code_t* scc_call_gen_code(scc_call_t* call, int ret_val) {
   scc_code_t *code = NULL,*last = NULL,*c;
   scc_statement_t* a = NULL;
   int n = 0;
-
+  
+  // Check if we need to prepend an op code
+  // In that case it mean the function take
+  // a list as argument and we must also close it
+  // with the number of arguments (including this one)
+  if(call->func->hidden_args > 0 &&
+     (call->func->argt[call->func->argc] & 0xFFFF) == SCC_FA_OP) {
+      c = scc_code_push_val(SCC_OP_PUSH,
+                            call->func->argt[call->func->argc]>>16);
+      SCC_LIST_ADD(code,last,c);
+  }
+  
   // Generate arg code
   for(n = 0, a = call->argv ; a ; n++, a = a->next) {
     if(call->func->argt[n] & SCC_FA_REF) continue;
     c = scc_statement_gen_code(a,1);
     SCC_LIST_ADD(code,last,c);
   }
+  
+  // If we had an extra op code close the list
+  if(call->func->hidden_args > 0 &&
+     (call->func->argt[call->func->argc] & 0xFFFF) == SCC_FA_OP) {
+    c = scc_code_push_val(SCC_OP_PUSH,n+1);
+    SCC_LIST_ADD(code,last,c);
+  }
+  
   
   if(call->func->opcode <= 0xFF) {
     c = scc_code_new(1);

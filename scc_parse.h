@@ -81,6 +81,11 @@ typedef struct scc_verb_script_st scc_verb_script_t;
 #define SCC_FA_ARRAY   (3|SCC_FA_WREF)
 // offset to the begining of the call
 #define SCC_FA_SELF_OFF 4
+// extra op argument, the op must be set in the higher 16bits
+// this is for functions of the form foo([ op, ... ])
+#define SCC_FA_OP       5
+// Macro to place the opcode in the argument list
+#define SCC_FA_OPC(x)   (SCC_FA_OP | ((x)<<16))
 
 // op type
 #define SCC_OT_ASSIGN  0

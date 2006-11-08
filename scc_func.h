@@ -652,9 +652,105 @@ static scc_func_t scc_func[] = {
     "getActorAnimCounter1", 0xAB, 1, 1, 0,
     { SCC_FA_VAL }
   },{
+
+    // iMUSE
     "soundKludge", 0xAC, 0, 1, 0,
     { SCC_FA_LIST }
   },{
+    "imSetMasterVolume", 0xAC, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x0006) }
+  },{
+    "imGetMasterVolume", 0xAC, 0, 0, 1,
+    { SCC_FA_OPC(0x0007) }
+  },{
+    "imStartSound", 0xAC, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x0008) }
+  },{
+    "imStopSound", 0xAC, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x0009) }
+  },{
+    "imStopAllSounds", 0xAC, 0, 0, 1,
+    { SCC_FA_OPC(0x000A) }
+  },{
+    "imGetSoundStatus", 0xAC, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x000D) }
+  },{
+    "imSetVolchan", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0010) }
+  },{
+    "imSetChannelVolume", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0011) }
+  },{
+    "imSetVolchanEntry", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0012) }
+  },{
+    "imClearTrigger", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0013) }
+  },{
+    "imPlayerGetParam", 0xAC, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0100) }
+  },{
+    "imPlayerSetPriority", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0101) }
+  },{
+    "imPlayerSetVolume", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0102) }
+  },{
+    "imPlayerSetPan", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0103) }
+  },{
+    "imPlayerSetTranspose", 0xAC, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0104) }
+  },{
+    "imPlayerSetDetune", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0105) }
+  },{
+    "imPlayerSetSpeed", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0106) }
+  },{
+    "imPlayerJump", 0xAC, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0107) }
+  },{
+    "imPlayerScan", 0xAC, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0108) }
+  },{
+    "imPlayerSetLoop", 0xAC, 0, 6, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0109) }
+  },{
+    "imClearPlayerLoop", 0xAC, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x010A) }
+  },{
+    "imPlayerSetOnOff", 0xAC, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x010B) }
+  },{
+    "imPlayerSetHook", 0xAC, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x010C) }
+  },{
+    "imPlayerFade", 0xAC, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x010D) }
+  },{
+    "imQueueTrigger", 0xAC, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x010E) }
+  },{
+    "imQueueCommand", 0xAC, 0, 7, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, 
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x010F) }
+  },{
+    "imClearQueue", 0xAC, 0, 0, 1,
+    { SCC_FA_OPC(0x0110) }
+  },{
+    "imPlayerGetParam", 0xAC, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0113) }
+  },{
+    "imPlayerSetPartVolume", 0xAC, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0116) }
+  },{
+    "imQueryQueue", 0xAC, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x0117) }
+  },{
+
+
     "isAnyOf", 0xAD, 1, 2, 0,
     { SCC_FA_VAL, SCC_FA_LIST }
   },{
@@ -768,8 +864,102 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
 
-    // TODO "kernelGetFunctions", 0xC8, 0, 1,
-    
+    // kernelGet
+    "getPixel", 0xC8, 1, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x71) }
+  },{
+    "getSpecialBox", 0xC8, 1, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x73) }
+  },{
+    "isInBox", 0xC8, 1, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x74) }
+  },{
+    "getColor", 0xC8, 1, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0xCE) }
+  },{
+    "getRoomObjectX", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xCF) }
+  },{
+    "getRoomObjectY", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD0) }
+  },{
+    "getRoomObjectWidth", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD1) }
+  },{
+    "getRoomObjectHeight", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD2) }
+  },{
+    "getKeyState", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD3) }
+  },{
+    "getActorFrame", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD4) }
+  },{
+    "getVerbX", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD5) }
+  },{
+    "getVerbY", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD6) }
+  },{
+    "getBoxFlags", 0xC8, 1, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD7) }
+  },{
+
+    // kernelSet
+    "grabCursor", 0xC9, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x04) }
+  },{
+    "fadeOut", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x05) }
+  },{
+    "fadeIn", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x06) }
+  },{
+#if 0
+    "startManiac", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x08) }
+  },{
+#endif
+    "killAllScriptsExceptCurrent", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x09) }
+  },{
+    "nukeFlObjects", 0xC9, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x68) }
+  },{
+    "setActorScale", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6B) }
+  },{
+#if 0 // What does it do ?
+    "setShadowPalette", 0xC9, 0, 5, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_OPC(0x6C) }
+  },{
+#endif
+    "clearCharsetMask", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x6E) }
+  },{
+    "setActorShadowMode", 0xC9, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6F) }
+  },{
+    "shiftShadowPalette", 0xC9, 0, 7, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x70) }
+  },{
+    "enqueueObject", 0xC9, 0, 8, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x77) }
+  },{
+    "swapColors", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x78) }
+  },{
+    "copyColor", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x7B) }
+  },{
+    "saveSound", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x7C) }
+  },{
+
+
     "breakXTimes", 0xCA, 0, 1, 0,
     { SCC_FA_VAL }
   },{
