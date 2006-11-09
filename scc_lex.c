@@ -64,7 +64,7 @@ struct scc_lexbuf {
     /// Size allocated for the buffer
     unsigned data_size;
     /// Current line
-    int line
+    int line;
     /// Current column
     int column;
 };
