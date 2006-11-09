@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file raw2voc.c
+ * @brief Tool to create voc files from raw PCM data
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

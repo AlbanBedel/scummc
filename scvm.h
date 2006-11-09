@@ -17,6 +17,13 @@
  *
  */
 
+/// @defgroup scvm SCVM
+/**
+ * @file scvm.h
+ * @ingroup scvm
+ * @brief A primitive SCUMM VM implementation.
+ */
+
 #define SCVM_ARRAY_BIT    0
 #define SCVM_ARRAY_NIBBLE 1
 #define SCVM_ARRAY_BYTE   2

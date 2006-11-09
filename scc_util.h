@@ -17,6 +17,14 @@
  *
  */
 
+/// @defgroup utils Common utilities
+/**
+ * @file scc_util.h
+ * @ingroup utils
+ * @brief Common stuff and portabilty helpers
+ */
+
+
 #define SCC_SWAP_16(x) ((((x)>>8)&0xFF)|(((x)<<8)&0xFF00))
 #define SCC_SWAP_32(x) (  SCC_SWAP_16((uint16_t)(((x)>>16)&0xFFFF)) | (SCC_SWAP_16((uint16_t)(x))<<16) )
 

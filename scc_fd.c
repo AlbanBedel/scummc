@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_fd.c
+ * @ingroup utils
+ * @brief Read/write file with XOR encryption
+ */
+
 #include "config.h"
 
 #include <stdio.h>

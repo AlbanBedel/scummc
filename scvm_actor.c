@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scvm_actor.c
+ * @ingroup scvm
+ * @brief SCVM actors
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_parse.y
+ * @ingroup scc
+ * @brief ScummC compiler
+ */
+
 %{
 #include "config.h"
 

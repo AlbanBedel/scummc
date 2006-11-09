@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file write.c
+ * @ingroup scumm
+ * @brief Write SCUMM data. Mostly obsolete.
+ */
+
 #include "config.h"
 
 #include <sys/types.h>

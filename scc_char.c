@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_char.c
+ * @ingroup scumm
+ * @brief SCUMM charset parser
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

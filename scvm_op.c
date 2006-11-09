@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scvm_op.c
+ * @ingroup scvm
+ * @brief SCVM op-code implementation
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

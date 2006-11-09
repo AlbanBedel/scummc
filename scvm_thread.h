@@ -17,24 +17,34 @@
  *
  */
 
+/**
+ * @file scvm_thread.h
+ * @ingroup scvm
+ * @brief SCVM thread implementation.
+ */
+
 typedef struct scvm_script {
   unsigned id;
   unsigned size;
   unsigned char code[0];
 } scvm_script_t;
 
-// thread state
+/// @name Thread states
+//@{
 #define SCVM_THREAD_STOPPED 0
 #define SCVM_THREAD_RUNNING 1
 #define SCVM_THREAD_PENDED  2
 #define SCVM_THREAD_DELAYED 3
 #define SCVM_THREAD_FROZEN  4
+//@}
 
-// thread flags
+/// @name Thread flags
+//@{
 #define SCVM_THREAD_NO_FREEZE 1
 #define SCVM_THREAD_RECURSIVE 2
 
 #define SCVM_THREAD_DELAY (1<<16)
+//@}
 
 #define SCVM_MAX_OVERRIDE 8
 
@@ -42,26 +52,26 @@ typedef struct scvm_thread scvm_thread_t;
 
 struct scvm_thread {
   unsigned id;
-  // unused, running, pended, delayed, frozen
+  /// unused, running, pended, delayed, frozen
   unsigned state;
-  // used for script runned by the VM itself
+  /// Used for script runned by the VM itself
   unsigned next_state;
-  // parent thread for recursive calls
+  /// Parent thread for recursive calls
   scvm_thread_t* parent;
   unsigned flags;
   unsigned cycle;
-  // delay left in ms
+  /// Delay left in ms
   unsigned delay;
-  // script beeing run
+  /// Script beeing run
   scvm_script_t* script;
-  // position in the code
+  /// Position in the code
   unsigned code_ptr;
-  // code_ptr is saved here when a new op is started
+  /// Code_ptr is saved here when a new op is started
   unsigned op_start;
-  // thread variables
+  /// Thread variables
   unsigned num_var;
   int *var;
-  // override stack
+  /// Override stack
   unsigned override_ptr;
   unsigned override[SCVM_MAX_OVERRIDE];
 };

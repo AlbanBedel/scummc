@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file palcat.c
+ * @brief Tool to concatenate image palette
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

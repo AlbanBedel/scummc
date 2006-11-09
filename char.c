@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file char.c
+ * @ingroup scumm
+ * @brief SCUMM charset generator
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

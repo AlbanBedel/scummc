@@ -17,6 +17,12 @@
  *
  */
 
+/** 
+ * @file cost_lexer.c
+ * @ingroup lex
+ * @brief Costume lexer.
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

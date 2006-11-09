@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file zpnn2bmp.c
+ * @ingroup scumm
+ * @brief Tool to convert ZPnn blocks to BMP.
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

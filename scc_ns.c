@@ -16,6 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file scc_ns.c
+ * @ingroup scc sld
+ * @brief ScummC namespace
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

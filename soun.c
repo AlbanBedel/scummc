@@ -16,6 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file soun.c
+ * @ingroup scumm
+ * @brief SCUMM soun block generator
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

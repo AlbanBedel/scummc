@@ -16,6 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/// @defgroup sld Linker
+/**
+ * @file scc_ld.c
+ * @ingroup sld
+ * @brief ScummC linker
+ */
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -47,8 +55,10 @@ struct scc_ld_block_st {
   scc_ld_block_t* next;
 
   uint32_t type;
-  int asis; // can be copied as is, it won't need any patching
-  int addr; // used for scripts
+  /// Can be copied as is, it won't need any patching
+  int asis;
+  /// Ressource address, used for scripts
+  int addr;
 
 
   int data_len;
@@ -59,9 +69,10 @@ typedef struct scc_ld_room_st scc_ld_room_t;
 struct scc_ld_room_st {
   scc_ld_room_t* next;
 
-  // room ns used to resolve the rid during code patching
+  /// Room ns used to resolve the rid during code patching
   scc_ns_t* ns;
-  scc_symbol_t* sym; // from the local ns
+  /// Room symbol from the local ns
+  scc_symbol_t* sym;
   
   scc_ld_block_t* room;
   scc_ld_block_t* scr;

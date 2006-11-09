@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_param.h
+ * @ingroup utils
+ * @brief Command line parser
+ */
+
 #define SCC_PARAM_FLAG 1
 #define SCC_PARAM_INT  2
 #define SCC_PARAM_STR  3

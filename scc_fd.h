@@ -17,6 +17,13 @@
  *
  */
 
+/**
+ * @file scc_fd.h
+ * @ingroup utils
+ * @brief Read/write file with XOR encryption
+ */
+
+
 typedef struct scc_fd {
   int fd;
   uint8_t enckey;

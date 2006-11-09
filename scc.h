@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc.h
+ * @ingroup scumm
+ * @brief Read/write SCUMM data. Mostly obsolete.
+ */
+
 #define OF_STATE_SHL 4
 #define OF_OWNER_MASK 0x0F
 

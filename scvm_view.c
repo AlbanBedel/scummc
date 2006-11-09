@@ -18,6 +18,12 @@
  *
  */
 
+/**
+ * @file scvm_view.c
+ * @ingroup scvm
+ * @brief SCVM rendering
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

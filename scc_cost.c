@@ -16,6 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file scc_cost.c
+ * @ingroup scumm
+ * @brief SCUMM costume parser and decoder
+ */
+
 #include "config.h"
 
 #include <inttypes.h>

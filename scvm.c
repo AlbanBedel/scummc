@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scvm.c
+ * @ingroup scvm
+ * @brief A primitive SCUMM VM implementation.
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

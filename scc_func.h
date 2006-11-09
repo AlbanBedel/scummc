@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_func.h
+ * @ingroup scc
+ * @brief ScummC builtin functions
+ */
+
 // A define for the various print function families
 
 #define PRINT(name,op) {                         \

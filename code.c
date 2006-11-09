@@ -16,6 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file code.c
+ * @ingroup scumm
+ * @brief SCUMM image encoders
+ */
+
 #include "config.h"
 
 #include <inttypes.h>

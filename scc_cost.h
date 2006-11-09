@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_cost.h
+ * @ingroup scumm
+ * @brief SCUMM costume parser and decoder
+ */
+
 typedef struct scc_cost_pic scc_cost_pic_t;
 struct scc_cost_pic {
   scc_cost_pic_t* next;

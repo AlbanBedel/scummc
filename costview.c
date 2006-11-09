@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file costview.c
+ * @brief Gtk based costume viewer
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

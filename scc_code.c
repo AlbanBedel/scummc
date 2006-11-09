@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_code.c
+ * @ingroup scc
+ * @brief SCUMM code generator
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

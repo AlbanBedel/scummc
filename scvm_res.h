@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scvm_res.h
+ * @ingroup scvm
+ * @brief SCVM ressources management
+ */
+
 typedef struct scvm scvm_t;
 
 #define SCVM_RES_LOCKED 1

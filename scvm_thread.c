@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scvm_thread.c
+ * @ingroup scvm
+ * @brief SCVM thread implementation
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

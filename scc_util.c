@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_util.c
+ * @ingroup utils
+ * @brief Common stuff and portabilty helpers
+ */
+
 // This file should contain generic stuff that can be helpfull anywhere.
 #include "config.h"
 

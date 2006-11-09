@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file cost_parse.y
+ * @ingroup scumm
+ * @brief Costume compiler
+ */
+
 %{
 
 #include "config.h"

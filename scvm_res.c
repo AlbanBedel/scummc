@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scvm_res.c
+ * @ingroup scvm
+ * @brief SCVM ressources management
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

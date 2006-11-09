@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_char.h
+ * @ingroup scumm
+ * @brief SCUMM charset parser
+ */
+
 typedef struct scc_char_st {
   uint8_t w,h;
   int8_t  x,y;

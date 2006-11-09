@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_param.c
+ * @ingroup utils
+ * @brief Command line parser
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

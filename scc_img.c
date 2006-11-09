@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_img.c
+ * @ingroup utils
+ * @brief Read/write image files
+ */
+
 #include "config.h"
 
 #include <sys/types.h>

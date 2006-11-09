@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file imgremap.c
+ * @brief Tool to swap colors in an image
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

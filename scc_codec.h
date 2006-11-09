@@ -17,12 +17,20 @@
  *
  */
 
+/// @defgroup scumm SCUMM data
+/**
+ * @file scc_codec.h
+ * @ingroup scumm
+ * @brief SCUMM image encoding/decoding
+ */
+
 // code.c
    
-// create an smap out from a bitmap. It simply try every codec for each
-// stripe and take the best one. Note that in the doot data at least some
-// room aren't using the best encoding.
-
+/// @brief Create a smap from a bitmap.
+///
+/// It simply try every codec for each stripe and take the best one.
+/// Note that in the doot data at least some room aren't using the
+/// best encoding.
 int scc_code_image(uint8_t* src, int src_stride,
                    int width,int height,int transparentColor,
                    uint8_t** smap_p);

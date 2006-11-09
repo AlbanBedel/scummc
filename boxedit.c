@@ -17,6 +17,11 @@
  *
  */
 
+/**
+ * @file boxedit.c
+ * @brief Gtk based box editor
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

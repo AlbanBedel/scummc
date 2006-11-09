@@ -17,6 +17,12 @@
  *
  */
 
+/** 
+ * @file scc_lexer.c
+ * @ingroup scc lex
+ * @brief ScummC lexer.
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

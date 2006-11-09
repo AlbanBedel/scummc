@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file read.c
+ * @ingroup scumm
+ * @brief Read SCUMM data. Mostly obsolete.
+ */
+
 #include "config.h"
 
 // We can probably kick some since the testing code left us.

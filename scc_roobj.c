@@ -17,6 +17,12 @@
  *
  */
 
+/**
+ * @file scc_roobj.c
+ * @ingroup scc
+ * @brief ScummC object files
+ */
+
 #include "config.h"
 
 #include <stdlib.h>

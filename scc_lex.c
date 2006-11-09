@@ -17,6 +17,12 @@
  *
  */
 
+/** 
+ *  @file scc_lex.c
+ *  @ingroup lex
+ *  @brief Base class to implement lexers.
+ */
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -33,22 +39,37 @@
 #include "scc_fd.h"
 #include "scc_lex.h"
 
+/// Size of the blocks read by the lexbuf.
 #define SCC_LEX_BLOCK_SIZE 1024
 
+/** @brief Lexer buffer, the lexer input.
+ *
+ * The lexbuf take care of reading the data from the input
+ * files and tracking the current position (in term of lines
+ * and columns) in the input file.
+ */
 struct scc_lexbuf {
-    // next
+    /// Next buffer.
     scc_lexbuf_t* next;
-    // input fd
+    /// Input fd
     scc_fd_t* fd;
-    // read all the data out of the fd
+    /// Did we read all the data out of the fd
     char eof;
-    // buffer
+    /// Buffer
     char* data;
-    unsigned data_pos,data_len,data_size;
-    // current position
-    int line,column;
+    /// Current position in the buffer
+    unsigned data_pos;
+    /// Length of the data contained in the buffer
+    unsigned data_len;
+    /// Size allocated for the buffer
+    unsigned data_size;
+    /// Current line
+    int line
+    /// Current column
+    int column;
 };
 
+/// Lexer function stack.
 struct scc_lexer {
     scc_lexer_t* next;
     scc_lexer_f lex;

@@ -17,12 +17,19 @@
  *
  */
 
+/**
+ * @file scc_roobj.h
+ * @ingroup scc
+ * @brief ScummC object files
+ */
+
 typedef struct scc_roobj_res_st scc_roobj_res_t;
 typedef struct scc_roobj_cycl_st scc_roobj_cycl_t;
 typedef struct scc_roobj_state_st scc_roobj_state_t;
 typedef struct scc_roobj_obj_st scc_roobj_obj_t;
 typedef struct scc_roobj_st scc_roobj_t;
 
+/// Generic data ressources like music.
 struct scc_roobj_res_st {
   scc_roobj_res_t* next;
 
@@ -31,6 +38,7 @@ struct scc_roobj_res_st {
   unsigned data_len;
 };
 
+/// Palette cycle definition
 struct scc_roobj_cycl_st {
   scc_roobj_cycl_t* next;
 
@@ -39,65 +47,85 @@ struct scc_roobj_cycl_st {
   int start,end;
 };
 
+/// Object state definition
 struct scc_roobj_state_st {
   scc_roobj_state_t* next;
 
-  // hotspot
+  /// hotspot
   int hs_x,hs_y;
   scc_img_t* img;
   scc_img_t* zp[SCC_MAX_IM_PLANES];
 };  
 
+/// Object data
 struct scc_roobj_obj_st {
   scc_roobj_obj_t* next;
 
+  /// Symbol for this object
   scc_symbol_t* sym;
+  /// Hotspot list for each state
   int hotspots[SCC_MAX_IM_PLANES+1];
   int x,y,w,h;
+  /// Parent object
   scc_symbol_t* parent;
-  int parent_state,parent_id;
+  /// Parent state wich enable this object
+  int parent_state;
+  /// Index (in the room) of the parent object
+  int parent_id;
+  /// Direction the actors should use when facing the object
   int dir;
+  /// Default state
   int state;
+  /// Name of the object in game
   char* name;
 
-  // hotspot used if no extra state is defined
+  /// hotspot used if no extra state is defined
   int hs_x,hs_y;
-  // state have image, zplanes and hotspot
+  /// state have image, zplanes and hotspot
   scc_roobj_state_t* states;
-  // verbs
+  /// verbs
   scc_script_t* verb;
-  // generated imnn
+  /// generated imnn
   scc_imnn_t* im;
 
+  /// Initial owner of the object
   scc_symbol_t* owner;
+  /// Classes the object belong to
   scc_symbol_t* class[SCC_MAX_CLASS];
 };
 
+/// Room data
 struct scc_roobj_st {
-  scc_roobj_t* next; // chain when we have several room
+  /// Chain when we have several room
+  scc_roobj_t* next;
 
-  scc_symbol_t* sym; // our sym
+   /// Symbol of this romm
+  scc_symbol_t* sym;
 
+  /// Global scripts
   scc_script_t* scr;
+  /// Local scripts
   scc_script_t* lscr;
 
+  /// Object list
   scc_roobj_obj_t* obj,*last_obj;
 
-  // the defined ressources.
+  /// the defined ressources.
   scc_roobj_res_t *res;
 
-  // cycles
+  /// Palette cycles
   scc_roobj_cycl_t* cycl;
-  // transparent color
+  /// Transparent color
   int trans;
-  // room image
+  /// Background image
   scc_img_t* image;
+  /// Z-Planes for masking actors
   scc_img_t* zplane[SCC_MAX_IM_PLANES];
-  // boxd
+  /// Box list
   scc_boxd_t* boxd;
-  // boxm
+  /// Box matrix
   scc_data_t* boxm;
-  // scal
+  /// Scaling slots
   scc_data_t* scal;
 };
 

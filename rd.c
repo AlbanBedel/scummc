@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
+
+/**
+ * @file rd.c
+ * @brief Experiment playground, currently dump SCUMM files.
+ */
+
 #include "config.h"
 
 #include <sys/types.h>
