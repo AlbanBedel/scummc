@@ -724,7 +724,7 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
       SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0109) }
   },{
-    "imClearPlayerLoop", 0xAC, 0, 1, 1,
+    "imPlayerClearLoop", 0xAC, 0, 1, 1,
     { SCC_FA_VAL, SCC_FA_OPC(0x010A) }
   },{
     "imPlayerSetOnOff", 0xAC, 0, 3, 1,
@@ -935,12 +935,10 @@ static scc_func_t scc_func[] = {
     "setActorScale", 0xC9, 0, 2, 1,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6B) }
   },{
-#if 0 // What does it do ?
     "setShadowPalette", 0xC9, 0, 5, 1,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
       SCC_FA_VAL, SCC_FA_OPC(0x6C) }
   },{
-#endif
     "clearCharsetMask", 0xC9, 0, 0, 1,
     { SCC_FA_OPC(0x6E) }
   },{
