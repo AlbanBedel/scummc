@@ -257,7 +257,7 @@ static int scc_string_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
 }
 
 static int scc_preproc_lexer(scc_lex_t* lex,char* ppd,char* arg) {
-    int len;
+    int i,j,len;
 
     if(!strcmp(ppd,"include")) {
         if(!arg || (len = strlen(arg)) < 3 || (arg[0] != '"' && arg[0] != '<') ||
@@ -268,7 +268,34 @@ static int scc_preproc_lexer(scc_lex_t* lex,char* ppd,char* arg) {
         arg[len-1] = '\0';
         arg++;
         return scc_lex_push_buffer(lex,arg) ? -1 : 0;
+    } else if(!strcmp(ppd,"define")) {
+        if(!arg || !SCC_ISALPHA(arg[0])) {
+            scc_lex_error(lex,"Invalid define name: %s",arg);
+            return 0;
+        }
+        for(i = 1 ; arg[i] && arg[i] != ' ' && arg[i] != '\t' ; i++) {
+            if(!SCC_ISALNUM(arg[i]) && arg[i] != '_') {
+                scc_lex_error(lex,"Invalid define name: %s",arg);
+                return 0;
+            }
+        }
+        for(j = i ; arg[j] == ' ' || arg[j] == '\t' ; j++);
+        len = strlen(arg)-j;
+        {
+            char name[i+1];
+            memcpy(name,arg,i);
+            name[i] = 0;
+            if(len > 0) {
+                char val[len+1];
+                memcpy(val,arg+j,len);
+                val[len] = 0;
+                scc_lex_define(lex,name,val);
+            } else
+                scc_lex_define(lex,name,NULL);
+        }
+        return -1;
     }
+                
 
     //printf("Got preproc: '%s' -> '%s'\n",ppd,arg);
     scc_lex_error(lex,"Unknow preprocessor directive %s",ppd);
@@ -314,6 +341,12 @@ int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
             }
             free(str);
             return INTEGER;
+        }
+
+        // Is it a define ?
+        if(scc_lex_is_define(lex,str)) {
+            scc_lex_expand_define(lex,str);
+            return -1;
         }
 
         // Is it a keyword ?

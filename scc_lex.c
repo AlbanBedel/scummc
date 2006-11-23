@@ -67,6 +67,8 @@ struct scc_lexbuf {
     int line;
     /// Current column
     int column;
+    /// Current filename
+    char* filename;
 };
 
 /// Lexer function stack.
@@ -145,24 +147,24 @@ char* scc_lex_get_file(scc_lex_t* lex) {
 
     // not included, just return name:line
     if(!buf->next) {
-        asprintf(&str,"%s:%d",buf->fd->filename,buf->line);
+        asprintf(&str,"%s:%d",buf->filename,buf->line);
         return str;
     }
 
     // It was included, print from where it was included
     buf = buf->next;
     asprintf(&tmp,"In file included from %s:%d:\n",
-             buf->fd->filename,buf->line);
+             buf->filename,buf->line);
     // add the included includes
     while((buf = buf->next)) {
         str = tmp;
         asprintf(&tmp,"%s                 from %s:%d:\n",
-                 str,buf->fd->filename,buf->line);
+                 str,buf->filename,buf->line);
         free(str);
     }
     // and finnaly the current file:line
     buf = lex->buffer;
-    asprintf(&str,"%s%s:%d",tmp,buf->fd->filename,buf->line);
+    asprintf(&str,"%s%s:%d",tmp,buf->filename,buf->line);
     free(tmp);
 
     return str;
@@ -216,6 +218,7 @@ int scc_lex_push_buffer(scc_lex_t* lex,char* file) {
     }
     buf = calloc(1,sizeof(scc_lexbuf_t));
     buf->fd = fd;
+    buf->filename = strdup(fd->filename);
     buf->next = lex->buffer;
     lex->buffer = buf;
 
@@ -227,7 +230,8 @@ int scc_lex_push_buffer(scc_lex_t* lex,char* file) {
 int scc_lex_pop_buffer(scc_lex_t* lex) {
     scc_lexbuf_t* buf;
     if(!(buf = lex->buffer)) return 0;
-    scc_fd_close(buf->fd);
+    if(buf->fd) scc_fd_close(buf->fd);
+    if(buf->filename) free(buf->filename);
     if(buf->data) free(buf->data);
     if(buf->next)
         lex->buffer = buf->next;
@@ -450,6 +454,53 @@ int scc_lex_pop_lexer(scc_lex_t* lex) {
 
     lex->lexer = lexer->next;
     free(lexer);
+
+    return 1;
+}
+
+void scc_lex_define(scc_lex_t* lex, char* name, char* val) {
+    int i;
+
+    for(i = 0 ; i < lex->num_define ; i++)
+        if(!strcmp(name,lex->define[i<<1])) break;
+
+    if(i == lex->num_define) {
+        lex->define = realloc(lex->define,(lex->num_define<<1)+2);
+        lex->num_define++;
+    } else if(lex->define[(i<<1)+1])
+        free(lex->define[(i<<1)+1]);
+    lex->define[i<<1] = strdup(name);
+    lex->define[(i<<1)+1] = val ? strdup(val) : NULL;
+}
+
+int scc_lex_is_define(scc_lex_t* lex, char* name) {
+    int i;
+    for(i = 0 ; i < lex->num_define ; i++)
+        if(!strcmp(name,lex->define[i<<1])) return 1;
+    return 0;
+}
+
+int scc_lex_expand_define(scc_lex_t* lex, char* name) {
+    scc_lexbuf_t* buf;
+    int i;
+    for(i = 0 ; i < lex->num_define ; i++)
+        if(!strcmp(name,lex->define[i<<1])) break;
+    if(i == lex->num_define)
+        return 0;
+
+    if(!lex->define[(i<<1)+1]) return 1;
+
+    buf = calloc(1,sizeof(scc_lexbuf_t));
+    buf->filename = strdup(lex->buffer->filename);
+    buf->line = lex->buffer->line;
+    buf->column = lex->buffer->column;
+    buf->eof = 1;
+
+    buf->data = strdup(lex->define[(i<<1)+1]);
+    buf->data_len = strlen(buf->data);
+
+    buf->next = lex->buffer;
+    lex->buffer = buf;
 
     return 1;
 }

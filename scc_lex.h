@@ -64,6 +64,9 @@ struct scc_lex {
     /// callback to track deps
     scc_lexer_opened_f opened;
     void* userdata;
+    /// Defines list
+    char** define;
+    unsigned num_define;
 };
 
 /// Common struct to store compiler keywords.
@@ -131,6 +134,15 @@ int scc_lex_push_lexer(scc_lex_t* lex, scc_lexer_f lexf);
 
 /// Pop the current lexer.
 int scc_lex_pop_lexer(scc_lex_t* lex);
+
+/// Set a define
+void scc_lex_define(scc_lex_t* lex, char* name, char* val);
+
+/// Check if a symbol is a define
+int scc_lex_is_define(scc_lex_t* lex, char* name);
+
+/// Expand a define
+int scc_lex_expand_define(scc_lex_t* lex, char* name);
 
 /// Find a keyword, the array MUST be sorted.
 scc_keyword_t* scc_is_keyword(char* s,scc_keyword_t* kw,unsigned num_kw);
