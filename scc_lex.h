@@ -38,6 +38,7 @@
 typedef struct scc_lexbuf scc_lexbuf_t;
 typedef struct scc_lexer scc_lexer_t;
 typedef struct scc_lex scc_lex_t;
+typedef struct scc_define scc_define_t;
 typedef struct scc_keyword scc_keyword_t;
 
 /// Lexer function.
@@ -65,7 +66,7 @@ struct scc_lex {
     scc_lexer_opened_f opened;
     void* userdata;
     /// Defines list
-    char** define;
+    scc_define_t* define;
     unsigned num_define;
 };
 
@@ -136,7 +137,7 @@ int scc_lex_push_lexer(scc_lex_t* lex, scc_lexer_f lexf);
 int scc_lex_pop_lexer(scc_lex_t* lex);
 
 /// Set a define
-void scc_lex_define(scc_lex_t* lex, char* name, char* val);
+void scc_lex_define(scc_lex_t* lex, char* name, char* val, int line, int col);
 
 /// Check if a symbol is a define
 int scc_lex_is_define(scc_lex_t* lex, char* name);

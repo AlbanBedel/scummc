@@ -77,6 +77,20 @@ struct scc_lexer {
     scc_lexer_f lex;
 };
 
+/// Define definition
+struct scc_define {
+    /// Defined name
+    char* name;
+    /// Defined value
+    char* value;
+    /// File where it was defined
+    char* filename;
+    /// Line where it was defined
+    int line;
+    /// Column where it was defined
+    int column;
+};
+
 scc_lex_t* scc_lex_new(scc_lexer_f lexer,scc_lexer_pos_f set_start_pos,
                        scc_lexer_pos_f set_end_pos, char** include) {
     scc_lex_t* lex = calloc(1,sizeof(scc_lex_t));
@@ -458,25 +472,28 @@ int scc_lex_pop_lexer(scc_lex_t* lex) {
     return 1;
 }
 
-void scc_lex_define(scc_lex_t* lex, char* name, char* val) {
+void scc_lex_define(scc_lex_t* lex, char* name, char* val, int line, int col) {
     int i;
 
     for(i = 0 ; i < lex->num_define ; i++)
-        if(!strcmp(name,lex->define[i<<1])) break;
+        if(!strcmp(name,lex->define[i].name)) break;
 
     if(i == lex->num_define) {
-        lex->define = realloc(lex->define,((lex->num_define<<1)+2)*sizeof(char*));
         lex->num_define++;
-    } else if(lex->define[(i<<1)+1])
-        free(lex->define[(i<<1)+1]);
-    lex->define[i<<1] = strdup(name);
-    lex->define[(i<<1)+1] = val ? strdup(val) : NULL;
+        lex->define = realloc(lex->define,lex->num_define*sizeof(scc_define_t));
+    } else if(lex->define[i].value)
+        free(lex->define[i].value);
+    lex->define[i].name = strdup(name);
+    lex->define[i].value = val ? strdup(val) : NULL;
+    lex->define[i].filename = strdup(lex->buffer->filename);
+    lex->define[i].line = line;
+    lex->define[i].column = col;
 }
 
 int scc_lex_is_define(scc_lex_t* lex, char* name) {
     int i;
     for(i = 0 ; i < lex->num_define ; i++)
-        if(!strcmp(name,lex->define[i<<1])) return 1;
+        if(!strcmp(name,lex->define[i].name)) return 1;
     return 0;
 }
 
@@ -484,19 +501,19 @@ int scc_lex_expand_define(scc_lex_t* lex, char* name) {
     scc_lexbuf_t* buf;
     int i;
     for(i = 0 ; i < lex->num_define ; i++)
-        if(!strcmp(name,lex->define[i<<1])) break;
+        if(!strcmp(name,lex->define[i].name)) break;
     if(i == lex->num_define)
         return 0;
 
-    if(!lex->define[(i<<1)+1]) return 1;
+    if(!lex->define[i].value) return 1;
 
     buf = calloc(1,sizeof(scc_lexbuf_t));
-    buf->filename = strdup(lex->buffer->filename);
-    buf->line = lex->buffer->line;
-    buf->column = lex->buffer->column;
+    buf->filename = strdup(lex->define[i].filename);
+    buf->line = lex->define[i].line;
+    buf->column = lex->define[i].column;
     buf->eof = 1;
 
-    buf->data = strdup(lex->define[(i<<1)+1]);
+    buf->data = strdup(lex->define[i].value);
     buf->data_len = strlen(buf->data);
 
     buf->next = lex->buffer;

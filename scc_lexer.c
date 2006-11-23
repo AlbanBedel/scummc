@@ -252,7 +252,7 @@ static int scc_string_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
     return STRING;    
 }
 
-static int scc_preproc_lexer(scc_lex_t* lex,char* ppd,char* arg) {
+static int scc_preproc_lexer(scc_lex_t* lex,char* ppd,char* arg, int line, int col) {
     int i,j,len;
 
     if(!strcmp(ppd,"include")) {
@@ -285,9 +285,9 @@ static int scc_preproc_lexer(scc_lex_t* lex,char* ppd,char* arg) {
                 char val[len+1];
                 memcpy(val,arg+j,len);
                 val[len] = 0;
-                scc_lex_define(lex,name,val);
+                scc_lex_define(lex,name,val,line,col+j);
             } else
-                scc_lex_define(lex,name,NULL);
+                scc_lex_define(lex,name,NULL,line,col);
         }
         return -1;
     }
@@ -303,6 +303,7 @@ int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
     char c,d;
     char* str,*ppd;
     int tpos = 0,pos = 0;
+    int define_line = -1, define_col = -1;
     scc_keyword_t* keyword;
 
     c = scc_lex_at(lex,0);
@@ -557,6 +558,10 @@ int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
             } else
                 scc_lex_drop(lex,tpos);
 
+            // Store the arg start position
+            if(define_line < 0)
+                scc_lex_get_line_column(lex,&define_line,&define_col);
+
             // find the eol
             tpos = scc_lex_strchr(lex,0,'\n');
             if(tpos < 0) { // we should do better here
@@ -582,7 +587,7 @@ int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
         }
 
         // call the preproc
-        tpos = scc_preproc_lexer(lex,ppd,str);
+        tpos = scc_preproc_lexer(lex,ppd,str,define_line,define_col);
         free(ppd);
         if(str) free(str);
         return tpos;
