@@ -163,3 +163,81 @@ int VAR_TIMEDATE_MINUTE        @ 126;
 
 int VAR_TIMEDATE_DAY           @ 128;
 int VAR_TIMEDATE_MONTH         @ 129;
+
+//
+// iMUSE constants
+//
+
+// Commands
+#define IM_SET_MASTER_VOLUME     0x0006
+#define IM_GET_MASTER_VOLUME     0x0007
+#define IM_START_SOUND           0x0008
+#define IM_STOP_SOUND            0x0009
+#define IM_STOP_ALL_SOUNDS       0x000B
+#define IM_PLAYER_SET            0x000C
+#define IM_GET_SOUND_STATUS      0x000D
+#define IM_FADE_SOUND            0x000E
+#define IM_MAYBE_HOOK            0x000F
+#define IM_SET_VOLCHAN           0x0010
+#define IM_SET_CHANNEL_VOLUME    0x0011
+#define IM_SET_VOLCHAN_ENTRY     0x0012
+#define IM_CLEAR_TRIGGER         0x0013
+#define IM_PLAYER_GET_PARAM      0x0100
+#define IM_PLAYER_SET_PRIORITY   0x0101
+#define IM_PLAYER_SET_VOLUME     0x0102
+#define IM_PLAYER_SET_PAN        0x0103
+#define IM_PLAYER_SET_TRANSPOSE  0x0104
+#define IM_PLAYER_SET_DETUNE     0x0105
+#define IM_PLAYER_SET_SPEED      0x0106
+#define IM_PLAYER_JUMP           0x0107
+#define IM_PLAYER_SCAN           0x0108
+#define IM_PLAYER_SET_LOOP       0x0109
+#define IM_PLAYER_CLEAR_LOOP     0x010A
+#define IM_PLAYER_SET_ON_OFF     0x010B
+#define IM_PLAYER_SET_HOOK       0x010C
+#define IM_PLAYER_FADE           0x010D
+#define IM_QUEUE_TRIGGER         0x010E
+#define IM_QUEUE_COMMAND         0x010F
+#define IM_LIVE_MIDI_ON          0x0111
+#define IM_LIVE_MIDI_OFF         0x0112
+#define IM_PLAYER_GET_PARAM      0x0113
+#define IM_PLAYER_SET_HOOK       0x0114
+//#define IM_PLAYER_SET_VOLUME     0x0116
+#define IM_QUERY_QUEUE           0x0117
+
+// Player parameters
+
+#define IM_PRIORITY              0x00
+#define IM_VOLUME                0x01
+#define IM_PAN                   0x02
+#define IM_TRANSPOSE             0x03
+#define IM_DETUNE                0x04
+#define IM_SPEED                 0x05
+#define IM_TRACK_INDEX           0x06
+#define IM_BEAT_INDEX            0x07
+#define IM_TICK_INDEX            0x08
+#define IM_LOOP_COUNTER          0x09
+#define IM_LOOP_TO_BEAT          0x0A
+#define IM_LOOP_TO_TICK          0x0B
+#define IM_LOOP_FROM_BEAT        0x0C
+#define IM_LOOP_FROM_TICK        0x0D
+#define IM_PART_ON               0x0E
+#define IM_PART_VOL              0x0F
+#define IM_PART_INSTRUMENT       0x10
+#define IM_PART_TRANSPOSE        0x11
+#define IM_JUMP_HOOK             0x12
+#define IM_TRANSPOSE_HOOK        0x13
+#define IM_PART_ON_OFF_HOOK      0x14
+#define IM_PART_VOLUME_HOOK      0x15
+#define IM_PART_PROGRAM_HOOK     0x16
+#define IM_PART_TRANSPOSE_HOOK   0x17
+
+// Hook type
+
+#define IM_HOOK_JUMP             0x00
+#define IM_HOOK_TRANSPOSE        0x01
+#define IM_HOOK_PART_ON_OFF      0x02
+#define IM_HOOK_PART_VOLUME      0x03
+#define IM_HOOK_PART_PROGRAM     0x04
+#define IM_HOOK_PART_TRANSPOSE   0x05
+
