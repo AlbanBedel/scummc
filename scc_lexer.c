@@ -38,10 +38,6 @@
 // List of all the keywords
 // it must be kept sorted bcs a binary search is used on it
 static scc_keyword_t scc_keywords[] = {
-    { "EAST",       INTEGER,   1 },
-    { "NORTH",      INTEGER,   3 },
-    { "SOUTH",      INTEGER,   2 },
-    { "WEST",       INTEGER,   0 },
     { "actor",      ACTOR,     -1 },
     { "bit",        TYPE,      SCC_VAR_BIT },
     { "break",      BRANCH,    SCC_BRANCH_BREAK },

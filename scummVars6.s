@@ -165,6 +165,16 @@ int VAR_TIMEDATE_DAY           @ 128;
 int VAR_TIMEDATE_MONTH         @ 129;
 
 //
+// Directions
+//
+
+#define WEST   0
+#define EAST   1
+#define SOUTH  2
+#define NORTH  3
+
+
+//
 // iMUSE constants
 //
 
