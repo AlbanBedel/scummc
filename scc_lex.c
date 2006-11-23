@@ -465,7 +465,7 @@ void scc_lex_define(scc_lex_t* lex, char* name, char* val) {
         if(!strcmp(name,lex->define[i<<1])) break;
 
     if(i == lex->num_define) {
-        lex->define = realloc(lex->define,(lex->num_define<<1)+2);
+        lex->define = realloc(lex->define,((lex->num_define<<1)+2)*sizeof(char*));
         lex->num_define++;
     } else if(lex->define[(i<<1)+1])
         free(lex->define[(i<<1)+1]);
