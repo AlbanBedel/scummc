@@ -214,6 +214,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 %right <integer> '?' ':'
 %left <integer>  LOR
 %left <integer>  LAND
+%nonassoc <integer> IS
 %left <integer>  '|'
 %left <integer>  '&'
 %left <integer>  NEQ EQ
@@ -272,6 +273,10 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 %type <st> cargs
 %type <st> var
 %type <st> call
+
+%type <st> isargs
+%type <st> isarglist
+%type <st> isarg
 
 %type <sym> vdecl
 
@@ -1426,6 +1431,38 @@ statement: dval
   SCC_BOP($$,&&,$1,$2,$3);
 }
 
+| statement IS isargs
+{
+  scc_func_t* f;
+  scc_statement_t *a,*list;
+  char* err;
+  
+  f = scc_get_func("isObjectOfClass");
+  if(!f)
+    SCC_ABORT(@1,"Internal error: isObjectOfClass not found.\n");
+  
+  // create the arguments
+  list = calloc(1,sizeof(scc_statement_t));
+  list->type = SCC_ST_LIST;
+  list->val.l = $3;
+  
+  $1->next = list;
+  
+  // create the call
+  $$ = calloc(1,sizeof(scc_statement_t));
+  $$->type = SCC_ST_CALL;
+  
+  $$->val.c.func = f;
+  $$->val.c.argv = $1;
+  
+  for(a = $1 ; a ; a = a->next)
+    $$->val.c.argc++;
+  
+  err = scc_statement_check_func(&$$->val.c);
+  if(err)
+    SCC_ABORT(@1,"%s",err);
+}
+
 | statement '|' statement
 {
   SCC_BOP($$,|,$1,$2,$3);
@@ -1696,6 +1733,79 @@ cargs:
 
   i->next = $3;
 };
+
+isargs: isarg
+{
+  $$ = $1;
+}
+
+| '[' isarglist ']'
+{
+  $$ = $2;
+}
+;
+
+isarglist: isarg
+{
+  $$ = $1;
+}
+
+| isarglist ',' isarg
+{
+  scc_statement_t* i;
+  
+  $$ = $1;
+  for(i = $$ ; i->next ; i = i->next);
+  
+  i->next = $3;
+}
+;
+
+isarg: SYM
+{
+  scc_symbol_t* sym = scc_ns_get_sym(sccp->ns,NULL,$1);
+  scc_statement_t *clsid, *bit;
+  
+  if(!sym)
+    SCC_ABORT(@1,"%s is not a declared class.\n",$1);
+  
+  if(sym->type != SCC_RES_CLASS)
+    SCC_ABORT(@1,"%s is not a class in the current context.\n",$1);
+  
+  // allocate rid
+  if(!sym->rid) scc_ns_get_rid(sccp->ns,sym);
+  
+  // the arg is the class id + 0x80
+  clsid = calloc(1,sizeof(scc_statement_t));
+  clsid->type = SCC_ST_RES;
+  clsid->val.r = sym;
+  
+  bit = calloc(1,sizeof(scc_statement_t));
+  bit->type = SCC_ST_VAL;
+  bit->val.i = 0x80;
+  
+  SCC_BOP($$,+,clsid,'+',bit);
+}
+
+| '!' SYM
+{
+  scc_symbol_t* sym = scc_ns_get_sym(sccp->ns,NULL,$2);
+  
+  if(!sym)
+    SCC_ABORT(@1,"%s is not a declared class.\n",$2);
+  
+  if(sym->type != SCC_RES_CLASS)
+    SCC_ABORT(@1,"%s is not a class in the current context.\n",$2);
+  
+  // allocate rid
+  if(!sym->rid) scc_ns_get_rid(sccp->ns,sym);
+  
+  // the arg is simply the class id
+  $$ = calloc(1,sizeof(scc_statement_t));
+  $$->type = SCC_ST_RES;
+  $$->val.r = sym;
+}
+;
 
 dval: INTEGER
 {

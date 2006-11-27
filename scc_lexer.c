@@ -57,6 +57,7 @@ static scc_keyword_t scc_keywords[] = {
     { "global",     SCRTYPE,   SCC_RES_SCR },
     { "if",         IF,        0 },
     { "int",        TYPE,      SCC_VAR_WORD },
+    { "is",         IS,        -1 },
     { "local",      SCRTYPE,   SCC_RES_LSCR },
     { "nibble",     TYPE,      SCC_VAR_NIBBLE },
     { "object",     OBJECT,    -1 },

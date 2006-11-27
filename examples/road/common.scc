@@ -291,7 +291,7 @@ room ResRoom {
 
 
             if(obj) {
-                if(isObjectOfClass(obj, [ Openable + 0x80 ]))
+                if(obj is Openable)
                     alt = getObjectState(obj) ? Close : Open;
                 else
                     alt = LookAt;
@@ -386,7 +386,7 @@ room ResRoom {
             break;
             
         case Open:
-            if(isObjectOfClass(objA,[Openable])) {
+            if(objA is !Openable) {
                 egoSay("It's not the kind of thing that can be opened.");
                 break;
             }
@@ -401,7 +401,7 @@ room ResRoom {
             break;
             
         case Close:
-            if(isObjectOfClass(objA,[Openable])) {
+            if(objA is !Openable) {
                 egoSay("I don't think that this can be closed.");
                 break;
             }
