@@ -32,7 +32,7 @@ all_src=*.[chyl]             \
 	Makefile.target      \
 	cf/Makefile.cf       \
 	cf/*.sh              \
-	examples/*/*.scumm   \
+	examples/*/*.sc[ch]  \
 	examples/*/*.bmp     \
 	examples/*/*/*.bmp   \
 	examples/*/*.voc     \
@@ -77,7 +77,7 @@ endef
 CF_SUBTARGETS=                                   \
 	$(SUBTARGETS)                            \
 	$(foreach grp,$(GROUPS),$($(grp)))       \
-	
+
 $(foreach sub,$(CF_SUBTARGETS),$(eval $(call DEF_CF_TARGET_template,$(sub))))
 
 $(foreach sub,$(CLEAN_SUBTARGETS) distclean,$(eval $(call DEF_CF_CLEAN_TARGET_template,$(sub))))
