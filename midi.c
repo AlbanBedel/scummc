@@ -85,7 +85,7 @@ int main(int argc,char** argv) {
   
   if(strip_track >= 0) {
     if(strip_track >= smf->num_track) {
-      scc_log(LOG_ERR,"Track %d doesn't exist, there is only %d tracks.\n",
+      scc_log(LOG_ERR,"Track %d doesn't exist, there are only %d tracks.\n",
               strip_track,smf->num_track);
       return 1;
     }

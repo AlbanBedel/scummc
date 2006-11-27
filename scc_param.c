@@ -192,7 +192,7 @@ scc_cl_arg_t* scc_param_parse_argv(scc_param_t* params,int argc,char** argv) {
 	  fprintf(stderr,"Unknown parameter: %s\n",argv[n]);
 	  break;
 	case SCC_PARAM_NEED_ARG:
-	  fprintf(stderr,"Parameter %s need argument.\n",argv[n]);
+	  fprintf(stderr,"Parameter %s needs an argument.\n",argv[n]);
 	  break;
 	case SCC_PARAM_INVALID:
 	  fprintf(stderr,"Argument of %s is invalid: %s.\n",argv[n],argv[n+1]);

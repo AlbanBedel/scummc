@@ -53,7 +53,7 @@ scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size) {
   // read the charset header
   size2 = scc_fd_r32le(fd);
   if(size2 != size-15)
-    scc_log(LOG_WARN,"Warning size2 is invalid: %d != %d\n",size2,size-15);
+    scc_log(LOG_WARN,"Warning, size2 is invalid: %d != %d\n",size2,size-15);
     
   unk = scc_fd_r16le(fd);
   if(scc_fd_read(fd,pal,15) != 15) {
@@ -79,12 +79,12 @@ scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size) {
   }
   height = scc_fd_r8(fd);
   if(!height) {
-    scc_log(LOG_ERR,"Charset have 0 height ??\n");
+    scc_log(LOG_ERR,"Charset has 0 height??\n");
     return NULL;
   }
   num_char = scc_fd_r16le(fd);
   if(!num_char) {
-    scc_log(LOG_ERR,"Charset have no char ???\n");
+    scc_log(LOG_ERR,"Charset has no chars???\n");
     return NULL;
   }
   if(size < 25 + 4*num_char) {

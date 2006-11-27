@@ -139,7 +139,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
     static char func_err[2048];
 
     if(c->argc != c->func->argc) {
-      sprintf(func_err,"Function %s need %d args, %d found.\n",
+      sprintf(func_err,"Function %s needs %d args, %d found.\n",
 	      c->func->sym,c->func->argc,c->argc);
       return func_err;
     }
@@ -148,7 +148,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
       if(c->func->argt[n] == SCC_FA_VAL) {
 	if(a->type == SCC_ST_STR ||
 	   a->type == SCC_ST_LIST) {
-	  sprintf(func_err,"Argument %d of call to %s is of a wrong type.\n",
+	  sprintf(func_err,"Argument %d of call to %s is of the wrong type.\n",
 		  n+1,c->func->sym);
 	  return func_err;
 	}
@@ -700,7 +700,7 @@ resdecl: RESTYPE SYM location ASSIGN STRING
   scc_symbol_t* r;
 
   if($4 != '=')
-    SCC_ABORT(@4,"Invalid operator for ressource declaration.\n");
+    SCC_ABORT(@4,"Invalid operator for resource declaration.\n");
 
   r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
   scc_parser_find_res(sccp,&$5);
@@ -717,7 +717,7 @@ resdecl: RESTYPE SYM location ASSIGN STRING
   scc_symbol_t* r;
 
   if($5 != '=')
-    SCC_ABORT(@5,"Invalid operator for ressource declaration.\n");
+    SCC_ABORT(@5,"Invalid operator for resource declaration.\n");
 
   r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
   scc_parser_find_res(sccp,&$6);
@@ -761,7 +761,7 @@ objectparam: SYM ASSIGN STRING
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
   // bitch on the keyword
   if(strcmp($1,"states"))
-    SCC_ABORT(@1,"Expexted \"images\".\n");
+    SCC_ABORT(@1,"Expected \"images\".\n");
 }
 | SYM ASSIGN SYM
 {
@@ -790,7 +790,7 @@ objectparam: SYM ASSIGN STRING
 
     sccp->obj->parent = sym;
   } else
-    SCC_ABORT(@1,"Expexted 'owner' or 'parent'.\n");
+    SCC_ABORT(@1,"Expected 'owner' or 'parent'.\n");
     
 }
 | CLASS ASSIGN '{' classlist '}'
@@ -1348,11 +1348,11 @@ statement: dval
   scc_symbol_t* v;
 
   if($1->type != SCC_ST_VAR)
-    SCC_ABORT(@1,"%s is not a variable, so it can't be subscribed.\n",
+    SCC_ABORT(@1,"%s is not a variable, so it can't be subscripted.\n",
 	      $1->val.r->sym);
   v = $1->val.v.r;
   if(!(v->subtype & SCC_VAR_ARRAY))
-    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscribed.\n",v->sym);
+    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscripted.\n",v->sym);
   $$ = $1;
   $$->val.v.y = $3;
 }
@@ -1362,11 +1362,11 @@ statement: dval
   scc_symbol_t* v;
 
   if($1->type != SCC_ST_VAR)
-    SCC_ABORT(@1,"%s is not a variable, so it can't be subscribed.\n",
+    SCC_ABORT(@1,"%s is not a variable, so it can't be subscripted.\n",
 	      $1->val.r->sym);
   v = $1->val.v.r;
   if(!(v->subtype & SCC_VAR_ARRAY))
-    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscribed.\n",v->sym);
+    SCC_ABORT(@1,"%s is not an array variable, so it can't be subscripted.\n",v->sym);
   $$ = $1;
   $$->val.v.x = $3;
   $$->val.v.y = $5;
@@ -1384,7 +1384,7 @@ statement: dval
   for(a = $2 ; a ; a = a->next) {
     if(a->type == SCC_ST_STR ||
        a->type == SCC_ST_LIST)
-      SCC_ABORT(@2,"String and list can't be used inside a list.\n");
+      SCC_ABORT(@2,"Strings and lists can't be used inside a list.\n");
   }
 
   $$ = calloc(1,sizeof(scc_statement_t));
@@ -1590,7 +1590,7 @@ var: SYM
   scc_symbol_t* v = scc_ns_get_sym(sccp->ns,NULL,$1);
 
   if(!v)
-    SCC_ABORT(@1,"%s is not a declared ressource.\n",$1);
+    SCC_ABORT(@1,"%s is not a declared resource.\n",$1);
 
   $$ = calloc(1,sizeof(scc_statement_t));
   if(scc_sym_is_var(v->type)) {
@@ -1608,7 +1608,7 @@ var: SYM
   scc_symbol_t* v = scc_ns_get_sym(sccp->ns,$1,$3);
 
   if(!v)
-    SCC_ABORT(@1,"%s::%s is not a declared ressource.\n",$1,$3);
+    SCC_ABORT(@1,"%s::%s is not a declared resource.\n",$1,$3);
 
   $$ = calloc(1,sizeof(scc_statement_t));
   if(scc_sym_is_var(v->type)) {
@@ -1635,7 +1635,7 @@ call: SYM '(' cargs ')'
   if(!f) {
     s = scc_ns_get_sym(sccp->ns,NULL,$1);
     if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
-      SCC_ABORT(@1,"%s is not a know function or script.\n",$1);
+      SCC_ABORT(@1,"%s is not a known function or script.\n",$1);
 
     f = scc_get_func("startScript0");
     if(!f)
@@ -1679,7 +1679,7 @@ call: SYM '(' cargs ')'
 
   s = scc_ns_get_sym(sccp->ns,$1,$3);
   if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
-    SCC_ABORT(@1,"%s::%s is not a know function or script.\n",$1,$3);
+    SCC_ABORT(@1,"%s::%s is not a known function or script.\n",$1,$3);
 
   if(s->type == SCC_RES_LSCR &&
      s->parent != sccp->roobj->sym)
@@ -1688,7 +1688,7 @@ call: SYM '(' cargs ')'
 
   f = scc_get_func("startScript0");
   if(!f)
-    SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
+    SCC_ABORT(@1,"Internal error: startScript0 not found.\n");
 
   if(!s->rid) scc_ns_get_rid(sccp->ns,s);
 
@@ -2006,7 +2006,7 @@ int scc_parser_error(scc_parser_t* sccp,YYLTYPE *loc, const char *s)  /* Called 
 }
 
 static void usage(char* prog) {
-  scc_log(LOG_MSG,"Usage: %s [-o output] input.scumm [input2.scumm ...]\n",prog);
+  scc_log(LOG_MSG,"Usage: %s [-o output] input.scc [input2.scc ...]\n",prog);
   exit(-1);
 }
 
@@ -2076,7 +2076,7 @@ int main (int argc, char** argv) {
     for(scc_roobj = src->roobj_list ; scc_roobj ; 
         scc_roobj = scc_roobj->next) {
       if(!scc_roobj_write(scc_roobj,src->ns,out_fd)) {
-        scc_log(LOG_ERR,"Failed to write ROOM ????\n");
+        scc_log(LOG_ERR,"Failed to write ROOM????\n");
         return 1;
       }
     }

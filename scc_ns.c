@@ -182,12 +182,12 @@ static int scc_ns_redecl_sym(scc_ns_t* ns, scc_symbol_t* i,
 			     int type, int subtype,
 			     int addr) {
   if(i->type != type || i->subtype != subtype) {
-    scc_log(LOG_ERR,"Symbole %s is alredy defined with another type.\n",
+    scc_log(LOG_ERR,"Symbol %s is already defined with another type.\n",
             i->sym);
     return 0;
   }
   if(i->addr >= 0 && addr >= 0 && i->addr != addr) {
-    scc_log(LOG_ERR,"Symbole %s is alredy defined with address %d.\n",
+    scc_log(LOG_ERR,"Symbol %s is already defined with address %d.\n",
             i->sym,i->addr);
     return 0;
   }
@@ -210,7 +210,7 @@ scc_symbol_t*  scc_ns_add_sym(scc_ns_t* ns, char* sym,
     if(status == 'E') {
       // alredy exported ??
       if(rr->status == 'E') {
-	scc_log(LOG_ERR,"Symbol %s is exported several times.\n",sym);
+	scc_log(LOG_ERR,"Symbol %s is exported more than once.\n",sym);
 	return 0;
       }
       rr->status = 'E';
@@ -315,7 +315,7 @@ scc_symbol_t* scc_ns_decl(scc_ns_t* ns, char* room, char* sym,
 int scc_ns_push(scc_ns_t* ns, scc_symbol_t* s) {
 
   if(s->parent != ns->cur) {
-    scc_log(LOG_ERR,"Trying to push sym %s in the ns, but it doesn't belong to the current level %s\n",s->sym,ns->cur->sym);
+    scc_log(LOG_ERR,"Trying to push sym %s into the ns, but it doesn't belong to the current level %s\n",s->sym,ns->cur->sym);
     return 0;
   }
   
@@ -327,7 +327,7 @@ void scc_ns_clear(scc_ns_t* ns,int type) {
   scc_symbol_t *s,*o = NULL;
 
   if(!ns->cur) {
-    scc_log(LOG_ERR,"Trying to clear ns, but there is no pushed sym !!!\n");
+    scc_log(LOG_ERR,"Trying to clear ns, but there are no pushed syms!!!\n");
     return;
   }
 
@@ -391,7 +391,7 @@ int scc_ns_set_sym_addr(scc_ns_t* ns, scc_symbol_t* s,int addr) {
   }
 
   if(as[addr/8] & (1 << (addr%8))) {
-    scc_log(LOG_ERR,"Address 0x%X is alredy in use.\n",addr);
+    scc_log(LOG_ERR,"Address 0x%X is already in use.\n",addr);
     return 0;
   }
   as[addr/8] |= (1 << (addr%8));
@@ -471,7 +471,7 @@ int scc_ns_alloc_addr(scc_ns_t* ns) {
 
 static int scc_symbol_get_addr_from(scc_symbol_t* s,scc_symbol_t* ref) {
   if(ref->addr < 0) {
-    scc_log(LOG_ERR,"The symbol %s have no address in the src ns.\n",s->sym);
+    scc_log(LOG_ERR,"The symbol %s has no address in the src ns.\n",s->sym);
     return 0;
   }
 

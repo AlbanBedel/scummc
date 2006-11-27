@@ -647,7 +647,7 @@ static void expose_limb_img_cb(GtkWidget *img,GdkEvent* ev,scc_cost_view_t* cv) 
   pic = scc_cost_get_limb_pic(cv->dec.cost,id,pid,4);
 
   if(!pic) {
-    printf("Failed to find the right picture !!!\n");
+    printf("Failed to find the right picture!!!\n");
     return;
   } else {
     uint8_t buf[pic->width*pic->height];

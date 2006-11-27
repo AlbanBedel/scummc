@@ -127,7 +127,7 @@ scc_script_t* scc_roobj_get_scr(scc_roobj_t* ro, scc_symbol_t* sym) {
 int scc_roobj_add_scr(scc_roobj_t* ro,scc_script_t* scr) {
 
   if(scc_roobj_get_scr(ro,scr->sym)) {
-    scc_log(LOG_ERR,"Why are we trying to add a script we alredy have ????\n");
+    scc_log(LOG_ERR,"Why are we trying to add a script we already have????\n");
     return 0;
   }
   
@@ -173,7 +173,7 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj) {
   scc_roobj_obj_t* o = scc_roobj_get_obj(ro,obj->sym);
 
   if(o) {
-    scc_log(LOG_ERR,"%s is alredy defined.\n",obj->sym->sym);
+    scc_log(LOG_ERR,"%s is already defined.\n",obj->sym->sym);
     return 0;
   }
 
@@ -195,12 +195,12 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   }
 
   if(scc_res_types[rt].type < 0) {
-    scc_log(LOG_ERR,"Unknow ressource type !!!!\n");
+    scc_log(LOG_ERR,"Unknown resource type!!!!\n");
     return NULL;
   }    
 
   if(r) {
-    scc_log(LOG_ERR,"Room symbol %s is alredy defined.\n",sym->sym);
+    scc_log(LOG_ERR,"Room symbol %s is already defined.\n",sym->sym);
     return NULL;
   }
 
@@ -217,7 +217,7 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   // get the header
   ft = scc_fd_r32(fd);
   if(ft != scc_res_types[rt].id) {
-    scc_log(LOG_ERR,"The file %s doesn't seems to contain what we want.\n",val);
+    scc_log(LOG_ERR,"The file %s doesn't seem to contain what we want.\n",val);
     scc_fd_close(fd);
     return NULL;
   }
@@ -269,7 +269,7 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
     // terminator
     if(type == 0) {
       if(pos != size)
-        scc_log(LOG_WARN,"%s: Warning garbage after terminator ???\n",file);
+        scc_log(LOG_WARN,"%s: Warning, garbage after terminator???\n",file);
       return 1;
     }
 
@@ -284,7 +284,7 @@ static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
       len -= 2;
 
       if(pack != 0) {
-        scc_log(LOG_ERR,"%s: Unssuported packing format: %x\n",file,pack);
+        scc_log(LOG_ERR,"%s: Unsupported packing format: %x\n",file,pack);
         return 0;
       }
     case 6:
@@ -364,7 +364,7 @@ int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
   int freq;
 
   if(c) {
-    scc_log(LOG_ERR,"Cycle %s is alredy defined.\n",sym->sym);
+    scc_log(LOG_ERR,"Cycle %s is already defined.\n",sym->sym);
     return 0;
   }
 
@@ -388,7 +388,7 @@ int scc_roobj_add_cycl(scc_roobj_t* ro, scc_symbol_t* sym,
     return 0;
   }
   if(start > end) {
-    scc_log(LOG_ERR,"Error cycle start point is after the end point.\n");
+    scc_log(LOG_ERR,"Error: cycle start point is after the end point.\n");
     return 0;
   }
 
@@ -423,7 +423,7 @@ int scc_roobj_set_param(scc_roobj_t* ro,scc_ns_t* ns,
 static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
 
   if(ro->image) {
-    scc_log(LOG_ERR,"Room image has alredy been set.\n");
+    scc_log(LOG_ERR,"Room image has already been set.\n");
     return 0;
   }
 
@@ -455,7 +455,7 @@ int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
   }
 
   if(ro->zplane[idx]) {
-    scc_log(LOG_ERR,"Z-plane %d has alredy been set.\n",idx);
+    scc_log(LOG_ERR,"Z-plane %d has already been set.\n",idx);
     return 0;
   }
 
@@ -473,7 +473,7 @@ int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
   }
 
   if(ro->zplane[idx]->ncol != 2)
-    scc_log(LOG_WARN,"Warning zplanes should have only 2 colors.\n");
+    scc_log(LOG_WARN,"Warning: zplanes should have only 2 colors.\n");
   
   return 1;
 }
@@ -482,7 +482,7 @@ int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
 static int scc_roobj_set_data_param(scc_data_t** ptr,char* name,char* val) {
   
   if(ptr[0]) {
-    scc_log(LOG_ERR,"Room %s have alredy been set.\n",name);
+    scc_log(LOG_ERR,"Room %s has already been set.\n",name);
     return 0;
   }
 
@@ -571,7 +571,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
 	type = scc_fd_r32(fd);
 	len = scc_fd_r32be(fd);
 	if(type != MKID('B','O','X','M') || len <= 8) {
-	  scc_log(LOG_ERR,"The box file is missing the matrix ????\n");
+	  scc_log(LOG_ERR,"The box file is missing the matrix????\n");
 	  break;
 	}
 	ro->boxm = malloc(sizeof(scc_data_t)+len);
@@ -586,7 +586,7 @@ static int scc_roobj_set_boxd(scc_roobj_t* ro,scc_ns_t* ns,char* path) {
 	type = scc_fd_r32(fd);
 	len = scc_fd_r32be(fd);
 	if(type != MKID('S','C','A','L') || len != 40) {
-	  scc_log(LOG_ERR,"The box file is missing the scal block ????\n");
+	  scc_log(LOG_ERR,"The box file is missing the scal block????\n");
 	  break;
 	}
 	ro->scal = malloc(sizeof(scc_data_t)+len);
@@ -657,7 +657,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
     if(!img) return 0;
 
     if(img->w%8 || img->h%8) {
-      scc_log(LOG_ERR,"Image width and height must be multiple of 8.\n");
+      scc_log(LOG_ERR,"Image width and height must be multiples of 8.\n");
       scc_img_free(img);
       return 0;
     }
@@ -665,7 +665,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
     if(!obj->w) obj->w = img->w;
     if(!obj->h) obj->h = img->h;
     if(obj->w != img->w || obj->h != img->h) {
-      scc_log(LOG_ERR,"Image size is not matching the alredy defined size.\n");
+      scc_log(LOG_ERR,"Image size doesn't match the previously defined size.\n");
       scc_img_free(img);
       return 0;
     }
@@ -688,7 +688,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
         }
         if(st->zp[i]->w != img->w ||
            st->zp[i]->h != img->h) {
-          scc_log(LOG_ERR,"ZPlane %d have a wrong size.\n",i+1);
+          scc_log(LOG_ERR,"ZPlane %d has the wrong size.\n",i+1);
           scc_roobj_obj_state_free(st);
           return 0;
         }
@@ -711,7 +711,7 @@ int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr) {
 
   for(s = obj->verb ; s ; s = s->next) {
     if(scr->sym == s->sym) {
-      scc_log(LOG_ERR,"Why are we trying to add a verb we alredy have ????\n");
+      scc_log(LOG_ERR,"Why are we trying to add a verb we already have????\n");
       return 0;
     }
     if(!s->next) break;
@@ -726,14 +726,14 @@ int scc_roobj_obj_add_verb(scc_roobj_obj_t* obj,scc_script_t* scr) {
 int scc_roobj_obj_set_param(scc_roobj_obj_t* obj,char* sym, char* val) {
   if(!strcmp(sym,"name")) {
     if(obj->name) {
-      scc_log(LOG_ERR,"Object name is alredy defined.\n");
+      scc_log(LOG_ERR,"Object name is already defined.\n");
       return 0;
     }
     obj->name = strdup(val);
     return 1;
   } 
   
-  scc_log(LOG_ERR,"Unknow object parameter: %s\n",sym);
+  scc_log(LOG_ERR,"Unknown object parameter: %s\n",sym);
   return 0;
 }
 
@@ -777,7 +777,7 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
     }
     obj->parent_state = val;
   } else {
-    scc_log(LOG_ERR,"Unknow integer object parameter: %s\n",sym);
+    scc_log(LOG_ERR,"Unknown integer object parameter: %s\n",sym);
     return 0;
   }
   
@@ -809,7 +809,7 @@ scc_pal_t* scc_roobj_gen_pals(scc_roobj_t* ro) {
   int i;
 
   if(!ro->image) {
-    scc_log(LOG_V,"Room have no image, using dummy one !!!!\n");
+    scc_log(LOG_V,"Room has no image, using dummy one!!!!\n");
     ro->image = scc_img_new(8,8,256);
   }
 
@@ -830,7 +830,7 @@ scc_rmim_t* scc_roobj_gen_rmim(scc_roobj_t* ro) {
   uint8_t* zd;
 
   if(!ro->image) {
-    scc_log(LOG_V,"Room have no image, using dummy one  !!!!\n");
+    scc_log(LOG_V,"Room has no image, using dummy one!!!!\n");
     ro->image = scc_img_new(8,8,256);
   }
 
@@ -1102,7 +1102,7 @@ int scc_write_lscr_block(scc_roobj_t* ro, scc_fd_t* fd) {
     else {
       n++;
       if(scr->sym->addr < 0)
-	scc_log(LOG_WARN,"Warning: a local script is missing his adress.\n");
+	scc_log(LOG_WARN,"Warning: a local script is missing its address.\n");
     }
   }
 
@@ -1307,7 +1307,7 @@ int scc_roobj_write_res(scc_roobj_res_t* res, scc_fd_t* fd) {
   }
 
   if(scc_res_types[rt].type < 0) {
-    scc_log(LOG_ERR,"Unknow ressource type !!!!\n");
+    scc_log(LOG_ERR,"Unknown resource type !!!!\n");
     return 0;
   }
   

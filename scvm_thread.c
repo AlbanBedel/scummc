@@ -142,7 +142,7 @@ int scvm_start_thread(scvm_t* vm, scvm_script_t* scr, unsigned code_ptr,
   for(i = 0 ; i < vm->num_thread ; i++)
     if(vm->thread[i].state == SCVM_THREAD_STOPPED) break;
   if(i >= vm->num_thread) {
-    scc_log(LOG_ERR,"No thread left to start script %d\n",scr->id);
+    scc_log(LOG_ERR,"No threads left to start script %d\n",scr->id);
     return -1; // fixme
   }
   thread = &vm->thread[i];

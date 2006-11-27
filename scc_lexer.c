@@ -295,7 +295,7 @@ static int scc_preproc_lexer(scc_lex_t* lex,char* ppd,char* arg, int line, int c
                 
 
     //printf("Got preproc: '%s' -> '%s'\n",ppd,arg);
-    scc_lex_error(lex,"Unknow preprocessor directive %s",ppd);
+    scc_lex_error(lex,"Unknown preprocessor directive %s",ppd);
     return 0;
 }
 
@@ -499,7 +499,7 @@ int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
         d = scc_lex_getc(lex);
         CHECK_EOF(lex,d);
         if(d != '\'') {
-            scc_lex_error(lex,"Unterminated charcter constant.");
+            scc_lex_error(lex,"Unterminated character constant.");
             return 0;
         }
         lvalp->integer = c;
@@ -566,7 +566,7 @@ int scc_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
             // find the eol
             tpos = scc_lex_strchr(lex,0,'\n');
             if(tpos < 0) { // we should do better here
-                scc_lex_error(lex,"Unxpected eof");
+                scc_lex_error(lex,"Unexpected eof");
                 return 0;
             }
             // count the leading spaces

@@ -77,7 +77,7 @@ int main(int argc,char** argv) {
       return 1;
     }
     if(in->ncol <= from || in->ncol <= to) {
-      printf("Input image %s have only %d colors.\n",f->val,in->ncol);
+      printf("Input image %s has only %d colors.\n",f->val,in->ncol);
       return 1;
     }
     

@@ -353,7 +353,7 @@ int scc_boxedit_read_scale(scc_boxedit_t* be,
   }
 
   if(len != SCC_NUM_SCALE_SLOT*8+8) {
-    printf("SCAL block have an invalid length: %d, should be 40.\n",len);
+    printf("SCAL block has an invalid length: %d, should be 40.\n",len);
     return 0;
   }
   
@@ -2218,7 +2218,7 @@ static int delete_win_cb(GtkWidget *widget,GdkEvent *event,
 					    GTK_DIALOG_DESTROY_WITH_PARENT,
 					    GTK_MESSAGE_QUESTION,
 					    GTK_BUTTONS_NONE,
-					    "Do you want to save before quitting ?");
+					    "Do you want to save before quitting?");
     gtk_dialog_add_buttons(GTK_DIALOG(dial),GTK_STOCK_YES,GTK_RESPONSE_YES,
 			   GTK_STOCK_NO,GTK_RESPONSE_NO,
 			   GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,NULL);

@@ -61,7 +61,7 @@ scc_res_list_t* scc_read_res_list(scc_fd_t* fd) {
 void scc_print_res_list(scc_res_list_t* l) {
   int i;
 
-  printf("The list have %d elements\n",l->size);
+  printf("The list has %d elements\n",l->size);
   for(i = 0; i < l->size ; i++)
     printf(" %4.4d : %d  (%d)\n",i,l->room_no[i],l->room_off[i]);
 }
@@ -93,7 +93,7 @@ scc_res_idx_t* scc_read_res_idx(scc_fd_t* fd) {
     case MKID('M','A','X','S'): {
       // We do version 6 only atm
       if(itemsize != 30) {
-	printf("Bad version probably, we need a 30 bytes maxs block.\n");
+	printf("Bad version probably, we need a 30 byte maxs block.\n");
 	return NULL;
       }
 
@@ -166,7 +166,7 @@ scc_res_idx_t* scc_read_res_idx(scc_fd_t* fd) {
     case MKID('D','O','B','J'): {
       res->num_obj_owners = scc_fd_r16le(fd);
       if(res->num_obj_owners != res->num_glob_objs) 
-	printf("Warning obj list size doesn't match number of global objects\n");
+	printf("Warning: obj list size doesn't match number of global objects\n");
       if(!res->num_obj_owners) break;
       res->obj_owners = malloc(res->num_obj_owners);
       if(scc_fd_read(fd,res->obj_owners,res->num_obj_owners) != res->num_obj_owners) {
@@ -322,7 +322,7 @@ int check_dir(char* path) {
     return 0;
   }
   if(!S_ISDIR(st.st_mode)) {
-    printf("%s is not a directory !!!\n",path);
+    printf("%s is not a directory!!!\n",path);
     return 0;
   }
   return 1;
@@ -422,7 +422,7 @@ scc_pal_t* scc_parse_pals(scc_fd_t* fd,int len) {
   size -= 8;
 
   if(!size || len < pos+size+8) {
-    printf("Warning PALS block with invalid size\n");
+    printf("Warning: PALS block with invalid size\n");
     scc_fd_seek(fd,len - pos,SEEK_CUR);
     return NULL;
   } else { // Read the OFFS block
@@ -442,7 +442,7 @@ scc_pal_t* scc_parse_pals(scc_fd_t* fd,int len) {
     //printf("We should find %d pals (%d/4)\n",size/4,size);
 
     if(pos != size+16) {
-      printf("We missed somethg in the OFFS block ??\n");
+      printf("We missed something in the OFFS block ??\n");
       scc_fd_seek (fd,size+16-pos,SEEK_CUR);
       pos = size+16;
     }
@@ -467,7 +467,7 @@ scc_pal_t* scc_parse_pals(scc_fd_t* fd,int len) {
       if(r >= num_pal) break;
 
       if(pos != offset[r] + off_start) {
-	printf("Warning missed some pal data ???\n");
+	printf("Warning: missed some pal data???\n");
 	scc_fd_seek(fd,(offset[r] + off_start)-pos,SEEK_CUR);
 	pos = offset[r] + off_start;
       }
@@ -488,7 +488,7 @@ scc_pal_t* scc_parse_pals(scc_fd_t* fd,int len) {
     }
     
     if(pos < len) {
-      printf("Warning pals parsing finished unaligned (%d/%d) ???\n",pos,len);
+      printf("Warning: pals parsing finished unaligned (%d/%d) ???\n",pos,len);
       scc_fd_seek(fd,len - pos,SEEK_CUR);
     }
 
@@ -515,7 +515,7 @@ scc_rmim_t* scc_parse_rmim(scc_fd_t* fd,int len) {
 
   if(type == MKID('R','M','I','H')) {
     if(size != 2) {
-      printf("Invalid RMIH block !!!\n");
+      printf("Invalid RMIH block!!!\n");
       scc_fd_seek(fd,len - pos,SEEK_CUR);
       return NULL;
     }
@@ -531,13 +531,13 @@ scc_rmim_t* scc_parse_rmim(scc_fd_t* fd,int len) {
   }
 
   if(type != MKID('I','M','0','0')) {
-    printf("No IM00 block found ???\n");
+    printf("No IM00 block found???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return rmim;
   }
 
   if(size < 8) {
-    printf("Invalid IM00 block ???\n");
+    printf("Invalid IM00 block???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return rmim;
   }
@@ -547,13 +547,13 @@ scc_rmim_t* scc_parse_rmim(scc_fd_t* fd,int len) {
   pos += 8; size -= 8;
 
   if(type != MKID('S','M','A','P')) {
-    printf("No SMAP block found ???\n");
+    printf("No SMAP block found???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return rmim;
   }
 
   if(pos + size > len) {
-    printf("Too short RMIM block ???\n");
+    printf("Too short RMIM block???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return rmim;
   }
@@ -565,7 +565,7 @@ scc_rmim_t* scc_parse_rmim(scc_fd_t* fd,int len) {
   while(w < size) {
     r = scc_fd_read(fd,rmim->smap + w,size-w);
     if(r < 0) {
-      printf("Read error !!!!\n");
+      printf("Read error!!!!\n");
       free(rmim->smap);
       rmim->smap = NULL;
       scc_fd_seek(fd,len-pos,SEEK_CUR);
@@ -583,7 +583,7 @@ scc_rmim_t* scc_parse_rmim(scc_fd_t* fd,int len) {
     if(pos + size > len) break;
 
     if(type >> 8 != MKID(0,'Z','P','0')) {
-      printf("Unknow block in IM00 ????\n");
+      printf("Unknown block in IM00????\n");
       scc_fd_seek(fd,size,SEEK_CUR);
       pos += size;
       continue;
@@ -603,7 +603,7 @@ scc_rmim_t* scc_parse_rmim(scc_fd_t* fd,int len) {
     while(w < size) {
       r = scc_fd_read(fd,rmim->z_buf[b] + w,size-w);
       if(r <= 0) {
-	printf("Read error !!!!\n");
+	printf("Read error!!!!\n");
 	free(rmim->z_buf[b]);
 	rmim->z_buf[b] = NULL;
 	break;
@@ -633,13 +633,13 @@ scc_imnn_t* scc_parse_imnn(scc_fd_t* fd,uint8_t idx,int len) {
   pos += 8; size -= 8;
 
   if(type != MKID('S','M','A','P')) {
-    printf("No SMAP block found ???\n");
+    printf("No SMAP block found???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return NULL;
   }
 
   if(pos + size > len) {
-    printf("Too short RMIM block ???\n");
+    printf("Too short RMIM block???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return NULL;
   }
@@ -652,7 +652,7 @@ scc_imnn_t* scc_parse_imnn(scc_fd_t* fd,uint8_t idx,int len) {
   while(w < size) {
     r = scc_fd_read(fd,imnn->smap + w,size-w);
     if(r < 0) {
-      printf("Read error !!!!\n");
+      printf("Read error!!!!\n");
       free(imnn->smap);
       free(imnn);
       scc_fd_seek(fd,len-pos,SEEK_CUR);
@@ -663,7 +663,7 @@ scc_imnn_t* scc_parse_imnn(scc_fd_t* fd,uint8_t idx,int len) {
   }
 
   if(pos != size+8) {
-    printf("Warning missed SMAP block end\n");
+    printf("Warning: missed SMAP block end\n");
     scc_fd_seek(fd,size+8-pos,SEEK_CUR);
     pos = size+8;
   }
@@ -676,7 +676,7 @@ scc_imnn_t* scc_parse_imnn(scc_fd_t* fd,uint8_t idx,int len) {
     if(pos + size > len) break;
 
     if(type >> 8 != MKID(0,'Z','P','0')) {
-      printf("Unknow block in IM00 ????\n");
+      printf("Unknown block in IM00????\n");
       scc_fd_seek(fd,pos+size,SEEK_CUR);
       pos += size;
       continue;
@@ -696,7 +696,7 @@ scc_imnn_t* scc_parse_imnn(scc_fd_t* fd,uint8_t idx,int len) {
     while(w < size) {
       r = scc_fd_read(fd,imnn->z_buf[b] + w,size-w);
       if(r < 0) {
-	printf("Read error !!!!\n");
+	printf("Read error!!!!\n");
 	free(imnn->z_buf[b]);
 	imnn->z_buf[b] = NULL;
 	break;
@@ -729,13 +729,13 @@ scc_obim_t* scc_parse_obim(scc_fd_t* fd,int len) {
   pos += 8; size -= 8;
 
   if(type != MKID('I','M','H','D')) {
-    printf("Warning OBIM lock without IMHD\n");
+    printf("Warning: OBIM block without IMHD\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return NULL;
   }
   
   if(size < 18) {
-    printf("Invalid IMHD block ???\n");
+    printf("Invalid IMHD block???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return NULL;
   }
@@ -752,7 +752,7 @@ scc_obim_t* scc_parse_obim(scc_fd_t* fd,int len) {
   obim->num_hotspots = scc_fd_r16le(fd);
   pos += 18;
   if(obim->num_hotspots != (size-18)/4) {
-    printf("Warning invalid num hotspots: %d/%d\n",
+    printf("Warning, invalid num hotspots: %d/%d\n",
 	   obim->num_hotspots,(size-18)/4);
     if(obim->num_hotspots > (size-18)/4)
       obim->num_hotspots = (size-18)/4;
@@ -765,7 +765,7 @@ scc_obim_t* scc_parse_obim(scc_fd_t* fd,int len) {
   }
   
   if(pos != size+8) {
-    printf("Warning missing some hotspot data ??\n");
+    printf("Warning: missing some hotspot data??\n");
     scc_fd_seek(fd,size+8-pos,SEEK_CUR);
     pos = size+8;
   }
@@ -779,13 +779,13 @@ scc_obim_t* scc_parse_obim(scc_fd_t* fd,int len) {
     pos += size; size -= 8;
 
     if(type>>8 != MKID(0,'I','M','0')) {
-      printf("Got unknow block in OBIM\n");
+      printf("Got unknown block in OBIM\n");
       scc_fd_seek(fd,size,SEEK_CUR);
       continue;
     }
 
     if(size < 8) {
-      printf("Invalid IMnn block ???\n");
+      printf("Invalid IMnn block???\n");
       scc_fd_seek(fd,size,SEEK_CUR);
       continue;
     }
@@ -822,7 +822,7 @@ scc_verb_t* scc_parse_verb(scc_fd_t* fd, int len) {
 
   while(1) {
     if(len < pos + 1) {
-      printf("Too small VERB block ???\n");
+      printf("Too small VERB block???\n");
       if(map) free(map);
       return NULL;
     }
@@ -838,7 +838,7 @@ scc_verb_t* scc_parse_verb(scc_fd_t* fd, int len) {
     if(len >= pos + 2) {
       map[map_pos].off = scc_fd_r16le(fd); pos += 2;
     } else if(map[map_pos].idx != 0) {
-      printf("Too small VERB block ???\n");
+      printf("Too small VERB block???\n");
       if(map) free(map);
       return NULL;
     }
@@ -866,7 +866,7 @@ scc_verb_t* scc_parse_verb(scc_fd_t* fd, int len) {
     }
 
     if(map[i].off-8 >= len) {
-      printf("Bad verb offset ??? %d/%d\n",map[i].off-8,len);
+      printf("Bad verb offset??? %d/%d\n",map[i].off-8,len);
       continue;
     }
 
@@ -883,13 +883,13 @@ scc_verb_t* scc_parse_verb(scc_fd_t* fd, int len) {
     }
 
     if(pos+v->len > len) {
-      printf("Not enouth data left for the code block %d/%d???\n",v->len,len-pos);
+      printf("Not enough data left for the code block %d/%d???\n",v->len,len-pos);
       break;
     }
 
     v->code = malloc(v->len);
     scc_fd_read(fd,v->code,v->len); pos += v->len;
-    if(v->code[v->len-1] != 0x65) printf("Verb %d: code without return ???\n",v->idx);
+    if(v->code[v->len-1] != 0x65) printf("Verb %d: code without return???\n",v->idx);
 
     if(verb_tail) verb_tail->next = v;
     else verb = v;
@@ -919,7 +919,7 @@ scc_obcd_t* scc_parse_obcd(scc_fd_t* fd,int len) {
   size -= 8;
 
   if(type != MKID('C','D','H','D')) {
-    printf("OBCD block not starting with a CDHD block ???\n");
+    printf("OBCD block not starting with a CDHD block???\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
     return NULL;
   }
@@ -954,7 +954,7 @@ scc_obcd_t* scc_parse_obcd(scc_fd_t* fd,int len) {
     switch(type) {
     case MKID('V','E','R','B'):
       if(obcd->verb) {
-	printf("Warning we alredy have a VERB block !!!\n");
+	printf("Warning: we already have a VERB block!!!\n");
 	break;
       }
       obcd->verb = scc_parse_verb(fd,size);
@@ -964,7 +964,7 @@ scc_obcd_t* scc_parse_obcd(scc_fd_t* fd,int len) {
     case MKID('O','B','N','A'): {
       int r,w=0;
       if(obcd->name) {
-	printf("Warning we alredy have a OBNA block !!!\n");
+	printf("Warning: we already have an OBNA block!!!\n");
 	break;
       }
       obcd->name = malloc(size);
@@ -979,13 +979,13 @@ scc_obcd_t* scc_parse_obcd(scc_fd_t* fd,int len) {
       obcd->name[size-1] = '\0'; // Just to make sure
     } break;
     default:
-      printf("Got unknow block in OBCD %c%c%c%c\n",
+      printf("Got unknown block in OBCD %c%c%c%c\n",
 	     UNMKID(type));
     }
   }
 
   if(pos != len) {
-    printf("Warning misaligned end in OBCD !!!!\n");
+    printf("Warning: misaligned end in OBCD!!!!\n");
     scc_fd_seek(fd,len-pos,SEEK_CUR);
   }
 
@@ -1009,7 +1009,7 @@ scc_boxd_t* scc_parse_boxd(scc_fd_t* fd,int len) {
   num = scc_fd_r16le(fd);
   pos += 2;
 
-  if(num*20+2 != len) printf("Warning BOXD block have invalid size\n");
+  if(num*20+2 != len) printf("Warning: BOXD block has invalid size\n");
 
   while(pos+20 <= len) {
     boxd = malloc(sizeof(scc_boxd_t));
@@ -1098,7 +1098,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
     switch(type) {
     case MKID('R','M','H','D'):
       if(size != 6) {
-	printf("Invalid room header size !!!!\n");
+	printf("Invalid room header size!!!!\n");
 	return 0;
       }
       room->width = scc_fd_r16le(fd);
@@ -1140,29 +1140,29 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
     } break;
    case MKID('E','X','C','D'):
      if(room->excd) {
-       printf("Warning we alredy have a EXCD\n");
+       printf("Warning: we already have a EXCD\n");
        break;
      }
      room->excd = scc_read_data(fd,size);
      if(!room->excd)
-       printf("Warning failed to parse EXCD block\n");
+       printf("Warning: failed to parse EXCD block\n");
      break;
    case MKID('E','N','C','D'):
      if(room->encd) {
-       printf("Warning we alredy have a ENCD\n");
+       printf("Warning: we alredy have a ENCD\n");
        break;
      }
      room->encd = scc_read_data(fd,size);
      if(!room->encd)
-       printf("Warning failed to parse ENCD block\n");
+       printf("Warning: failed to parse ENCD block\n");
      break;
    case MKID('N','L','S','C'):
      if(room->nlsc) {
-       printf("Warning we alredy have a NLSC\n");
+       printf("Warning: we already have a NLSC\n");
        break;
      }
      if(size != 2) {
-       printf("Warning invalid NLSC block\n");
+       printf("Warning: invalid NLSC block\n");
        break;
      }
      room->nlsc = scc_fd_r16le(fd);
@@ -1170,7 +1170,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
     case MKID('L','S','C','R'): {
       lscr = scc_read_data_list(fd,scc_fd_r8(fd),size-1);
       if(!lscr) {
-	printf("Warning failed to parse LSCR block\n");
+	printf("Warning: failed to parse LSCR block\n");
 	break;
       }
       if(lscr_tail) lscr_tail->next = lscr;
@@ -1179,20 +1179,20 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
     } break;
     case MKID('B','O','X','D'):
      if(room->boxd) {
-       printf("Warning we alredy have a BOXD\n");
+       printf("Warning: we already have a BOXD\n");
        break;
      }
      room->boxd = scc_parse_boxd(fd,size);
      if(!room->boxd)
-       printf("Warning failed to parse BOXD block\n");
+       printf("Warning: failed to parse BOXD block\n");
      break;
     case MKID('B','O','X','M'):
      if(room->boxm) {
-       printf("Warning we alredy have a BOXM\n");
+       printf("Warning: we alredy have a BOXM\n");
        break;
      }
      if(!room->boxd) {
-       printf("Error got a BOXM block before the BOXD block.\n");
+       printf("Error: got a BOXM block before the BOXD block.\n");
        break;
      } else {
        int num;
@@ -1201,20 +1201,20 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
        room->boxm = scc_parse_boxm(fd,num,size); 
      }
      if(!room->boxm)
-       printf("Warning failed to parse BOXM block\n");
+       printf("Warning: failed to parse BOXM block\n");
      break;
     case MKID('S','C','A','L'):
      if(room->scal) {
-       printf("Warning we alredy have a SCAL\n");
+       printf("Warning: we already have a SCAL\n");
        break;
      }
-     if(size != 32) printf("SCAL block with non standard size ???\n");
+     if(size != 32) printf("SCAL block with non standard size???\n");
      room->scal = scc_read_data(fd,size);
      if(!room->scal)
        printf("Warning failed to parse SCAL block\n");
      break;
     default:
-      printf("Skeeping %c%c%c%c block\n", UNMKID(type));
+      printf("Skipping %c%c%c%c block\n", UNMKID(type));
       scc_fd_seek(fd,size,SEEK_CUR);
       break;
     }
@@ -1242,7 +1242,7 @@ scc_lfl_t* scc_parse_lfl(scc_fd_t* fd,scc_res_idx_t* idx,int len) {
 
 
   if(type != MKID('R','O','O','M')) {
-    printf("LFLF block without ROOM block ???\n");
+    printf("LFLF block without ROOM block???\n");
     return NULL;
   }
 
@@ -1288,7 +1288,7 @@ scc_lfl_t* scc_parse_lfl(scc_fd_t* fd,scc_res_idx_t* idx,int len) {
 
     l = scc_get_res_idx_list(idx,type);
     if(!l) {
-      printf("Got unknow block in lfl: %c%c%c%c \n",UNMKID(type));
+      printf("Got unknown block in lfl: %c%c%c%c \n",UNMKID(type));
       scc_fd_seek(fd,size,SEEK_CUR);
       continue;
     }
@@ -1324,7 +1324,7 @@ scc_lfl_t* scc_parse_lfl(scc_fd_t* fd,scc_res_idx_t* idx,int len) {
       chr_tail = item;
       break;
     default:
-      printf("Got unknow block in lfl %c%c%c%c  (but type is indexed)\n",
+      printf("Got unknown block in lfl %c%c%c%c  (but type is indexed)\n",
 	     UNMKID(type));     
       free(item);
       break;
@@ -1395,7 +1395,7 @@ scc_res_t* scc_parse_res(scc_fd_t* fd,scc_res_idx_t* idx) {
   pos += 8;
 
   if(type !=  MKID('L','E','C','F')) {
-    printf("This doesn't look like scumm resource file.\n");
+    printf("This doesn't look like a scumm resource file.\n");
     return NULL;
   }
 
@@ -1405,7 +1405,7 @@ scc_res_t* scc_parse_res(scc_fd_t* fd,scc_res_idx_t* idx) {
   size -= 8;
 
   if(type != MKID('L','O','F','F')) {
-    printf("Missing LOFF block ????\n");
+    printf("Missing LOFF block????\n");
     return NULL;
   }
   printf("The whole file should be %d bytes\n",size);
@@ -1428,20 +1428,20 @@ scc_res_t* scc_parse_res(scc_fd_t* fd,scc_res_idx_t* idx) {
     size -= 8;
     
     if(pos + size > lecf_size) {
-      printf("Invalid block length ???\n");
+      printf("Invalid block length???\n");
       break;
     }
     pos += size;
 
     if(type != MKID('L','F','L','F')) {
-      printf("Non LFLF block ????\n");
+      printf("Non LFLF block????\n");
       scc_fd_seek(fd,size,SEEK_CUR);
 
       continue;
     }
     lfl = scc_parse_lfl(fd,idx,size);
     if(!lfl) {
-      printf("Invalid lfl block ???\n");
+      printf("Invalid lfl block???\n");
       continue;
     }
     if(!res->lfl) res->lfl = lfl;
@@ -1635,7 +1635,7 @@ int scc_res_find(scc_res_t* res,uint32_t type,uint32_t idx) {
 
   t2 = scc_fd_r32(res->fd);
   if(t2 != type) {
-    fprintf(stderr,"Oups we didn't found the awaited data: 0x%x\n",t2);
+    fprintf(stderr,"Oops, we didn't find the awaited data: 0x%x\n",t2);
     return -1;
   }
   size = scc_fd_r32be(res->fd);

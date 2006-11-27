@@ -160,7 +160,7 @@ void* scvm_load_res(scvm_t* vm, unsigned type, unsigned num) {
     unsigned offset = vm->res[type].idx[num].offset;
     if(!fd) return NULL;
     if(scc_fd_seek(fd,offset,SEEK_SET) != offset) {
-      scc_log(LOG_ERR,"Failed to seek at %d in %s.\n",offset,fd->filename);
+      scc_log(LOG_ERR,"Failed to seek to %d in %s.\n",offset,fd->filename);
       scvm_close_file(vm,vm->res[type].idx[num].file);
       return NULL;
     }
@@ -540,7 +540,7 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
       
     case MKID('L','S','C','R'):
       if(num_lscr >= room->num_script) {
-        scc_log(LOG_ERR,"Too many local script in room.\n");
+        scc_log(LOG_ERR,"Too many local scripts in room.\n");
         goto bad_block;
       }
       if(block_size <= 8+1) {
@@ -568,14 +568,14 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
   }
   
   if(num_lscr < room->num_script)
-    scc_log(LOG_WARN,"Room %d is missing some local script?\n",num);
+    scc_log(LOG_WARN,"Room %d is missing some local scripts?\n",num);
 
   // Resolve the object parent
   for(i=0 ; i < num_obim ; i++) {
     uint8_t num = (uint8_t)((uintptr_t)objlist[i]->parent);
     if(!num) continue;
     if(num > num_obim) {
-      scc_log(LOG_WARN,"Object %d have an invalid parent.\n",obj->id);
+      scc_log(LOG_WARN,"Object %d has an invalid parent.\n",obj->id);
       continue;
     }
     objlist[i]->parent = objlist[num-1];

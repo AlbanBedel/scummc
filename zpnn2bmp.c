@@ -70,7 +70,7 @@ int main(int argc,char** argv) {
   if(!files) return -1;
 
   if(w < 0 || h < 0) {
-    printf("You must specify the width, height of the zplanes.\n");
+    printf("You must specify the width and height of the zplanes.\n");
     return -1;
   }
 
@@ -98,7 +98,7 @@ int main(int argc,char** argv) {
   }
 
   if(len <= 0) {
-    printf("The input file have an invalid length.\n");
+    printf("The input file has an invalid length.\n");
     return -1;
   }
 

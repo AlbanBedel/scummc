@@ -111,7 +111,7 @@ int scc_lex_lex(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
 
     // check that we have both a buffer and a lexer
     if(!lex->buffer) {
-        scc_lex_error(lex,"No input have been setup");
+        scc_lex_error(lex,"No input has been setup");
         return 0;
     }
 
@@ -192,12 +192,12 @@ void scc_lex_error(scc_lex_t* lex,char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     if(lex->error) {
-        printf("Warning the lexer already have a pending error. Can't add:\n");
+        printf("Warning: the lexer already has a pending error. Can't add:\n");
         vprintf(fmt,ap);
     } else {
         if(vasprintf(&lex->error,fmt,ap) < 0) {
             lex->error = NULL;
-            printf("Warning the lexer failed to allocate mem for error message:\n");
+            printf("Warning: the lexer failed to allocate mem for error message:\n");
             vprintf(fmt,ap);
         }
     }
@@ -265,7 +265,7 @@ int scc_lex_fill_buffer(scc_lex_t* lex,unsigned min_len) {
     while(1) {
         // safe guard
         if(buf->data_pos > buf->data_len) {
-            printf("Warning bug in the lexer buffer: data_pos > data_len\n");
+            printf("Warning: bug in the lexer buffer: data_pos > data_len\n");
             buf->data_pos = buf->data_len;
         }
         // count how much data we have ahead

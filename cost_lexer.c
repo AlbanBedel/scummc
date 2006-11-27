@@ -280,7 +280,7 @@ int cost_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
             // find the eol
             tpos = scc_lex_strchr(lex,0,'\n');
             if(tpos < 0) { // we should do better here
-                scc_lex_error(lex,"Unxpected eof");
+                scc_lex_error(lex,"Unexpected eof");
                 return 0;
             }
             // count the leading spaces

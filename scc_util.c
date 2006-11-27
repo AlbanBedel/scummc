@@ -135,11 +135,11 @@ int glob(const char *pattern, int flags,
     WIN32_FIND_DATA found_file;
 
     if(errfunc)
-        scc_log(LOG_ERR,"glob():ERROR: Sorry errfunc not supported "
+        scc_log(LOG_ERR,"glob():ERROR: Sorry, errfunc not supported "
                 "by this implementation\n");
     if(flags)
-        scc_log(LOG_ERR,"glob():ERROR:Sorry no flags supported "
-                "by this globimplementation\n");
+        scc_log(LOG_ERR,"glob():ERROR:Sorry, no flags supported "
+                "by this implementation\n");
 
     //scc_log(LOG_DBG,"PATTERN \"%s\"\n",pattern);
 

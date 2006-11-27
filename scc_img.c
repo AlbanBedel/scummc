@@ -195,7 +195,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
 
   fmt = scc_fd_r32le(fd);
   if(fmt != 0 && fmt != 1) {
-    printf("BMP file %s use an unsupported compression format: 0x%x.\n",fd->filename,fmt);
+    printf("BMP file %s uses an unsupported compression format: 0x%x.\n",fd->filename,fmt);
     return NULL;
   }
 
@@ -280,7 +280,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
           // repeated color
           if(n > 0) {
               if(x+n > w) {
-                  printf("Warning repetition should continue on the next line ???\n");
+                  printf("Warning: repetition should continue on the next line???\n");
                   n = w-x;
               }
               if(n > 0) {
@@ -312,7 +312,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
               n = scc_fd_r8(fd);
               // check we are still in the img
               if(x+n > w) {
-                  printf("Warning bitmap contain invalid x delta: %d+%d > %d\n",
+                  printf("Warning: bitmap contains invalid x delta: %d+%d > %d\n",
                          x,n,w);
                   n = w-x;
               }
@@ -324,7 +324,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
               // y delta
               n = scc_fd_r8(fd);
               if(dst - n*w < img->data) {
-                  printf("Warning bitmap contain invalid y delta: %p -%d*%d < %p\n",
+                  printf("Warning: bitmap contains invalid y delta: %p -%d*%d < %p\n",
                          dst,n,w,img->data);
                   n = (dst - img->data)/w;
               }
@@ -347,7 +347,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
 
           // c >= 3 raw data
           if(x+c > w) {
-              printf("Warning raw data should continue on the next line ???\n");
+              printf("Warning: raw data should continue on the next line???\n");
               c = w-x;
           }
           scc_fd_read(fd,&dst[x],c);

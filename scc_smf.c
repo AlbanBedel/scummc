@@ -165,7 +165,7 @@ scc_smf_t* scc_smf_parse(scc_fd_t* fd) {
 
       if(chunk != MKID('M','T','h','d') ||
          scc_fd_r32be(fd) != 6) {
-          scc_log(LOG_ERR,"%s doesn't seems to be a valid MIDI file.\n",fd->filename);
+          scc_log(LOG_ERR,"%s doesn't seem to be a valid MIDI file.\n",fd->filename);
           return 0;
       }
       break;
@@ -187,7 +187,7 @@ scc_smf_t* scc_smf_parse(scc_fd_t* fd) {
 
     // Not a MIDI track: skip it
     if(chunk != MKID('M','T','r','k')) {
-      scc_log(LOG_WARN,"Skiping unknow midi chunk: %c%c%c%c\n",UNMKID(chunk));
+      scc_log(LOG_WARN,"Skipping unknown midi chunk: %c%c%c%c\n",UNMKID(chunk));
       scc_fd_seek(fd,SEEK_CUR,size);
       continue;
     }

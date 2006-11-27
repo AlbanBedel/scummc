@@ -113,7 +113,7 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
   // load the font
   err = FT_New_Face(ft,font,face_id,&face);
   if(err == FT_Err_Unknown_File_Format) {
-    printf("%s: Unknown file formt.\n",font);
+    printf("%s: Unknown file format.\n",font);
     return NULL;
   } else if(err) {
     printf("%s: Failed to open font file.\n",font);
@@ -147,7 +147,7 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
       left = slot->bitmap_left;
 
     if(slot->bitmap_left+slot->bitmap.width > 255) {
-        printf("Warning too wide character: %c (%d)\n",
+        printf("Warning, character too wide: %c (%d)\n",
                chars[i],chars[i]);
         chars[i] = 0;
         continue;
@@ -258,12 +258,12 @@ scc_charmap_t* new_charmap_from_bitmap(char* path) {
     // check the palette
     // keep in mind we need an extra color for our "borders"
     if(img->ncol > 17) {
-        printf("Image have too many colors.\n");
+        printf("Image has too many colors.\n");
         scc_img_free(img);
         return NULL;
     }
     if(img->ncol < 3) {
-        printf("Image have too few colors.\n");
+        printf("Image has too few colors.\n");
         scc_img_free(img);
         return NULL;
     }
@@ -341,7 +341,7 @@ scc_charmap_t* charmap_from_char(char* path) {
     size = scc_fd_r32be(fd);
 
     if(fmt != MKID('C','H','A','R') || size < 8+25 ) {
-        printf("%s doesn't seems to be a valid CHAR file.\n",path);
+        printf("%s doesn't seem to be a valid CHAR file.\n",path);
         scc_fd_close(fd);
         return NULL;
     }
@@ -392,7 +392,7 @@ scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space
     ncol = 16;
     break;
   default:
-    printf("Charmap have bad bpp: %d ??\n",chmap->bpp);
+    printf("Charmap has bad bpp: %d ??\n",chmap->bpp);
     return NULL;
   }
 

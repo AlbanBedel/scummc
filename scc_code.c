@@ -95,7 +95,7 @@ void scc_loop_push(int type, char* sym) {
   scc_loop_t* l;
 
   if(sym && scc_loop_get(SCC_BRANCH_BREAK,sym)) {
-    scc_log(LOG_ERR,"Warning there is alredy a loop named %s in the loop stack.\n",
+    scc_log(LOG_ERR,"Warning: there is already a loop named %s in the loop stack.\n",
             sym);
   }
 
@@ -221,7 +221,7 @@ static scc_code_t* scc_code_push_res(uint8_t op,scc_symbol_t* res) {
   if(res->addr >= 0) return scc_code_push_val(op,res->addr);
 
   if(!res->rid) {
-    scc_log(LOG_ERR,"Ressource %s have no assigned rid !!!!\n",res->sym);
+    scc_log(LOG_ERR,"Resource %s has no assigned rid!!!!\n",res->sym);
     return NULL;
   }
 
@@ -303,7 +303,7 @@ static scc_code_t* scc_str_gen_code(scc_str_t* s) {
       c->fix |= SCC_FIX_RES + s->sym->type;
       break;
     default:
-      scc_log(LOG_ERR,"Got an unknow string type.\n");
+      scc_log(LOG_ERR,"Got an unknown string type.\n");
       break;
     }
     SCC_LIST_ADD(code,last,c);
@@ -473,7 +473,7 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
     // should not happend, alredy checked in the parser
     // or we should simply multiply both index ??
     if(a->val.v.x)
-      scc_log(LOG_WARN,"Warning: Strings can't be assigned to 2-dim arrays, ignoring second index.\n");
+      scc_log(LOG_WARN,"Warning: strings can't be assigned to 2-dim arrays, ignoring second index.\n");
 
     c = scc_statement_gen_code(a->val.v.y,1);
     SCC_LIST_ADD(code,last,c);
@@ -1011,7 +1011,7 @@ static scc_code_t* scc_branch_gen_code(scc_instruct_t* inst) {
   }
 
   if(!loop_stack) {
-    scc_log(LOG_ERR,"Branching instruction can't be used outside of loops.\n");
+    scc_log(LOG_ERR,"Branching instructions can't be used outside of loops.\n");
     return NULL;
   }
 
@@ -1023,7 +1023,7 @@ static scc_code_t* scc_branch_gen_code(scc_instruct_t* inst) {
   }
 
   if(l->type == SCC_INST_SWITCH && inst->subtype == SCC_BRANCH_CONTINUE) {
-    scc_log(LOG_ERR,"Continue is not allowed in swith blocks.\n");
+    scc_log(LOG_ERR,"Continue is not allowed in switch blocks.\n");
     return NULL;
   }
 
@@ -1284,7 +1284,7 @@ scc_script_t* scc_script_new(scc_ns_t* ns, scc_instruct_t* inst,
       uint16_t rid = SCC_GET_16LE(data,p);
       sym = scc_ns_get_sym_with_id(ns,code->fix - SCC_FIX_RES,rid);
       if(!sym) {
-	scc_log(LOG_ERR,"Unable to find ressource %d of type %d\n",
+	scc_log(LOG_ERR,"Unable to find resource %d of type %d\n",
                 rid,code->fix - SCC_FIX_RES);
 	continue;
       }

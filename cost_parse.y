@@ -230,7 +230,7 @@ picture: picturedec '=' '{' picparamlist '}'
 {
   // check that the pic have an image
   if(!cur_pic->path)
-    COST_ABORT(@1,"Picture %s have no path defined.\n",
+    COST_ABORT(@1,"Picture %s has no path defined.\n",
                cur_pic->name);
   
   if(cur_pic->is_glob) {
@@ -241,9 +241,9 @@ picture: picturedec '=' '{' picparamlist '}'
     
     // expand the glob
     if(glob(cur_pic->path,0,NULL,&gl))
-      COST_ABORT(@1,"Glob patern error: %s\n",cur_pic->path);
+      COST_ABORT(@1,"Glob pattern error: %s\n",cur_pic->path);
     if(!gl.gl_pathc)
-      COST_ABORT(@1,"Glob patern didn't matched anything: %s\n",cur_pic->path);
+      COST_ABORT(@1,"Glob pattern didn't match anything: %s\n",cur_pic->path);
     
     // detach the current pic from the list
     if(pic_list == cur_pic)
@@ -261,7 +261,7 @@ picture: picturedec '=' '{' picparamlist '}'
       p = find_pic(name);
       if(p) {
         if(p->path)
-          COST_ABORT(@1,"Glob expension failed: %s is alredy defined\n",name);
+          COST_ABORT(@1,"Glob expansion failed: %s is already defined\n",name);
       } else {
         p = calloc(1,sizeof(cost_pic_t));
         p->name = strdup(name);
@@ -320,7 +320,7 @@ picparamlist: picparam
 picparam: PATH '=' STRING
 {
   if(cur_pic->path)
-    COST_ABORT(@1,"This picture already have a path defined.\n");
+    COST_ABORT(@1,"This picture already has a path defined.\n");
 
   if(img_path)
     asprintf(&cur_pic->path,"%s/%s",img_path,$3);
@@ -330,10 +330,10 @@ picparam: PATH '=' STRING
 | GLOB '=' STRING
 {
   if(cur_pic->path)
-    COST_ABORT(@1,"This picture already have a path defined.\n");
+    COST_ABORT(@1,"This picture already has a path defined.\n");
 
   if(cur_pic->ref)
-    COST_ABORT(@1,"This picture have alredy been referenced, we can't expand it to a glob anymore.\n");
+    COST_ABORT(@1,"This picture has already been referenced, we can't expand it to a glob anymore.\n");
 
   if(img_path)
     asprintf(&cur_pic->path,"%s/%s",img_path,$3);
@@ -369,7 +369,7 @@ limbdec: LIMB SYM location
     n = $3;
     // name mismatch ???
     if(limbs[n].name && strcmp(limbs[n].name,$2))
-       COST_ABORT(@3,"Limb %d is alrdey defined with the name %s.\n",
+       COST_ABORT(@3,"Limb %d is already defined with the name %s.\n",
                   n,limbs[n].name);
   } else {
     // look if there a limb with that name
@@ -442,7 +442,7 @@ animdec: ANIM SYM location
     n = $3;
     // name mismatch ???
     if(anims[n].name && strcmp(anims[n].name,$2))
-       COST_ABORT(@3,"Anim %d is alrdey defined with the name %s.\n",
+       COST_ABORT(@3,"Anim %d is already defined with the name %s.\n",
                   n,anims[n].name);
   } else {
     // look if there a anim with that name
@@ -487,14 +487,14 @@ limbanim: SYM '(' cmdlist ')'
   for(n = 0 ; n < COST_MAX_LIMBS ; n++)
     if(limbs[n].name && !strcmp(limbs[n].name,$1)) break;
   if(n == COST_MAX_LIMBS)
-    COST_ABORT(@1,"Their is no limb named %s.\n",$1);
+    COST_ABORT(@1,"There is no limb named %s.\n",$1);
 
   if($3[0] > COST_MAX_LIMB_CMDS)
     COST_ABORT(@3,"Too many commands. A limb anim can have only %d commands.\n",
                COST_MAX_LIMB_CMDS);
 
   if(cur_anim->limb_mask & (1 << n))
-    COST_ABORT(@1,"Anim for limb %s is alredy defined.\n",
+    COST_ABORT(@1,"Anim for limb %s is already defined.\n",
                limbs[n].name);
 
   cur_anim->limb_mask |= (1 << n);
@@ -509,10 +509,10 @@ limbanim: SYM '(' cmdlist ')'
   for(n = 0 ; n < COST_MAX_LIMBS ; n++)
     if(limbs[n].name && !strcmp(limbs[n].name,$1)) break;
   if(n == COST_MAX_LIMBS)
-    COST_ABORT(@1,"Their is no limb named %s.\n",$1);
+    COST_ABORT(@1,"There is no limb named %s.\n",$1);
 
   if(cur_anim->limb_mask & (1 << n))
-    COST_ABORT(@1,"Anim for limb %s is alredy defined.\n",
+    COST_ABORT(@1,"Anim for limb %s is already defined.\n",
                limbs[n].name);
   cur_anim->limb_mask |= (1 << n);
 }
@@ -658,7 +658,7 @@ static int cost_pic_load(cost_pic_t* pic,char* file) {
   if(!img) return 0;
 
   if(img->ncol != pal_size)
-    printf("Warning image %s don't have the same number of colors as the palette: %d != %d.\n",file,img->ncol,pal_size);
+    printf("Warning, image %s doesn't have the same number of colors as the palette: %d != %d.\n",file,img->ncol,pal_size);
 
   pic->width = img->w;
   pic->height = img->h;
@@ -863,7 +863,7 @@ static int cost_write(scc_fd_t* fd) {
     for(j = 0 ; j < limbs[i].num_pic ; j++) {
       if(!(p = limbs[i].pic[j])) continue;
       if(!p->ref) continue;
-      if(!p->width || !p->height) printf("Bad pic ?\n");
+      if(!p->width || !p->height) printf("Bad pic?\n");
       //printf("Write pic: %dx%d\n",p->width,p->height);
       scc_fd_w16le(fd,p->width);
       scc_fd_w16le(fd,p->height);

@@ -208,7 +208,7 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
     for(j = 0 ; j < num ; j++) {
       unsigned rno = scc_fd_r8(loff_fd);
       if(rno >= vm->res[SCVM_RES_ROOM].num) {
-        scc_log(LOG_ERR,"LOFF block have bad room number: %d\n",rno);
+        scc_log(LOG_ERR,"LOFF block has bad room number: %d\n",rno);
         continue;
       }
       vm->res[SCVM_RES_ROOM].idx[rno].offset = scc_fd_r32le(loff_fd);

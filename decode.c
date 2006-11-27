@@ -416,7 +416,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
       //check_coder(dst + i*8,dst_stride,&smap[o+1],stripe_size,height,unkCodeA,unkDecodeA);
       break;
     default:
-      scc_log(LOG_ERR,"Unknow image coding: %d\n",type);
+      scc_log(LOG_ERR,"Unknown image coding: %d\n",type);
       break;
     }
   }

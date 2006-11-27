@@ -114,7 +114,7 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
     mask = 0x07;
     break;
   default:
-    printf("Costume picture have an unknow palette size: %d\n",cost->pal_size);
+    printf("Costume picture has an unknown palette size: %d\n",cost->pal_size);
     return 0;
   }
 
@@ -183,7 +183,7 @@ int scc_read_cost_pic(scc_fd_t* fd,scc_cost_t* cost,scc_cost_pic_t* pic,int len,
     mask = 0x07;
     break;
   default:
-    printf("Costume picture have an unknow palette size: %d\n",cost->pal_size);
+    printf("Costume picture has an unknown palette size: %d\n",cost->pal_size);
     return 0;
   }
 
@@ -277,7 +277,7 @@ scc_cost_t* scc_parse_cost(scc_fd_t* fd,int len) {
   scc_cost_anim_t* ani;
 
   unk = scc_fd_r32le(fd);
-  if(scc_fd_r16le(fd) != 0x4f43) printf("Bad CO header ???\n");
+  if(scc_fd_r16le(fd) != 0x4f43) printf("Bad CO header???\n");
 
   pos += 3*2;
   // number of anims
@@ -326,7 +326,7 @@ scc_cost_t* scc_parse_cost(scc_fd_t* fd,int len) {
     }
     
     if(!cmask) {
-      printf("Costume with no limb ????\n");
+      printf("Costume with no limbs????\n");
       scc_fd_seek(fd,len-pos,SEEK_CUR);
       return cost;
     }
@@ -499,7 +499,7 @@ int scc_cost_dec_load_anim(scc_cost_dec_t* dec,uint16_t aid) {
     dec->pc[i] = anim->limb[i].start;
     if(dec->pc[i] == 0xFFFF) continue;
     if(dec->pc[i] >= dec->cost->cmds_size) {
-      printf("Warning limb %d got out of the cmd array\n",i);
+      printf("Warning: limb %d got out of the cmd array\n",i);
       continue;
     }
     cmd = dec->cost->cmds[dec->pc[i]];
@@ -558,7 +558,7 @@ int scc_cost_dec_bbox(scc_cost_dec_t* dec,int* x1p,int* y1p,
     if(dec->pc[i] == 0xFFFF || dec->stopped & (1<<i)) continue;
     
     if(dec->pc[i] >= dec->cost->cmds_size) {
-      printf("Warning limb %d got out of the cmd array\n",i);
+      printf("Warning: limb %d got out of the cmd array\n",i);
       continue;
     }
     cmd = dec->cost->cmds[dec->pc[i]];
@@ -600,7 +600,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
     if(dec->pc[i] == 0xFFFF || dec->stopped & (1<<i)) continue;
     
     if(dec->pc[i] >= dec->cost->cmds_size) {
-      printf("Warning limb %d got out of the cmd array\n",i);
+      printf("Warning: limb %d got out of the cmd array\n",i);
       continue;
     }
     cmd = dec->cost->cmds[dec->pc[i]];

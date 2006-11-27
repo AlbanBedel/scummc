@@ -336,7 +336,7 @@ int scc_write_data_list(scc_fd_t* fd,uint32_t type,scc_data_list_t* l) {
     while(w < l->size) {
       r = scc_fd_write(fd,l->data+w,l->size-w);
       if(r < 0) {
-	printf("Write error ???\n");
+	printf("Write error???\n");
 	return 0;
       }
       w += r;
@@ -354,7 +354,7 @@ int scc_write_data(scc_fd_t* fd,uint32_t type,scc_data_t* d) {
   while(w < d->size) {
     r = scc_fd_write(fd,d->data+w,d->size-w);
     if(r < 0) {
-      printf("Write error ???\n");
+      printf("Write error???\n");
       return 0;
     }
     w += r;
@@ -438,7 +438,7 @@ int scc_write_rmim(scc_fd_t* fd,scc_rmim_t* rmim) {
   while(w < rmim->smap_size) {
     r = scc_fd_write(fd,rmim->smap+w,rmim->smap_size-w);
     if(r < 0) {
-      printf("Write error ???\n");
+      printf("Write error???\n");
       return 0;
     }
     w += r;
@@ -453,7 +453,7 @@ int scc_write_rmim(scc_fd_t* fd,scc_rmim_t* rmim) {
     while(w < rmim->z_buf_size[i]) {
       r = scc_fd_write(fd,rmim->z_buf[i]+w,rmim->z_buf_size[i]-w);
       if(r < 0) {
-	printf("Write error ???\n");
+	printf("Write error???\n");
 	return 0;
       }
       w += r;
@@ -473,7 +473,7 @@ int scc_write_imnn(scc_fd_t* fd,scc_imnn_t* img) {
   while(w < img->smap_size) {
     r = scc_fd_write(fd,img->smap+w,img->smap_size-w);
     if(r < 0) {
-      printf("Write error ???\n");
+      printf("Write error???\n");
       return 0;
     }
     w += r;
@@ -489,7 +489,7 @@ int scc_write_imnn(scc_fd_t* fd,scc_imnn_t* img) {
     while(w < img->z_buf_size[nz]) {
       r = scc_fd_write(fd,img->z_buf[nz]+w,img->z_buf_size[nz]-w);
       if(r < 0) {
-	printf("Write error ???\n");
+	printf("Write error???\n");
 	return 0;
       }
       w += r;
@@ -554,7 +554,7 @@ int scc_write_obcd(scc_fd_t* fd,scc_obcd_t* o) {
     while(w < len) {
       r = scc_fd_write(fd,o->name+w,len-w);
       if(r < 0) {
-	printf("Write error ???\n");
+	printf("Write error???\n");
 	return 0;
       }
       w += r;
@@ -763,7 +763,7 @@ int scc_write_cost(scc_fd_t* fd,scc_cost_t* c) {
 	//off += len;
 	//len = 0;
       } else {
-	  printf("Limb %d have an invalid redirect\n",n);
+	  printf("Limb %d has an invalid redirect\n",n);
       }
      
     } else {
@@ -818,7 +818,7 @@ int scc_write_cost(scc_fd_t* fd,scc_cost_t* c) {
       if(a->redir < a->id)
 	anims[a->id] = anims[a->redir];
       else
-	printf("Anim %d have an invalid redirect\n",a->id);
+	printf("Anim %d has an invalid redirect\n",a->id);
       
     } else {
       anims[a->id] = off;
@@ -877,7 +877,7 @@ int scc_write_cost(scc_fd_t* fd,scc_cost_t* c) {
 
 #ifdef TESTING
     if(limbs[n] != scc_fd_pos(fd) - start_pos)
-      printf("Limb table start at the wrong place: %d / %d\n",
+      printf("Limb table starts at the wrong place: %d / %d\n",
 	     (int)scc_fd_pos(fd) - start_pos,limbs[n]);
 #endif
 
@@ -1052,12 +1052,12 @@ int scc_write_res_idx(scc_fd_t* fd,scc_res_idx_t* idx) {
     scc_fd_w16le(fd,idx->num_obj_owners);
     if(scc_fd_write(fd,idx->obj_owners,idx->num_obj_owners) !=
        idx->num_obj_owners) {
-      printf("Write error ???\n");
+      printf("Write error???\n");
       return 0;
     }
     if(scc_fd_write(fd,idx->class_data,idx->num_obj_owners*4) !=
        idx->num_obj_owners*4) {
-      printf("Write error ???\n");
+      printf("Write error???\n");
       return 0;
     }
   }

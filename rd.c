@@ -109,7 +109,7 @@ int main(int argc,char** argv) {
 
     if(r->rmim->num_z_buf < 1) continue;
 
-    printf("ROOM %d have %d zbuf\n",r->idx,r->rmim->num_z_buf);
+    printf("ROOM %d has %d zbuf\n",r->idx,r->rmim->num_z_buf);
 
     for(i = 1 ; i <= r->rmim->num_z_buf ; i++) {
       scc_decode_zbuf(img8,r->width/8,

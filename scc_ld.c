@@ -142,7 +142,7 @@ static int scc_ld_write_block_list(scc_ld_block_t* blk,scc_fd_t* fd) {
 
   while(blk) {
     if(!blk->asis) {
-      scc_log(LOG_WARN,"Warning skipping non-patched block %c%c%c%c.\n",
+      scc_log(LOG_WARN,"Warning: skipping non-patched block %c%c%c%c.\n",
               UNMKID(blk->type));
       blk = blk->next;
       continue;
@@ -235,7 +235,7 @@ int scc_ld_parse_sym_block(scc_fd_t* fd, scc_ld_room_t* room, int len) {
     // the first exported room should be ourself.
     if(type == SCC_RES_ROOM && status == 'E') {
       if(room->sym) 
-	scc_log(LOG_WARN,"Warning several rooms are exported in the same STAB !!!!\n");
+	scc_log(LOG_WARN,"Warning: multiple rooms are exported in the same STAB!!!!\n");
       else
 	room->sym = sym;
     }
@@ -277,7 +277,7 @@ int scc_ld_parse_stab(scc_fd_t* fd, scc_ld_room_t* room, int max_len) {
     }
     gsym = scc_ns_get_sym(scc_ns,NULL,sym->sym);
     if(!gsym) {
-      scc_log(LOG_ERR,"NS errror !!!!\n");
+      scc_log(LOG_ERR,"NS error!!!!\n");
       return 0;
     }
     // push the room in the ns
@@ -458,7 +458,7 @@ int scc_ld_load_roobj(char* path) {
   while(pos < flen) {
     len = scc_fd_get_block(fd,flen-pos,&type); pos += 8;
     if(type != MKID('r','o','o','m')) {
-      scc_log(LOG_ERR,"Got unknow block %c%c%c%c in roobj file.\n",UNMKID(type));
+      scc_log(LOG_ERR,"Got unknown block %c%c%c%c in roobj file.\n",UNMKID(type));
       return 0;
     }
     ro = scc_ld_parse_room(fd,len);
@@ -516,7 +516,7 @@ int scc_ld_find_main(scc_ns_t* ns) {
       // Found a script named main
       if(!strcmp(s->sym,"main")) {
 	if(m)
-	  scc_log(LOG_WARN,"Warning several rooms have a main script !!!!\n");
+	  scc_log(LOG_WARN,"Warning: multiple rooms have a main script!!!!\n");
 	else
 	  m = s;
       }
@@ -525,7 +525,7 @@ int scc_ld_find_main(scc_ns_t* ns) {
 
   if(m) {
     if(!scc_ns_set_sym_addr(scc_ns,m,1)) {
-      scc_log(LOG_ERR,"Failed to set main script address ????\n");
+      scc_log(LOG_ERR,"Failed to set main script address????\n");
       return 0;
     }
     return 1;
@@ -556,7 +556,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
   // fix list
   if(type == MKID('S','F','I','X')) {
     if((size/8)*8 != size || size > len) {
-      scc_log(LOG_ERR,"SFIX block have invalid length.\n");
+      scc_log(LOG_ERR,"SFIX block has invalid length.\n");
       return NULL;
     }
     for(pos = 8 ; pos < size ; pos += 8) {
@@ -569,7 +569,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
       off = SCC_GET_32LE(data,pos+4);
       s = scc_ns_get_sym_with_id(room->ns,sym_type,sym_id);
       if(!s) {
-	scc_log(LOG_ERR,"SFIX entry with invalid id ????\n");
+	scc_log(LOG_ERR,"SFIX entry with invalid id????\n");
 	return NULL;
       }
       fix = malloc(sizeof(scc_sym_fix_t));
@@ -580,7 +580,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
     }
 
     if(pos+8 > len) {
-      scc_log(LOG_ERR,"Invalid scob block ????\n");
+      scc_log(LOG_ERR,"Invalid scob block????\n");
       return NULL;
     }
     type = SCC_GET_32(data,pos);
@@ -588,7 +588,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
   }
 
   if(type != MKID('s','c','o','b') || size < 8 || pos+size != len) {
-    scc_log(LOG_ERR,"Invalid scob block ????\n");
+    scc_log(LOG_ERR,"Invalid scob block????\n");
     return NULL;
   }
 
@@ -611,7 +611,7 @@ static scc_script_t* scc_ld_parse_scob(scc_ld_room_t* room,
     if(fix->sym->type == SCC_RES_VOICE) {
       scc_ld_voice_t* v = scc_ld_get_voice(fix->sym);
       if(!v) {
-        scc_log(LOG_ERR,"Got invalid voice sym fix ???.\n");
+        scc_log(LOG_ERR,"Got invalid voice sym fix???\n");
         return NULL;
       }
       scr_data[fix->off] = v->offset & 0xFF;
@@ -659,7 +659,7 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
   id = SCC_GET_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,id);
   if(!sym) {
-    scc_log(LOG_ERR,"imhd block contain an invalid id ????\n");
+    scc_log(LOG_ERR,"imhd block contains an invalid id????\n");
     return NULL;
   }
   
@@ -692,7 +692,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   vid = SCC_GET_16LE(blk->data,8);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,vid);
   if(!sym) {
-    scc_log(LOG_ERR,"cdhd block contain an invalid id (0x%x) ????\n",vid);
+    scc_log(LOG_ERR,"cdhd block contains an invalid id (0x%x)????\n",vid);
     return NULL;
   }
   addr = sym->addr;
@@ -703,7 +703,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   if(oid) {
     osym = scc_ns_get_sym_with_id(room->ns,SCC_RES_ACTOR,oid);
     if(!osym) {
-      scc_log(LOG_ERR,"cdhd block contain an invalid owner id (0x%x) ????\n",oid);
+      scc_log(LOG_ERR,"cdhd block contains an invalid owner id (0x%x)????\n",oid);
       return NULL;
     }
     obj_owner[sym->addr] = (st << 4) | osym->addr;
@@ -715,7 +715,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
     if(!cid) continue;
     csym = scc_ns_get_sym_with_id(room->ns,SCC_RES_CLASS,cid);
     if(!csym) {
-      scc_log(LOG_ERR,"cdhd block contain an invalid class id (0x%x) ????\n",cid);
+      scc_log(LOG_ERR,"cdhd block contains an invalid class id (0x%x)????\n",cid);
       return NULL;
     }
     obj_class[sym->addr] |= (1 << (csym->addr-1));
@@ -729,14 +729,14 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
     if(type == MKID('O','B','N','A')) {
       break;
     } else if(type != MKID('v','e','r','b')) {
-      scc_log(LOG_ERR,"Got unknow block inside obcd block !!!!\n");
+      scc_log(LOG_ERR,"Got unknown block inside obcd block!!!!\n");
       return NULL;
     }
     id = SCC_GET_16LE(blk->data,pos + 8);
     if(id) {
       sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_VERB,id);
       if(!sym) {
-        scc_log(LOG_ERR,"verb block contain an invalid id: %d ????\n",id);
+        scc_log(LOG_ERR,"verb block contains an invalid id: %d????\n",id);
         return NULL;
       }
     } else
@@ -747,7 +747,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
       return NULL;
     }
     if(verb_size + new_scr->code_len > 0xFFFF) {
-      scc_log(LOG_ERR,"verb block have too much code.");
+      scc_log(LOG_ERR,"verb block has too much code.");
       return NULL;
     }
 
@@ -801,7 +801,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   vpos += len;
 
   if(vpos != new_size) {
-    scc_log(LOG_ERR,"Smthg went wrong %d %d???\n",vpos,new_size);
+    scc_log(LOG_ERR,"Something went wrong %d %d???\n",vpos,new_size);
     return NULL;
   }
 
@@ -889,7 +889,7 @@ int scc_ld_res_patch(scc_ld_room_t* room, scc_ld_block_t* list,
   for(blk = list ; blk ; blk = blk->next) {
     scc_symbol_t* s = scc_ns_get_sym_with_id(room->ns,type,blk->addr);
     if(!s) {
-      scc_log(LOG_ERR,"Got %s with invalid id !!!!\n",name);
+      scc_log(LOG_ERR,"Got %s with invalid id!!!!\n",name);
       return 0;
     }
     blk->type = newid;
@@ -931,7 +931,7 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
       new = scc_ld_lscr_patch(room,blk);
       break;
     default:
-      scc_log(LOG_ERR,"Got unhandeld room block !!!\n");
+      scc_log(LOG_ERR,"Got unhandled room block!!!\n");
       return 0;
     }
 
@@ -954,7 +954,7 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
 	new = scc_ld_scrp_patch(room,blk);
 	break;
     default:
-      scc_log(LOG_ERR,"Got unhandeld script block !!!\n");
+      scc_log(LOG_ERR,"Got unhandled script block!!!\n");
       return 0;
     }
 
@@ -1321,13 +1321,13 @@ int main(int argc,char** argv) {
   scc_log(LOG_DBG,"All files loaded.\n");
 
   if(!scc_ld_check_ns(scc_ns,NULL)) {
-    scc_log(LOG_ERR,"Some symbol are unresolved, aborting.\n");
+    scc_log(LOG_ERR,"Some symbols are unresolved, aborting.\n");
     return 2;
   }
 
   // Look for the main script, and set it's address
   if(!scc_ld_find_main(scc_ns)) {
-    scc_log(LOG_ERR,"Unable to find a script suitable as main.\n");
+    scc_log(LOG_ERR,"Unable to find a suitable main script.\n");
     return 3;
   }
 
@@ -1358,7 +1358,7 @@ int main(int argc,char** argv) {
     else
       sprintf(name,"scummc.sou");
 
-    scc_log(LOG_V,"Outputing voice file %s\n",name);
+    scc_log(LOG_V,"Outputting voice file %s\n",name);
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
     if(!fd) {
       scc_log(LOG_ERR,"Failed to open file %s\n",name);
@@ -1401,7 +1401,7 @@ int main(int argc,char** argv) {
       sprintf(name,"scummc.001");
 
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
-    scc_log(LOG_V,"Outputing data file %s\n",name);
+    scc_log(LOG_V,"Outputting data file %s\n",name);
 
     if(!fd) {
       scc_log(LOG_ERR,"Failed to open file %s\n",name);
@@ -1417,7 +1417,7 @@ int main(int argc,char** argv) {
       sprintf(name,"%s.000",out_file);
     else
       sprintf(name,"scummc.000");
-    scc_log(LOG_V,"Outputing index file %s\n",name);
+    scc_log(LOG_V,"Outputting index file %s\n",name);
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
     if(!fd) {
       scc_log(LOG_ERR,"Failed to open file %s\n",name);
