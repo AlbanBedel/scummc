@@ -1140,7 +1140,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
     } break;
    case MKID('E','X','C','D'):
      if(room->excd) {
-       printf("Warning: we already have a EXCD\n");
+       printf("Warning: we already have an EXCD\n");
        break;
      }
      room->excd = scc_read_data(fd,size);
@@ -1149,7 +1149,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
      break;
    case MKID('E','N','C','D'):
      if(room->encd) {
-       printf("Warning: we alredy have a ENCD\n");
+       printf("Warning: we alredy have an ENCD\n");
        break;
      }
      room->encd = scc_read_data(fd,size);
@@ -1158,7 +1158,7 @@ int scc_parse_room(scc_fd_t* fd,scc_room_t* room,int len) {
      break;
    case MKID('N','L','S','C'):
      if(room->nlsc) {
-       printf("Warning: we already have a NLSC\n");
+       printf("Warning: we already have an NLSC\n");
        break;
      }
      if(size != 2) {
