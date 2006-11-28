@@ -17,7 +17,7 @@
  *
  */
 
-palette([0-31]);
+palette([16-47]);
 
 picture walkE = {
     glob = "devil/walkE??.bmp",

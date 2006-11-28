@@ -80,7 +80,7 @@ room ResRoom {
         setActorTalkPos(-60,-60);
         setActorName("Beasty");
         setActorWalkSpeed(2,1);
-        setActorTalkColor(0xC6);
+        setActorTalkColor(7);
         setActorWidth(40);
         setActorAnimSpeed(2);
         // set VAR_EGO so we can use the *Ego* functions
@@ -91,9 +91,9 @@ room ResRoom {
     script setupVerbs() {
         int color,hiColor,dimColor,l,c,vrb;
 
-        color = 0x36;
-        hiColor = 0x37;
-        dimColor = 26;
+        color = 6;
+        hiColor = 11;
+        dimColor = 7;
 
         sntcVerb = WalkTo;
         //sntcObjA = 0;

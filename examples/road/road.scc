@@ -22,6 +22,7 @@
 #include "common.sch"
 
 bit welcomed,lost;
+actor santa;
 
 // our room
 room Road {
@@ -35,6 +36,7 @@ room Road {
     trans = 0;
 
     //cycle testCycl = { 60, 0, 103, 111 };
+    cost santaCost = "santa.cost";
 
     voice letsgothere = { "letsgothere.voc", 500 };
     voice welcome = { "welcome.voc" };
@@ -235,6 +237,21 @@ room Road {
 
         // our palette is buggy, fix it
         setRoomColor(0,0,0,0);
+
+        // Setup the santa
+        setCurrentActor(santa);
+        initActor();
+        setActorCostume(santaCost);
+        setActorTalkPos(-60,-60);
+        setActorName("Santa");
+        setActorTalkColor(14);
+        setActorAnimSpeed(2);
+        // allow it to be outside of the walk boxes
+        setActorIgnoreBoxes();
+        putActorAt(santa,20,90,Road);
+        // run the "standing" anim
+        setActorStanding();
+        setCurrentActor(VAR_EGO);
 
         // init the print slot
         egoPrintBegin();
