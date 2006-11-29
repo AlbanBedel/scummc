@@ -572,14 +572,37 @@ static scc_param_t scc_parse_params[] = {
   { "hdpi", SCC_PARAM_INT, 1, 1000, &hdpi },
   { "vspace", SCC_PARAM_INT, -1000, 1000, &vspace },
 #endif
-  { "palsize", SCC_PARAM_INT, 0, 255, &palsize },
+  { "palsize", SCC_PARAM_INT, 2, 256, &palsize },
   { "bmp-width", SCC_PARAM_INT, 1, 10000, &bmp_width },
   { "bmp-space", SCC_PARAM_INT, 3, 10000, &bmp_space },
   { NULL, 0, 0, 0, NULL }
 };
 
 static void usage(char* prog) {
-  printf("Usage: %s -font font.ttf ( -obmp out.bmp | -ochar out.char )\n",prog);
+  printf("Usage: %s [ OPTIONS ] INPUT OUTPUT\n"
+         "\n  INPUT:\n"
+#ifdef HAVE_FT
+         "    -font FONT          Use a font supported by Freetype (TTF, Type 1, etc)\n"
+#endif
+         "    -ibmp FILE          Use a BMP font\n"
+         "    -char FILE          Use a SCUMM charset\n"
+         "\n  OUTPUT:\n"
+         "    -ochar FILE         Create a SCUMM charset\n"
+         "    -obmp FILE          Create a BMP font\n"
+#ifdef HAVE_FT
+         "\n  Freetype input options:\n"
+         "    -cw w               Character width in 1/64th of points (default: auto)\n"
+         "    -ch h               Character height in 1/64th of points (default: 24 pts)\n"
+         "    -vdpi r             Vertical resolution in dpi (default: 30)\n"
+         "    -hdpi r             Horizontal resolution in dpi (default: 30)\n"
+         "    -vspace s           Extra interline space in pixel (default: 0)\n"
+#endif
+         "\n  BMP output options:\n"
+         "    -palsize <2-256>    Force the palette size\n"
+         "    -bmp-width w        Image width (default: 800)\n"
+         "    -bmp-space s        Character spacing (default: 8)\n"
+         "\n"
+         ,prog);
   exit(-1);
 }
 
