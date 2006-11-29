@@ -203,6 +203,27 @@ static void scc_unescape_string(char* str) {
                 memmove(str+i-1,str+i,strlen(str+i)+1);
                 i--;
                 break;
+            case 'x':
+                if(str[i+1] >= '0' && str[i+1] <= '9')
+                    esc = (str[i+1]-'0') << 4;
+                else if(str[i+1] >= 'a' && str[i+1] <= 'f')
+                    esc = (str[i+1]-'a') << 4;
+                else if(str[i+1] >= 'A' && str[i+1] <= 'F')
+                    esc = (str[i+1]-'A') << 4;
+                else
+                    break;
+                if(str[i+2] >= '0' && str[i+2] <= '9')
+                    esc |= (str[i+2]-'0');
+                else if(str[i+2] >= 'a' && str[i+2] <= 'f')
+                  esc |= (str[i+2]-'a');
+                else if(str[i+2] >= 'A' && str[i+2] <= 'F')
+                  esc |= (str[i+2]-'A');
+                else
+                    break;
+                str[i-1] = esc;
+                memmove(str+i,str+i+3,strlen(str+i+3)+1);
+                i--;
+                break;
             default:
                 // TODO warn
                 break;
