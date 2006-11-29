@@ -28,6 +28,8 @@ verb SntcLine;
 // The inventory slots
 verb invSlot0 @ 100, invSlot1 @ 101, invSlot2 @ 102, invSlot3 @ 103,
     invSlot4 @ 104, invSlot5 @ 105, invSlot6 @ 106, invSlot7 @ 107;
+// The inventory arrows
+verb invUp, invDown;
 
 // Object callbacks
 verb Icon,Preposition,SetBoxes;

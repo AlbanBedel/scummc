@@ -193,6 +193,25 @@ room ResRoom {
         setVerbDimColor(dimColor);
         //setVerbKey('');
 
+        setCurrentVerb(invUp);
+        initVerb();
+        setVerbName("\x03");
+        setVerbXY(135,160);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        //verbCenter();
+
+        setCurrentVerb(invDown);
+        initVerb();
+        setVerbName("\x02");
+        setVerbXY(135,182);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        //verbCenter();
+        
+
         for(l = 0,vrb = invSlot0 ; l < 2 ; l++)
             for(c = 0 ; c < 4 ; c++, vrb++) {
                 setCurrentVerb(vrb);
@@ -212,10 +231,11 @@ room ResRoom {
        
         if(verbsOn) return;
  
-        vrb[0] = [ Give, PickUp, Use, Open, LookAt, Push, Close, TalkTo, Pull,
-                   SntcLine ];
+        vrb[0] = [ Give, PickUp, Use, Open,
+                   LookAt, Push, Close, TalkTo,
+                   Pull, SntcLine, invUp, invDown ];
         
-        for(i = 0 ; i < 10 ; i++) {
+        for(i = 0 ; i < 12 ; i++) {
             setCurrentVerb(vrb[i]);
             setVerbOn();
             redrawVerb();
