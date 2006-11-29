@@ -309,6 +309,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 %type <integer> globalres
 %type <integer> roomres
 %type <integer> resdecl
+%type <str> resdef
 %type <integer> scripttype
 
 %type <arg> scriptargs
@@ -529,6 +530,8 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
 {}
 | cycledecl ';'
 {}
+| resdecl ';'
+{}
 ;
 
 roomscrdecl: scripttype SCRIPT SYM  '(' scriptargs ')' location
@@ -573,17 +576,13 @@ roomobjdecl: OBJECT SYM location
 }
 ;
 
-// costume, sounds, and other external ressources
-// can be defined along with the room parameters
-// such as image, etc
+
+// the basic room parameters such as image, box, zplanes, etc
 roomdecls: roomdecl
 | roomdecls roomdecl
 ;
 
-roomdecl: resdecl ';'
-{
-}
-| SYM ASSIGN STRING ';'
+roomdecl: SYM ASSIGN STRING ';'
 {
   if($2 != '=')
     SCC_ABORT(@2,"Invalid operator for parameter setting.\n");
@@ -622,6 +621,7 @@ roomdecl: resdecl ';'
 }
 ;
 
+// The optional room resources like cycle, voice, charset, etc
 cycledef: cycledecl ASSIGN '{' INTEGER ',' INTEGER ',' INTEGER ',' INTEGER '}'
 {
   if($2 != '=')
@@ -693,41 +693,48 @@ synclist: INTEGER
 }
 ;
 
-// ressource declaration, possibly with harcoded
-// location
-resdecl: RESTYPE SYM location ASSIGN STRING
+// generic resource declaration/definition
+resdecl: RESTYPE SYM location resdef
 {
-  scc_symbol_t* r;
-
-  if($4 != '=')
-    SCC_ABORT(@4,"Invalid operator for resource declaration.\n");
-
-  r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
-  scc_parser_find_res(sccp,&$5);
-  // then we need to add that to the roobj
-  if(!sccp->do_deps && !scc_roobj_add_res(sccp->roobj,r,$5))
-    SCC_ABORT(@2,"Failed to declare %s.\n",$2);
-  if(sccp->do_deps) scc_parser_add_dep(sccp,$5);
+  scc_symbol_t* r = scc_ns_decl(sccp->ns,NULL,$2,$1,0,$3);
   
-  if(!r->rid) scc_ns_get_rid(sccp->ns,r);
+  if($4) {
+    scc_parser_find_res(sccp,&$4);
+    // then we need to add that to the roobj
+    if(!sccp->do_deps && !scc_roobj_add_res(sccp->roobj,r,$4))
+      SCC_ABORT(@2,"Failed to declare %s.\n",$2);
+    if(sccp->do_deps) scc_parser_add_dep(sccp,$4);
+
+    if(!r->rid) scc_ns_get_rid(sccp->ns,r);
+  }
+  $$ = $1; // propagate type  
+}
+| resdecl ',' SYM location resdef
+{
+  scc_symbol_t* r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
+  
+  if($5) {
+    scc_parser_find_res(sccp,&$5);
+    // then we need to add that to the roobj
+    if(!sccp->do_deps && !scc_roobj_add_res(sccp->roobj,r,$5))
+      SCC_ABORT(@3,"Failed to declare %s.\n",$3);
+    if(sccp->do_deps) scc_parser_add_dep(sccp,$5);
+
+    if(!r->rid) scc_ns_get_rid(sccp->ns,r);
+  }
   $$ = $1; // propagate type
 }
-| resdecl ',' SYM location ASSIGN STRING
+;
+
+resdef: /* NOTHING */
 {
-  scc_symbol_t* r;
-
-  if($5 != '=')
-    SCC_ABORT(@5,"Invalid operator for resource declaration.\n");
-
-  r = scc_ns_decl(sccp->ns,NULL,$3,$1,0,$4);
-  scc_parser_find_res(sccp,&$6);
-  // then we need to add that to the roobj
-  if(!sccp->do_deps && !scc_roobj_add_res(sccp->roobj,r,$6))
-    SCC_ABORT(@3,"Failed to declare %s.\n",$3);
-  if(sccp->do_deps) scc_parser_add_dep(sccp,$6);
-
-  if(!r->rid) scc_ns_get_rid(sccp->ns,r);
-  $$ = $1; // propagate type
+  $$ = NULL;
+}
+| ASSIGN STRING
+{
+  if($1 != '=')
+    SCC_ABORT(@1,"Invalid operator for resource definition.\n");
+  $$ = $2;
 }
 ;
 
