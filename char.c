@@ -593,6 +593,7 @@ static void usage(char* prog) {
          "\n  Freetype input options:\n"
          "    -cw w               Character width in 1/64th of points (default: auto)\n"
          "    -ch h               Character height in 1/64th of points (default: 24 pts)\n"
+         "                        Values less than 128 are interpreted in points.\n"
          "    -vdpi r             Vertical resolution in dpi (default: 30)\n"
          "    -hdpi r             Horizontal resolution in dpi (default: 30)\n"
          "    -vspace s           Extra interline space in pixel (default: 0)\n"
