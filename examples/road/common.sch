@@ -41,6 +41,9 @@ class Openable,Pickable;
 // verb and object in the sentence.
 char *sntcPrepo;
 
+// List of the objects used to handle action on actors
+int  *actorObject;
+
 // define an actor for our hero
 actor hero;
 

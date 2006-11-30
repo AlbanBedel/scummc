@@ -280,7 +280,11 @@ room ResRoom {
             // find what verb should be displayed and the
             // object under the pointer
             vrb = 0;
-            obj = getObjectAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
+            obj = getActorAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
+            if(obj == VAR_EGO)
+                obj = 0;
+            unless(obj)
+                obj = getObjectAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
             unless(obj) {
                 obj = getVerbAt(VAR_MOUSE_X,VAR_MOUSE_Y);
                 if(obj >= invSlot0 && obj <= invSlot7) {
@@ -311,7 +315,9 @@ room ResRoom {
 
 
             if(obj) {
-                if(obj is Openable)
+                if(obj <= 0xF)
+                    alt = TalkTo;
+                else if(obj is Openable)
                     alt = getObjectState(obj) ? Close : Open;
                 else
                     alt = LookAt;
@@ -389,23 +395,42 @@ room ResRoom {
             return;
             
         case PickUp:
-            egoSay("I can't pick that up.");
+            if(objA <= 0xF)
+                egoSay("I can't carry him around.");
+            else
+                egoSay("I can't pick that up.");
             break;
             
         case Use:
-            egoSay("I can't use that !.");
+            if(objA <= 0xF) {
+                if(objB)
+                    egoSay("I can't use that on someone!");
+                else
+                    egoSay("I can't just *use* someone!");
+            } else
+                egoSay("I can't use that !");
             break;
             
         case LookAt:
-            egoSay("There is nothing special about it.");
+            if(objA <= 0xF)
+                egoSay("There is nothing special about him.");
+            else
+                egoSay("There is nothing special about it.");
             break;
             
         case Push:
         case Pull:
-            egoSay("I don't feel in shape today.");
+            if(objA <= 0xF)
+                egoSay("That wouldn't be very nice.");
+            else
+                egoSay("I don't feel in shape today.");
             break;
             
         case Open:
+            if(objA <= 0xF) {
+                egoSay("You know these human bodies aren't very resistant, if i open it he might die.");
+                break;
+            }
             if(objA is !Openable) {
                 egoSay("It's not the kind of thing that can be opened.");
                 break;
@@ -421,6 +446,10 @@ room ResRoom {
             break;
             
         case Close:
+            if(objA <= 0xF) {
+                egoSay("Closing someone ?\wThat hardly make any sense.");
+                break;
+            }            
             if(objA is !Openable) {
                 egoSay("I don't think that this can be closed.");
                 break;
@@ -443,7 +472,7 @@ room ResRoom {
 
     // the sentence script, doSentence call it
     script sentenceHandler(int vrb, int objA, int objB) {
-        int owner,tmp;
+        int owner,tmp,act;
 
         // click on the sentence line, make it as if the user
         // clicked the currently selected objects
@@ -487,12 +516,17 @@ room ResRoom {
         }
         
         // if the object is in the room walk there
-        if(owner == 0xF) {
+        if(objA <= 0xF || owner == 0xF) {
             walkActorToObj(VAR_EGO,objA,0);
             waitForActor(VAR_EGO);
-        } else if(objB) if(getObjectOwner(objB) == 0xF) {
+            // This is needed when walking to an actor
+            if(objA <= 0xF)
+                actorFace(VAR_EGO,objA);
+        } else if(objB) if(objB <= 0xF || getObjectOwner(objB) == 0xF) {
             walkActorToObj(VAR_EGO,objB,0);
             waitForActor(VAR_EGO);
+            if(objB <= 0xF)
+                actorFace(VAR_EGO,objB);
         }
 
         // switch the objects
@@ -503,6 +537,12 @@ room ResRoom {
             objB = tmp;
         }
 
+        // Take the actorObject if it exist
+        if(objA <= 0xF) if(actorObject[objA]) {
+            act = objA;
+            objA = actorObject[objA];
+        }
+
         // if the object implement the verb call that
         if(getObjectVerbEntrypoint(objA,vrb)) {
             startObject(2,objA,vrb,[ vrb, objA, objB ]);
@@ -510,7 +550,7 @@ room ResRoom {
             do breakScript() until(cursorOn);
         } else {
             //otherwise use our default:
-            defaultAction(vrb, objA, objB);
+            defaultAction(vrb, act ? act : objA, objB);
  
         }
         // if the verb need objB we are done for now
@@ -722,6 +762,9 @@ room ResRoom {
         // the graphics are going wacky
         setScreen(0,144);
         //setScreen(44,188);
+
+        // Create the actor -> obj link
+        dimInt(actorObject,0x10);
 
         // init the charset
         //initCharset(chset1);
