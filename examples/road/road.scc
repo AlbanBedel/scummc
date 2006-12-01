@@ -302,6 +302,7 @@ room Road {
                 if(VAR_OVERRIDE) {
                     setCameraAt(440);
                     putActorAt(VAR_EGO,430,80,Road);
+                    setActorStanding();
                     cameraFollowActor(VAR_EGO);
                 }
             }
