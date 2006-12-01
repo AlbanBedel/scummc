@@ -44,14 +44,36 @@ char *sntcPrepo;
 // List of the objects used to handle action on actors
 int  *actorObject;
 
+// Dialog string list
+char *dialogList;
+int   numDialog,selectedSentence;
+verb dialogVerb0 @ 110, dialogVerb1 @ 111, dialogVerb2 @ 112;
+verb dialogVerb3 @ 113, dialogVerb4 @ 114;
+#define MAX_DIALOG_SENTENCE 5
+
 // define an actor for our hero
 actor hero;
+#define BEASTY_COLOR      7
+#define BEASTY_DIM_COLOR 26
 
 room ResRoom {
-    script showVerbs();
+    script showVerbs(int show);
     script showCursor();
     script hideCursor();
     
+    // Reset the dialog list
+    script dialogClear(int kill);
+    // Add an entry to the dialog list
+    script dialogAdd(char* str);
+    // Remove an entry, if kill is not zero undim the string too
+    script dialogRemove(int idx, int kill);
+    // Start a dialog
+    script dialogStart(int color, int hiColor);
+    // Hide the dialog verbs
+    script dialogHide();
+    // End a dialog
+    script dialogEnd();
+
     // Inventory objects
     object axe;
 }

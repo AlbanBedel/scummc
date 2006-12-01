@@ -21,7 +21,7 @@
 #include <scummVars6.s>
 #include "common.sch"
 
-bit welcomed,lost;
+bit welcomed,lost,santaHello;
 actor santa;
 
 // our room
@@ -168,17 +168,114 @@ room Road {
     object santaObj {
         name = "Santa";
         verb(int vrb,int objA,int objB) {
+            char* sentence;
         case TalkTo:
-            cutscene() {
-                egoSay("Hey ...");
+            cutscene(1) {
+                egoSay("Hey Santa!");
                 waitForMessage();
-                actorSay(santa,"I don't talk with creatures from the Evil!\w"
-                         "Just go away!");
-                waitForMessage();
-                walkActorTo(VAR_EGO,getObjectX(VAR_EGO),getObjectY(VAR_EGO)+10);
-                waitForActor(VAR_EGO);
-                egoSay("He doesn't seems very cooperative.");
+                unless(santaHello) {
+                    actorSay(santa,"Yes, and you are ?");
+                    waitForMessage();
+                }
             }
+            unless(santaHello) {
+                santaHello = 1;
+                sentence[0] = "Beasty, a fearsome fighter from the Evil!";
+                ResRoom::dialogAdd(sentence);
+                // This is needed otherwise the next asignement would
+                // just realloc the array.
+                sentence = 0;
+                sentence[0] = "Beasty, from the Kingdom Der Evil.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, an OS mascot.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, a red guy with a trident.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, a poor chap who lost his way.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+                do breakScript() while(selectedSentence < 0);
+                ResRoom::dialogHide();
+                cutscene() {
+                    sentence = dialogList[selectedSentence];
+                    egoSay("%s{sentence}");
+                    waitForMessage();
+                    switch(selectedSentence) {
+                    case 0:
+                        actorSay(santa,"That sure sound very impressing.");
+                        break;
+                    case 1:
+                        actorSay(santa,"Isn't that the place where everything is named K-something?");
+                        break;
+                    case 2:
+                        actorSay(santa,"Can't be worse than beeing a children mascot.");
+                        break;
+                    }
+                    waitForMessage();
+                }
+                ResRoom::dialogClear(1);
+
+                if(selectedSentence == 1) {
+                    sentence[0] = "Indeed, and we like it this way!";
+                    ResRoom::dialogAdd(sentence);
+                    sentence = 0;
+                    sentence[0] = "That's the place, anything against Ks?";
+                    ResRoom::dialogAdd(sentence);
+                    sentence = 0;
+                    ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+                    do breakScript() while(selectedSentence < 0);
+                    ResRoom::dialogHide();
+                    cutscene() {
+                        sentence = dialogList[selectedSentence];
+                        egoSay("%s{sentence}");
+                        waitForMessage();
+                        if(selectedSentence == 1) {
+                            actorSay(santa,"Not really.\wI just tend to prefer Gs.");
+                            waitForMessage();
+                        }
+                    }
+                    ResRoom::dialogClear(1);
+                }
+            }
+            cutscene() {
+                actorSay(santa,"What do you want?");
+                waitForMessage();
+            }
+            sentence[0] = "What is this place?";
+            ResRoom::dialogAdd(sentence);
+            sentence = 0;
+            sentence[0] = "Are you really Santa, or just some guy in a red coat?";
+            ResRoom::dialogAdd(sentence);
+            sentence = 0;
+            sentence[0] = "Nothing. Have a nice day.";
+            ResRoom::dialogAdd(sentence);
+            sentence = 0;
+            ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+            do breakScript() while(selectedSentence < 0);
+            ResRoom::dialogHide();
+            cutscene() {
+                sentence = dialogList[selectedSentence];
+                egoSay("%s{sentence}");
+                waitForMessage();
+                switch(selectedSentence) {
+                case 0:
+                    actorSay(santa,"It's the Grand Nation Of Maximum Eccentricity.");
+                    break;
+                case 1:
+                    actorSay(santa,"I'am the real Santa.\wBut not on duty so don't expect presents or anything.");
+                    break;
+                case 2:
+                    actorSay(santa,"Bye.");
+                    break;
+                }
+                waitForMessage();
+            }
+            ResRoom::dialogClear(1);
+            ResRoom::dialogEnd();
             return;
 
         case Use:
@@ -334,7 +431,7 @@ room Road {
             }
         }
 
-        ResRoom::showVerbs();
+        ResRoom::showVerbs(1);
         ResRoom::showCursor();
     }
 

@@ -38,6 +38,8 @@ room ResRoom {
     chset chset1 @ 1 = "vera-gui.char";
     // our standard charset
     chset chtest = "vera.char";
+    // dialog charset
+    chset dialogCharset = "vera-small.char";
     // and the costume for our actor
     cost egoCost = "devil.cost";
 
@@ -225,11 +227,11 @@ room ResRoom {
 
     // turn on all the verb for the interface 
     // and fire the mouse watching thread
-    script showVerbs() {
+    script showVerbs(int show) {
         int* vrb;
         int i;
        
-        if(verbsOn) return;
+        if(!!show == verbsOn) return;
  
         vrb[0] = [ Give, PickUp, Use, Open,
                    LookAt, Push, Close, TalkTo,
@@ -237,18 +239,24 @@ room ResRoom {
         
         for(i = 0 ; i < 12 ; i++) {
             setCurrentVerb(vrb[i]);
-            setVerbOn();
+            if(show)
+                setVerbOn();
+            else
+                setVerbOff();
             redrawVerb();
         }
         undim(vrb);
 
         for(i = 0 ; i < 8 ; i++) {
             setCurrentVerb(invSlot0+i);
-            setVerbOn();
+            if(show)
+                setVerbOn();
+            else
+                setVerbOff();
             redrawVerb();
         }
 
-        verbsOn = 1;
+        verbsOn = !!show;
 
     }
 
@@ -371,11 +379,19 @@ room ResRoom {
     script cutsceneStart(int type) {
         dbgPrint("cutscene start");
         hideCursor();
+        if(type > 0) {
+            // We need to break here to make sure the mouse watch script
+            // stop. Otherwise it might turn on the alt verb again,
+            breakScript();
+            showVerbs(0);
+        }
     }
 
     script cutsceneEnd(int type) {
         dbgPrint("cutscene end");
         showCursor();
+        if(type > 1)
+            showVerbs(1);
     }
 
     script resetSntc(int vrb) {
@@ -560,6 +576,21 @@ room ResRoom {
         resetSntc(0);
     }
 
+    script keyboardHandler(int key) {
+        switch(key) {
+        case 'o':
+            egoSay("Hooo");
+            break;
+        case 'r':
+            egoSay("Let's restart.");
+            waitForMessage();
+            restartGame();
+            break;
+        case 'q':
+            shutdown();
+            break;
+        }
+    }
 
     // This script receive the keyboard and mouse events
     script inputHandler(int area,int cmd, int btn) {
@@ -574,19 +605,7 @@ room ResRoom {
         actorPrintEnd();
 
         if(area == 4) { // area 4 is the keyboard
-            switch(cmd) {
-            case 'o':
-                egoSay("Hooo");
-                break;
-            case 'r':
-                egoSay("Let's restart.");
-                waitForMessage();
-                restartGame();
-                break;
-            case 'q':
-                shutdown();
-                break;
-            }
+            keyboardHandler(cmd);
             return;
         }
 
@@ -668,6 +687,128 @@ room ResRoom {
             }
         }
 
+    }
+
+    //
+    // Dialogs stuff
+    //
+
+    // Reset the dialog list
+    script dialogClear(int kill) {
+        int i;
+        if(dialogList) {
+            if(kill) {
+                for(i = 0 ; i < numDialog ; i++)
+                    undim(dialogList[i]);
+            }
+            undim(dialogList);
+            dialogList = 0;
+        }
+        numDialog = 0;
+    }
+
+    // Add an entry to the dialog list
+    script dialogAdd(char* str) {
+        if(numDialog >= MAX_DIALOG_SENTENCE) {
+            dbgPrint("Too many sentences, can't add another one.");
+            return;
+        }
+        unless(dialogList)
+            dimInt(dialogList,MAX_DIALOG_SENTENCE);
+        dialogList[numDialog] = str;
+        numDialog++;
+    }
+
+    // Remove an entry, if kill is not zero undim the string too
+    script dialogRemove(int idx, int kill) {
+        int i;
+        if(idx < 0 || idx >= numDialog) {
+         dbgPrint("Dialog index out of range: %i{idx}, can't remove.");
+         return;
+        }
+        // Remove the string form the array
+        if(kill)
+            undim(dialogList[idx]);
+        dialogList[idx] = 0;
+        // shift the res
+        for(i = idx+1 ; i < numDialog ; i++)
+            dialogList[i-1] = dialogList[i];
+        numDialog--;
+    }
+
+    script dialogInputHandler(int area,int cmd, int btn) {
+        int vrb,obj,objB,x;
+
+        dbgPrintBegin();
+        dbgPrint("Area=%i{area} cmd=%i{cmd} button=%i{btn}");
+        dbgPrintEnd();
+
+        egoPrintBegin();
+        egoPrintOverhead();
+        actorPrintEnd();
+
+        if(area == 4) { // area 4 is the keyboard
+            keyboardHandler(cmd);
+            return;
+        }
+        
+        if(cmd < dialogVerb0 || cmd > dialogVerb4)
+            return;
+
+        // Sentence selected
+        selectedSentence = cmd - dialogVerb0;
+    }
+
+    // Start a dialog
+    script dialogStart(int color, int hiColor) {
+        int i;
+        selectedSentence = -1;
+        if(numDialog < 1) {
+            dbgPrint("No dialog was setup, nothing to show.");
+            selectedSentence = -2;
+            return;
+        }
+        // Hide the normal verbs/inventory
+        showVerbs(0);
+        // Show our stuff
+        // switch the charset
+        initCharset(dialogCharset);
+        // setup the verbs
+        unless(color) color = 6;
+        unless(hiColor) hiColor = 11;
+        for(i = 0 ; i < numDialog ; i++) {
+            setCurrentVerb(dialogVerb0 + i);
+            initVerb();
+            setVerbNameString(dialogList[i]);
+            setVerbXY(10,145+11*i);
+            setVerbColor(color);
+            setVerbHiColor(hiColor);
+            setVerbOn();
+            redrawVerb();
+        }
+        initCharset(chtest);
+        // Kill the mouseWatch
+        if(isScriptRunning(mouseWatch))
+            stopScript(mouseWatch);
+        // Set the dialog input handler
+        VAR_VERB_SCRIPT = dialogInputHandler;
+    }
+
+    script dialogHide() {
+        int i;
+        for(i = 0 ; i < numDialog ; i++) {
+            setCurrentVerb(dialogVerb0 + i);
+            setVerbOff();
+            redrawVerb();
+        }
+    }
+
+    script dialogEnd() {
+        dialogHide();
+        showVerbs(1);
+        VAR_VERB_SCRIPT = inputHandler;
+        // Restart the mouse watching thread
+        mouseWatch();
     }
 
     // The main script is the first thing started by the engine.
