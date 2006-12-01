@@ -21,7 +21,7 @@
 #include <scummVars6.s>
 #include "common.sch"
 
-bit welcomed,lost,santaHello;
+bit welcomed,lost,santaHello,santaPlace,santaReal;
 actor santa;
 #define SANTA_COLOR 14
 
@@ -170,6 +170,7 @@ room Road {
         name = "Santa";
         verb(int vrb,int objA,int objB) {
             char* sentence;
+            int asked;
         case TalkTo:
             cutscene(1) {
                 egoSay("Hey Santa!");
@@ -196,6 +197,12 @@ room Road {
                 ResRoom::dialogAdd(sentence);
                 sentence = 0;
                 sentence[0] = "Beasty, a poor chap who lost his way.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, a deamon.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, ready to bring you hell.";
                 ResRoom::dialogAdd(sentence);
                 sentence = 0;
                 ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
@@ -246,36 +253,49 @@ room Road {
                 actorSay(santa,"What do you want?");
                 waitForMessage();
             }
-            sentence[0] = "What is this place?";
-            ResRoom::dialogAdd(sentence);
-            sentence = 0;
-            sentence[0] = "Are you really Santa, or just some guy in a red coat?";
-            ResRoom::dialogAdd(sentence);
-            sentence = 0;
-            sentence[0] = "Nothing. Have a nice day.";
-            ResRoom::dialogAdd(sentence);
-            sentence = 0;
-            ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
-            do breakScript() while(selectedSentence < 0);
-            ResRoom::dialogHide();
-            cutscene() {
-                sentence = dialogList[selectedSentence];
-                egoSay("%s{sentence}");
-                waitForMessage();
-                switch(selectedSentence) {
-                case 0:
-                    actorSay(santa,"It's the Grand Nation Of Maximum Eccentricity.");
-                    break;
-                case 1:
-                    actorSay(santa,"I'am the real Santa.\wBut not on duty so don't expect presents or anything.");
-                    break;
-                case 2:
-                    actorSay(santa,"Bye.");
-                    break;
+            dialogLoop: while(1) {
+                unless(santaPlace)
+                    sentence[0] = "What is this place?";
+                else
+                    sentence = 0;
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                unless(santaReal)
+                    sentence[0] = "Are you really Santa, or just some guy in a red coat?";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                if(asked)
+                    sentence[0] = "Have a nice day.";
+                else
+                    sentence[0] = "Nothing. Have a nice day.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                asked = 1;
+                ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+                do breakScript() while(selectedSentence < 0);
+                ResRoom::dialogHide();
+                cutscene() {
+                    sentence = dialogList[selectedSentence];
+                    egoSay("%s{sentence}");
+                    waitForMessage();
+                    switch(selectedSentence) {
+                    case 0:
+                        actorSay(santa,"It's the Grand Nation Of Maximum Eccentricity.");
+                        santaPlace = 1;
+                        break;
+                    case 1:
+                        actorSay(santa,"I'am the real Santa.\wBut not on duty so don't expect presents or anything.");
+                        santaReal = 1;
+                        break;
+                    case 2:
+                        actorSay(santa,"Bye.");
+                        break;
+                    }
+                    waitForMessage();
                 }
-                waitForMessage();
+                ResRoom::dialogClear(1);
+                if(selectedSentence == 2) break dialogLoop;
             }
-            ResRoom::dialogClear(1);
             ResRoom::dialogEnd();
             return;
 

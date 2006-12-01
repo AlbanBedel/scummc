@@ -50,10 +50,14 @@ int  *actorObject;
 
 // Dialog string list
 char *dialogList;
-int   numDialog,selectedSentence;
+int numDialog,numActiveDialog,dialogOffset,selectedSentence;
+int dialogColor, dialogHiColor;
 verb dialogVerb0 @ 110, dialogVerb1 @ 111, dialogVerb2 @ 112;
 verb dialogVerb3 @ 113, dialogVerb4 @ 114;
-#define MAX_DIALOG_SENTENCE 5
+verb dialogUp, dialogDown;
+
+#define MAX_DIALOG_LINES    5
+#define MAX_DIALOG_SENTENCE 16
 
 // define an actor for our hero
 actor hero;

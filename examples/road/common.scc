@@ -704,7 +704,7 @@ room ResRoom {
             undim(dialogList);
             dialogList = 0;
         }
-        numDialog = 0;
+        numDialog = numActiveDialog = 0;
     }
 
     // Add an entry to the dialog list
@@ -717,6 +717,7 @@ room ResRoom {
             dimInt(dialogList,MAX_DIALOG_SENTENCE);
         dialogList[numDialog] = str;
         numDialog++;
+        if(str) numActiveDialog++;
     }
 
     // Remove an entry, if kill is not zero undim the string too
@@ -726,18 +727,92 @@ room ResRoom {
          dbgPrint("Dialog index out of range: %i{idx}, can't remove.");
          return;
         }
-        // Remove the string form the array
-        if(kill)
-            undim(dialogList[idx]);
-        dialogList[idx] = 0;
+        if(dialogList[idx]) {
+            numActiveDialog--;
+            // Remove the string from the array
+            if(kill)
+                undim(dialogList[idx]);
+            dialogList[idx] = 0;
+        }
         // shift the res
         for(i = idx+1 ; i < numDialog ; i++)
             dialogList[i-1] = dialogList[i];
         numDialog--;
     }
 
+    script showDialog() {
+        int i,v,d,first,last,firstSentence,lastSentence;
+
+        first = last = -1;
+        firstSentence = lastSentence = -1;
+        // switch the charset
+        initCharset(dialogCharset);
+        // Dialog lines
+        v = 0;
+        for(i = 0 ; i < numDialog ; i++) {
+            unless(dialogList[i]) continue;
+            if(firstSentence < 0) firstSentence = i;
+            lastSentence = i;
+            if(v < dialogOffset || v >= dialogOffset+MAX_DIALOG_LINES) {
+                v++;
+                continue;
+            }
+            if(first < 0) first = i;
+            last = i;
+            setCurrentVerb(dialogVerb0 + d);
+            initVerb();
+            setVerbNameString(dialogList[i]);
+            setVerbXY(12,145+11*d);
+            setVerbColor(dialogColor);
+            setVerbHiColor(dialogHiColor);
+            setVerbOn();
+            redrawVerb();
+            v++, d++;
+        }
+        while(d < MAX_DIALOG_LINES) {
+            setCurrentVerb(dialogVerb0 + d);
+            setVerbOff();
+            redrawVerb();
+            d++;
+        }
+        dbgPrint("Sentence: %i{firstSentence} %i{lastSentence}");
+        dbgPrint("Shown: %i{first} %i{last}");
+       
+        // Up arrow
+        setCurrentVerb(dialogUp);
+        if(first > firstSentence) {
+            initVerb();
+            setVerbName("\x03");
+            setVerbXY(2,145);
+            setVerbColor(dialogColor);
+            setVerbHiColor(dialogHiColor);
+            setVerbOn();
+            redrawVerb();
+        } else {
+            setVerbOff();
+            redrawVerb();
+        }            
+        // Down arrow
+        setCurrentVerb(dialogDown);
+        if(last < lastSentence) {
+            initVerb();
+            setVerbName("\x02");
+            setVerbXY(2,145+4*11);
+            setVerbColor(dialogColor);
+            setVerbHiColor(dialogHiColor);
+            setVerbOn();
+            redrawVerb();
+        } else {
+            setVerbOff();
+            redrawVerb();
+        }
+        
+        initCharset(chtest);
+
+    }
+
     script dialogInputHandler(int area,int cmd, int btn) {
-        int vrb,obj,objB,x;
+        int i,v,d;
 
         dbgPrintBegin();
         dbgPrint("Area=%i{area} cmd=%i{cmd} button=%i{btn}");
@@ -751,18 +826,39 @@ room ResRoom {
             keyboardHandler(cmd);
             return;
         }
+
+        if(cmd == dialogUp || cmd == dialogDown) {
+            dialogOffset += (cmd == dialogUp ? -1 : 1)*MAX_DIALOG_LINES/2;
+            if(dialogOffset > numActiveDialog-MAX_DIALOG_LINES)
+                dialogOffset = numActiveDialog-MAX_DIALOG_LINES;
+            if(dialogOffset < 0) dialogOffset = 0;
+            dbgPrint("Dialog offset: %i{dialogOffset}");
+            showDialog();
+            return;
+        }
         
         if(cmd < dialogVerb0 || cmd > dialogVerb4)
             return;
 
-        // Sentence selected
-        selectedSentence = cmd - dialogVerb0;
+        // Find the selected sentence
+        for(i = 0 ; i < numDialog ; i++) {
+            unless(dialogList[i]) continue;
+            if(v < dialogOffset || v >= dialogOffset+MAX_DIALOG_LINES) {
+                v++;
+                continue;
+            }
+            if(d == cmd-dialogVerb0) break;
+            v++, d++;
+        }
+
+        selectedSentence = i;
     }
 
     // Start a dialog
     script dialogStart(int color, int hiColor) {
         int i;
         selectedSentence = -1;
+        dialogOffset = 0;
         if(numDialog < 1) {
             dbgPrint("No dialog was setup, nothing to show.");
             selectedSentence = -2;
@@ -771,22 +867,10 @@ room ResRoom {
         // Hide the normal verbs/inventory
         showVerbs(0);
         // Show our stuff
-        // switch the charset
-        initCharset(dialogCharset);
         // setup the verbs
-        unless(color) color = 6;
-        unless(hiColor) hiColor = 11;
-        for(i = 0 ; i < numDialog ; i++) {
-            setCurrentVerb(dialogVerb0 + i);
-            initVerb();
-            setVerbNameString(dialogList[i]);
-            setVerbXY(10,145+11*i);
-            setVerbColor(color);
-            setVerbHiColor(hiColor);
-            setVerbOn();
-            redrawVerb();
-        }
-        initCharset(chtest);
+        dialogColor = color ? color : VERB_COLOR;
+        dialogHiColor = hiColor ? hiColor : VERB_HI_COLOR;
+        showDialog();
         // Kill the mouseWatch
         if(isScriptRunning(mouseWatch))
             stopScript(mouseWatch);
@@ -796,11 +880,17 @@ room ResRoom {
 
     script dialogHide() {
         int i;
-        for(i = 0 ; i < numDialog ; i++) {
+        for(i = 0 ; i < MAX_DIALOG_LINES ; i++) {
             setCurrentVerb(dialogVerb0 + i);
             setVerbOff();
             redrawVerb();
         }
+        setCurrentVerb(dialogUp);
+        setVerbOff();
+        redrawVerb();
+        setCurrentVerb(dialogDown);
+        setVerbOff();
+        redrawVerb();
     }
 
     script dialogEnd() {
