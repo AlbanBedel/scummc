@@ -30,6 +30,10 @@ verb invSlot0 @ 100, invSlot1 @ 101, invSlot2 @ 102, invSlot3 @ 103,
     invSlot4 @ 104, invSlot5 @ 105, invSlot6 @ 106, invSlot7 @ 107;
 // The inventory arrows
 verb invUp, invDown;
+// The verb colors
+#define VERB_COLOR       6
+#define VERB_HI_COLOR   11
+#define VERB_DIM_COLOR   7
 
 // Object callbacks
 verb Icon,Preposition,SetBoxes;

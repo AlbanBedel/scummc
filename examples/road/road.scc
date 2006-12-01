@@ -23,6 +23,7 @@
 
 bit welcomed,lost,santaHello;
 actor santa;
+#define SANTA_COLOR 14
 
 // our room
 room Road {
@@ -361,7 +362,7 @@ room Road {
         setActorCostume(santaCost);
         setActorTalkPos(-60,-60);
         setActorName("Santa");
-        setActorTalkColor(14);
+        setActorTalkColor(SANTA_COLOR);
         setActorAnimSpeed(2);
         actorObject[santa] = santaObj;
         // allow it to be outside of the walk boxes
