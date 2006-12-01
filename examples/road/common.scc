@@ -102,7 +102,7 @@ room ResRoom {
         setCurrentVerb(SntcLine);
         initVerb();
         setVerbName("%v{sntcVerb} %n{sntcObjA} %s{sntcPrepo} %n{sntcObjB}");
-        setVerbXY(160,146);
+        setVerbXY(160,145);
         setVerbColor(color);
         setVerbHiColor(hiColor);
         verbCenter();

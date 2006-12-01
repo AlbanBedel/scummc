@@ -248,10 +248,6 @@ room Road {
 
     }
 
-    local script localTest() {
-        dbgPrint("T2st");
-    }
-
     // This script is executed when the room is loaded
     local script entry() {
 
@@ -340,9 +336,6 @@ room Road {
 
         ResRoom::showVerbs();
         ResRoom::showCursor();
-
-        localTest();
-
     }
 
     local script exit() {
