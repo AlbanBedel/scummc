@@ -282,6 +282,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 
 %type <st> statement
 %type <st> statements
+%type <st> opt_statements
 %type <inst> instruct
 %type <inst> ifblock
 %type <st> caseval
@@ -1175,7 +1176,7 @@ loopblock: loophead body
 ;
 
 
-loophead: label FOR '(' statements ';' statements ';' statements ')'
+loophead: label FOR '(' opt_statements ';' statements ';' opt_statements ')'
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_FOR;
@@ -1339,6 +1340,16 @@ statements: statement
 }
 ;
 
+// optional statements
+opt_statements: /* NOTHING */
+{
+  $$ = NULL;
+}
+| statements
+{
+  $$ = $1;
+}
+;
 
 statement: dval
 {

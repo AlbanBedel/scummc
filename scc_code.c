@@ -899,18 +899,21 @@ static scc_code_t* scc_if_gen_code(scc_instruct_t* inst) {
 
 static scc_code_t* scc_for_gen_code(scc_instruct_t* inst) {
   scc_code_t *code=NULL,*last=NULL,*c;
-  scc_code_t *loop,*body,*post;
+  scc_code_t *loop,*body,*post = NULL;
   int cont;
 
   // push the loop context
   scc_loop_push(inst->type,inst->sym);
 
   body = scc_instruct_gen_code(inst->body);
-  post = scc_statement_gen_code(inst->post,0);
+  if(inst->post)
+      post = scc_statement_gen_code(inst->post,0);
 
   // pre
-  c = scc_statement_gen_code(inst->pre,0);
-  SCC_LIST_ADD(code,last,c);
+  if(inst->pre) {
+      c = scc_statement_gen_code(inst->pre,0);
+      SCC_LIST_ADD(code,last,c);
+  }
 
   // cond  
   loop = c = scc_statement_gen_code(inst->cond,1);

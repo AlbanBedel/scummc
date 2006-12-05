@@ -769,11 +769,10 @@ room ResRoom {
             redrawVerb();
             v++, d++;
         }
-        while(d < MAX_DIALOG_LINES) {
+        for( ; d < MAX_DIALOG_LINES ; d++) {
             setCurrentVerb(dialogVerb0 + d);
             setVerbOff();
             redrawVerb();
-            d++;
         }
         dbgPrint("Sentence: %i{firstSentence} %i{lastSentence}");
         dbgPrint("Shown: %i{first} %i{last}");
