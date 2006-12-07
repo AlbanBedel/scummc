@@ -36,6 +36,7 @@
 #define SCC_PARAM_NEED_ARG     -2
 #define SCC_PARAM_INVALID      -3
 #define SCC_PARAM_OUT_OF_RANGE -4
+#define SCC_PARAM_INVALID_TYPE -5
 
 typedef struct scc_param_st {
   char* name;

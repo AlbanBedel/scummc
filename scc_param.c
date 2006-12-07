@@ -163,7 +163,7 @@ int scc_param_parse(scc_param_t* params,char* k,char* v) {
   if(!params[i].name) return SCC_PARAM_UNKNOWN;
 
   parser = scc_param_get_parser(params[i].type);
-  if(!params[i].name) return SCC_PARAM_UNKNOWN;
+  if(!parser) return SCC_PARAM_INVALID_TYPE;
 
   if(!((parser->flags & SCC_PARAM_TYPE_NO_ARG) || v))
     return SCC_PARAM_NEED_ARG;
@@ -199,6 +199,9 @@ scc_cl_arg_t* scc_param_parse_argv(scc_param_t* params,int argc,char** argv) {
 	  break;
 	case SCC_PARAM_OUT_OF_RANGE:
 	  fprintf(stderr,"Argument of %s is out of range.\n",argv[n]);
+	  break;
+	case SCC_PARAM_INVALID_TYPE:
+	  fprintf(stderr,"Parameter %s have an invalid type.\n",argv[n]);
 	  break;
 	default:
 	  fprintf(stderr,"Error while parsing parameter %s.\n",argv[n]);
