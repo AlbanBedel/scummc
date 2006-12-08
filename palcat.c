@@ -42,15 +42,17 @@
 
 
 static char* outname = NULL;
+static char* inname = NULL;
 
 
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &outname },
+  { "i", SCC_PARAM_STR, 0, 0, &inname },
   { NULL, 0, 0, 0, NULL }
 };
 
 static void usage(char* prog) {
-  printf("Usage: %s -o merged.bmp inputA.bmp inputB.bmp\n",prog);
+  printf("Usage: %s -o merged.bmp [-i in.bmp] inputA.bmp in.bmp inputB.bmp\n",prog);
   exit(-1);
 }
 
@@ -64,20 +66,46 @@ int main(int argc,char** argv) {
 
   if(!files || !outname) usage(argv[0]);
 
+  if (inname) {
+    out = scc_img_open(inname);
+    if (!out)
+      inname = NULL;
+  }
 
   for(f = files ; f ; f = f->next) {
-    in = scc_img_open(f->val);
+    if (!inname || strcmp(f->val, inname)) {
+      in = scc_img_open(f->val);
+    } else {
+      // Found input filename, now switch to append mode
+      inname = NULL;
+      continue;
+    }
+
     if(!in) {
       printf("Failed to open %s.\n",f->val);
       return 1;
     }
 
     if(!out) {
+      // Assign output to first file specified
       out = in;
       continue;
     }
+
+    // Realloc the palette
     out->pal = realloc(out->pal,(out->ncol+in->ncol)*3);
-    memcpy(out->pal+3*out->ncol,in->pal,in->ncol*3);
+
+    // Pre-append the palette
+    if (inname) {
+      int i;
+      memmove(out->pal+3*in->ncol,out->pal,out->ncol*3);
+      memcpy(out->pal,in->pal,in->ncol*3);
+      // Offset bitmap data in image by input colors (assuming data is 8bit)
+      for (i = 0 ; i < out->w*out->h ; i++)
+          out->data[i] += in->ncol;
+    } else  // Append the palette
+      memcpy(out->pal+3*out->ncol,in->pal,in->ncol*3);
+    
     out->ncol += in->ncol;
     
     scc_img_free(in);
