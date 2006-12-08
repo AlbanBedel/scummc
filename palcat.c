@@ -82,7 +82,7 @@ int main(int argc,char** argv) {
     }
 
     if(!in) {
-      printf("Failed to open %s.\n",f->val);
+      scc_log(LOG_ERR,"Failed to open image '%s'.\n",f->val);
       return 1;
     }
 
