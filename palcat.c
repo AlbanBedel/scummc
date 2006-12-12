@@ -59,6 +59,7 @@ static void usage(char* prog) {
 int main(int argc,char** argv) {
   scc_cl_arg_t* files,*f;
   scc_img_t *out = NULL,*in;
+  unsigned pre_off = 0;
   
   if(argc < 5) usage(argv[0]);
   
@@ -98,8 +99,9 @@ int main(int argc,char** argv) {
     // Pre-append the palette
     if (inname) {
       int i;
-      memmove(out->pal+3*in->ncol,out->pal,out->ncol*3);
-      memcpy(out->pal,in->pal,in->ncol*3);
+      memmove(out->pal+pre_off+3*in->ncol,out->pal+pre_off,out->ncol*3-pre_off);
+      memcpy(out->pal+pre_off,in->pal,in->ncol*3);
+      pre_off += in->ncol*3;
       // Offset bitmap data in image by input colors (assuming data is 8bit)
       for (i = 0 ; i < out->w*out->h ; i++)
           out->data[i] += in->ncol;
