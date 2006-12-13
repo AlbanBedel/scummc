@@ -1092,6 +1092,21 @@ static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0xA9A8 A9E2 A9E8
+static int scvm_op_wait_for(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned x;
+  uint16_t off;
+  if((r=scvm_pop(vm,&x)) ||
+     (r=scvm_thread_r16(thread,&off))) return r;
+  return scvm_op_break_script(vm,thread);
+}
+
+// 0xA9A9 A9AA A9AB
+static int scvm_op_wait(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_op_break_script(vm,thread);  
+}
+
 // 0xAA
 static int scvm_op_get_actor_x_scale(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
@@ -1488,7 +1503,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   // A8
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_subop, "wait" },
   { scvm_op_get_actor_x_scale, "get actor x scale" },
   { NULL, NULL },
   // AC
@@ -1810,10 +1825,10 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // A8
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_wait_for, "wait actor" },
+  { scvm_op_wait, "wait msg" },
+  { scvm_op_wait, "wait camera" },
+  { scvm_op_wait, "wait sentence" },
   // AC
   { scvm_op_set_scrolling, "set scrolling" },
   { NULL, NULL },
@@ -1882,7 +1897,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   // E0
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_wait_for, "wait anim" },
   { scvm_op_set_actor_layer, "set layer" },
   // E4
   { scvm_op_set_actor_walk_script, "set walk script" },
@@ -1890,7 +1905,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_set_actor_direction, "set direction" },
   { scvm_op_dummy_v, "turn to direction" },
   // E8
-  { NULL, NULL },
+  { scvm_op_wait_for, "wait turn" },
   { scvm_op_dummy, "freeze" },
   { scvm_op_dummy, "unfreeze" },
   { scvm_op_set_actor_talk_script, "set talk script" },
