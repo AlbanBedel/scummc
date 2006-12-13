@@ -1235,6 +1235,13 @@ cutsceneblock: CUTSCENE '(' cargs ')' body
   $$->body = $5;
 }
 
+| TRY body
+{
+  $$ = calloc(1,sizeof(scc_instruct_t));
+  $$->type = SCC_INST_OVERRIDE;
+  $$->body = $2;
+}
+
 | TRY body OVERRIDE body
 {
   $$ = calloc(1,sizeof(scc_instruct_t));
