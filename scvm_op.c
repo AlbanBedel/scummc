@@ -762,6 +762,8 @@ static int scvm_op_get_object_x(scvm_t* vm, scvm_thread_t* thread) {
   int r,o;
   scvm_object_t* obj;
   if((r=scvm_pop(vm,&o))) return r;
+  if(o < vm->num_actor)
+    return scvm_push(vm,vm->actor[o].x);
   if(o >= vm->res[SCVM_RES_OBJECT].num)
     return SCVM_ERR_BAD_OBJECT;
   if(!(obj = vm->res[SCVM_RES_OBJECT].idx[o].data))
@@ -774,6 +776,8 @@ static int scvm_op_get_object_y(scvm_t* vm, scvm_thread_t* thread) {
   int r,o;
   scvm_object_t* obj;
   if((r=scvm_pop(vm,&o))) return r;
+  if(o < vm->num_actor)
+    return scvm_push(vm,vm->actor[o].y);
   if(o >= vm->res[SCVM_RES_OBJECT].num)
     return SCVM_ERR_BAD_OBJECT;
   if(!(obj = vm->res[SCVM_RES_OBJECT].idx[o].data))
