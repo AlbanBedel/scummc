@@ -69,6 +69,33 @@ scc_cost_anim_t* scc_cost_new_anim(scc_cost_t* cost,uint8_t id) {
   return ani;
 }
 
+scc_cost_anim_t* scc_cost_get_anim(scc_cost_t* cost,uint8_t id) {
+  scc_cost_anim_t* ani = cost->anims;
+  int redir = 8;
+  while(ani) {
+    // Found
+    if(ani->id == id) {
+      // No redirect (or slightly invalid)
+      if(ani->redir == 0xFF ||
+         ani->redir == id)
+        break;
+      // Too deep redirect
+      if(redir <= 0)
+        return NULL;
+      // Redirect
+      redir--;
+      id = ani->redir;
+      // Restart
+      if(id < ani->id) {
+        ani = cost->anims;
+        continue;
+      }
+    }
+    ani = ani->next;
+  }
+  return ani;
+}
+
 int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic) {
   scc_cost_pic_t* iter;
 
@@ -363,6 +390,7 @@ scc_cost_t* scc_parse_cost(scc_fd_t* fd,int len) {
      } else {
 
 	ani->mask = mask = scc_fd_r16le(fd); pos += 2;
+	ani->redir = 0xFF;
 
 	for(j = 15 ; j >= 0 ; j--) {
 	  
@@ -490,8 +518,8 @@ int scc_cost_dec_load_anim(scc_cost_dec_t* dec,uint16_t aid) {
   int i;
   uint8_t cmd;
 
-  for(anim = dec->cost->anims ; anim && anim->id != aid ; anim = anim->next);
-  if(!anim) return 0;
+  if(!(anim = scc_cost_get_anim(dec->cost,aid)))
+    return 0;
 
   dec->anim = anim;
 

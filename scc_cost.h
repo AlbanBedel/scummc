@@ -85,6 +85,8 @@ typedef struct scc_cost_dec {
 
 scc_cost_anim_t* scc_cost_new_anim(scc_cost_t* cost,uint8_t id);
 
+scc_cost_anim_t* scc_cost_get_anim(scc_cost_t* cost,uint8_t id);
+
 int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic);
 
 int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
