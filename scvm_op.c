@@ -703,13 +703,12 @@ static int scvm_op_stop_script(scvm_t* vm, scvm_thread_t* thread) {
 // 0x7F
 static int scvm_op_put_actor_at(scvm_t* vm, scvm_thread_t* thread) {
   int r,a,x,y,room;
-  scvm_actor_t* actor;
-  
+
   if((r=scvm_vpop(vm,&room,&y,&x,&a,NULL)))
     return r;
   
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
-  if(room == 0xFF) room = actor->room;
+  if(room == 0xFF) room = vm->actor[a].room;
   scvm_actor_put_at(&vm->actor[a],x,y,room);
   return 0;
 }
