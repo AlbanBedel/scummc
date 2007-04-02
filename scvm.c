@@ -432,6 +432,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         // set the camera min/max
         vm->var->camera_min_x = vm->view->screen_width/2;
         vm->var->camera_max_x = room->width - vm->var->camera_min_x;
+        vm->var->room = room->id;
         vm->room = room;
         vm->state = SCVM_RUN_PRE_ENTRY;
       }
