@@ -250,7 +250,7 @@ typedef struct scvm_vars {
   int gui_exit_script;
   int unknown3;
   int sound_param[3];
-  int mouse_present;
+  int input_mode;
   int memory_performance;
   int video_performance;
   // 070

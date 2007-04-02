@@ -76,6 +76,37 @@ static int scvm_default_random(scvm_t* vm,int min,int max) {
   return min+r;
 }
 
+static void scvm_vars_init(scvm_vars_t* var) {
+  // init some engine variables
+  // soundcard: 0 = none
+  //            1 = pc speaker
+  //            3 = adlib
+  var->soundcard = 0;
+  // video mode: 4  = CGA
+  //             13 = EGA
+  //             19 = VGA?
+  //             30 = Hercule
+  //             42 = FMTowns
+  //             50 = MAC
+  //             82 = Amiga
+  var->videomode = 19;
+  // Heap size
+  var->heap_space = 1400;
+  // Playing from HD
+  var->fixed_disk = 1;
+  // Input mode: 0 = keyboard
+  //             1 = joystick
+  //             3 = mouse
+  var->input_mode = 3;
+  // EMS size
+  var->ems_space = 10000;
+  // Set an initial room size
+  var->room_width = 320;
+  var->room_height = 200;
+  // Subtitle speed
+  var->charinc = 4;
+}
+
 scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   scc_fd_t* fd;
   scvm_t* vm;
@@ -118,6 +149,7 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   vm->num_var = scc_fd_r16le(fd);
   vm->var_mem = calloc(vm->num_var,sizeof(int));
   vm->var = (scvm_vars_t*)vm->var_mem;
+  scvm_vars_init(vm->var);
   // unknown
   scc_fd_r16le(fd);
   // bit vars, don't be so stupid as the original vm, round up
