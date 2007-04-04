@@ -411,3 +411,5 @@ struct scvm {
 #define SCVM_ERR_OVERRIDE_OVERFLOW  -16
 #define SCVM_ERR_OVERRIDE_UNDERFLOW -17
 #define SCVM_ERR_BAD_OBJECT         -18
+#define SCVM_ERR_NO_ROOM            -19
+#define SCVM_ERR_BAD_PALETTE        -20

@@ -906,6 +906,21 @@ static int scvm_op_set_rgb_intensity(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x9CD5
+static int scvm_op_set_palette(scvm_t* vm, scvm_thread_t* thread) {
+  int r,p;
+  if((r=scvm_pop(vm,&p))) return r;
+  if(!vm->room) return SCVM_ERR_NO_ROOM;
+  if(p < 0 || p >= vm->room->num_palette)
+    return SCVM_ERR_BAD_PALETTE;
+  vm->room->current_palette = vm->room->palette[p];
+  memcpy(vm->view->palette,vm->room->current_palette,
+         sizeof(scvm_palette_t));
+  vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
+  return 0;
+}
+
+
 // 0x9DC5
 static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
@@ -1884,7 +1899,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   // D4
   { scvm_op_array_write_list2, "array write list2" },
-  { scvm_op_dummy_v, "room palette" },
+  { scvm_op_set_palette, "set palette" },
   { NULL, NULL },
   { scvm_op_dummy_v, "set cursor transparency" },
   // D8

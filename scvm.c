@@ -64,6 +64,8 @@ static char* scvm_error[0x100] = {
   "override overflow",
   "override underflow",
   "bad object",
+  "no room",
+  "bad palette",
   NULL
 };
 
