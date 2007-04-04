@@ -406,7 +406,7 @@ scc_cost_t* scc_parse_cost(scc_fd_t* fd,int len) {
 	    if(ani->limb[j].start != 0xFFFF) {
 	      alen = scc_fd_r8(fd); pos += 1;
 	      ani->limb[j].end = ani->limb[j].start + (alen & 0x7F);
-	      ani->limb[j].flags = alen>>7;	      
+	      ani->limb[j].flags = !(alen>>7);
 	    }
 	  } else
 	    ani->limb[j].start = 0xFFFF;
