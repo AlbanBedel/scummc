@@ -652,7 +652,7 @@ static void expose_limb_img_cb(GtkWidget *img,GdkEvent* ev,scc_cost_view_t* cv) 
   } else {
     uint8_t buf[pic->width*pic->height];
     scc_cost_decode_pic(cv->dec.cost,pic,buf,pic->width,
-			0,pic->width,0,pic->height,-1,255,255);
+			0,pic->width,0,pic->height,-1,255,255,0);
 
     gdk_draw_indexed_image(img->window,cv->img_gc,
 			   (img->allocation.width%10)/2,

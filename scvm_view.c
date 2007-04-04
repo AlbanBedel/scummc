@@ -115,7 +115,7 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     scc_log(LOG_MSG,"Draw actor %d at %dx%d\n",a,vm->actor[a].x,vm->actor[a].y);
     scc_cost_dec_frame(&vm->actor[a].costdec,
                        buffer + view->room_start*stride + dx,
-                       vm->actor[a].x,vm->actor[a].y,
+                       vm->actor[a].x-sx,vm->actor[a].y,
                        w,h,stride,
                        vm->actor[a].scale_x,vm->actor[a].scale_y);
   }

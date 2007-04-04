@@ -92,7 +92,8 @@ int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic);
 int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			uint8_t* dst,int dst_stride, 
 			int x_min,int x_max,int y_min,int y_max,
-			int trans, int x_scale, int y_scale);
+			int trans, int x_scale, int y_scale,
+			int y_flip);
 
 int scc_read_cost_pic(scc_fd_t* fd,scc_cost_t* cost,scc_cost_pic_t* pic,int len,int* posp);
 

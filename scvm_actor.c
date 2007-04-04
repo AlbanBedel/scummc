@@ -67,7 +67,8 @@ void scvm_actor_init(scvm_actor_t* a) {
 void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room) {
   a->x = x;
   a->y = y;
-  if(room) a->room = room;
+  //if(room) 
+  a->room = room;
 }
 
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost) {
@@ -77,20 +78,26 @@ void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost) {
 }
 
 void scvm_actor_animate(scvm_actor_t* a, int anim) {
+  a->anim_cycle = 0;
   if(anim >= 0xFC) {
-    scc_cost_dec_load_anim(&a->costdec,a->stand_frame<<2);
+    scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
+    a->direction = anim&3;
     // stop moving
     return;
   }
   if(anim >= 0xF8) {
     // set direction
+    scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
+    a->direction = anim&3;
     return;
   }
   if(anim >= 0xF4) {
     // turn to direction
+    scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
+    a->direction = anim&3;
     return;
   }
-  scc_cost_dec_load_anim(&a->costdec,anim);
+  scc_cost_dec_load_anim(&a->costdec,(anim<<2)+a->direction);
 }
 
 void scvm_actor_step_anim(scvm_actor_t* a) {

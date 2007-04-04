@@ -126,8 +126,9 @@ int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic) {
 int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			uint8_t* dst,int dst_stride, 
 			int x_min,int x_max,int y_min,int y_max,
-			int trans, int x_scale, int y_scale) {
-  int shr,mask,x = 0,y = 0,end = 0,pos = 0;
+			int trans, int x_scale, int y_scale,
+			int y_flip) {
+  int shr,mask,x = 0,y = 0,end = 0,pos = 0, x_step;
   int yerr = 0, xerr = 0, xskip = 0, yskip = 0, dx = 0, dy = 0;
   uint8_t color,rep;
 
@@ -144,6 +145,12 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
     printf("Costume picture has an unknown palette size: %d\n",cost->pal_size);
     return 0;
   }
+
+  if(y_flip) {
+    dx = pic->width-1;
+    x_step = -1;
+  } else
+    x_step = 1;
 
   while(!end) {
     if(pos >= pic->data_size) {
@@ -183,7 +190,7 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
         xerr += x_scale;
         if(xerr<<1 >= 255) {
           xerr -= 255;
-          dx++;
+          dx += x_step;
           xskip = 0;
         } else
           xskip = 1;
@@ -561,7 +568,7 @@ int scc_cost_dec_step(scc_cost_dec_t* dec) {
 	// anim counter ++ ?
 	if(dec->anim->limb[i].start != dec->anim->limb[i].end &&
 	   dec->pc[i] != dec->anim->limb[i].end) continue;
-      } else if(cmd > 0x70) {
+      } else if(cmd > 0x70 && cmd < 0x79) {
 	// queue soound ?
 	if(dec->anim->limb[i].start != dec->anim->limb[i].end &&
 	   dec->pc[i] != dec->anim->limb[i].end) continue;
@@ -620,9 +627,14 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
 		       int dst_width, int dst_height,
 		       int dst_stride,
                        int x_scale, int y_scale) {
-  int i,l,c,l_max,c_max,rel_x,rel_y,width,height;
+  int i,l,c,l_max,c_max,rel_x,rel_y,width,height,flip;
   scc_cost_pic_t* pic;
   uint8_t cmd,trans = dec->cost->pal[0];
+
+  if(!dec->anim)
+    return 0;
+
+  flip = (!(dec->cost->format & 0x80)) && (!(dec->anim->id&3));
 
   for(i = 15 ; i >= 0 ; i--) {
     if(dec->pc[i] == 0xFFFF || dec->stopped & (1<<i)) continue;
@@ -647,6 +659,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
     rel_y = pic->rel_y*y_scale/255;
     width = pic->width*x_scale/255;
     height = pic->width*y_scale/255;
+    if(flip) rel_x = -width-rel_x;
     l = c = 0;
     if(x+rel_x < 0) c = -x-rel_x;
     if(y+rel_y < 0) l = -y-rel_y;
@@ -663,7 +676,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
     scc_cost_decode_pic(dec->cost,pic,
 			&dst[dst_stride*(y+rel_y)+x+rel_x],
 			dst_stride,
-			c,c_max,l,l_max,trans,x_scale,y_scale);
+			c,c_max,l,l_max,trans,x_scale,y_scale,flip);
   }
 
   return 1;
