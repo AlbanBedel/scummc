@@ -47,7 +47,7 @@
 int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                    uint8_t* buffer, int stride,
                    unsigned width, unsigned height) {
-  int sx,dx,w,h,y,a;
+  int sx,dx,w,h,x,y,a;
 
   if(width < 320 || height < 200 ||
      !vm->room) return 0;
@@ -102,10 +102,13 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     
     if(obj->y + obj_h >= h)
       obj_h = h - obj->y;
-    for(y = 0 ; y < obj_h ; y++)
-      memcpy(dst + y*stride,
-             src + y*obj->width,
-             obj_w);
+    for(y = 0 ; y < obj_h ; y++) {
+      for(x = 0 ; x < obj_w ; x++)
+        if(src[x] != vm->room->trans)
+          dst[x] = src[x];
+      dst += stride;
+      src += obj->width;
+    }
   }
   
   for(a = 0 ; a < vm->num_actor ; a++) {

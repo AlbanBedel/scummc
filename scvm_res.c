@@ -427,6 +427,11 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
       }
       break;
       
+    case MKID('T','R','N','S'):
+      if(block_size != 2+8) goto bad_block;
+      room->trans = scc_fd_r16le(fd);
+      break;
+
     case MKID('P','A','L','S'):
       if(block_size < 16) goto bad_block;
       type = scc_fd_r32(fd);
