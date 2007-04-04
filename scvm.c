@@ -622,13 +622,15 @@ int main(int argc,char** argv) {
       sdl_scvm_update_palette(screen,vm->view->palette);
       vm->view->flags &= ~SCVM_VIEW_PALETTE_CHANGED;
     }
-    scvm_step_actors(vm);
     
     if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
     scvm_view_draw(vm,vm->view,screen->pixels,screen->pitch,
                    screen->w,screen->h);
     if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
     SDL_Flip(screen);
+
+    scvm_step_actors(vm);
+
     end = vm->get_time(vm);
     if(end < start) end = start;
     delay = vm->var->timer_next*15;
