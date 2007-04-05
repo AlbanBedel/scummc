@@ -450,13 +450,17 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
         room->num_palette = npal;
         room->palette = malloc(npal*sizeof(scvm_palette_t));
         for(i = 0 ; i < npal ; i++) {
+          int c;
           scc_fd_seek(fd,offset[i],SEEK_SET);
           type = scc_fd_r32(fd);
           sub_block_size = scc_fd_r32be(fd);
           if(type != MKID('A','P','A','L') ||
-             sub_block_size-8!=sizeof(scvm_palette_t)) goto bad_block;
-          if(scc_fd_read(fd,room->palette[i],sizeof(scvm_palette_t)) != 
-             sizeof(scvm_palette_t)) goto bad_block;
+             sub_block_size-8!= SCVM_PALETTE_SIZE*3) goto bad_block;
+          for(c = 0 ; c < SCVM_PALETTE_SIZE ; c++) {
+            room->palette[i][c].r = scc_fd_r8(fd);
+            room->palette[i][c].g = scc_fd_r8(fd);
+            room->palette[i][c].b = scc_fd_r8(fd);
+          }
         }
       }
       break;

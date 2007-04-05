@@ -40,12 +40,14 @@ typedef struct scvm_array {
   } data;
 } scvm_array_t;
 
+/// Number of colors in a palette
+#define SCVM_PALETTE_SIZE 256
 
 typedef struct scvm_color {
   uint8_t r,g,b;
-} PACKED_ATTRIB scvm_color_t;
+} scvm_color_t;
 
-typedef scvm_color_t scvm_palette_t[256];
+typedef scvm_color_t scvm_palette_t[SCVM_PALETTE_SIZE];
 
 typedef struct scvm_image {
   uint8_t* data;
