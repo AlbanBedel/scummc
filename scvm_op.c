@@ -633,8 +633,7 @@ static int scvm_op_draw_object(scvm_t* vm, scvm_thread_t* thread) {
   int r,obj_id,state;
   if((r = scvm_vpop(vm,&state,&obj_id,NULL)))
     return r;
-  // return some error ?
-  if(!vm->room) return 0;
+  if(!vm->room) return SCVM_ERR_NO_ROOM;
   // the lower address are actors
   if(obj_id < 0x10 || obj_id >= vm->num_object)
     return SCVM_ERR_BAD_OBJECT;
@@ -886,6 +885,7 @@ static int scvm_op_set_room_intensity(scvm_t* vm, scvm_thread_t* thread) {
   int r,scale,start,end;
   if((r=scvm_vpop(vm,&end,&start,&scale,NULL)))
     return r;
+  if(!vm->room) return SCVM_ERR_NO_ROOM;
   scvm_view_scale_palette(vm->view,vm->room->current_palette,
                           scale,scale,scale,start,end);
   return 0;
@@ -901,6 +901,7 @@ static int scvm_op_set_rgb_intensity(scvm_t* vm, scvm_thread_t* thread) {
   int r,red,green,blue,start,end;
   if((r=scvm_vpop(vm,&end,&start,&blue,&green,&red,NULL)))
     return r;
+  if(!vm->room) return SCVM_ERR_NO_ROOM;
   scvm_view_scale_palette(vm->view,vm->room->current_palette,
                           red,green,blue,start,end);
   return 0;
