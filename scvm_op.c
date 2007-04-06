@@ -216,6 +216,7 @@ int scvm_alloc_array(scvm_t* vm, unsigned type, unsigned x, unsigned y) {
       if(vm->array[addr].size == 0) break;
   if(addr >= vm->num_array) return SCVM_ERR_OUT_OF_ARRAY;
   array = &vm->array[addr];
+  array->type = type;
 
   if(y) {
     array->line_size = x;
