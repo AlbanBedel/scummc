@@ -461,6 +461,9 @@ struct scvm {
 #define SCVM_ERR_INTERRUPTED        -23
 #define SCVM_ERR_BREAKPOINT         -24
 
+
+char* scvm_state_name(unsigned state);
+
 int scvm_add_breakpoint(scvm_t* vm, unsigned room_id,
                         unsigned script_id, unsigned pos);
 

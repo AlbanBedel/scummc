@@ -84,6 +84,10 @@ typedef struct scvm_op {
   char* name;
 } scvm_op_t;
 
+char* scvm_thread_state_name(unsigned state);
+
+void scvm_thread_flags_name(unsigned flags, char* out, int size);
+
 int scvm_thread_r8(scvm_thread_t* thread, uint8_t* ret);
 
 int scvm_thread_r16(scvm_thread_t* thread, uint16_t* ret);

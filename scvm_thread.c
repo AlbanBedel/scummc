@@ -41,6 +41,38 @@
 #include "scvm_thread.h"
 #include "scvm.h"
 
+char* scvm_thread_state_name(unsigned state) {
+  static char* names[] = {
+    "stopped", "running", "pended", "delayed", "frozen"
+  };
+  if(state >= sizeof(names)/sizeof(char*))
+    return NULL;
+  return names[state];
+}
+
+void scvm_thread_flags_name(unsigned flags, char* out, int size) {
+  char* names[sizeof(unsigned)*8] = {};
+  int b,n = 0, len = 0;
+  if(size < 1)
+    return;
+  names[0] = "NO_FREEZE";
+  names[1] = "RECURSIVE";
+  names[16] = "DELAY";
+  names[17] = "AT_BREAKPOINT";
+  for(b = 0 ; size > 1 && b < sizeof(unsigned)*8 ; b++) {
+    if(!(flags & (1<<b)))
+      continue;
+    if(names[b])
+      len = snprintf(out,size-1,"%s%s",n > 0 ? " " : "", names[b]);
+    else
+      len = snprintf(out,size-1,"%sFLAG_%X",n > 0 ? " " : "", b);
+    out += len;
+    size -= len;
+    n++;
+  }
+  out[size-1] = 0;
+}
+
 
 int scvm_thread_r8(scvm_thread_t* thread, uint8_t* ret) {
   if(thread->code_ptr + 1 > thread->script->size) return SCVM_ERR_SCRIPT_BOUND;

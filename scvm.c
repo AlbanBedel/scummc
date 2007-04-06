@@ -77,6 +77,40 @@ static char* scvm_error[0x100] = {
 extern scvm_op_t scvm_optable[0x100];
 extern scvm_op_t scvm_suboptable[0x100];
 
+char* scvm_state_name(unsigned state) {
+  switch(state) {
+  case SCVM_UNINITED:
+    return "uninited";
+  case SCVM_BOOT:
+    return "boot";
+  case SCVM_BEGIN_CYCLE:
+    return "begin cycle";
+  case SCVM_RUNNING:
+    return "running";
+  case SCVM_START_SCRIPT:
+    return "start script";
+  case SCVM_OPEN_ROOM:
+    return "open room";
+  case SCVM_RUN_PRE_EXIT:
+    return "run pre exit";
+  case SCVM_RUN_EXCD:
+    return "run excd";
+  case SCVM_RUN_POST_EXIT:
+    return "run post exit";
+  case SCVM_SETUP_ROOM:
+    return "setup room";
+  case SCVM_RUN_PRE_ENTRY:
+    return "run pre entry";
+  case SCVM_RUN_ENCD:
+    return "run encd";
+  case SCVM_RUN_POST_ENTRY:
+    return "run post entry";
+  case SCVM_OPENED_ROOM:
+    return "opened room";
+  }
+  return NULL;
+}
+
 static int scvm_default_random(struct scvm_backend_priv* be,int min,int max) {
   int diff = max-min;
   int r = (int)((diff+1.0)*rand()/(RAND_MAX+1.0));
