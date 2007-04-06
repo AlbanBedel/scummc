@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include <SDL.h>
 
@@ -66,13 +67,15 @@ static char* scvm_error[0x100] = {
   "bad object",
   "no room",
   "bad palette",
+  "uninitialized vm",
+  "failed to set video mode",
   NULL
 };
 
 extern scvm_op_t scvm_optable[0x100];
 extern scvm_op_t scvm_suboptable[0x100];
 
-static int scvm_default_random(scvm_t* vm,int min,int max) {
+static int scvm_default_random(struct scvm_backend_priv* be,int min,int max) {
   int diff = max-min;
   int r = (int)((diff+1.0)*rand()/(RAND_MAX+1.0));
   return min+r;
@@ -109,13 +112,23 @@ static void scvm_vars_init(scvm_vars_t* var) {
   var->charinc = 4;
 }
 
-scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
+scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename, uint8_t key) {
   scc_fd_t* fd;
   scvm_t* vm;
   int i,num,len = (path ? strlen(path) + 1 : 0) + strlen(basename);
   char idx_file[len+1];
   uint32_t type;
-  
+
+  if(!be) {
+    scc_log(LOG_ERR,"No backend?\n");
+    return NULL;
+  }
+
+  if(be->init && !be->init(be)) {
+      scc_log(LOG_ERR,"Backend initialization failed.\n");
+      return NULL;
+  }
+
   if(path)
     sprintf(idx_file,"%s/%s.000",path,basename);
   else
@@ -147,6 +160,7 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
     return NULL;
   }
   vm = calloc(1,sizeof(scvm_t));
+  vm->backend = be;
   // vars
   vm->num_var = scc_fd_r16le(fd);
   vm->var_mem = calloc(vm->num_var,sizeof(int));
@@ -298,7 +312,7 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   vm->view->screen_height = 200;
   
   // threads
-  vm->state = SCVM_BEGIN_CYCLE;
+  vm->state = SCVM_BOOT;
   vm->num_thread = 16;
   vm->current_thread = NULL;
   vm->thread = calloc(vm->num_thread,sizeof(scvm_thread_t));
@@ -314,10 +328,44 @@ scvm_t *scvm_new(char* path,char* basename, uint8_t key) {
   scvm_close_file(vm,0);
   
   // set default system callbacks
-  vm->random = scvm_default_random;
+  if(!vm->backend->random)
+    vm->backend->random = scvm_default_random;
   
   return vm;
 }
+
+unsigned scvm_get_time(scvm_t* vm) {
+  return vm->backend->get_time(vm->backend->priv);
+}
+
+int scvm_random(scvm_t* vm, int min, int max) {
+  return vm->backend->random(vm->backend->priv,min,max);
+}
+
+int scvm_init_video(scvm_t* vm, unsigned w, unsigned h, unsigned bpp) {
+  return vm->backend->init_video(vm->backend->priv,w,h,bpp);
+}
+
+void scvm_update_palette(scvm_t* vm, scvm_color_t* pal) {
+  vm->backend->update_palette(vm->backend->priv,pal);
+}
+
+void scvm_draw(scvm_t* vm, scvm_view_t* view) {
+  vm->backend->draw(vm->backend->priv,vm,view);
+}
+
+void scvm_sleep(scvm_t* vm, unsigned delay) {
+  vm->backend->sleep(vm->backend->priv,delay);
+}
+
+void scvm_flip(scvm_t* vm) {
+  vm->backend->flip(vm->backend->priv);
+}
+
+void scvm_uninit_video(scvm_t* vm) {
+  vm->backend->uninit_video(vm->backend->priv);
+}
+
 
 static void scvm_switch_to_thread(scvm_t* vm,unsigned thid, unsigned next_state) {
   vm->current_thread->state = SCVM_THREAD_PENDED;
@@ -335,9 +383,20 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
   while(cycles > 0) {
     scc_log(LOG_MSG,"VM run threads state: %d\n",vm->state);
     switch(vm->state) {
+    case SCVM_BOOT:
+      if(!scvm_init_video(vm,320,200,8)) {
+       scc_log(LOG_ERR,"Failed to open video output.\n");
+        return SCVM_ERR_VIDEO_MODE;
+      }
+      if((r=scvm_start_script(vm,0,1,NULL)) < 0) {
+        scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_error[-r]);
+        return r;
+      }
+      vm->state = SCVM_BEGIN_CYCLE;
+
     case SCVM_BEGIN_CYCLE:
       // Reschedule the delayed threads
-      now = vm->get_time(vm);
+      now = scvm_get_time(vm);
       if(now < vm->time) now = vm->time;
       delta = now - vm->time;
       for(i = 0 ; i < vm->num_thread ; i++) {
@@ -538,7 +597,89 @@ void scvm_cycle_palette(scvm_t* vm) {
   }
 }
 
-static void sdl_scvm_update_palette(SDL_Surface* screen, scvm_color_t* pal) {
+int scvm_run_once(scvm_t* vm) {
+  unsigned start,end,delay;
+  int r;
+
+  if(!vm->backend)
+    return SCVM_ERR_UNINITED_VM;;
+
+  start = scvm_get_time(vm);
+  r = scvm_run_threads(vm,1);
+  if(r < 0) {
+    if(vm->current_thread)
+      scc_log(LOG_MSG,"Script error: %s @ %03d:0x%04X\n",
+              scvm_error[-r],vm->current_thread->script->id,
+              vm->current_thread->op_start);
+    else
+      scc_log(LOG_MSG,"Script error: %s\n",scvm_error[-r]);
+    return r;
+  }
+
+  scvm_cycle_palette(vm);
+  if(vm->view->flags & SCVM_VIEW_PALETTE_CHANGED) {
+    scvm_update_palette(vm,vm->view->palette);
+    vm->view->flags &= ~SCVM_VIEW_PALETTE_CHANGED;
+  }
+
+  scvm_draw(vm,vm->view);
+
+  scvm_step_actors(vm);
+
+  end = scvm_get_time(vm);
+  if(end < start) end = start;
+  delay = vm->var->timer_next*1000/60;
+  if(delay > end-start)
+    scvm_sleep(vm,delay-(end-start));
+
+  scvm_flip(vm);
+
+  return 0;
+}
+
+int scvm_run(scvm_t* vm) {
+  int r = 0;
+  while(r >= 0)
+    r = scvm_run_once(vm);
+  return r;
+}
+
+/////////////////////
+
+typedef struct scvm_backend_priv {
+  int inited_video;
+  SDL_Surface* screen;
+} scvm_backend_sdl_t;
+
+static int sdl_scvm_init_video(scvm_backend_sdl_t* be, unsigned width,
+                               unsigned height, unsigned bpp) {
+  if(!be->inited_video) {
+    if(SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
+      scc_log(LOG_ERR,"SDL video init failed.\n");
+      return 0;
+    }
+    signal(SIGINT,SIG_DFL);
+    signal(SIGQUIT,SIG_DFL);
+    signal(SIGTERM,SIG_DFL);
+    be->inited_video = 1;
+  }
+  if(!(be->screen =
+       SDL_SetVideoMode(width,height,bpp,SDL_HWPALETTE))) {
+    scc_log(LOG_ERR,"Failed to create SDL screen.\n");
+    return 0;
+  }
+  return 1;
+}
+
+static void sdl_scvm_uninit_video(scvm_backend_sdl_t* be) {
+  if(be->inited_video) {
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    be->inited_video = 0;
+  }
+}
+
+
+static void sdl_scvm_update_palette(scvm_backend_sdl_t* be, scvm_color_t* pal) {
   SDL_Color colors[256];
   int i;
   for(i = 0 ; i < 256 ; i++) {
@@ -546,11 +687,49 @@ static void sdl_scvm_update_palette(SDL_Surface* screen, scvm_color_t* pal) {
     colors[i].g = pal[i].g;
     colors[i].b = pal[i].b;
   }
-  SDL_SetPalette(screen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+  SDL_SetPalette(be->screen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
 }
 
-static unsigned sdl_scvm_get_time(scvm_t* vm) {
+void sdl_scvm_draw(scvm_backend_sdl_t* be, scvm_t* vm, scvm_view_t* view) {
+  if(SDL_MUSTLOCK(be->screen)) SDL_LockSurface(be->screen);
+  scvm_view_draw(vm,vm->view,be->screen->pixels,be->screen->pitch,
+                 be->screen->w,be->screen->h);
+  if(SDL_MUSTLOCK(be->screen)) SDL_UnlockSurface(be->screen);
+}
+
+static void sdl_scvm_sleep(scvm_backend_sdl_t* be, unsigned delay) {
+  SDL_Delay(delay);
+}
+
+static void sdl_scvm_flip(scvm_backend_sdl_t* be) {
+  SDL_Flip(be->screen);
+}
+
+static unsigned sdl_scvm_get_time(scvm_backend_sdl_t* be) {
   return SDL_GetTicks();
+}
+
+static void sdl_backend_uninit(scvm_backend_t* be) {
+  SDL_Quit();
+  if(be->priv)
+    free(be->priv);
+}
+
+static int sdl_backend_init(scvm_backend_t* be) {
+  be->uninit = sdl_backend_uninit;
+  be->get_time = sdl_scvm_get_time;
+  be->update_palette = sdl_scvm_update_palette;
+  be->init_video = sdl_scvm_init_video;
+  be->draw = sdl_scvm_draw;
+  be->sleep = sdl_scvm_sleep;
+  be->flip = sdl_scvm_flip;
+  be->uninit_video = sdl_scvm_uninit_video;
+  be->priv = calloc(1,sizeof(scvm_backend_sdl_t));
+  if(SDL_Init(SDL_INIT_NOPARACHUTE) < 0) {
+    scc_log(LOG_ERR,"SDL init failed.\n");
+    return 0;
+  }
+  return 1;
 }
 
 static char* basedir = NULL;
@@ -566,10 +745,8 @@ static scc_param_t scc_parse_params[] = {
 int main(int argc,char** argv) {
   scvm_t* vm;
   scc_cl_arg_t* files;
-  int r,n;
-  unsigned start,end,delay;
-  SDL_Surface* screen;
-  
+  scvm_backend_t backend = { sdl_backend_init };
+
   if(argc < 2) {
     scc_log(LOG_ERR,"Usage: scvm [-dir dir] [-key nn] basename\n");
     return 1;
@@ -577,68 +754,16 @@ int main(int argc,char** argv) {
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   if(!files) return -1;
-  
-  vm = scvm_new(basedir,files->val,file_key);
-  vm->get_time = sdl_scvm_get_time;
-  
+
+  vm = scvm_new(&backend,basedir,files->val,file_key);
+
   if(!vm) {
     scc_log(LOG_ERR,"Failed to create VM.\n");
     return 1;
   }
   scc_log(LOG_MSG,"VM created.\n");
 
-  if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0) {
-    scc_log(LOG_ERR,"SDL init failed.\n");
-    return 1;
-  }
-  
-  screen = SDL_SetVideoMode(vm->view->screen_width,vm->view->screen_height,
-                            8,SDL_HWPALETTE);
-  if(!screen) {
-    scc_log(LOG_ERR,"Failed to create SDL screen.\n");
-    return 1;
-  }
-  
-  
-  
-  if((r=scvm_start_script(vm,0,1,NULL)) < 0) {
-    scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_error[-r]);
-    return 1;
-  }
-  // only run some cycles for now
-  for(n = 0 ; n < 200 ; n++) {
-    start = vm->get_time(vm);
-    r = scvm_run_threads(vm,1);
-    if(r < 0) {
-      if(vm->current_thread)
-        scc_log(LOG_MSG,"Script error: %s @ %03d:0x%04X\n",
-                scvm_error[-r],vm->current_thread->script->id,
-                vm->current_thread->op_start);
-      else
-        scc_log(LOG_MSG,"Script error: %s\n",scvm_error[-r]);
-      return 1;
-    }
 
-    scvm_cycle_palette(vm);
-    if(vm->view->flags & SCVM_VIEW_PALETTE_CHANGED) {
-      sdl_scvm_update_palette(screen,vm->view->palette);
-      vm->view->flags &= ~SCVM_VIEW_PALETTE_CHANGED;
-    }
-    
-    if(SDL_MUSTLOCK(screen)) SDL_LockSurface(screen);
-    scvm_view_draw(vm,vm->view,screen->pixels,screen->pitch,
-                   screen->w,screen->h);
-    if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
-    SDL_Flip(screen);
-
-    scvm_step_actors(vm);
-
-    end = vm->get_time(vm);
-    if(end < start) end = start;
-    delay = vm->var->timer_next*15;
-    if(delay > end-start)
-      SDL_Delay(delay+start-end);
-  }
-  
+  scvm_run(vm);
   return 0;
 }

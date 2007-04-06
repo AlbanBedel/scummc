@@ -726,7 +726,7 @@ static int scvm_op_actor_animate(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
   int r,max;
   if((r=scvm_pop(vm,&max))) return r;
-  vm->var->random_num = vm->random(vm,0,max);
+  vm->var->random_num = scvm_random(vm,0,max);
   return scvm_push(vm,vm->var->random_num);
 }
 
@@ -735,7 +735,7 @@ static int scvm_op_get_random_number_range(scvm_t* vm, scvm_thread_t* thread) {
   int r,min,max;
   if((r=scvm_vpop(vm,&max,&min,NULL)))
     return r;
-  vm->var->random_num = vm->random(vm,min,max);
+  vm->var->random_num = scvm_random(vm,min,max);
   return scvm_push(vm,vm->var->random_num);
 }
 

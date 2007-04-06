@@ -307,6 +307,28 @@ typedef struct scvm_vars {
   //int padding[126];
 } PACKED_ATTRIB scvm_vars_t;
 
+
+struct scvm_backend_priv;
+
+typedef struct scvm_backend {
+    // start the backend
+    int (*init)(struct scvm_backend* be);
+    void (*uninit)(struct scvm_backend* be);
+    // system callback
+    unsigned (*get_time)(struct scvm_backend_priv* be);
+    int (*random)(struct scvm_backend_priv* be,int min,int max);
+    void (*sleep)(struct scvm_backend_priv* be, unsigned time);
+    // rendering
+    int (*init_video)(struct scvm_backend_priv* be, unsigned width,
+                      unsigned height, unsigned bpp);
+    void (*update_palette)(struct scvm_backend_priv* be, scvm_color_t* pal);
+    void (*draw)(struct scvm_backend_priv* be, scvm_t* vm, scvm_view_t* view);
+    void (*flip)(struct scvm_backend_priv* be);
+    void (*uninit_video)(struct scvm_backend_priv* be);
+
+    struct scvm_backend_priv* priv;
+} scvm_backend_t;
+
 // Don't change the first 4 as they match the
 // v6 resouces opcodes.
 #define SCVM_RES_SCRIPT  0
@@ -321,6 +343,9 @@ typedef int (*scvm_get_var_f)(struct scvm* vm,unsigned addr);
 typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 
 // VM states
+
+#define SCVM_UNINITED         0
+#define SCVM_BOOT             5
 
 #define SCVM_BEGIN_CYCLE      10
 #define SCVM_RUNNING          20
@@ -389,10 +414,8 @@ struct scvm {
   unsigned stack_size;
   unsigned stack_ptr;
   int *stack;
-  
-  // system callback
-  unsigned (*get_time)(scvm_t* vm);
-  int (*random)(scvm_t* vm,int min,int max);
+
+  scvm_backend_t* backend;
 };
 
 #define SCVM_ERR_SCRIPT_BOUND    -1
@@ -415,3 +438,26 @@ struct scvm {
 #define SCVM_ERR_BAD_OBJECT         -18
 #define SCVM_ERR_NO_ROOM            -19
 #define SCVM_ERR_BAD_PALETTE        -20
+#define SCVM_ERR_UNINITED_VM        -21
+#define SCVM_ERR_VIDEO_MODE         -22
+
+
+int scvm_run_once(scvm_t* vm);
+
+int scvm_run(scvm_t* vm);
+
+unsigned scvm_get_time(scvm_t* vm);
+
+int scvm_random(scvm_t* vm, int min, int max);
+
+int scvm_init_video(scvm_t* vm, unsigned w, unsigned h, unsigned bpp);
+
+void scvm_update_palette(scvm_t* vm, scvm_color_t* pal);
+
+void scvm_draw(scvm_t* vm, scvm_view_t* view);
+
+void scvm_sleep(scvm_t* vm, unsigned delay);
+
+void scvm_flip(scvm_t* vm);
+
+void scvm_uninit_video(scvm_t* vm);
