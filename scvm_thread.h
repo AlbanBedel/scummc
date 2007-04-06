@@ -44,6 +44,7 @@ typedef struct scvm_script {
 #define SCVM_THREAD_RECURSIVE 2
 
 #define SCVM_THREAD_DELAY (1<<16)
+#define SCVM_THREAD_AT_BREAKPOINT (2<<16)
 //@}
 
 #define SCVM_MAX_OVERRIDE 8

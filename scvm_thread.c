@@ -203,13 +203,38 @@ int scvm_thread_do_op(scvm_t* vm, scvm_thread_t* thread, scvm_op_t* optable) {
 
 
 int scvm_thread_run(scvm_t* vm, scvm_thread_t* thread) {
-  int r=0;
+  int i,r=0;
   while(thread->state == SCVM_THREAD_RUNNING &&
         thread->cycle <= vm->cycle) {
     thread->op_start = thread->code_ptr;
-    r = scvm_thread_do_op(vm,thread,vm->optable);
-    if(r < 0) return r;
-    if(r > 0) break;
+    // Check if the debugger want to break
+    if(vm->dbg && vm->dbg->check_interrupt && vm->dbg->check_interrupt(vm))
+      return SCVM_ERR_INTERRUPTED;
+    // We check the interupts only every 64 ops
+    for(i = 0 ; thread->state == SCVM_THREAD_RUNNING &&
+          thread->cycle <= vm->cycle && i < 64 ; i++) {
+      thread->op_start = thread->code_ptr;
+      // Check for breakpoints
+      if(vm->dbg) {
+        scvm_breakpoint_t* bp = vm->dbg->breakpoint;
+        while(bp - vm->dbg->breakpoint < vm->dbg->num_breakpoint) {
+          if((!bp->room_id || (vm->room && bp->room_id == vm->room->id)) &&
+             bp->script_id == thread->script->id &&
+             bp->pos == thread->code_ptr) {
+            if(thread->flags & SCVM_THREAD_AT_BREAKPOINT) {
+              thread->flags &= ~SCVM_THREAD_AT_BREAKPOINT;
+              break;
+            } else {
+              thread->flags |= SCVM_THREAD_AT_BREAKPOINT;
+              return SCVM_ERR_BREAKPOINT;
+            }
+          }
+          bp++;
+        }
+      }
+      if((r = scvm_thread_do_op(vm,thread,vm->optable)))
+        return r;
+    }
   }
   return r;
 }

@@ -69,6 +69,8 @@ static char* scvm_error[0x100] = {
   "bad palette",
   "uninitialized vm",
   "failed to set video mode",
+  "interrupted",
+  "breakpoint",
   NULL
 };
 
@@ -332,6 +334,36 @@ scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename, uint8_t key) {
     vm->backend->random = scvm_default_random;
   
   return vm;
+}
+
+int scvm_add_breakpoint(scvm_t* vm, unsigned room_id,
+                        unsigned script_id, unsigned pos) {
+  scvm_debug_t* dbg;
+  scvm_breakpoint_t* bp;
+  int id;
+
+  if(script_id < 200 && script_id >= vm->res[SCVM_RES_SCRIPT].num)
+    return -1;
+  // TODO: check room script id if the room is loaded
+  if(room_id >= vm->res[SCVM_RES_ROOM].num)
+    return -1;
+
+  if(!vm->dbg)
+    vm->dbg = calloc(1,sizeof(scvm_debug_t));
+
+  dbg = vm->dbg;
+  id = dbg->num_breakpoint;
+  if((id & 3) == 0)
+    dbg->breakpoint = realloc(dbg->breakpoint,
+                              (id+4)*sizeof(scvm_breakpoint_t));
+  bp = dbg->breakpoint + id;
+  dbg->num_breakpoint++;
+
+  bp->id = id;
+  bp->room_id = room_id;
+  bp->script_id = script_id;
+  bp->pos = pos;
+  return bp->id;
 }
 
 unsigned scvm_get_time(scvm_t* vm) {

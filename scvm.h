@@ -308,6 +308,21 @@ typedef struct scvm_vars {
 } PACKED_ATTRIB scvm_vars_t;
 
 
+typedef struct scvm_breakpoint {
+  unsigned id;
+  unsigned room_id;
+  unsigned script_id;
+  unsigned pos;
+} scvm_breakpoint_t;
+
+typedef struct scvm_debug {
+  unsigned num_breakpoint;
+  scvm_breakpoint_t* breakpoint;
+
+  int (*check_interrupt)(scvm_t* vm);
+
+} scvm_debug_t;
+
 struct scvm_backend_priv;
 
 typedef struct scvm_backend {
@@ -363,6 +378,9 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 #define SCVM_OPENED_ROOM      280
 
 struct scvm {
+  // Debuging data
+  scvm_debug_t* dbg;
+
   // variables
   unsigned num_var;
   int *var_mem;
@@ -440,7 +458,11 @@ struct scvm {
 #define SCVM_ERR_BAD_PALETTE        -20
 #define SCVM_ERR_UNINITED_VM        -21
 #define SCVM_ERR_VIDEO_MODE         -22
+#define SCVM_ERR_INTERRUPTED        -23
+#define SCVM_ERR_BREAKPOINT         -24
 
+int scvm_add_breakpoint(scvm_t* vm, unsigned room_id,
+                        unsigned script_id, unsigned pos);
 
 int scvm_run_once(scvm_t* vm);
 
