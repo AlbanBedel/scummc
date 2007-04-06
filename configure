@@ -31,6 +31,7 @@ debug=yes
 gtk=yes
 ft=yes
 sdl=yes
+readline=yes
 
 CF_HOST=cf-shell.sf.net
 CF_PATH=scummc/trunk
@@ -108,6 +109,9 @@ while [ -n "$1" ] ; do
 	    ;;
 	--disable-sdl)
 	    sdl=no
+	    ;;
+	--disable-readline)
+	    readline=no
 	    ;;
 	--cflags)
 	    CFLAGS=$2
@@ -762,6 +766,37 @@ else
     echo "SDL: disabled"
 fi
 
+##
+## readline
+##
+
+readline_def='#undef HAVE_READLINE'
+if [ "$readline" != "no" ] ; then
+    readline=no
+    cat <<EOF > $BUILDDIR/test.c
+#include <stdlib.h>
+#include <stdio.h>
+#include <readline/readline.h>
+int main(void) {
+  char* str = readline("prompt");
+  return 0;
+}
+EOF
+    $CC -o $BUILDDIR/test.bin $CFLAGS -lreadline -ltermcap \
+        $BUILDDIR/test.c 2> /dev/null
+    if [ $? -eq 0 ] ; then
+	readline=yes
+	readline_def='#define HAVE_READLINE 1'
+	readline_cflags=
+	readline_ldflags='-lreadline -ltermcap'
+	echo "realine: yes"
+    else
+	echo "readline: no"
+    fi
+else
+    echo "readline: disabled"
+fi
+
 
 ##
 ## Write out the whole config
@@ -807,6 +842,10 @@ HAVE_SDL=$sdl
 SDL_CFLAGS=$sdl_cflags
 SDL_LDFLAGS=$sdl_ldflags
 
+HAVE_READLINE=$readline
+READLINE_CFLAGS=$readline_cflags
+READLINE_LDFLAGS=$readline_ldflags
+
 EOF
 
 echo "Writing $BUILDDIR/config.h"
@@ -833,6 +872,9 @@ $ft_def
 
 // SDL
 $sdl_def
+
+// READLINE
+$readline_def
 
 EOF
 
