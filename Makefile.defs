@@ -164,6 +164,7 @@ costview_LIBS=                  \
 
 scvm_SRCS=                      \
 	scvm.c                  \
+	scvm_dbg.c              \
 	scvm_res.c              \
 	scvm_thread.c           \
 	scvm_op.c               \
@@ -178,6 +179,9 @@ scvm_SRCS=                      \
 
 scvm_LIBS=                      \
 	SDL                     \
+
+scvm_OPT_LIBS=                  \
+	READLINE                \
 
 ## Utils
 
@@ -234,6 +238,7 @@ LIBS =                          \
 	GTK                     \
 	FT                      \
 	SDL                     \
+	READLINE                \
 
 ## Source needing gtk
 GTK_SRCS =                      \
@@ -246,3 +251,7 @@ FT_SRCS =                       \
 
 SDL_SRCS =                      \
 	scvm.c                  \
+
+READLINE =                      \
+	scvm_dbg.c              \
+

@@ -79,6 +79,7 @@ struct scvm_object {
   scvm_object_t* parent;
   unsigned actor_dir;
   unsigned* verb_entries;
+  unsigned num_verb_entries;
   scvm_script_t* script;
   // presistent object data
   scvm_object_pdata_t* pdata;
@@ -486,3 +487,5 @@ void scvm_sleep(scvm_t* vm, unsigned delay);
 void scvm_flip(scvm_t* vm);
 
 void scvm_uninit_video(scvm_t* vm);
+
+int scvm_debugger(scvm_t* vm);

@@ -95,7 +95,7 @@ int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
     scc_log(LOG_MSG,"Read bit var %d: %d\n",addr,*val);
   } else if(addr & 0x4000) { // thread local variable
     addr &= 0x3FFF;
-    if(addr >= thread->num_var) return SCVM_ERR_BAD_ADDR;
+    if(!thread || addr >= thread->num_var) return SCVM_ERR_BAD_ADDR;
     *val = thread->var[addr];
     scc_log(LOG_MSG,"Read local var %d: %d\n",addr,*val);
   } else { // global variable
@@ -121,7 +121,7 @@ int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
     scc_log(LOG_MSG,"Write bit var %d: %d\n",addr,val);
   } else if(addr & 0x4000) { // thread local variable
     addr &= 0x3FFF;
-    if(addr >= thread->num_var) return SCVM_ERR_BAD_ADDR;
+    if(!thread || addr >= thread->num_var) return SCVM_ERR_BAD_ADDR;
     thread->var[addr] = val;
     scc_log(LOG_MSG,"Write local var %d: %d\n",addr,val);
   } else { // global variable

@@ -720,13 +720,16 @@ typedef struct scvm_backend_priv {
 static int sdl_scvm_init_video(scvm_backend_sdl_t* be, unsigned width,
                                unsigned height, unsigned bpp) {
   if(!be->inited_video) {
+    sighandler_t oldint = signal(SIGINT,SIG_DFL);
+    sighandler_t oldquit = signal(SIGQUIT,SIG_DFL);
+    sighandler_t oldterm = signal(SIGTERM,SIG_DFL);
     if(SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
       scc_log(LOG_ERR,"SDL video init failed.\n");
       return 0;
     }
-    signal(SIGINT,SIG_DFL);
-    signal(SIGQUIT,SIG_DFL);
-    signal(SIGTERM,SIG_DFL);
+    signal(SIGINT,oldint);
+    signal(SIGQUIT,oldquit);
+    signal(SIGTERM,oldterm);
     be->inited_video = 1;
   }
   if(!(be->screen =
@@ -800,10 +803,12 @@ static int sdl_backend_init(scvm_backend_t* be) {
 
 static char* basedir = NULL;
 static int file_key = 0;
+static int run_debugger = 0;
 
 static scc_param_t scc_parse_params[] = {
   { "dir", SCC_PARAM_STR, 0, 0, &basedir },
   { "key", SCC_PARAM_INT, 0, 0xFF, &file_key },
+  { "dbg", SCC_PARAM_FLAG, 0, 1, &run_debugger },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -829,7 +834,9 @@ int main(int argc,char** argv) {
   }
   scc_log(LOG_MSG,"VM created.\n");
 
-
-  scvm_run(vm);
+  if(run_debugger)
+    scvm_debugger(vm);
+  else
+    scvm_run(vm);
   return 0;
 }

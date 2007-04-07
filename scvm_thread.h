@@ -114,3 +114,13 @@ int scvm_start_script(scvm_t* vm, unsigned flags, unsigned num, unsigned* args);
 int scvm_stop_script(scvm_t* vm, unsigned id);
 
 int scvm_is_script_running(scvm_t* vm, unsigned id);
+
+int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
+                         uint16_t addr, int* val);
+
+int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
+                          uint16_t addr, int val);
+
+int scvm_read_array(scvm_t* vm, unsigned addr, unsigned x, unsigned y, int* val);
+
+int scvm_write_array(scvm_t* vm, unsigned addr, unsigned x, unsigned y, int val);

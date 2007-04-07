@@ -350,6 +350,7 @@ scvm_object_t* scvm_load_obcd(scvm_t* vm, scvm_room_t* room, scc_fd_t* fd) {
     }
     if(num_entries) {
       obj->verb_entries = malloc(2*num_entries*sizeof(unsigned));
+      obj->num_verb_entries = num_entries;
       memcpy(obj->verb_entries,entries,2*num_entries*sizeof(unsigned));
     }
     if(size > 0) {
