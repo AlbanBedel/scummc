@@ -61,6 +61,7 @@ struct scc_cost_anim {
 typedef struct scc_cost scc_cost_t;
 struct scc_cost {
   scc_cost_t* next;
+  unsigned id;
 
   uint8_t format;
   uint8_t flags;

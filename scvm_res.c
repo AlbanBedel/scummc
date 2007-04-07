@@ -606,6 +606,7 @@ bad_block:
 
 void* scvm_load_costume(scvm_t* vm,scc_fd_t* fd, unsigned num) {
   uint32_t size,fmt;
+  scc_cost_t* cost;
   fmt = scc_fd_r32(fd);
   size = scc_fd_r32be(fd);
   
@@ -614,13 +615,15 @@ void* scvm_load_costume(scvm_t* vm,scc_fd_t* fd, unsigned num) {
             UNMKID(fmt),size);
     return NULL;
   }
-  return scc_parse_cost(fd,size-8);
+  cost = scc_parse_cost(fd,size-8);
+  if(cost) cost->id = num;
+  return cost;
 }
 
 
 void* scvm_load_charset(scvm_t* vm,scc_fd_t* fd, unsigned num) {
   uint32_t size,fmt;
-  
+  scc_charmap_t* ch;
   // read the scumm block header
   fmt = scc_fd_r32(fd);
   size = scc_fd_r32be(fd);
@@ -630,5 +633,7 @@ void* scvm_load_charset(scvm_t* vm,scc_fd_t* fd, unsigned num) {
             UNMKID(fmt),size);
     return NULL;
   }
-  return scc_parse_charmap(fd,size-8);
+  ch = scc_parse_charmap(fd,size-8);
+  if(ch) ch->id = num;
+  return ch;
 }

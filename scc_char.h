@@ -33,6 +33,7 @@ typedef struct scc_char_st {
 #define SCC_MAX_CHAR 8192
 
 typedef struct scc_charmap_st {
+  unsigned   id;
   uint8_t    pal[15];             // palette used
   uint8_t    bpp;                 // bpp used for coding
   uint8_t    height;              // font height
