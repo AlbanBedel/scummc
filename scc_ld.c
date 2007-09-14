@@ -1161,7 +1161,7 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
 
 int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
                      int local_n,int array_n,int flobj_n,
-                     int inv_n) {
+                     int inv_n, int write_room_names) {
   int room_n = 0,scr_n = scc_ns_res_max(scc_ns,SCC_RES_SCR) + 1;
   int chset_n = scc_ns_res_max(scc_ns,SCC_RES_CHSET) + 1;
   int obj_n = scc_ns_res_max(scc_ns,SCC_RES_OBJ) + 1;
@@ -1170,6 +1170,7 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
   int var_n = scc_ns_res_max(scc_ns,SCC_RES_VAR)+1;
   int bvar_n = scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1;
   int i;
+  char rnam_buf[10];
   scc_ld_room_t* r;
 
 
@@ -1184,8 +1185,29 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
   bvar_n = ((bvar_n+7)/8)*8;
 
   scc_fd_w32(fd,MKID('R','N','A','M'));
-  scc_fd_w32be(fd,8 + 1);
-  scc_fd_w8(fd,0);
+  if (write_room_names)
+  {
+     // NOTE: ScummVM uses a different codepath for HE v8 games as the format
+     //       is slightly different. But for now we will just implement
+     //       this format.
+     scc_fd_w32be(fd, 8 + ((room_n-1)*10) + 1);
+     
+     for (r = room ; r ; r = r->next)
+     {
+        scc_fd_w8(fd, r->sym->addr);
+        strncpy(rnam_buf, r->sym->sym, 9);
+        for (i=0; i<10; i++)
+            rnam_buf[i] ^= 0xFF; 
+        scc_fd_write(fd, rnam_buf, 9);
+     }
+
+     scc_fd_w8(fd, 0);
+  }
+  else
+  {
+     scc_fd_w32be(fd,8 + 1);
+     scc_fd_w8(fd,0);
+  }
 
   scc_fd_w32(fd,MKID('M','A','X','S'));
   scc_fd_w32be(fd,8 + 15*2);
@@ -1274,12 +1296,13 @@ int scc_ld_write_sou(scc_ld_voice_t* v,scc_fd_t* fd) {
 }
 
 static void usage(char* prog) {
-  scc_log(LOG_MSG,"Usage: %s [-o basename] [-rooms] input.roobj [file2.roobj ...]\n",prog);
+  scc_log(LOG_MSG,"Usage: %s [-o basename] [-rooms] [-write-room-names] input.roobj [file2.roobj ...]\n",prog);
   exit(-1);
 }
 
 static char* out_file = NULL;
 static int dump_rooms = 0;
+static int write_room_names = 0;
 static int enckey = 0;
 static int max_local = 200;
 static int max_array = 100;
@@ -1297,6 +1320,7 @@ static scc_param_t scc_ld_params[] = {
   { "max-inventory", SCC_PARAM_INT, 0, 0xFFFF, &max_inventory },
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { "vv", SCC_PARAM_FLAG, LOG_MSG, LOG_DBG, &scc_log_level },
+  { "write-room-names", SCC_PARAM_FLAG, 0, 1, &write_room_names },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1423,7 +1447,7 @@ int main(int argc,char** argv) {
       scc_log(LOG_ERR,"Failed to open file %s\n",name);
       return 5;
     }
-    if(!scc_ld_write_idx(scc_room,fd,max_local,max_array,max_flobj,max_inventory)) {
+    if(!scc_ld_write_idx(scc_room,fd,max_local,max_array,max_flobj,max_inventory, write_room_names)) {
       scc_log(LOG_ERR,"Failed to write index file.\n");
       return 6;
     }
