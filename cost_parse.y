@@ -99,6 +99,7 @@
 
   typedef struct cost_limb_anim {
     unsigned len;
+    unsigned flags;
     uint8_t cmd[COST_MAX_LIMB_CMDS];
   } cost_limb_anim_t;
 
@@ -114,6 +115,9 @@
 #define COST_MAX_PALETTE_SIZE 32
   static unsigned pal_size = 0;
   static uint8_t pal[COST_MAX_PALETTE_SIZE];
+
+  // Default to no flip
+  static unsigned cost_flags = 0x80;
 
   static char* img_path = NULL;
   static char* cost_output = NULL;
@@ -174,6 +178,8 @@
 }
 
 %token PALETTE
+%token FLAGS
+%token LOOP FLIP
 %token PICTURE
 %token LIMB
 %token ANIM
@@ -189,6 +195,7 @@
 %type <integer> number location
 %type <intpair> numberpair
 %type <intlist> intlist intlistitem cmdlist cmdlistitem
+%type <intpair> limbanimflags flaglist flag flagvalue
 
 %%
 
@@ -198,7 +205,7 @@ srcfile: /* empty */
 
 // the palette declaration is requiered and must be
 // first.
-costume: palette ';' statementlist
+costume: palette costflags statementlist
 ;
 
 statementlist: ';'
@@ -480,7 +487,7 @@ limbanimlist: limbanim
 | limbanimlist ',' limbanim
 ;
 
-limbanim: SYM '(' cmdlist ')'
+limbanim: SYM '(' cmdlist ')' limbanimflags
 {
   int n;
   // find the limb
@@ -499,10 +506,12 @@ limbanim: SYM '(' cmdlist ')'
 
   cur_anim->limb_mask |= (1 << n);
   cur_anim->limb[n].len = $3[0];
+  cur_anim->limb[n].flags |=  $5[0];
+  cur_anim->limb[n].flags &= ~$5[1];
   memcpy(cur_anim->limb[n].cmd,$3+1,$3[0]);
   free($3);
 }
-| SYM '(' ')'
+| SYM '(' ')' limbanimflags
 {
   int n;
   // find the limb
@@ -515,6 +524,8 @@ limbanim: SYM '(' cmdlist ')'
     COST_ABORT(@1,"Anim for limb %s is already defined.\n",
                limbs[n].name);
   cur_anim->limb_mask |= (1 << n);
+  cur_anim->limb[n].flags |=  $4[0];
+  cur_anim->limb[n].flags &= ~$4[1];
 }
 ;
 
@@ -566,7 +577,7 @@ cmdlistitem: intlistitem
 }
 ;
 
-palette: PALETTE '(' intlist ')'
+palette: PALETTE '(' intlist ')' ';'
 {
   if($3[0] != 16 &&
      $3[0] != 32)
@@ -616,6 +627,54 @@ intlistitem: INTEGER
   $$[0] = l;
   for(i = 0 ; i < l ; i++)
     $$[i+1] = $2+s*i;
+}
+;
+
+costflags: /* empty */
+| FLAGS '=' flaglist ';'
+{
+  cost_flags |=  $3[0];
+  cost_flags &= ~$3[1];
+}
+;
+
+limbanimflags: /* empty */
+{
+  $$[0] = 0;
+  $$[1] = 0;
+}
+| flaglist
+;
+
+flaglist: flag
+| flaglist ',' flag
+{
+  $$[0] |= $3[0];
+  $$[1] |= $3[1];
+}
+;
+
+flag: flagvalue
+{
+  $$[0] = $1[0];
+  $$[1] = $1[1];
+}
+| '!' flagvalue
+{
+  $$[0] = $2[1];
+  $$[1] = $2[0];
+}
+;
+
+flagvalue: FLIP
+{
+  $$[0] = 0;
+  $$[1] = 0x80;
+}
+| LOOP
+{
+  $$[0] = 0;
+  $$[1] = 0x80;
 }
 ;
 
@@ -793,7 +852,7 @@ static int cost_get_size(int *na,unsigned* coff,unsigned* aoff,unsigned* loff) {
 static int cost_write(scc_fd_t* fd) {
   int size,num_anim,i,j,pad = 0;
   cost_pic_t* p;
-  uint8_t fmt = 0x58 | 0x80;
+  uint8_t fmt = 0x58 | cost_flags;
   unsigned coff,cpos = 0;
   unsigned aoff[COST_MAX_ANIMS];
   unsigned loff[COST_MAX_LIMBS];
@@ -839,7 +898,9 @@ static int cost_write(scc_fd_t* fd) {
       if(anims[i].limb[j].len) {
         scc_fd_w16le(fd,cpos);  // cmd start
         cpos += anims[i].limb[j].len;
-        scc_fd_w8(fd,anims[i].limb[j].len-1); // last cmd offset
+        // last cmd offset
+        scc_fd_w8(fd,((anims[i].limb[j].len-1)&0x7F) |
+                     (anims[i].limb[j].flags&0x80));
       } else
         scc_fd_w16le(fd,0xFFFF); // stoped limb
     }

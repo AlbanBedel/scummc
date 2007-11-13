@@ -37,7 +37,9 @@
 // it must be kept sorted bcs a binary search is used on it
 static scc_keyword_t cost_keywords[] = {
     { "EAST",       INTEGER,     1 },
+    { "FLIP",       FLIP,       -1 },
     { "HIDE",       HIDE,       -1 },
+    { "LOOP",       LOOP,       -1 },
     { "NORTH",      INTEGER,     3 },
     { "SKIP",       SKIP,       -1 },
     { "SOUND",      SOUND,      -1 },
@@ -46,6 +48,7 @@ static scc_keyword_t cost_keywords[] = {
     { "STOP",       STOP,       -1 },
     { "WEST",       INTEGER,     0 },
     { "anim",       ANIM,       -1 },
+    { "flags",      FLAGS,      -1 },
     { "glob",       GLOB,       -1 },
     { "limb",       LIMB,       -1 },
     { "move",       MOVE,       -1 },
@@ -207,7 +210,7 @@ int cost_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
         // Error
         break;
         
-        // ; , @ ( ) [ ] { } + - =
+        // ; , @ ( ) [ ] { } + - = !
     case ';':
     case ',':
     case '@':
@@ -220,6 +223,7 @@ int cost_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex) {
     case '+':
     case '-':
     case '=':
+    case '!':
         lvalp->integer = c;
         return c;
         
