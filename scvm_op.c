@@ -1306,6 +1306,11 @@ static int scvm_op_dummy_print(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_ERR_NO_OP;
 }
 
+static int scvm_op_dummy_get_at(scvm_t* vm, scvm_thread_t* thread) {
+  int r,x,y;
+  if((r = scvm_vpop(vm,&y,&x,NULL))) return r;
+  return scvm_push(vm,0);
+}
 
 
 static int scvm_op_subop(scvm_t* vm, scvm_thread_t* thread) {
@@ -1499,7 +1504,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // 94
-  { NULL, NULL },
+  { scvm_op_dummy_get_at, "get verb at" },
   { scvm_op_begin_override, "begin override" },
   { scvm_op_end_override, "end override" },
   { NULL, NULL },
@@ -1512,9 +1517,9 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_subop, "view op" },
   { scvm_op_subop, "actor op" },
   { scvm_op_subop, "verb op" },
-  { NULL, NULL },
+  { scvm_op_dummy_get_at, "get actor at" },
   // A0
-  { NULL, NULL },
+  { scvm_op_dummy_get_at, "get object at" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
