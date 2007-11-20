@@ -1079,9 +1079,11 @@ static int scvm_op_array_write_list(scvm_t* vm, scvm_thread_t* thread) {
      (r=scvm_thread_r16(thread,&vaddr)) ||
      (r = scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
      (r = scvm_pop(vm,&len))) return r;
-  if(addr <= 0 && (addr = scvm_alloc_array(vm,SCVM_ARRAY_WORD,
-                                           x+len,0)) <= 0)
-    return addr;
+  if(addr <= 0) {
+    if((addr = scvm_alloc_array(vm,SCVM_ARRAY_WORD, x+len,0)) <= 0)
+      return addr;
+    scvm_thread_write_var(vm,thread,vaddr,addr);
+  }
   while(len > 0) {
     if((r = scvm_pop(vm,&val)) ||
        (r=scvm_write_array(vm,addr,x,0,val))) return r;
