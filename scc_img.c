@@ -145,7 +145,8 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   int i,l,bpp;
   uint32_t fsize,doff,hsize,w,stride,h,isize,ncol,fmt;
   scc_img_t* img;
-  uint8_t* dst,n,c,x;
+  uint8_t* dst;
+  int n,c,x;
 
   // Header
   if(scc_fd_read(fd,hdr,2) != 2) return NULL;
