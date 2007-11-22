@@ -48,6 +48,8 @@
 
 static scc_ns_t* scc_ns = NULL;
 static uint8_t* obj_owner;
+static uint8_t* obj_state;
+static uint8_t* obj_room;
 static uint32_t* obj_class;
 
 typedef struct scc_ld_block_st scc_ld_block_t;
@@ -681,7 +683,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   uint32_t  size = SCC_GET_32BE(blk->data,4);
   uint16_t vid,oid,cid,id,addr;
   scc_symbol_t* sym,*osym,*csym;
-  int nverb=0,verb_size=0,len,pos = 0,new_size,vpos,vn,st,i;
+  int nverb=0,verb_size=0,len,pos = 0,new_size,vpos,vn,i;
   scc_script_t* scr=NULL,*scr_last=NULL,*new_scr;
   scc_ld_block_t* new;
   
@@ -701,7 +703,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   }
   addr = sym->addr;
   // initial state
-  st = blk->data[10];
+  obj_state[sym->addr] = blk->data[10];
   // owner
   oid = SCC_GET_16LE(blk->data,11);
   if(oid) {
@@ -710,9 +712,11 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
       scc_log(LOG_ERR,"cdhd block contains an invalid owner id (0x%x)????\n",oid);
       return NULL;
     }
-    obj_owner[sym->addr] = (st << 4) | osym->addr;
+    obj_owner[sym->addr] = osym->addr;
   } else
-    obj_owner[sym->addr] = (st << 4) | 0x0F;
+    obj_owner[sym->addr] = 0x0F;
+  // room
+  obj_room[sym->addr] = room->sym->addr;
 
   for(i = 0 ; i < SCC_MAX_CLASS ; i++) {
     cid = SCC_GET_16LE(blk->data,8+2+1+2+2*i);
@@ -1214,23 +1218,46 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
   }
 
   scc_fd_w32(fd,MKID('M','A','X','S'));
-  scc_fd_w32be(fd,8 + 15*2);
+  if(room->vm_version == 7) {
+    char dummy_version[50] = { 0 };
+    scc_fd_w32be(fd,8 + 50*2+15*2);
 
-  scc_fd_w16le(fd,var_n);
-  scc_fd_w16le(fd,0); // unk
-  scc_fd_w16le(fd,bvar_n);
-  scc_fd_w16le(fd,local_n); // local obj, dunno what's that exactly
-  scc_fd_w16le(fd,array_n);  // num array we should count them
-  scc_fd_w16le(fd,0); // unk
-  scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_VERB)+1);
-  scc_fd_w16le(fd,flobj_n); // fl objects
-  scc_fd_w16le(fd,inv_n); // inventory
-  scc_fd_w16le(fd,room_n);
-  scc_fd_w16le(fd,scr_n);
-  scc_fd_w16le(fd,snd_n);
-  scc_fd_w16le(fd,chset_n);
-  scc_fd_w16le(fd,cost_n);
-  scc_fd_w16le(fd,obj_n);
+    scc_fd_write(fd,dummy_version,50);
+    scc_fd_write(fd,dummy_version,50);
+    scc_fd_w16le(fd,var_n);
+    scc_fd_w16le(fd,bvar_n);
+    scc_fd_w16le(fd,0); // unk
+    scc_fd_w16le(fd,obj_n);
+    scc_fd_w16le(fd,local_n);
+    scc_fd_w16le(fd,20); // new name
+    scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_VERB)+1);
+    scc_fd_w16le(fd,flobj_n); // fl objects
+    scc_fd_w16le(fd,inv_n); // inventory
+    scc_fd_w16le(fd,array_n);  // num array we should count them
+    scc_fd_w16le(fd,room_n);
+    scc_fd_w16le(fd,scr_n);
+    scc_fd_w16le(fd,snd_n);
+    scc_fd_w16le(fd,chset_n);
+    scc_fd_w16le(fd,cost_n);
+  } else {
+    scc_fd_w32be(fd,8 + 15*2);
+
+    scc_fd_w16le(fd,var_n);
+    scc_fd_w16le(fd,0); // unk
+    scc_fd_w16le(fd,bvar_n);
+    scc_fd_w16le(fd,local_n); // local obj, dunno what's that exactly
+    scc_fd_w16le(fd,array_n);  // num array we should count them
+    scc_fd_w16le(fd,0); // unk
+    scc_fd_w16le(fd,scc_ns_res_max(scc_ns,SCC_RES_VERB)+1);
+    scc_fd_w16le(fd,flobj_n); // fl objects
+    scc_fd_w16le(fd,inv_n); // inventory
+    scc_fd_w16le(fd,room_n);
+    scc_fd_w16le(fd,scr_n);
+    scc_fd_w16le(fd,snd_n);
+    scc_fd_w16le(fd,chset_n);
+    scc_fd_w16le(fd,cost_n);
+    scc_fd_w16le(fd,obj_n);
+  }
 
   scc_fd_w32(fd,MKID('D','R','O','O'));
   scc_fd_w32be(fd,8 + 2 + room_n*5);
@@ -1270,15 +1297,29 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
 
 
   scc_fd_w32(fd,MKID('D','O','B','J'));
-  scc_fd_w32be(fd,8 + 2 + obj_n*5);
-  scc_fd_w16le(fd,obj_n);
-  scc_fd_write(fd,obj_owner,obj_n);
+  if(room->vm_version == 7) {
+    scc_fd_w32be(fd,8 + 2 + obj_n*6);
+    scc_fd_w16le(fd,obj_n);
+    scc_fd_write(fd,obj_state,obj_n);
+    scc_fd_write(fd,obj_room,obj_n);
+  } else {
+    scc_fd_w32be(fd,8 + 2 + obj_n*5);
+    scc_fd_w16le(fd,obj_n);
+    for(i = 0 ; i < obj_n ; i++)
+      scc_fd_w8(fd,(obj_owner[i]&0xF)|(obj_state[i]<<4));
+  }
   for(i = 0 ; i < obj_n ; i++)
     scc_fd_w32le(fd,obj_class[i]);
 
   scc_fd_w32(fd,MKID('A','A','R','Y'));
   scc_fd_w32be(fd,8 + 2);
   scc_fd_w16le(fd,0);
+
+  if(room->vm_version == 7) {
+    scc_fd_w32(fd,MKID('A','N','A','M'));
+    scc_fd_w32be(fd,8 + 2);
+    scc_fd_w16le(fd,0);
+  }
 
   return 1;
 }
@@ -1379,6 +1420,8 @@ int main(int argc,char** argv) {
   // allocate the object tables
   obj_n = scc_ns_res_max(scc_ns,SCC_RES_OBJ) + 1;
   obj_owner = calloc(1,obj_n);
+  obj_state = calloc(1,obj_n);
+  obj_room  = calloc(1,obj_n);
   obj_class = calloc(4,obj_n);
 
   // patch the rooms
