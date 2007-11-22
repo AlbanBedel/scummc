@@ -1355,7 +1355,8 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   int i;
   int num_obj = 0;
   int stab_len;
-  int size = 8 + 6; // RMHD
+  int rmhd_size = ro->target->version == 7 ? 10 : 6;
+  int size = 8 + rmhd_size;
 
   stab_len = scc_stab_size(ns);
   if(stab_len) size += 8 + stab_len;
@@ -1414,7 +1415,9 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   scc_fd_w8(fd,ro->target->version);
 
   scc_fd_w32(fd,MKID('R','M','H','D'));
-  scc_fd_w32be(fd,8 + 6);
+  scc_fd_w32be(fd,8 + rmhd_size);
+  if(ro->target->version == 7)
+      scc_fd_w32le(fd,730); // version
   scc_fd_w16le(fd,ro->image->w);
   scc_fd_w16le(fd,ro->image->h);
   scc_fd_w16le(fd,num_obj);
