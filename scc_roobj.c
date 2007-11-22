@@ -1142,9 +1142,10 @@ int scc_write_lscr_block(scc_roobj_t* ro, scc_fd_t* fd) {
   return 1;
 }
 
-static int scc_imob_size(scc_roobj_obj_t* obj) {
+static int scc_imob_size(int version,scc_roobj_obj_t* obj) {
   scc_imnn_t* i;
-  int size = 8 + 2 + 5*2 + 2+2 +2;
+  int base_size = version == 7 ? 20 : 16;
+  int size = 8 + base_size +2;
   int ni = 0;
 
   for(i = obj->im ; i ; i = i->next) {
@@ -1158,10 +1159,11 @@ static int scc_imob_size(scc_roobj_obj_t* obj) {
   return size;
 }
 
-static int scc_write_imob(scc_roobj_obj_t* obj,scc_fd_t* fd) {
+static int scc_write_imob(int version,scc_roobj_obj_t* obj,scc_fd_t* fd) {
   int j,ni=0,nz=0;
   scc_imnn_t* i;
   scc_roobj_state_t* st;
+  int base_size = version == 7 ? 20 : 16;
 
   for(i = obj->im ; i ; i = i->next) {
     int z = 0;
@@ -1173,23 +1175,44 @@ static int scc_write_imob(scc_roobj_obj_t* obj,scc_fd_t* fd) {
   }
 
   scc_fd_w32(fd,MKID('i','m','h','d'));
-  scc_fd_w32be(fd,8 + 2 + 5*2 + 2+2 + 2 + (ni ? 4*ni : 4));
+  scc_fd_w32be(fd,8 + base_size + 2 + (ni ? 4*ni : 4));
 
-  // obj id
-  scc_fd_w16le(fd,obj->sym->rid);
+  if(version == 7) {
+    // version
+    scc_fd_w32le(fd,730);
+    // obj id
+    scc_fd_w16le(fd,obj->sym->rid);
+    // number of image
+    scc_fd_w16le(fd,ni);
+    // x,y
+    scc_fd_w16le(fd,obj->x);
+    scc_fd_w16le(fd,obj->y);
+    // w,h
+    scc_fd_w16le(fd,obj->w);
+    scc_fd_w16le(fd,obj->h);
+    // num zpnn
+    scc_fd_w16le(fd,nz);
+    // unk
+    scc_fd_w8(fd,0);
+    // direction
+    scc_fd_w8(fd,obj->dir);
+  } else {
+    // obj id
+    scc_fd_w16le(fd,obj->sym->rid);
 
-  // write number of image and zplanes
-  scc_fd_w16le(fd,ni);
-  scc_fd_w16le(fd,nz);  
-  // unk
-  scc_fd_w16le(fd,0);
-  // x,y
-  scc_fd_w16le(fd,obj->x);
-  scc_fd_w16le(fd,obj->y);
+    // write number of image and zplanes
+    scc_fd_w16le(fd,ni);
+    scc_fd_w16le(fd,nz);
+    // unk
+    scc_fd_w16le(fd,0);
+    // x,y
+    scc_fd_w16le(fd,obj->x);
+    scc_fd_w16le(fd,obj->y);
 
-  // w,h
-  scc_fd_w16le(fd,obj->w);
-  scc_fd_w16le(fd,obj->h);
+    // w,h
+    scc_fd_w16le(fd,obj->w);
+    scc_fd_w16le(fd,obj->h);
+  }
 
   // num hotspot
   if(ni) {
@@ -1377,7 +1400,7 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   if(!scc_roobj_make_obj_parent(ro)) return 0;
   for(obj = ro->obj ; obj ; obj = obj->next) {
     obj->im = scc_roobj_obj_gen_imnn(obj);
-    size += 8 + scc_imob_size(obj);
+    size += 8 + scc_imob_size(ro->target->version,obj);
     size += 8 + scc_obob_size(obj);
     num_obj++;
   }
@@ -1447,8 +1470,8 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   // OBIM
   for(obj = ro->obj ; obj ; obj = obj->next) {
     scc_fd_w32(fd,MKID('o','b','i','m'));
-    scc_fd_w32be(fd,8 + scc_imob_size(obj));
-    scc_write_imob(obj,fd);
+    scc_fd_w32be(fd,8 + scc_imob_size(ro->target->version,obj));
+    scc_write_imob(ro->target->version,obj,fd);
   }
   // OBCD
   for(obj = ro->obj ; obj ; obj = obj->next) {

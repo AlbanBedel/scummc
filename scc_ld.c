@@ -669,6 +669,7 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
   uint32_t type = SCC_GET_32(blk->data,0);
   uint32_t  size = SCC_GET_32BE(blk->data,4);
   uint16_t id;
+  int id_pos = scc_ns->target->version == 7 ? 12 : 8;
   scc_symbol_t* sym;
 
   if(type != MKID('i','m','h','d') || size < 26) {
@@ -676,7 +677,7 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
     return NULL;
   }
 
-  id = SCC_GET_16LE(blk->data,8);
+  id = SCC_GET_16LE(blk->data,id_pos);
   sym = scc_ns_get_sym_with_id(room->ns,SCC_RES_OBJ,id);
   if(!sym) {
     scc_log(LOG_ERR,"imhd block contains an invalid id????\n");
@@ -684,7 +685,7 @@ static scc_ld_block_t* scc_ld_obim_patch(scc_ld_room_t* room,
   }
   
   SCC_SET_32(blk->data,0,MKID('I','M','H','D'));
-  SCC_SET_16LE(blk->data,8,sym->addr);
+  SCC_SET_16LE(blk->data,id_pos,sym->addr);
 
   blk->type = MKID('O','B','I','M');
   blk->asis = 1;
