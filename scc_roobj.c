@@ -1260,8 +1260,9 @@ int scc_write_verb_block(scc_script_t* scr,scc_fd_t* fd) {
   return 1;
 }
 
-int scc_obob_size(scc_roobj_obj_t* obj) {
-  int size = 8 + 2 +1+2+2*SCC_MAX_CLASS +2+2 +2+2 +1+1 +2*2 +1;
+int scc_obob_size(int version,scc_roobj_obj_t* obj) {
+  int body_size = version == 7 ? 4+1+1 : 2+2 +2+2 +1+1 +2*2 +1;
+  int size = 8 + 2 +1+2+2*SCC_MAX_CLASS + body_size;
 
   size += scc_verb_block_size(obj->verb);
 
@@ -1271,11 +1272,12 @@ int scc_obob_size(scc_roobj_obj_t* obj) {
 }
 
 
-int scc_write_obob(scc_roobj_obj_t* obj,scc_fd_t* fd) {
+int scc_write_obob(int version,scc_roobj_obj_t* obj,scc_fd_t* fd) {
+  int body_size = version == 7 ? 4+1+1 : 2+2 +2+2 +1+1 +2*2 +1;
   int i;
 
   scc_fd_w32(fd,MKID('c','d','h','d'));
-  scc_fd_w32be(fd,8 + 2 +1+2+2*SCC_MAX_CLASS +2+2 +2+2 +1+1 +2*2 +1);
+  scc_fd_w32be(fd,8 + 2 +1+2+2*SCC_MAX_CLASS + body_size);
 
   // rid
   scc_fd_w16le(fd,obj->sym->rid);
@@ -1295,20 +1297,29 @@ int scc_write_obob(scc_roobj_obj_t* obj,scc_fd_t* fd) {
       scc_fd_w16le(fd,0);
   }
 
-  scc_fd_w16le(fd,obj->x);
-  scc_fd_w16le(fd,obj->y);
+  if(version == 7) {
+    // version
+    scc_fd_w32le(fd,730);
+    // parent
+    scc_fd_w8(fd,obj->parent_id);
+    // parent state
+    scc_fd_w8(fd,obj->parent_state);
+  } else {
+    scc_fd_w16le(fd,obj->x);
+    scc_fd_w16le(fd,obj->y);
 
-  scc_fd_w16le(fd,obj->w);
-  scc_fd_w16le(fd,obj->h);
+    scc_fd_w16le(fd,obj->w);
+    scc_fd_w16le(fd,obj->h);
 
-  // parent state
-  scc_fd_w8(fd,obj->parent_state);
-  // parent
-  scc_fd_w8(fd,obj->parent_id);
-  // unk
-  scc_fd_w32(fd,0);
-  // actor dir
-  scc_fd_w8(fd,obj->dir);
+    // parent state
+    scc_fd_w8(fd,obj->parent_state);
+    // parent
+    scc_fd_w8(fd,obj->parent_id);
+    // unk
+    scc_fd_w32(fd,0);
+    // actor dir
+    scc_fd_w8(fd,obj->dir);
+  }
 
   // VERBS
   scc_write_verb_block(obj->verb,fd);
@@ -1401,7 +1412,7 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   for(obj = ro->obj ; obj ; obj = obj->next) {
     obj->im = scc_roobj_obj_gen_imnn(obj);
     size += 8 + scc_imob_size(ro->target->version,obj);
-    size += 8 + scc_obob_size(obj);
+    size += 8 + scc_obob_size(ro->target->version,obj);
     num_obj++;
   }
   // local scripts
@@ -1476,8 +1487,8 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   // OBCD
   for(obj = ro->obj ; obj ; obj = obj->next) {
     scc_fd_w32(fd,MKID('o','b','c','d'));
-    scc_fd_w32be(fd,8 + scc_obob_size(obj));
-    scc_write_obob(obj,fd);
+    scc_fd_w32be(fd,8 + scc_obob_size(ro->target->version,obj));
+    scc_write_obob(ro->target->version,obj,fd);
   }
 
   // All the stuff needed for local scripts

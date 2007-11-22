@@ -698,14 +698,15 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   uint32_t  size = SCC_GET_32BE(blk->data,4);
   uint16_t vid,oid,cid,id,addr;
   scc_symbol_t* sym,*osym,*csym;
-  int nverb=0,verb_size=0,len,pos = 0,new_size,vpos,vn,i;
+  int nverb=0,verb_size=0,len,pos = 0,new_size,vbase,vpos,vn,i;
   scc_script_t* scr=NULL,*scr_last=NULL,*new_scr;
   scc_ld_block_t* new;
-  
+  int cdhd_size = scc_ns->target->version == 7 ? 8 : 17;
 
   scc_log(LOG_DBG,"Patching obcd.\n");
 
-  if(type != MKID('c','d','h','d') || size != 25 + 1 + 2 + SCC_MAX_CLASS*2) {
+  if(type != MKID('c','d','h','d') ||
+     size != 8 + 1+2+2*SCC_MAX_CLASS+cdhd_size) {
     scc_log(LOG_ERR,"Invalid cdhd block.\n");
     return NULL;
   }
@@ -787,7 +788,7 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   
   // build verb block
   scc_log(LOG_DBG,"Building the verb block: %d.\n",nverb*3+1+verb_size);  
-  new_size = 25 + 8 + nverb*3+1+verb_size + len;
+  new_size = 8 + cdhd_size + 8 + nverb*3+1+verb_size + len;
 
   new = malloc(sizeof(scc_ld_block_t) + new_size);
   new->type = MKID('O','B','C','D');
@@ -797,29 +798,40 @@ static scc_ld_block_t* scc_ld_obcd_patch(scc_ld_room_t* room,
   
   // make the cdhd header
   SCC_SET_32(new->data,0,MKID('C','D','H','D'));
-  SCC_SET_32BE(new->data,4,25);
-  SCC_SET_16LE(new->data,8,addr);
-  // copy cdhd  
-  memcpy(new->data + 8 + 2,blk->data + 8 + 2 + 1 + 2 + SCC_MAX_CLASS*2,15);
+  if(scc_ns->target->version == 7) {
+    SCC_SET_32BE(new->data,4,8+cdhd_size);
+    // copy the version
+    memcpy(new->data + 8,blk->data + 8 + 2 + 1 + 2 + SCC_MAX_CLASS*2,4);
+    // patch the id
+    SCC_SET_16LE(new->data,8+4,addr);
+    // copy parent and parent state
+    memcpy(new->data + 8+4+2,blk->data + 8 + 2 + 1 + 2 + SCC_MAX_CLASS*2+4,2);
+  } else {
+    SCC_SET_32BE(new->data,4,8+17);
+    SCC_SET_16LE(new->data,8,addr);
+    // copy cdhd
+    memcpy(new->data + 8 + 2,blk->data + 8 + 2 + 1 + 2 + SCC_MAX_CLASS*2,15);
+  }
   // write VERB
-  SCC_SET_32(new->data,25,MKID('V','E','R','B'));
-  SCC_SET_32BE(new->data,29,8 + nverb*3+1+verb_size);
-  
-  vpos = 33+nverb*3+1;
+  SCC_SET_32(new->data,8+cdhd_size,MKID('V','E','R','B'));
+  SCC_SET_32BE(new->data,8+cdhd_size+4,8 + nverb*3+1+verb_size);
+
+  vbase = 8+cdhd_size+8;
+  vpos = vbase+nverb*3+1;
   vn = 0;
   while(scr) {
     if(scr->sym)
-      new->data[33+vn*3] = scr->sym->addr;
+      new->data[vbase+vn*3] = scr->sym->addr;
     else
-      new->data[33+vn*3] = 0xFF;
-    SCC_SET_16LE(new->data,33+vn*3+1,vpos-25);
+      new->data[vbase+vn*3] = 0xFF;
+    SCC_SET_16LE(new->data,vbase+vn*3+1,vpos-cdhd_size-8);
     if(scr->code_len) memcpy(&new->data[vpos],scr->code,scr->code_len);
     vpos += scr->code_len;
     vn++;
     // we should free it too
     scr = scr->next;
   }
-  new->data[33+vn*3] = 0;
+  new->data[vbase+vn*3] = 0;
   memcpy(&new->data[vpos],&blk->data[pos],len);
   vpos += len;
 
