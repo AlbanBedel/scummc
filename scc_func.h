@@ -1126,14 +1126,3 @@ static scc_func_t* scc_func_v7[] = {
     NULL
 };
 
-static scc_func_t** scc_func[] = {
-    NULL, // 0
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL, // 5
-    scc_func_v6,
-    scc_func_v7,
-    NULL
-};

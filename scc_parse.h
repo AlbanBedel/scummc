@@ -24,8 +24,12 @@
  * @brief ScummC compiler
  */
 
-#define SCC_MAX_ARGS   31
-#define SCC_MAX_CLASS  32
+#define SCC_MAX_ARGS         31
+#define SCC_MAX_CLASS        32
+#define SCC_MAX_ACTOR        17
+#define SCC_MAX_GLOB_SCR_V6  200
+#define SCC_MAX_GLOB_SCR_V7  2000
+
 
 /// @name Statement type
 //@{
@@ -457,3 +461,19 @@ struct scc_operator_st {
 #define SCC_OP_BAND              0xD6
 #define SCC_OP_BOR               0xD7
 //@}
+
+typedef struct scc_target_st {
+    /// Target version
+    int          version;
+    /// List of function list
+    scc_func_t** func_list;
+    /// Highst possible address for each ressource type
+    int*         addr_max;
+    /// Lowest address that can be used
+    int*         addr_min;
+    /// Maximal number of global scripts
+    int          max_global_scr;
+} scc_target_t;
+
+scc_target_t* scc_get_target(int version);
+

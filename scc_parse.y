@@ -56,7 +56,7 @@
 
 typedef struct scc_parser {
   // targeted vm version
-  int vm_version;
+  scc_target_t* target;;
   scc_lex_t* lex;
   scc_ns_t* ns;
   scc_roobj_t* roobj_list;
@@ -71,7 +71,6 @@ typedef struct scc_parser {
   char do_deps;
   int num_deps;
   char** deps;
-  scc_func_t** func_list;
 } scc_parser_t;
 
 #define YYPARSE_PARAM v_sccp
@@ -88,7 +87,6 @@ void scc_parser_add_dep(scc_parser_t* p, char* dep);
 
 static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 
-#include "scc_func.h"
 
 #define SCC_LIST_ADD(list,last,c) if(c){                  \
   if(last) last->next = c;                                \
@@ -127,8 +125,8 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 
     if(!sym) return NULL;
 
-    for(i = 0 ; p->func_list[i] ; i++) {
-      scc_func_t* list = p->func_list[i];
+    for(i = 0 ; p->target->func_list[i] ; i++) {
+      scc_func_t* list = p->target->func_list[i];
       for(j = 0 ; list[j].sym ; j++) {
         if(strcmp(sym,list[j].sym)) continue;
         return &list[j];
@@ -456,7 +454,7 @@ roombdecl: ROOM SYM location
   scc_symbol_t* sym = scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_ROOM,0,$3);
   scc_ns_get_rid(sccp->ns,sym);
   scc_ns_push(sccp->ns,sym);
-  sccp->roobj = scc_roobj_new(sccp->vm_version,sym);
+  sccp->roobj = scc_roobj_new(sccp->target,sym);
 }
 ;
 
@@ -464,7 +462,7 @@ roombdecl: ROOM SYM location
 room: roombdecl roombody
 {
   scc_log(LOG_DBG,"Room done :)\n");
-  sccp->local_scr = SCC_MAX_GLOB_SCR;
+  sccp->local_scr = sccp->target->max_global_scr;
   memset(&sccp->ns->as[SCC_RES_LSCR],0,0x10000/8);
   sccp->cycl = 1;
   scc_ns_clear(sccp->ns,SCC_RES_CYCL);
@@ -1991,12 +1989,12 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
 
   if(!scc_lex_push_buffer(sccp->lex,file)) return NULL;
 
-  sccp->ns = scc_ns_new();
+  sccp->ns = scc_ns_new(sccp->target);
   sccp->roobj_list = NULL;
   sccp->roobj = NULL;
   sccp->obj = NULL;
   sccp->local_vars = 0;
-  sccp->local_scr = SCC_MAX_GLOB_SCR;
+  sccp->local_scr = sccp->target->max_global_scr;
   sccp->cycl = 1;
   sccp->do_deps = do_deps;
 
@@ -2022,16 +2020,16 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
 
 scc_parser_t* scc_parser_new(char** include, char** res_path,
                              int vm_version) {
+  scc_target_t* target = scc_get_target(vm_version);
   scc_parser_t* p;
 
-  if(!scc_func[vm_version]) return NULL;
+  if(!target) return NULL;
 
   p = calloc(1,sizeof(scc_parser_t));
-  p->vm_version = vm_version;
+  p->target = target;
   p->lex = scc_lex_new(scc_main_lexer,set_start_pos,set_end_pos,include);
   p->lex->userdata = p;
   p->res_path = res_path;
-  p->func_list = scc_func[vm_version];
   return p;
 }
 

@@ -100,7 +100,7 @@ struct scc_roobj_st {
   scc_roobj_t* next;
 
   /// Targeted VM version
-  int vm_version;
+  scc_target_t* target;
 
    /// Symbol of this romm
   scc_symbol_t* sym;
@@ -132,7 +132,7 @@ struct scc_roobj_st {
   scc_data_t* scal;
 };
 
-scc_roobj_t* scc_roobj_new(int vm_version, scc_symbol_t* sym);
+scc_roobj_t* scc_roobj_new(scc_target_t* t, scc_symbol_t* sym);
 
 void scc_roobj_free(scc_roobj_t* ro);
 

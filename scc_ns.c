@@ -35,27 +35,6 @@
 #include "scc_parse.h"
 #include "scc_ns.h"
 
-static int scc_addr_max[] = {
-  0,       // unused
-  0x3FFF,  // VAR
-  0xFF,    // ROOM
-  SCC_MAX_GLOB_SCR-1, // SCR
-  0xFFFF,  // COST
-  0xFFFF,  // SOUND
-  0xFFFF,  // CHSET
-  0xFF,    // LSCR
-  0xFE,    // VERB (0xFF is default)
-  0xFFFF,  // OBJ
-  0x0F,    // STATE
-  0x400F,  // LVAR
-  0xFFFF,  // BVAR
-  0xFFFF,  // PALS
-  0x0F,    // CYCL
-  0x0F,    // ACTOR
-  0xFF,    // BOX
-  SCC_MAX_CLASS,  // CLASS
-  0x7FFFFFFF      // VOICE
-};
 
 void scc_symbol_list_free(scc_symbol_t* s);
 
@@ -94,8 +73,9 @@ int scc_sym_is_global(int type) {
   return 0;
 }
 
-scc_ns_t* scc_ns_new(void) {
+scc_ns_t* scc_ns_new(scc_target_t* target) {
   scc_ns_t* ns = calloc(1,sizeof(scc_ns_t));
+  ns->target = target;
   return ns;
 }
 
@@ -248,13 +228,13 @@ scc_symbol_t*  scc_ns_add_sym(scc_ns_t* ns, char* sym,
   return rr;
 }
 
-static int scc_ns_make_addr(int type, int subtype, int addr) {
+static int scc_ns_make_addr(int type, int subtype, int addr, int loff) {
 
   if(addr < 0) return addr;
 
   if(type == SCC_RES_BVAR) addr |= 0x8000;
   else if(type == SCC_RES_LVAR) addr |= 0x4000;
-  else if(type == SCC_RES_LSCR) addr += SCC_MAX_GLOB_SCR;
+  else if(type == SCC_RES_LSCR) addr += loff;
 
   return addr;
 }
@@ -264,7 +244,7 @@ scc_symbol_t* scc_ns_decl(scc_ns_t* ns, char* room, char* sym,
   scc_symbol_t* rr;
   scc_symbol_t* new;
 
-  addr = scc_ns_make_addr(type,subtype,addr);
+  addr = scc_ns_make_addr(type,subtype,addr,ns->target->max_global_scr);
 
   if(room) {
       // go into a room ns
@@ -385,7 +365,7 @@ int scc_ns_set_sym_addr(scc_ns_t* ns, scc_symbol_t* s,int addr) {
 
   if(addr == s->addr) return 1;
 
-  if(addr > scc_addr_max[s->type]) {
+  if(addr > ns->target->addr_max[s->type]) {
     scc_log(LOG_ERR,"Address 0x%X is invalid for its type.\n",addr);
     return 0;
   }
@@ -406,7 +386,7 @@ int scc_ns_alloc_sym_addr(scc_ns_t* ns,scc_symbol_t* s,int* cur) {
 
   if(s->addr >= 0) return 1;
 
-  for(i = cur[0] ; i <= scc_addr_max[s->type] ; i++) {
+  for(i = cur[0] ; i <= ns->target->addr_max[s->type] ; i++) {
     if(as[i/8] & (1 << (i%8))) continue;
     as[i/8] |= 1 << (i%8);
     cur[0]++;
@@ -419,34 +399,10 @@ int scc_ns_alloc_sym_addr(scc_ns_t* ns,scc_symbol_t* s,int* cur) {
 
 int scc_ns_alloc_addr(scc_ns_t* ns) {
   scc_symbol_t* r,*s;
-  int cur[] = {
-    0, // nothing
-    140, // VAR (don't use the engine vars)
-    1,  // ROOM
-    1,  // SCR
-    1,  // COST
-    1,  // SOUND
-    1,  // CHSET
-    SCC_MAX_GLOB_SCR, // LSCR
-    1,  // VERB
-    SCC_MAX_ACTOR, // OBJ
-    1, // STATE
-    0x4000, // LVAR
-    0x8000, // BVAR
-    1,  // PAL
-    1,  // CYCL
-    1,  // ACTOR
-    0,  // BOX
-    1,  // CLASS
-    0   // VOICE
-  };
+  int cur[SCC_RES_LAST];
 
-  // a little self test in case SCC_RES_LAST change
-  if(sizeof(cur)/sizeof(int) != SCC_RES_LAST) {
-    scc_log(LOG_ERR,"Pls check scc_ns_alloc_addr !!!!\n");
-    return 0;
-  }
-    
+  memcpy(cur,ns->target->addr_min,SCC_RES_LAST*sizeof(int));
+
   scc_log(LOG_DBG,"Allocating address:\n");
   for(r = ns->glob_sym ; r ; r = r->next) {
     if(!scc_ns_alloc_sym_addr(ns,r,&cur[r->type])) {

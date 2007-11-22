@@ -24,6 +24,8 @@
  */
 
 typedef struct scc_ns_st {
+  /// Targeted VM version
+  scc_target_t* target;
   /// Global symbol tree
   scc_symbol_t *glob_sym;
   /// Current start point in the tree, NULL is global
@@ -34,7 +36,7 @@ typedef struct scc_ns_st {
   uint8_t as[SCC_RES_LAST][0x10000/8];
 } scc_ns_t;
 
-scc_ns_t* scc_ns_new(void);
+scc_ns_t* scc_ns_new(scc_target_t* target);
 
 void scc_ns_free(scc_ns_t* ns);
 

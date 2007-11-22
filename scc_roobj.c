@@ -77,10 +77,10 @@ static struct scc_res_types {
   { -1, 0, 0 }
 };
 
-scc_roobj_t* scc_roobj_new(int vm_version, scc_symbol_t* sym) {
+scc_roobj_t* scc_roobj_new(scc_target_t* target, scc_symbol_t* sym) {
   scc_roobj_t* ro = calloc(1,sizeof(scc_roobj_t));
 
-  ro->vm_version = vm_version;
+  ro->target = target;
   ro->sym = sym;
 
   return ro;
@@ -1411,7 +1411,7 @@ int scc_roobj_write(scc_roobj_t* ro, scc_ns_t* ns, scc_fd_t* fd) {
   scc_fd_w32(fd,MKID('r','o','o','m'));
   scc_fd_w32be(fd,size + 1 + 8);
 
-  scc_fd_w8(fd,ro->vm_version);
+  scc_fd_w8(fd,ro->target->version);
 
   scc_fd_w32(fd,MKID('R','M','H','D'));
   scc_fd_w32be(fd,8 + 6);

@@ -144,11 +144,6 @@
 #define PRIu64 "llu"
 #endif
 
-// needed by the room builder
-#define SCC_MAX_IM_PLANES 10
-#define SCC_MAX_GLOB_SCR  200
-#define SCC_MAX_ACTOR     17
-
 // A coomon struct to hold some data
 typedef struct scc_data scc_data_t;
 struct scc_data {

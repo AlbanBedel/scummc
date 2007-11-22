@@ -26,6 +26,8 @@
 #define OF_STATE_SHL 4
 #define OF_OWNER_MASK 0x0F
 
+#define SCC_MAX_IM_PLANES    10
+
 typedef struct scc_res_list {
   uint32_t size;
   uint8_t* room_no;

@@ -342,10 +342,24 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
   scc_ld_block_t* blk;
   scc_ld_block_t* room_last = NULL,*scr_last = NULL, *cost_last = NULL;
   scc_ld_block_t* chset_last = NULL, *snd_last = NULL;
+  int vm_version = scc_fd_r8(fd); pos += 1;
+
+  if(!scc_ns) {
+    scc_target_t* target = scc_get_target(vm_version);
+    if(!target) {
+      scc_log(LOG_ERR,"Unsuported VM version: %d\n",vm_version);
+      return NULL;
+    }
+    scc_ns = scc_ns_new(target);
+  } else if(vm_version != scc_ns->target->version) {
+      scc_log(LOG_ERR,"Bad VM version: %d (started with %d)\n",
+              vm_version,scc_ns->target->version);
+      return NULL;
+  }
 
   room = calloc(1,sizeof(scc_ld_room_t));
-  room->ns = scc_ns_new();
-  room->vm_version = scc_fd_r8(fd); pos += 1;
+  room->vm_version = vm_version;
+  room->ns = scc_ns_new(scc_ns->target);
 
   while(pos < max_len) {
     len = scc_fd_get_block(fd,max_len-pos,&type); pos += 8;
@@ -1373,7 +1387,6 @@ int main(int argc,char** argv) {
   scc_ld_room_t* r;
   scc_cl_arg_t* files,*f;
   int obj_n;
-  int vm_version;
   char default_name[255];
 
   if(argc < 2) usage(argv[0]);
@@ -1381,8 +1394,9 @@ int main(int argc,char** argv) {
   files = scc_param_parse_argv(scc_ld_params,argc-1,&argv[1]);
   if(!files) usage(argv[0]);
 
-  scc_ns = scc_ns_new();
-
+  // The global ns is now created just before loading the
+  // the first to get the target vm version.
+  //scc_ns = scc_ns_new(vm_version);
 
   for(f = files ; f ; f = f->next) {
     scc_log(LOG_V,"Loading %s.\n",f->val);
@@ -1390,15 +1404,6 @@ int main(int argc,char** argv) {
       return 1;
   }
   scc_log(LOG_DBG,"All files loaded.\n");
-
-  // Check the target vm version on the files
-  vm_version = scc_room->vm_version;
-  for(r = scc_room->next ; r ; r = r->next)
-    if(r->vm_version != vm_version) {
-      scc_log(LOG_ERR,"Room with different target VM version found, "
-                      "aborting.\n");
-      return 1;
-    }
 
   if(!scc_ld_check_ns(scc_ns,NULL)) {
     scc_log(LOG_ERR,"Some symbols are unresolved, aborting.\n");
@@ -1432,7 +1437,7 @@ int main(int argc,char** argv) {
 
   // Compute our basename
   if(!out_file) {
-      sprintf(default_name,"scummc%d",vm_version);
+      sprintf(default_name,"scummc%d",scc_ns->target->version);
       out_file = default_name;
   }
 
