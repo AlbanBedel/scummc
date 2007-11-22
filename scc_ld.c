@@ -1333,6 +1333,7 @@ int main(int argc,char** argv) {
   scc_cl_arg_t* files,*f;
   int obj_n;
   int vm_version;
+  char default_name[255];
 
   if(argc < 2) usage(argv[0]);
 
@@ -1386,15 +1387,18 @@ int main(int argc,char** argv) {
     if(!scc_ld_room_patch(r)) return 5;
   }
 
+  // Compute our basename
+  if(!out_file) {
+      sprintf(default_name,"scummc%d",vm_version);
+      out_file = default_name;
+  }
+
   // write the voice file
   if(scc_voice) {
     char name[255];
     scc_fd_t* fd;
 
-    if(out_file)
-      sprintf(name,"%s.sou",out_file);
-    else
-      sprintf(name,"scummc.sou");
+    sprintf(name,"%s.sou",out_file);
 
     scc_log(LOG_V,"Outputting voice file %s\n",name);
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,0);
@@ -1414,10 +1418,7 @@ int main(int argc,char** argv) {
     for(r = scc_room ; r ; r = r->next) {
       char name[255];
       scc_fd_t* fd;
-      if(out_file)
-	sprintf(name,"%s-%03d.lflf",out_file,r->sym->addr);
-      else
-	sprintf(name,"%03d.lflf",r->sym->addr);
+      sprintf(name,"%s-%03d.lflf",out_file,r->sym->addr);
       scc_log(LOG_V,"Dumping room %s to %s\n",r->sym->sym,name);
       
       fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
@@ -1433,10 +1434,7 @@ int main(int argc,char** argv) {
     char name[255];
     scc_fd_t* fd;
 
-    if(out_file)
-      sprintf(name,"%s.001",out_file);
-    else
-      sprintf(name,"scummc.001");
+    sprintf(name,"%s.001",out_file);
 
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
     scc_log(LOG_V,"Outputting data file %s\n",name);
@@ -1451,10 +1449,7 @@ int main(int argc,char** argv) {
     }
     scc_fd_close(fd);
 
-    if(out_file)
-      sprintf(name,"%s.000",out_file);
-    else
-      sprintf(name,"scummc.000");
+    sprintf(name,"%s.000",out_file);
     scc_log(LOG_V,"Outputting index file %s\n",name);
     fd = new_scc_fd(name,O_WRONLY|O_CREAT|O_TRUNC,enckey);
     if(!fd) {

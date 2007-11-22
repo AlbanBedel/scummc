@@ -56,7 +56,7 @@ all: scummc.000 scummc.001 scummc.sou
 	$(SCC) -o $@ $(SCC_FLAGS) $<
 
 scummc.000: $(OBJS)
-	$(SLD) -v $^
+	$(SLD) -v -o scummc $^
 
 scummc.001 scummc.sou: scummc.000 ;
 
