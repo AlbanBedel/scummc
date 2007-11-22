@@ -856,18 +856,19 @@ static scc_ld_block_t* scc_ld_lscr_patch(scc_ld_room_t* room,
 					scc_ld_block_t* blk) {
   scc_script_t* scr;
   scc_ld_block_t* new;
+  int id_size = scc_ns->target->version == 7 ? 2 : 1;
    
-  scr = scc_ld_parse_scob(room,NULL,&blk->data[1],blk->data_len-1);
+  scr = scc_ld_parse_scob(room,NULL,&blk->data[2],blk->data_len-2);
 
   if(!scr) return NULL;
 
-  new = malloc(sizeof(scc_ld_block_t) + 1 + scr->code_len);
+  new = malloc(sizeof(scc_ld_block_t) + id_size + scr->code_len);
   new->type = MKID('L','S','C','R');
   new->asis = 1;
   new->next = blk->next;
-  new->data_len = scr->code_len+1;
-  new->data[0] = blk->data[0];
-  memcpy(&new->data[1],scr->code,scr->code_len);
+  new->data_len = scr->code_len+id_size;
+  memcpy(new->data,blk->data,id_size);
+  memcpy(&new->data[id_size],scr->code,scr->code_len);
 
   scc_script_free(scr);
 

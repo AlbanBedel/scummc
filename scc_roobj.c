@@ -1083,7 +1083,7 @@ int scc_lscr_block_size(scc_roobj_t* ro) {
   for(scr = ro->lscr ; scr ; scr = scr->next) {
     if(!strcmp(scr->sym->sym,"entry")) en = 1;
     else if(!strcmp(scr->sym->sym,"exit")) ex = 1;
-    else size += 1;
+    else size += 2;
     size += 8 + scc_scob_size(scr);
   }
 
@@ -1134,8 +1134,8 @@ int scc_write_lscr_block(scc_roobj_t* ro, scc_fd_t* fd) {
   for(scr = ro->lscr ; scr ; scr = scr->next) {
     if(scr == en || scr == ex) continue;
     scc_fd_w32(fd,MKID('l','s','c','r'));
-    scc_fd_w32be(fd,8 + 1 + scc_scob_size(scr));
-    scc_fd_w8(fd,scr->sym->addr);
+    scc_fd_w32be(fd,8 + 2 + scc_scob_size(scr));
+    scc_fd_w16le(fd,scr->sym->addr);
     scc_write_scob(fd,scr);
   }
 
