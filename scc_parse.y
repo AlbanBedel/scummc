@@ -55,6 +55,8 @@
 #define YYERROR_VERBOSE 1
 
 typedef struct scc_parser {
+  // targeted vm version
+  int vm_version;
   scc_lex_t* lex;
   scc_ns_t* ns;
   scc_roobj_t* roobj_list;
@@ -450,7 +452,7 @@ roombdecl: ROOM SYM location
   scc_symbol_t* sym = scc_ns_decl(sccp->ns,NULL,$2,SCC_RES_ROOM,0,$3);
   scc_ns_get_rid(sccp->ns,sym);
   scc_ns_push(sccp->ns,sym);
-  sccp->roobj = scc_roobj_new(sym);
+  sccp->roobj = scc_roobj_new(sccp->vm_version,sym);
 }
 ;
 
@@ -2014,8 +2016,10 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
   return src;
 }
 
-scc_parser_t* scc_parser_new(char** include, char** res_path) {
+scc_parser_t* scc_parser_new(char** include, char** res_path,
+                             int vm_version) {
   scc_parser_t* p = calloc(1,sizeof(scc_parser_t));
+  p->vm_version = vm_version;
   p->lex = scc_lex_new(scc_main_lexer,set_start_pos,set_end_pos,include);
   p->lex->userdata = p;
   p->res_path = res_path;
@@ -2031,13 +2035,14 @@ int scc_parser_error(scc_parser_t* sccp,YYLTYPE *loc, const char *s)  /* Called 
 }
 
 static void usage(char* prog) {
-  scc_log(LOG_MSG,"Usage: %s [-o output] input.scc [input2.scc ...]\n",prog);
+  scc_log(LOG_MSG,"Usage: %s [-o output] [-V version] input.scc [input2.scc ...]\n",prog);
   exit(-1);
 }
 
 static char** scc_include = NULL;
 static char** scc_res_path = NULL;
 static int scc_do_deps = 0;
+static int scc_vm_version = 6;
 
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &scc_output },
@@ -2046,6 +2051,7 @@ static scc_param_t scc_parse_params[] = {
   { "d", SCC_PARAM_FLAG, 0, 1, &scc_do_deps },
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { "vv", SCC_PARAM_FLAG, LOG_MSG, LOG_DBG, &scc_log_level },
+  { "V", SCC_PARAM_INT, 6, 7, &scc_vm_version },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -2065,7 +2071,7 @@ int main (int argc, char** argv) {
 
   if(!files) usage(argv[0]);
 
-  sccp = scc_parser_new(scc_include,scc_res_path);
+  sccp = scc_parser_new(scc_include,scc_res_path,scc_vm_version);
 
   for(f = files ; f ; f = f->next) {
     src = scc_parser_parse(sccp,f->val,scc_do_deps);

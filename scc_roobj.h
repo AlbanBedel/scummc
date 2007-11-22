@@ -99,6 +99,9 @@ struct scc_roobj_st {
   /// Chain when we have several room
   scc_roobj_t* next;
 
+  /// Targeted VM version
+  int vm_version;
+
    /// Symbol of this romm
   scc_symbol_t* sym;
 
@@ -129,7 +132,7 @@ struct scc_roobj_st {
   scc_data_t* scal;
 };
 
-scc_roobj_t* scc_roobj_new(scc_symbol_t* sym);
+scc_roobj_t* scc_roobj_new(int vm_version, scc_symbol_t* sym);
 
 void scc_roobj_free(scc_roobj_t* ro);
 

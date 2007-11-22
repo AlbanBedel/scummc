@@ -69,6 +69,9 @@ typedef struct scc_ld_room_st scc_ld_room_t;
 struct scc_ld_room_st {
   scc_ld_room_t* next;
 
+  /// Targeted VM version
+  int vm_version;
+
   /// Room ns used to resolve the rid during code patching
   scc_ns_t* ns;
   /// Room symbol from the local ns
@@ -340,7 +343,8 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
 
   room = calloc(1,sizeof(scc_ld_room_t));
   room->ns = scc_ns_new();
-  
+  room->vm_version = scc_fd_r8(fd); pos += 1;
+
   while(pos < max_len) {
     len = scc_fd_get_block(fd,max_len-pos,&type); pos += 8;
     if(len < 0) {
@@ -1328,6 +1332,7 @@ int main(int argc,char** argv) {
   scc_ld_room_t* r;
   scc_cl_arg_t* files,*f;
   int obj_n;
+  int vm_version;
 
   if(argc < 2) usage(argv[0]);
 
@@ -1343,6 +1348,15 @@ int main(int argc,char** argv) {
       return 1;
   }
   scc_log(LOG_DBG,"All files loaded.\n");
+
+  // Check the target vm version on the files
+  vm_version = scc_room->vm_version;
+  for(r = scc_room->next ; r ; r = r->next)
+    if(r->vm_version != vm_version) {
+      scc_log(LOG_ERR,"Room with different target VM version found, "
+                      "aborting.\n");
+      return 1;
+    }
 
   if(!scc_ld_check_ns(scc_ns,NULL)) {
     scc_log(LOG_ERR,"Some symbols are unresolved, aborting.\n");
