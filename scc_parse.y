@@ -71,6 +71,7 @@ typedef struct scc_parser {
   char do_deps;
   int num_deps;
   char** deps;
+  scc_func_t** func_list;
 } scc_parser_t;
 
 #define YYPARSE_PARAM v_sccp
@@ -121,14 +122,17 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
   // output filename
   static char* scc_output = NULL;
 
-  scc_func_t* scc_get_func(char* sym) {
-    int i;
+  scc_func_t* scc_get_func(scc_parser_t* p, char* sym) {
+    int i,j;
 
     if(!sym) return NULL;
 
-    for(i = 0 ; scc_func[i].sym ; i++) {
-      if(strcmp(sym,scc_func[i].sym)) continue;
-      return &scc_func[i];
+    for(i = 0 ; p->func_list[i] ; i++) {
+      scc_func_t* list = p->func_list[i];
+      for(j = 0 ; list[j].sym ; j++) {
+        if(strcmp(sym,list[j].sym)) continue;
+        return &list[j];
+      }
     }
 
     return NULL;
@@ -1464,7 +1468,7 @@ statement: dval
   scc_statement_t *a,*list;
   char* err;
   
-  f = scc_get_func("isObjectOfClass");
+  f = scc_get_func(sccp,"isObjectOfClass");
   if(!f)
     SCC_ABORT(@1,"Internal error: isObjectOfClass not found.\n");
   
@@ -1658,13 +1662,13 @@ call: SYM '(' cargs ')'
   scc_symbol_t* s;
   char* err;
 
-  f = scc_get_func($1);
+  f = scc_get_func(sccp,$1);
   if(!f) {
     s = scc_ns_get_sym(sccp->ns,NULL,$1);
     if(!s || (s->type != SCC_RES_SCR && s->type != SCC_RES_LSCR))
       SCC_ABORT(@1,"%s is not a known function or script.\n",$1);
 
-    f = scc_get_func("startScript0");
+    f = scc_get_func(sccp,"startScript0");
     if(!f)
       SCC_ABORT(@1,"Internal error: startScriptQuick not found.\n");
 
@@ -1713,7 +1717,7 @@ call: SYM '(' cargs ')'
     SCC_ABORT(@1,"%s is a local script and %s is not the current room.\n",
               $3,$1);
 
-  f = scc_get_func("startScript0");
+  f = scc_get_func(sccp,"startScript0");
   if(!f)
     SCC_ABORT(@1,"Internal error: startScript0 not found.\n");
 
@@ -2018,11 +2022,16 @@ scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
 
 scc_parser_t* scc_parser_new(char** include, char** res_path,
                              int vm_version) {
-  scc_parser_t* p = calloc(1,sizeof(scc_parser_t));
+  scc_parser_t* p;
+
+  if(!scc_func[vm_version]) return NULL;
+
+  p = calloc(1,sizeof(scc_parser_t));
   p->vm_version = vm_version;
   p->lex = scc_lex_new(scc_main_lexer,set_start_pos,set_end_pos,include);
   p->lex->userdata = p;
   p->res_path = res_path;
+  p->func_list = scc_func[vm_version];
   return p;
 }
 

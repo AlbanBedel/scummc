@@ -118,7 +118,7 @@
     {} \
   }
 
-static scc_func_t scc_func[] = {
+static scc_func_t scc_func_v6_v7[] = {
   {
     "startScript", 0x5E, 0, 3, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_LIST }
@@ -230,13 +230,7 @@ static scc_func_t scc_func[] = {
     "stopObjectScript", 0x77, 0, 1, 0,
     { SCC_FA_VAL }
   },{
-    "panCameraTo", 0x78, 0, 1, 0,
-    { SCC_FA_VAL }
-  },{
     "cameraFollowActor", 0x79, 0, 1, 0,
-    { SCC_FA_VAL }
-  },{
-    "setCameraAt", 0x7A, 0, 1, 0,
     { SCC_FA_VAL }
   },{
     "startRoom", 0x7B, 0, 1, 0,
@@ -254,9 +248,6 @@ static scc_func_t scc_func[] = {
     "putActorAt", 0x7F, 0, 4, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
-    "putActorAtObject", 0x80, 0, 3, 0, // z
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
-  },{
     "actorFace", 0x81, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
@@ -264,12 +255,6 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_VAL }
   },{
     "doSentence", 0x83, 0, 4, 0,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
-  },{
-    "pickupObject", 0x84, 0, 2, 0,  // z
-    { SCC_FA_VAL, SCC_FA_VAL }
-  },{
-    "startRoomWithEgo", 0x85, 0, 4, 0,
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "getRandomNumber", 0x87, 1, 1, 0,
@@ -911,59 +896,6 @@ static scc_func_t scc_func[] = {
     { SCC_FA_VAL, SCC_FA_OPC(0xD7) }
   },{
 
-    // kernelSet
-    "grabCursor", 0xC9, 0, 4, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x04) }
-  },{
-    "fadeOut", 0xC9, 0, 1, 1,
-    { SCC_FA_VAL, SCC_FA_OPC(0x05) }
-  },{
-    "fadeIn", 0xC9, 0, 1, 1,
-    { SCC_FA_VAL, SCC_FA_OPC(0x06) }
-  },{
-#if 0
-    "startManiac", 0xC9, 0, 0, 1,
-    { SCC_FA_OPC(0x08) }
-  },{
-#endif
-    "killAllScriptsExceptCurrent", 0xC9, 0, 0, 1,
-    { SCC_FA_OPC(0x09) }
-  },{
-    "nukeFlObjects", 0xC9, 0, 3, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x68) }
-  },{
-    "setActorScale", 0xC9, 0, 2, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6B) }
-  },{
-    "setShadowPalette", 0xC9, 0, 5, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
-      SCC_FA_VAL, SCC_FA_OPC(0x6C) }
-  },{
-    "clearCharsetMask", 0xC9, 0, 0, 1,
-    { SCC_FA_OPC(0x6E) }
-  },{
-    "setActorShadowMode", 0xC9, 0, 3, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6F) }
-  },{
-    "shiftShadowPalette", 0xC9, 0, 7, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
-      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x70) }
-  },{
-    "enqueueObject", 0xC9, 0, 8, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
-      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x77) }
-  },{
-    "swapColors", 0xC9, 0, 2, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x78) }
-  },{
-    "copyColor", 0xC9, 0, 2, 1,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x7B) }
-  },{
-    "saveSound", 0xC9, 0, 1, 1,
-    { SCC_FA_VAL, SCC_FA_OPC(0x7C) }
-  },{
-
-
     "breakXTimes", 0xCA, 0, 1, 0,
     { SCC_FA_VAL }
   },{
@@ -1029,3 +961,179 @@ static scc_func_t scc_func[] = {
   }
 };
 
+static scc_func_t scc_func_v6_only[] = {
+  {
+    "panCameraTo", 0x78, 0, 1, 0,
+    { SCC_FA_VAL }
+  },{
+    "setCameraAt", 0x7A, 0, 1, 0,
+    { SCC_FA_VAL }
+  },{
+    "putActorAtObject", 0x80, 0, 3, 0, // z
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "pickupObject", 0x84, 0, 2, 0,  // z
+    { SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "startRoomWithEgo", 0x85, 0, 4, 0, // z
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+
+    // kernelSet
+    "grabCursor", 0xC9, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x04) }
+  },{
+    "fadeOut", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x05) }
+  },{
+    "fadeIn", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x06) }
+  },{
+#if 0
+    "startManiac", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x08) }
+  },{
+#endif
+    "killAllScriptsExceptCurrent", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x09) }
+  },{
+    "nukeFlObjects", 0xC9, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x68) }
+  },{
+    "setActorScale", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6B) }
+  },{
+    "setShadowPalette", 0xC9, 0, 5, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_OPC(0x6C) }
+  },{
+    "clearCharsetMask", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x6E) }
+  },{
+    "setActorShadowMode", 0xC9, 0, 3, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6F) }
+  },{
+    "shiftShadowPalette", 0xC9, 0, 7, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x70) }
+  },{
+    "enqueueObject", 0xC9, 0, 8, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x77) }
+  },{
+    "swapColors", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x78) }
+  },{
+    "copyColor", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x7B) }
+  },{
+    "saveSound", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x7C) }
+  },{
+
+    NULL, 0, 0, 0, 0, {}
+  }
+};
+
+
+static scc_func_t scc_func_v7_only[] = {
+  {
+    "panCameraTo", 0x78, 0, 2, 0,
+    { SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "setCameraAt", 0x7A, 0, 2, 0,
+    { SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "putActorAtObject", 0x80, 0, 2, 0, // z
+    { SCC_FA_VAL, SCC_FA_VAL }
+  },{
+    "pickupObject", 0x84, 0, 1, 0,  // z
+    { SCC_FA_VAL }
+  },{
+    "startRoomWithEgo", 0x85, 0, 3, 0, // z
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
+  },{
+
+    // kernelSet
+    "grabCursor", 0xC9, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x04) }
+  },{
+    "smushPlay", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x06) },
+  },{
+    "setCursorFromImage", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0C) }
+  },{
+    "remapActorPalette", 0xC9, 0, 4, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0D) }
+  },{
+    "remapActorPalette2", 0xC9, 0, 5, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x0E) }
+  },{
+    "setSmushFrameRate", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x0F) }
+  },{
+    "enqueueText", 0xC9, 0, 4, 1, // VAR_STRING2DRAW
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x10) }
+  },{
+    "enqueueText2", 0xC9, 0, 4, 1, // VAR_STRING2DRAW
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x11) }
+  },{
+    "setActorScale", 0xC9, 0, 2, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6B) }
+  },{
+    "setShadowPalette", 0xC9, 0, 6, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x6C) }
+  },{
+    "setShadowPalette2", 0xC9, 0, 6, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_OPC(0x6D) }
+  },{
+    // 0x72 is a stub in scummvm 0.10.0
+    "-freezeScripts2", 0xC9, 0, 0, 1,
+    { SCC_FA_OPC(0x75) }
+  },{
+    "enqueueObject", 0xC9, 0, 8, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x76) }
+  },{
+    "enqueueObject2", 0xC9, 0, 8, 1,
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL,
+      SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_OPC(0x77) }
+  },{
+    "saveSound", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0x7C) }
+  },{
+    "enableSubtitles", 0xC9, 0, 1, 1,
+    { SCC_FA_VAL, SCC_FA_OPC(0xD7) }
+  },{
+
+    NULL, 0, 0, 0, 0, {}
+  }
+};
+
+static scc_func_t* scc_func_v6[] = {
+    scc_func_v6_v7,
+    scc_func_v6_only,
+    NULL
+};
+
+static scc_func_t* scc_func_v7[] = {
+    scc_func_v6_v7,
+    scc_func_v7_only,
+    NULL
+};
+
+static scc_func_t** scc_func[] = {
+    NULL, // 0
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL, // 5
+    scc_func_v6,
+    scc_func_v7,
+    NULL
+};
