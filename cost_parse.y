@@ -67,6 +67,8 @@
     unsigned ref;
     // offset where it will be written
     unsigned offset;
+    // global index for akos
+    unsigned idx;
     // path/glob
     char* path;
     int is_glob;
@@ -122,6 +124,9 @@
   static char* img_path = NULL;
   static char* cost_output = NULL;
   static scc_fd_t* out_fd = NULL;
+
+  // Output a AKOS instead of COST
+  static int akos = 0;
 
   static int cost_pic_load(cost_pic_t* pic,char* file);
 
@@ -941,6 +946,180 @@ static int cost_write(scc_fd_t* fd) {
   return 1;
 }
 
+
+static int akos_write(scc_fd_t* fd) {
+  int akhd_size = 8 + 2 + 1 + 1 + 2 + 2 + 2;
+  int akpl_size = 8 + pal_size;
+  int aksq_size = 8;
+  int akch_size = 8;
+  int akof_size = 8;
+  int akci_size = 8;
+  int akcd_size = 8;
+  int akos_size;
+  int i,j;
+  int cpos = 0;
+  int aoff[COST_MAX_ANIMS];
+  cost_pic_t* pic;
+  int num_anim = 0, num_pic = 0;
+  int data_off = 0, header_off = 0;
+
+
+  // get the highest anim id
+  for(i = COST_MAX_ANIMS-1 ; i >= 0 ; i--)
+    if(anims[i].name) break;
+  num_anim = i+1;
+
+  // Compute the number of picture and setup the ids
+  for(pic = pic_list ; pic ; pic = pic->next) {
+    if(!pic->ref) continue;
+    pic->idx = num_pic;
+    num_pic++;
+  }
+
+  // Compute the size needed for all commands
+  for(i = 0 ; i < num_anim ; i++)
+    for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--)
+      aksq_size += anims[i].limb[j].len;
+
+  // Compute the size needed for the anim definitions
+  akch_size += 2*num_anim;
+  for(i = 0 ; i < num_anim ; i++) {
+    if(!anims[i].limb_mask) {
+      aoff[i] = 0;
+      continue;
+    }
+    aoff[i] = akch_size-8;
+    akch_size += 2;
+    for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
+      if(!(anims[i].limb_mask & (1 << j))) continue;
+      akch_size += 1 + 2 + 2;
+    }
+  }
+
+  akof_size += (4 + 2)*num_pic;
+
+  akci_size += (2+2 + 2+2 + 2+2)*num_pic;
+
+  // Compute the size needed for the picture data
+  for(pic = pic_list ; pic ; pic = pic->next) {
+    if(!pic->ref) continue;
+    akcd_size += pic->data_size;
+  }
+
+  akos_size = 8 + akhd_size + akpl_size + aksq_size +
+    akch_size + akof_size + akci_size + akcd_size;
+
+  scc_fd_w32(fd,MKID('A','K','O','S'));
+  scc_fd_w32be(fd,akos_size);
+
+  // Write the header
+  scc_fd_w32(fd,MKID('A','K','H','D'));
+  scc_fd_w32be(fd,akhd_size);
+  // Version ?
+  scc_fd_w16le(fd,0x0001);
+  // Flags
+  scc_fd_w8(fd,cost_flags>>7);
+  // Unknown
+  scc_fd_w8(fd,0x80);
+  // Num anim
+  scc_fd_w16le(fd,num_anim);
+  // Num frame
+  scc_fd_w16le(fd,num_pic);
+  // Codec
+  scc_fd_w16le(fd,1);
+
+  // Write the palette
+  scc_fd_w32(fd,MKID('A','K','P','L'));
+  scc_fd_w32be(fd,akpl_size);
+  scc_fd_write(fd,pal,pal_size);
+
+  // Write the commands, a bit tricky because
+  // need to relocate the picture id from limb picture
+  // to global picture.
+  scc_fd_w32(fd,MKID('A','K','S','Q'));
+  scc_fd_w32be(fd,aksq_size);
+  for(i = 0 ; i < num_anim ; i++)
+    for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
+      int c;
+      for(c = 0 ; c < anims[i].limb[j].len ; c++) {
+        int cmd = anims[i].limb[j].cmd[c];
+        // Ignore high id atm, that include commands
+        if(cmd >= 0x80) {
+          scc_fd_w8(fd,cmd), c++;
+          scc_fd_w8(fd,anims[i].limb[j].cmd[c]);
+          continue;
+        }
+        if(cmd >= limbs[j].num_pic ||
+           !limbs[j].pic[cmd]) {
+          printf("Warning: Bad picture index in anim %s, limb %s at %d: %d\n",
+                 anims[i].name,limbs[j].name,c,cmd);
+          scc_fd_w8(fd,0);
+        } else
+          scc_fd_w8(fd,limbs[j].pic[cmd]->idx);
+      }
+    }
+
+  // Write the anims
+  scc_fd_w32(fd,MKID('A','K','C','H'));
+  scc_fd_w32be(fd,akch_size);
+  // offsets
+  for(i = 0 ; i < num_anim ; i++)
+    scc_fd_w16le(fd,aoff[i]);
+  // definitions
+  for(i = 0 ; i < num_anim ; i++) {
+    if(!anims[i].limb_mask) continue;
+    // limb mask
+    scc_fd_w16le(fd,anims[i].limb_mask);
+    for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
+      if(!(anims[i].limb_mask & (1 << j))) continue;
+      // mode
+      scc_fd_w8(fd,(anims[i].limb[j].flags&0x80) ? 0x03 : 0x02);
+      // cmd start
+      scc_fd_w16le(fd,cpos);
+      cpos += anims[i].limb[j].len;
+      // len
+      scc_fd_w16le(fd,anims[i].limb[j].len-1);
+    }
+  }
+
+  // Write the offset table
+  scc_fd_w32(fd,MKID('A','K','O','F'));
+  scc_fd_w32be(fd,akof_size);
+  for(pic = pic_list ; pic ; pic = pic->next) {
+    if(!pic->ref) continue;
+    // Data offset
+    scc_fd_w32le(fd,data_off);
+    data_off += pic->data_size;
+    // Header offset
+    scc_fd_w16le(fd,header_off);
+    header_off += 2+2 + 2+2 + 2+2;
+  }
+
+  // Write the pic headers
+  scc_fd_w32(fd,MKID('A','K','C','I'));
+  scc_fd_w32be(fd,akci_size);
+  for(pic = pic_list ; pic ; pic = pic->next) {
+    if(!pic->ref) continue;
+    // width / height
+    scc_fd_w16le(fd,pic->width);
+    scc_fd_w16le(fd,pic->height);
+    scc_fd_w16le(fd,pic->rel_x);
+    scc_fd_w16le(fd,pic->rel_y);
+    scc_fd_w16le(fd,pic->move_x);
+    scc_fd_w16le(fd,pic->move_y);
+  }
+
+  // Write the pic data
+  scc_fd_w32(fd,MKID('A','K','C','D'));
+  scc_fd_w32be(fd,akcd_size);
+  for(pic = pic_list ; pic ; pic = pic->next) {
+    if(!pic->ref) continue;
+    scc_fd_write(fd,pic->data,pic->data_size);
+  }
+
+  return 1;
+}
+
 static scc_lex_t* cost_lex;
 extern int cost_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
 
@@ -973,6 +1152,7 @@ static void usage(char* prog) {
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &cost_output },
   { "I", SCC_PARAM_STR, 0, 0, &img_path },
+  { "akos", SCC_PARAM_FLAG, 0, 1, &akos },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -997,8 +1177,11 @@ int main (int argc, char** argv) {
   if(!scc_lex_push_buffer(cost_lex,files->val)) return -1;
 
   if(yyparse()) return -1;
- 
-  cost_write(out_fd);
+
+  if(akos)
+    akos_write(out_fd);
+  else
+    cost_write(out_fd);
 
   scc_fd_close(out_fd);
 
