@@ -175,6 +175,9 @@ struct scc_data {
 #define SCC_ISDIGIT(c) ((c) >= '0' && (c) <= '9')
 #define SCC_ISALNUM(c) (SCC_ISALPHA(c) || SCC_ISDIGIT(c))
 
+#define SCC_TOUPPER(c) (((c) >= 'a' && (c) <= 'z') ? (c)-'a'+'A' : (c))
+#define SCC_TOLOWER(c) (((c) >= 'A' && (c) <= 'Z') ? (c)-'A'+'a' : (c))
+
 #ifndef HAVE_ASPRINTF
 #ifndef va_start
 #include <stdarg.h>
