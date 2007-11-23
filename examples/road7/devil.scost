@@ -1,0 +1,143 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+palette([16-47]);
+
+picture walkE = {
+    glob = "devil/walkE??.bmp",
+    position = { -25, -35 }
+};
+
+picture walkW = {
+    glob = "devil/walkW??.bmp",
+    position = { -25, -35 }
+};
+
+picture walkN = {
+    glob = "devil/walkN??.bmp",
+    position = { -25, -35 }
+};
+
+picture walkS = {
+    glob = "devil/walkS??.bmp",
+    position = { -25, -35 }
+};
+
+picture standE = {
+    glob = "devil/standE??.bmp",
+    position = { -25, -35 }
+};
+
+picture standW = {
+    glob = "devil/standW??.bmp",
+    position = { -25, -35 }
+};
+
+picture standN = {
+    glob = "devil/standN??.bmp",
+    position = { -25, -35 }
+};
+
+picture standS = {
+    glob = "devil/standS??.bmp",
+    position = { -25, -35 }
+};
+
+
+limb body = {
+    walkE00, walkE01, walkE02, walkE03, // 0-3
+    walkE04, walkE05, walkE06, walkE07, // 4-7
+
+    walkW00, walkW01, walkW02, walkW03, // 8-11
+    walkW04, walkW05, walkW06, walkW07, // 12-15
+
+    walkS00, walkS01, walkS02, walkS03, // 16-19
+    walkS04, walkS05, walkS06, walkS07, // 20-23
+
+    walkN00, walkN01, walkN02, walkN03, // 24-27
+    walkN04, walkN05, walkN06, walkN07,  // 28-31
+
+
+    standE00, standE01, standE02, standE03, // 32-35
+    standE04, standE05, standE06, standE07, // 36-39
+
+    standW00, standW01, standW02, standW03, // 40-43
+    standW04, standW05, standW06, standW07, // 44-47
+
+    standS00, standS01, standS02, standS03, // 48-51
+    standS04, standS05, standS06, standS07, // 52-55
+
+    standN00, standN01, standN02, standN03, // 56-59
+    standN04, standN05, standN06, standN07  // 60-63
+};
+
+anim walkE = {
+    body([0-7])
+};
+
+anim walkW = {
+    body([8-15])
+};
+
+anim walkS = {
+    body([16-23])
+};
+
+anim walkN = {
+    body([24-31])
+};
+
+
+anim standE = {
+    //body([32-39])
+    //body(32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39)
+    body(2)
+};
+
+anim standW = {
+    //body([40-47])
+    body(10)
+};
+
+anim standS = {
+    //body([48-55])
+    body(18)
+};
+
+anim standN = {
+    //body([56-63])
+    body(26)
+};
+
+anim initE = {
+    body([32-39])
+};
+
+anim initW = {
+    body([40-47])
+};
+
+anim initS = {
+    body([48-55])
+};
+
+anim initN = {
+    body([56-63])
+};
+

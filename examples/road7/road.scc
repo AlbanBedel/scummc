@@ -1,0 +1,468 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+// include all the vars used by the engine itself
+#include <scummVars7.s>
+#include "common.sch"
+
+bit welcomed,lost,santaHello,santaPlace,santaReal;
+actor santa;
+#define SANTA_COLOR 14
+
+// our room
+room Road {
+    // first we define the room parameters
+    // the background picture
+    image = "road.bmp";
+    // the zplanes
+    zplane = { "road_mask1.bmp", "road_mask2.bmp" };
+
+    boxd = "road.box";
+    trans = 0;
+
+    //cycle testCycl = { 60, 0, 103, 111 };
+    cost santaCost = "santa.cost";
+
+    voice letsgothere = { "letsgothere.voc", 500 };
+    voice welcome = { "welcome.voc" };
+    voice tv = { "file.voc" };
+
+    object axe;
+
+    object leftDoor {
+        x = 152;
+        y = 35;
+        dir = NORTH;
+        name = "the door";
+        class = { Openable };
+        states = { 
+            { 8, 40, "door_left.bmp", { "", "" } }
+        };
+        state = 0;
+
+        verb(int vrb,int objA, int objB) {
+        case SetBoxes:
+            if(vrb == Open)
+                setBoxFlags( [ openDoor ], 0x80);
+            else
+                setBoxFlags( [ openDoor ], 0);
+            createBoxMatrix();
+            return;
+
+        case WalkTo:
+            if(getObjectState(objA))
+                egoSay("Even open, this door is way too small for me.");
+            else
+                egoSay("It's closed.");
+            return;
+
+        case Use:
+            if(objB) {
+                if(objB == axe)
+                    egoSay("I don't want to destroy this door.");
+                else
+                    egoSay("That doesn't make much sense.");
+                return;
+            }
+            if(getObjectState(objA))
+                doSentence(Close,objA,0,0);
+            else
+                doSentence(Open,objA,0,0);
+        }
+    }
+
+    object window {
+        x = 112;
+        y = 46;
+        w = 32;
+        h = 16;
+        hs_x = 16;
+        hs_y = 30;
+        dir = NORTH;
+        name = "the window";
+    }
+
+    object river {
+        x = 0;
+        y = 0;
+        w = 48;
+        h = 20;
+        hs_x = 33;
+        hs_y = 15;
+        dir = WEST;
+        name = "the river";
+
+        verb(int vrb,int objA, int objB) {
+        case LookAt:
+            cutscene() {
+                egoSay("Wa _ Water ??\wI hate that stuff.");
+                waitForMessage();
+            }
+
+        case Use:
+            if(objB == axe)
+                egoSay("A axe is not that great to fish.");
+            else
+                egoSay("Don't even think about it.");
+            return;
+        
+        case PickUp:
+            egoSay("I need something to put the water in.");
+            return;
+        }
+    }
+
+    object axe {
+        x = 320;
+        y = 27;
+        w = 16;
+        h = 8;
+        class = { Pickable };
+        states = {
+            { 0, 16, "axe.bmp",
+              { "", "axe_mask2.bmp" } }
+        };
+        name = "the axe";
+        dir = EAST;
+
+        
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ ResRoom::axe, objA, objB ]);
+            return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "on";
+            return;
+
+        case LookAt:
+            if(getObjectOwner(objA) == VAR_EGO)
+                egoSay("It's really sharp.");
+            else
+                egoSay("Look nice !");
+            return;
+
+        case PickUp:
+            egoSay("Cool");
+            pickupObject(objA);
+        }
+    }
+
+    object santaObj {
+        name = "Santa";
+        verb(int vrb,int objA,int objB) {
+            char* sentence;
+            int asked;
+        case TalkTo:
+            cutscene(1) {
+                egoSay("Hey Santa!");
+                waitForMessage();
+                unless(santaHello) {
+                    actorSay(santa,"Yes, and you are ?");
+                    waitForMessage();
+                }
+            }
+            unless(santaHello) {
+                santaHello = 1;
+                sentence[0] = "Beasty, a fearsome fighter from the Evil!";
+                ResRoom::dialogAdd(sentence);
+                // This is needed otherwise the next asignement would
+                // just realloc the array.
+                sentence = 0;
+                sentence[0] = "Beasty, from the Kingdom Der Evil.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, an OS mascot.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, a red guy with a trident.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, a poor chap who lost his way.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, a deamon.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Beasty, ready to bring you hell.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+                do breakScript() while(selectedSentence < 0);
+                ResRoom::dialogHide();
+                cutscene() {
+                    sentence = dialogList[selectedSentence];
+                    egoSay("%s{sentence}");
+                    waitForMessage();
+                    switch(selectedSentence) {
+                    case 0:
+                        actorSay(santa,"That sure sound very impressing.");
+                        break;
+                    case 1:
+                        actorSay(santa,"Isn't that the place where everything is named K-something?");
+                        break;
+                    case 2:
+                        actorSay(santa,"Can't be worse than beeing a children mascot.");
+                        break;
+                    }
+                    waitForMessage();
+                }
+                ResRoom::dialogClear(1);
+
+                if(selectedSentence == 1) {
+                    sentence[0] = "Indeed, and we like it this way!";
+                    ResRoom::dialogAdd(sentence);
+                    sentence = 0;
+                    sentence[0] = "That's the place, anything against Ks?";
+                    ResRoom::dialogAdd(sentence);
+                    sentence = 0;
+                    ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+                    do breakScript() while(selectedSentence < 0);
+                    ResRoom::dialogHide();
+                    cutscene() {
+                        sentence = dialogList[selectedSentence];
+                        egoSay("%s{sentence}");
+                        waitForMessage();
+                        if(selectedSentence == 1) {
+                            actorSay(santa,"Not really.\wI just tend to prefer Gs.");
+                            waitForMessage();
+                        }
+                    }
+                    ResRoom::dialogClear(1);
+                }
+            }
+            cutscene() {
+                actorSay(santa,"What do you want?");
+                waitForMessage();
+            }
+            dialogLoop: while(1) {
+                unless(santaPlace)
+                    sentence[0] = "What is this place?";
+                else
+                    sentence = 0;
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                unless(santaReal)
+                    sentence[0] = "Are you really Santa, or just some guy in a red coat?";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                if(asked)
+                    sentence[0] = "Have a nice day.";
+                else
+                    sentence[0] = "Nothing. Have a nice day.";
+                ResRoom::dialogAdd(sentence);
+                sentence = 0;
+                asked = 1;
+                ResRoom::dialogStart(BEASTY_DIM_COLOR,BEASTY_COLOR);
+                do breakScript() while(selectedSentence < 0);
+                ResRoom::dialogHide();
+                cutscene() {
+                    sentence = dialogList[selectedSentence];
+                    egoSay("%s{sentence}");
+                    waitForMessage();
+                    switch(selectedSentence) {
+                    case 0:
+                        actorSay(santa,"It's the Grand Nation Of Maximum Eccentricity.");
+                        santaPlace = 1;
+                        break;
+                    case 1:
+                        actorSay(santa,"I'am the real Santa.\wBut not on duty so don't expect presents or anything.");
+                        santaReal = 1;
+                        break;
+                    case 2:
+                        actorSay(santa,"Bye.");
+                        break;
+                    }
+                    waitForMessage();
+                }
+                ResRoom::dialogClear(1);
+                if(selectedSentence == 2) break dialogLoop;
+            }
+            ResRoom::dialogEnd();
+            return;
+
+        case Use:
+            if(objB == axe)
+                egoSay("Killing him won't help us.");
+            else
+                egoSay("I can't just *use* someone.");
+        }
+    }
+
+    local script walkOut(int eff) {
+        screenEffect(eff);
+        startRoom(Road);
+    }
+
+    object exitSouth {
+        x = 0;
+        y = 128;
+        w = 108;
+        h = 16;
+        hs_x = 50;
+        hs_y = 4;
+        name = "the road going out";
+        dir = SOUTH;
+
+        verb(int vrb, int objA, int objB) {
+        case WalkTo:
+        case Use:
+            walkOut(0x8787);
+        }
+
+    }
+
+    object exitEast {
+        x = 472;
+        y = 72;
+        w = 16;
+        h = 48;
+        hs_x = 5;
+        hs_y = 24;
+        name = "the road going out";
+        dir = EAST;
+
+        verb(int vrb, int objA, int objB) {
+        case WalkTo:
+        case Use:
+            walkOut(0x8686);
+        }
+
+    }
+
+    object exitNorth {
+        x = 410;
+        y = 0;
+        w = 72;
+        h = 16;
+        hs_x = 36;
+        hs_y = 8;
+        name = "the road going out";
+        dir = NORTH;
+
+        verb(int vrb, int objA, int objB) {
+        case WalkTo:
+        case Use:
+            walkOut(0x8080);
+        }
+
+    }
+
+    // This script is executed when the room is loaded
+    local script entry() {
+
+        dbgPrintBegin();
+        dbgPrint("Entry");
+        dbgPrintEnd();
+
+        // our palette is buggy, fix it
+        setRoomColor(0,0,0,0);
+
+        // Setup the santa
+        setCurrentActor(santa);
+        initActor();
+        setActorCostume(santaCost);
+        setActorTalkPos(-60,-60);
+        setActorName("Santa");
+        setActorTalkColor(SANTA_COLOR);
+        setActorAnimSpeed(2);
+        actorObject[santa] = santaObj;
+        // allow it to be outside of the walk boxes
+        setActorIgnoreBoxes();
+        putActorAt(santa,20,90,Road);
+        // run the "standing" anim
+        setActorStanding();
+        setCurrentActor(VAR_EGO);
+
+        // init the print slot
+        egoPrintBegin();
+        actorPrintOverhead();
+        actorPrintEnd();
+        
+
+        unless(welcomed) {
+            putActorAt(VAR_EGO,440,0,Road);
+            try {
+                setCameraAt(0,100);
+                panCameraTo(440,100);
+                waitForCamera();
+                cameraFollowActor(VAR_EGO);
+                walkActorTo(hero,430,80);
+                waitForActor(hero);
+                
+                egoSay("Hello mortal.");
+                waitForMessage();
+                egoSay("Welcome to the first GPL Scumm game !!!");
+                waitForMessage();
+            } override {
+                if(VAR_OVERRIDE) {
+                    setCameraAt(440,100);
+                    putActorAt(VAR_EGO,430,80,Road);
+                    setActorStanding();
+                    cameraFollowActor(VAR_EGO);
+                }
+            }
+            welcomed = 1;
+        } else {
+     
+            switch(getRandomNumber(2)) {
+            case 0:
+                putActorAt(VAR_EGO,488,90,Road);
+                setCurrentActor(VAR_EGO);
+                setActorDirection(WEST);
+                cameraFollowActor(VAR_EGO);
+                walkActorTo(hero,420,90);
+                break;
+            case 1:
+                putActorAt(VAR_EGO,460,0,Road);
+                cameraFollowActor(VAR_EGO);
+                walkActorTo(hero,450,40);
+                break;
+            case 2:
+                putActorAt(VAR_EGO,60,144,Road);
+                setCurrentActor(VAR_EGO);
+                setActorDirection(NORTH);
+                cameraFollowActor(VAR_EGO);
+                walkActorTo(hero,80,120);
+                break;
+            }
+
+            unless(lost) {
+                waitForActor(hero);
+                egoSay("I think I'm lost.");
+                lost = 1;
+            }
+        }
+
+        ResRoom::showVerbs(1);
+        ResRoom::showCursor();
+    }
+
+    local script exit() {
+        dbgPrintBegin();
+        dbgPrint("Exit");
+        dbgPrintEnd();
+
+        ResRoom::hideCursor();
+    }
+
+
+}
