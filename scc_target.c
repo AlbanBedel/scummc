@@ -41,7 +41,7 @@ static int scc_addr_max_v6[] = {
     0,                       // unused
     0x3FFF,                  // VAR
     0xFF,                    // ROOM
-    SCC_MAX_GLOB_SCR_V6-1,   // SCR
+    0xC7,                    // SCR
     0xFFFF,                  // COST
     0xFFFF,                  // SOUND
     0xFFFF,                  // CHSET
@@ -67,9 +67,9 @@ static int scc_addr_min_v6[] = {
     1,                       // COST
     1,                       // SOUND
     1,                       // CHSET
-    SCC_MAX_GLOB_SCR_V6,     // LSCR
+    200,                     // LSCR
     1,                       // VERB
-    SCC_MAX_ACTOR,           // OBJ
+    17,                      // OBJ
     1,                       // STATE
     0x4000,                  // LVAR
     0x8000,                  // BVAR
@@ -86,19 +86,19 @@ static int scc_addr_max_v7[] = {
     0,                       // unused
     0x3FFF,                  // VAR
     0xFF,                    // ROOM
-    SCC_MAX_GLOB_SCR_V7-1,   // SCR
+    0x7CF,                   // SCR
     0xFFFF,                  // COST
     0xFFFF,                  // SOUND
     0xFFFF,                  // CHSET
     0xFFFF,                  // LSCR
     0xFE,                    // VERB (0xFF is default)
     0xFFFF,                  // OBJ
-    0x0F,                    // STATE
+    0xFF,                    // STATE
     0x400F,                  // LVAR
     0xFFFF,                  // BVAR
     0xFFFF,                  // PALS
     0x0F,                    // CYCL
-    0x0F,                    // ACTOR
+    0x1D,                    // ACTOR
     0xFF,                    // BOX
     SCC_MAX_CLASS,           // CLASS
     0x7FFFFFFF               // VOICE
@@ -112,9 +112,9 @@ static int scc_addr_min_v7[] = {
     1,                       // COST
     1,                       // SOUND
     1,                       // CHSET
-    SCC_MAX_GLOB_SCR_V7,     // LSCR
+    2000,                    // LSCR
     1,                       // VERB
-    SCC_MAX_ACTOR,           // OBJ
+    32,                      // OBJ
     1,                       // STATE
     0x4000,                  // LVAR
     0x8000,                  // BVAR
@@ -127,10 +127,8 @@ static int scc_addr_min_v7[] = {
 };
 
 static scc_target_t target_list[] = {
-    { 6, scc_func_v6, scc_addr_max_v6, scc_addr_min_v6,
-      SCC_MAX_GLOB_SCR_V6 },
-    { 7, scc_func_v7, scc_addr_max_v7, scc_addr_min_v7,
-      SCC_MAX_GLOB_SCR_V7 },
+    { 6, scc_func_v6, scc_addr_max_v6, scc_addr_min_v6, 200 },
+    { 7, scc_func_v7, scc_addr_max_v7, scc_addr_min_v7, 2000 },
     { -1 }
 };
 

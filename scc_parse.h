@@ -26,9 +26,6 @@
 
 #define SCC_MAX_ARGS         31
 #define SCC_MAX_CLASS        32
-#define SCC_MAX_ACTOR        17
-#define SCC_MAX_GLOB_SCR_V6  200
-#define SCC_MAX_GLOB_SCR_V7  2000
 
 
 /// @name Statement type
