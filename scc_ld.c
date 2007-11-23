@@ -401,6 +401,7 @@ scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
       break;
 
     case MKID('c','o','s','t'):
+    case MKID('a','k','o','s'):
       addr = scc_fd_r16le(fd);
       blk = scc_fd_read_block(fd,type,len-2);
       if(!blk) {
@@ -919,8 +920,9 @@ static scc_ld_block_t* scc_ld_scrp_patch(scc_ld_room_t* room,
 }
 
 int scc_ld_res_patch(scc_ld_room_t* room, scc_ld_block_t* list,
-                     int type,uint32_t newid, char* name) {
+                     int type, char* name) {
   scc_ld_block_t* blk;
+  unsigned newid,i;
 
   for(blk = list ; blk ; blk = blk->next) {
     scc_symbol_t* s = scc_ns_get_sym_with_id(room->ns,type,blk->addr);
@@ -928,6 +930,9 @@ int scc_ld_res_patch(scc_ld_room_t* room, scc_ld_block_t* list,
       scc_log(LOG_ERR,"Got %s with invalid id!!!!\n",name);
       return 0;
     }
+    newid = 0;
+    for(i = 0 ; i < 4 ; i++)
+      newid |= SCC_TOUPPER((blk->type>>(i*8))&0xFF)<<(i*8);
     blk->type = newid;
     blk->addr = s->addr;
   }
@@ -1003,16 +1008,13 @@ int scc_ld_room_patch(scc_ld_room_t* room) {
     last = new;
   }
 
-  if(!scc_ld_res_patch(room,room->cost,SCC_RES_COST,
-                      MKID('C','O','S','T'),"costume"))
+  if(!scc_ld_res_patch(room,room->cost,SCC_RES_COST,"costume"))
     return 0;
 
-  if(!scc_ld_res_patch(room,room->chset,SCC_RES_CHSET,
-                       MKID('C','H','A','R'),"charset"))
+  if(!scc_ld_res_patch(room,room->chset,SCC_RES_CHSET,"charset"))
     return 0;
 
-  if(!scc_ld_res_patch(room,room->snd,SCC_RES_SOUND,
-                       MKID('S','O','U','N'),"sound"))
+  if(!scc_ld_res_patch(room,room->snd,SCC_RES_SOUND,"sound"))
     return 0;
 
   return 1;

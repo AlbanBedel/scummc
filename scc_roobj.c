@@ -72,6 +72,7 @@ static struct scc_res_types {
 } scc_res_types[] = {
   { SCC_RES_SOUND, MKID('S','O','U','N'), MKID('s','o','u','n') },
   { SCC_RES_COST, MKID('C','O','S','T'), MKID('c','o','s','t') },
+  { SCC_RES_COST, MKID('A','K','O','S'), MKID('a','k','o','s') },
   { SCC_RES_CHSET, MKID('C','H','A','R'), MKID('c','h','a','r') },
   { SCC_RES_VOICE, MKID('v','o','i','c'), MKID('v','o','i','c') },
   { -1, 0, 0 }
@@ -217,7 +218,11 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
 
   // get the header
   ft = scc_fd_r32(fd);
-  if(ft != scc_res_types[rt].id) {
+  while(ft != scc_res_types[rt].id) {
+    if(scc_res_types[rt+1].type == sym->type) {
+      rt++;
+      continue;
+    }
     scc_log(LOG_ERR,"The file %s doesn't seem to contain what we want.\n",val);
     scc_fd_close(fd);
     return NULL;
@@ -230,6 +235,7 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
   }
 
   r = calloc(1,sizeof(scc_roobj_res_t));
+  r->type = ft;
   r->sym = sym;
   r->data = scc_fd_load(fd,len-8);
   r->data_len = len-8;
@@ -325,6 +331,7 @@ int scc_roobj_add_voice(scc_roobj_t* ro, scc_symbol_t* sym, char* file,
 
   // alloc the res
   r = malloc(sizeof(scc_roobj_res_t));
+  r->type = MKID('v','o','i','c');
   r->sym = sym;
   r->data_len = 8 + 2*nsync + vsize;
   r->data = malloc(r->data_len);
@@ -1338,7 +1345,7 @@ int scc_roobj_write_res(scc_roobj_res_t* res, scc_fd_t* fd) {
   int rt;
 
   for(rt = 0 ; scc_res_types[rt].type >= 0 ; rt++) {
-    if(scc_res_types[rt].type == res->sym->type) break;
+    if(res->type && scc_res_types[rt].id == res->type) break;
   }
 
   if(scc_res_types[rt].type < 0) {

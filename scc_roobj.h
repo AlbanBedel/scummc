@@ -33,6 +33,7 @@ typedef struct scc_roobj_st scc_roobj_t;
 struct scc_roobj_res_st {
   scc_roobj_res_t* next;
 
+  unsigned type;
   scc_symbol_t* sym;
   uint8_t* data;
   unsigned data_len;
