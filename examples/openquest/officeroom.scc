@@ -1,0 +1,272 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+#include <scummVars6.s>
+#include "common.sch"
+#include "officeroom.sch"
+#include "secretroom.sch"
+#include "inventoryitems.sch"
+#include "dialog.sch"
+#include "verbs.sch"
+#include "actors.sch"
+
+
+
+actor bulletsActor;
+
+// for the plate
+bit hasSmelledPlate, hasPressedPlate, hasTalkedAboutPlate;
+
+// for the bullets behind the plant
+bit hasSeenBullets;
+
+room OfficeRoom {
+
+    image = "graphics/rooms/back01_merged.bmp";
+
+    boxd = "graphics/rooms/back01.box";
+    trans = 0;
+    
+    cost bulletsCost = "bullets.cost";
+
+    object bullets;
+    
+
+    object cabinetDrawer {
+        x = 128;
+        y = 72;
+        dir = NORTH;
+        name = "cabinet";
+        class = { Openable };
+        states = { 
+            { 30, 16, "graphics/background_items/drawer_open.bmp", { "", "" } }
+        };
+        state = 0;
+
+        verb(int vrb,int objA, int objB) {
+
+        case PickUp:
+        case LookAt:
+            if(getObjectState(objA)==1 && VAR_EGO!=getObjectOwner(InventoryItems::gun)) {
+                egoSay("I'll look in here I think.");
+                waitForMessage();
+                egoSay("There appears to be a small sidearm in this container.");
+                pickupObject( InventoryItems::gun, InventoryItems );
+                waitForMessage();
+                egoSay("And a plastic card containing some kind of circuitry.");
+                pickupObject( InventoryItems::card, InventoryItems );
+            }
+            else
+                egoSay("Some kind of containing vessel for multiple instances of parchment.");
+        }
+    }
+
+
+    object plant {
+        x = 104;
+        y = 48;
+        dir = EAST;
+        name = "plant";
+        states = { 
+            { -10, 16, "graphics/background_items/plant_unmoved.bmp", { "", "" } },
+            { -10, 16, "graphics/background_items/plant_moved.bmp", { "", "" } }
+        };
+        state = 1;
+
+        verb(int vrb,int objA, int objB) {
+
+        case LookAt:
+            if( getObjectState( plant ) == 1 ) {
+                hasSeenBullets = 1;
+                egoSay( "There is a small object behind this plant beyond reach." );
+            }
+            else
+                egoSay( "There's nothing special about it." );
+            return;
+        case Push:
+        case Pull:
+            if( ! hasSeenBullets ) {
+                egoSay( "Moving this would accomplish nothing." );
+                return;
+            }
+            if( getObjectState( plant ) == 1 ) {
+                setObjectState( plant, 2 );
+                // initialize bulletsActor
+                setCurrentActor(bulletsActor);
+                initActor();
+                setActorCostume(bulletsCost);
+                setActorName("Bullets");
+                actorObject[bulletsActor] = bullets;
+                setActorWidth(10);
+                setActorIgnoreBoxes();
+                putActorAt(bulletsActor,113,94,OfficeRoom);
+                setCurrentActor(VAR_EGO);
+            }
+            else
+                egoSay("I've already moved the plant.");
+            return;
+        }
+    }
+
+
+    object bullets {
+        x = 160;
+        y = 100;
+        dir = WEST;
+        name = "ammunition";
+        class = { Pickable };
+        state = 0;
+
+        verb(int vrb,int objA, int objB) {
+
+        case PickUp:
+            pickupObject( InventoryItems::bullets, InventoryItems );
+            putActorAt( bulletsActor,0,0,InventoryItems );
+            setObjectState( bullets, 1 );
+            return;
+        case LookAt:
+            egoSay("A small box of projectiles.");
+        }
+    }
+
+
+    object commanderZifObj {
+        name = "OfficeRoom::commanderZifObj";
+        verb(int vrb,int objA,int objB) {
+            char* sentence;
+            int asked;
+        case TalkTo:
+            startScript( 2, Actors::zobTalkToZif, [hasPressedPlate, hasTalkedAboutPlate] );
+            return;
+        case LookAt:
+            egoSay("My commanding officer, Commander Zif.");
+            return;
+        }
+
+    }
+
+
+    object exitToHallway {
+        x = 40;
+        y = 40;
+        w = 32;
+        h = 72;
+        hs_x = 50;
+        hs_y = 4;
+        name = "hallway";
+        dir = WEST;
+
+        verb(int vrb, int objA, int objB) {
+        case WalkTo:
+        case Use:
+            egoSay("The hallway is not used in this game.");
+        }
+
+    }
+
+    
+    script setTalkedAboutPlate() {
+        hasTalkedAboutPlate = 1;
+    }
+
+
+    object plate {
+        x = 248;
+        y = 64;
+        w = 8;
+        h = 16;
+        hs_x = -10;
+        hs_y = 30;
+        name = "plate";
+        dir = EAST;
+
+        verb(int vrb, int objA, int objB) {
+        int i;
+        case LookAt:
+            // this should be "smell"
+            hasSmelledPlate = 1;
+            egoSay("I can smell the residue left by the indigenous lifeforms.");
+            waitForMessage();
+            egoSay("It must be some kind of pressure plate.");
+            return;
+        case Use:
+            if( getObjectState( exitToSecretRoom ) == 7 ) {
+                egoSay("The door is already open.");
+                return;
+            }
+            if( hasTalkedAboutPlate ) {
+                walkActorTo(commanderZif, 300, 100);
+                waitForActor( commanderZif );
+                actorSay(commanderZif, "I'll operate the one over here.");
+                waitForMessage();
+                delay( 20 );
+                for(i = 2 ; i < 8 ; i++) {
+                    delay( 10 );
+                    setObjectState( exitToSecretRoom, i );
+                }
+                actorSay(commanderZif, "Continue your investigation.");
+                return;
+            }
+            if( hasSmelledPlate ) {
+                hasPressedPlate = 1;
+                egoSay("Nothing happened.");
+                waitForMessage();
+                egoSay("The two plates appear to be connected.");
+                return;
+            }
+            egoSay("I don't know how to use that device.");
+            return;
+        }
+
+    }
+
+
+    object exitToSecretRoom {
+        x = 248;
+        y = 32;
+        name = "secret room";
+        dir = EAST;
+        states = {
+            { 0, 0, "graphics/door/door_closed.bmp" },
+            { 0, 0, "graphics/door/door_opening_01.bmp" },
+            { 0, 0, "graphics/door/door_opening_02.bmp" },
+            { 0, 0, "graphics/door/door_opening_03.bmp" },
+            { 0, 0, "graphics/door/door_opening_04.bmp" },
+            { 0, 0, "graphics/door/door_opening_05.bmp" },
+            { 0, 0, "graphics/door/door_open.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb, int objA, int objB) {
+        case WalkTo:
+            if( getObjectState( exitToSecretRoom ) == 1 ) {
+                egoSay( "It's closed." );
+                return;
+            }
+            setCurrentActor(VAR_EGO);
+            putActorAt(VAR_EGO,60,80,SecretRoom);
+            //putActorAt(commanderZif,160,120,SecretRoom);
+            startRoom(SecretRoom);
+            return;
+        }
+
+    }
+
+
+}

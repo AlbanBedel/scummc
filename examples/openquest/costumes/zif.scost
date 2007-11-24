@@ -1,0 +1,226 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+//palette([48-79]);
+//palette([0-31]);
+palette([224-255]);
+flags = FLIP;
+
+
+picture walking_e00 = {
+    glob = "../graphics/zif/frames/walk_W_??.bmp",
+    position = { -13, -48 }
+};
+
+picture walking_w00 = {
+    glob = "../graphics/zif/frames/walk_W_??.bmp",
+    position = { -13, -48 }
+};
+
+picture walking_n00 = {
+    glob = "../graphics/zif/frames/walk_N_??.bmp",
+    position = { -13, -48 }
+};
+
+picture walking_s00 = {
+    glob = "../graphics/zif/frames/walk_S_??.bmp",
+    position = { -13, -48 }
+};
+
+
+picture standE = {
+    path = "../graphics/zif/frames/stand_SW.bmp",
+    position = { -13, -48 }
+};
+
+picture standW = {
+    path = "../graphics/zif/frames/stand_SW.bmp",
+    position = { -13, -48 }
+};
+
+picture standN = {
+    path = "../graphics/zif/frames/stand_N.bmp",
+    position = { -13, -48 }
+};
+
+picture standS = {
+    path = "../graphics/zif/frames/stand_S.bmp",
+    position = { -13, -48 }
+};
+
+
+picture talking_e00 = {
+    glob = "../graphics/zif/frames/talk_SW_??.bmp",
+    position = { -13, -48 }
+};
+
+picture talking_w00 = {
+    glob = "../graphics/zif/frames/talk_SW_??.bmp",
+    position = { -13, -48 }
+};
+
+picture talking_N = {
+    path = "../graphics/zif/frames/talk_N_02.bmp",
+    position = { -13, -48 }
+};
+
+picture talking_s00 = {
+    glob = "../graphics/zif/frames/talk_S_??.bmp",
+    position = { -13, -48 }
+};
+
+
+
+//limb body = {
+//    standS
+//};
+
+limb body = {
+    walking_e0000, walking_e0001, walking_e0002, walking_e0003, // 0-3
+    //walking_e0004, walking_e0005, walking_e0006, walking_e0007,
+
+    walking_w0000, walking_w0001, walking_w0002, walking_w0003, // 4-7
+    //walking_w0004, walking_w0005, walking_w0006, walking_w0007,
+
+    walking_s0000, walking_s0001, walking_s0002, walking_s0003, // 8-11
+    //walking_s0004, walking_s0005, walking_s0006, walking_s0007,
+
+    walking_n0000, walking_n0001, walking_n0002, walking_n0003, // 12-15
+    //walking_n0004, walking_n0005, walking_n0006, walking_n0007,
+
+    standE, // 16
+    standW, // 17
+    standN, // 18
+    standS, // 19
+
+    talking_e0000, talking_e0001, talking_e0002, // 20-22
+
+    talking_w0000, talking_w0001, talking_w0002, // 23-25
+
+    talking_s0000, talking_s0001, talking_s0002, // 26-28
+
+    standN, talking_N, standN // 29-31
+
+};
+
+anim walkE = {
+    body([0-3])
+};
+
+anim walkW = {
+    body([4-7])
+};
+
+anim walkS = {
+    body([8-11])
+};
+
+anim walkN = {
+    body([12-15])
+};
+
+
+anim standE = {
+    body(16)
+};
+
+anim standW = {
+    body(17)
+};
+
+anim standN = {
+    body(18)
+};
+
+anim standS = {
+    body(19)
+};
+
+
+anim initE = {
+    body(16)
+};
+
+anim initW = {
+    body(17)
+};
+
+anim initN = {
+    body(18)
+};
+
+anim initS = {
+    body(19)
+};
+
+
+anim talkStartE = {
+    body([20-22])
+};
+
+anim talkStartW = {
+    body([23-25])
+};
+
+anim talkStartS = {
+    body([26-28])
+};
+
+anim talkStartN = {
+    body([29-31])
+};
+
+
+//*
+anim talkStopE = {
+    body(16)
+};
+
+anim talkStopW = {
+    body(17)
+};
+
+anim talkStopN = {
+    body(18)
+};
+
+anim talkStopS = {
+    body(19)
+};
+//*/
+
+/*
+anim talkStopE = {
+    body([20-22])
+};
+
+anim talkStopW = {
+    body([23-25])
+};
+
+anim talkStopN = {
+    body([26-28])
+};
+
+anim talkStopS = {
+    body([29-31])
+};
+//*/
+
+

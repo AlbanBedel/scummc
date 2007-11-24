@@ -1,0 +1,97 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+#include <scummVars6.s>
+#include "common.sch"
+#include "actors.sch"
+#include "dialog.sch"
+#include "inventoryitems.sch"
+#include "officeroom.sch"
+
+
+room Actors {
+
+    script zobTalkToZif( bit hasPressedPlate, bit hasTalkedAboutPlate ) {
+            char* sentence;
+
+            cutscene(1) {
+                actorFace( commanderZif, VAR_EGO );
+                actorSay(commanderZif,"Yes, ensign?");
+                waitForMessage();
+            }
+            dialogLoop: while(1) {
+                sentence[0] = "What are your orders?";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "I'll continue my search.";
+                Dialog::dialogAdd(sentence);
+                if( hasPressedPlate && ! hasTalkedAboutPlate ) {
+                    sentence = 0;
+                    sentence[0] = "I require your assistance with this opening mechanism.";
+                    Dialog::dialogAdd(sentence);
+                }
+
+                Dialog::dialogStart(ZOB_DIM_COLOR,ZOB_COLOR);
+                do breakScript() while(selectedSentence < 0);
+                Dialog::dialogHide();
+                cutscene() {
+                    sentence = dialogList[selectedSentence];
+                    egoSay("%s{sentence}");
+                    waitForMessage();
+                    switch(selectedSentence) {
+                    case 0:
+                        actorSay(commanderZif,"Locate the stolen artifact.");
+                        waitForMessage();
+                        egoSay("Any ideas where?");
+                        waitForMessage();
+                        actorSay(commanderZif,"Study your surroundings.");
+                        waitForMessage();
+                        actorSay(commanderZif,"Use all the cunning and guile at your disposal.");
+                        waitForMessage();
+                        actorSay(commanderZif,"Should you do this, you shall surely be successful.");
+                        waitForMessage();
+                        egoSay("Guile, right, aye sir.");
+                        waitForMessage();
+                        actorSay(commanderZif,"Also get a gun with which to shoot things.");
+                        waitForMessage();
+                        break;
+                    case 1:
+                        actorSay(commanderZif,"Very good.");
+                        break;
+                    case 2:
+                        actorSay(commanderZif,"Have you deciphered its secrets?");
+                        waitForMessage();
+                        egoSay("Yes, I believe two persons are required.");
+                        waitForMessage();
+                        actorSay(commanderZif,"In which case I shall follow you, ensign.");
+                        hasTalkedAboutPlate = 1;
+                        OfficeRoom::setTalkedAboutPlate();
+                        break;
+                    }
+                    waitForMessage();
+                }
+                Dialog::dialogClear(1);
+                if(selectedSentence == 1) break dialogLoop;
+            }
+            Dialog::dialogEnd();
+
+    }
+
+
+}

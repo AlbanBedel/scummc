@@ -1,0 +1,201 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+
+#include <scummVars6.s>
+#include "common.sch"
+#include "verbs.sch"
+
+
+
+room Verbs {
+
+    // setup all the verbs
+    script setupVerbs() {
+        int color,hiColor,dimColor,l,c,vrb;
+
+        color = VERB_COLOR;
+        hiColor = VERB_HI_COLOR;
+        dimColor = VERB_DIM_COLOR;
+
+        sntcVerb = WalkTo;
+        //sntcObjA = 0;
+        //sntcObjB = 0;
+
+        setCurrentVerb(SntcLine);
+        initVerb();
+        setVerbName("%v{sntcVerb} %n{sntcObjA} %s{sntcPrepo} %n{sntcObjB}");
+        setVerbXY(160,145);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        verbCenter();
+
+        setCurrentVerb(WalkTo);
+        initVerb();
+        setVerbName("Walk to");
+        setVerbKey('w');
+
+        setCurrentVerb(Give);
+        initVerb();
+        setVerbName("Give");
+        setVerbXY(10,156);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('g');
+        
+        setCurrentVerb(PickUp);
+        initVerb();
+        setVerbName("Pick up");
+        setVerbXY(50,156);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('p');
+
+        setCurrentVerb(Use);
+        initVerb();
+        setVerbName("Use");
+        setVerbXY(100,156);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('u');
+
+        setCurrentVerb(Open);
+        initVerb();
+        setVerbName("Open");
+        setVerbXY(10,170);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('o');
+
+        setCurrentVerb(LookAt);
+        initVerb();
+        setVerbName("Look at");
+        setVerbXY(50,170);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('l');
+
+        setCurrentVerb(Push);
+        initVerb();
+        setVerbName("Push");
+        setVerbXY(100,170);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        //setVerbKey('');
+
+        setCurrentVerb(Close);
+        initVerb();
+        setVerbName("Close");
+        setVerbXY(10,184);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('c');
+
+        setCurrentVerb(TalkTo);
+        initVerb();
+        setVerbName("Talk to");
+        setVerbXY(50,184);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        setVerbKey('t');
+
+        setCurrentVerb(Pull);
+        initVerb();
+        setVerbName("Pull");
+        setVerbXY(100,184);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        //setVerbKey('');
+
+        setCurrentVerb(invUp);
+        initVerb();
+        setVerbName("\x03");
+        setVerbXY(135,160);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        //verbCenter();
+
+        setCurrentVerb(invDown);
+        initVerb();
+        setVerbName("\x02");
+        setVerbXY(135,182);
+        setVerbColor(color);
+        setVerbHiColor(hiColor);
+        setVerbDimColor(dimColor);
+        //verbCenter();
+
+        for(l = 0,vrb = invSlot0 ; l < 2 ; l++)
+            for(c = 0 ; c < 4 ; c++, vrb++) {
+                setCurrentVerb(vrb);
+                initVerb();
+                //verbCenter();
+                setVerbXY(160 + c*40,160 + l*20);
+            }
+        dimInt(invObj,8);
+
+
+    }
+
+    // turn on all the verb for the interface 
+    // and fire the mouse watching thread
+    script showVerbs(int show) {
+        int* vrb;
+        int i;
+       
+        if(!!show == verbsOn) return;
+ 
+        vrb[0] = [ Give, PickUp, Use, Open,
+                   LookAt, Push, Close, TalkTo,
+                   Pull, SntcLine, invUp, invDown ];
+        
+        for(i = 0 ; i < 12 ; i++) {
+            setCurrentVerb(vrb[i]);
+            if(show)
+                setVerbOn();
+            else
+                setVerbOff();
+            redrawVerb();
+        }
+        undim(vrb);
+
+        for(i = 0 ; i < 8 ; i++) {
+            setCurrentVerb(invSlot0+i);
+            if(show)
+                setVerbOn();
+            else
+                setVerbOff();
+            redrawVerb();
+        }
+
+        verbsOn = !!show;
+
+    }
+
+
+}

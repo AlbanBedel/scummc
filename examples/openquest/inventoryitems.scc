@@ -1,0 +1,276 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+#include <scummVars6.s>
+#include "common.sch"
+#include "inventoryitems.sch"
+
+
+room InventoryItems {
+
+
+    // the inventory icons
+    
+    
+    object axe {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "the axe";
+        states = {
+            { 0, 0, "graphics/inventory_items/inv_axe.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::axe, objA, objB ]);
+            return;
+        }
+    }
+    
+    object gun {
+        name = "gun";
+        states = {
+            { 0, 0, "graphics/inventory_items/gun_40.bmp" }
+        };
+        state = 0;
+
+        verb(int vrb,int objA,int objB) {
+        case LookAt:
+            egoSay("A crude ballistic firearm fashioned from a primitive alloy.");
+            return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "on";
+            return;
+        case Use:
+            if(objB == bullets) {
+                setObjectState( gun, 1 );
+                setObjectOwner( bullets, 0 );
+                egoSay("The weapon has been loaded.");
+            }
+            else
+                egoSay("That would accomplish nothing.");
+            return;
+        }
+    }
+
+    object bullets {
+        name = "ammunition";
+        states = {
+            { 0, 0, "graphics/inventory_items/bullets.bmp" }
+        };
+        verb(int vrb,int objA,int objB) {
+        case LookAt:
+            egoSay("A small box of projectiles.");
+            return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "with";
+            return;
+        }
+    }
+
+    object card {
+        name = "card";
+        states = {
+            { 0, 0, "graphics/inventory_items/card.bmp" }
+        };
+        verb(int vrb,int objA,int objB) {
+        case LookAt:
+            egoSay("This device could be used to interact with some form of hardware.");
+            return;
+        }
+    }
+
+    object batteries {
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries.bmp" }
+        };
+
+        verb(int vrb,int objA,int objB) {
+        case LookAt:
+            egoSay("They used to power the hand scanner.");
+            return;
+        }
+    }
+
+    object batteries2 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries2.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries2, objA, objB ]);
+            return;
+        }
+    }
+
+    object batteries3 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries3.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries3, objA, objB ]);
+            return;
+        }
+    }
+
+    object batteries4 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries4.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries4, objA, objB ]);
+            return;
+        }
+    }
+
+    object batteries5 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries5.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries5, objA, objB ]);
+            return;
+        }
+    }
+
+    object batteries6 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries6.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries6, objA, objB ]);
+            return;
+        }
+    }
+
+    object batteries7 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries7.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries7, objA, objB ]);
+            return;
+        }
+    }
+
+    object batteries8 {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "batteries";
+        states = {
+            { 0, 0, "graphics/inventory_items/batteries8.bmp" }
+        };
+        state = 1;
+
+        verb(int vrb,int objA,int objB) {
+        case Icon:
+            startScript2(vrb, [ InventoryItems::batteries8, objA, objB ]);
+            return;
+        }
+    }
+
+    object scanner {
+        w = 40;
+        h = 16;
+        x = 0;
+        name = "scanner";
+        states = {
+            { 0, 0, "graphics/inventory_items/scanner_40.bmp" },
+            { 0, 0, "graphics/inventory_items/scanner_dead_40.bmp" }
+        };
+
+        verb(int vrb,int objA,int objB) {
+        case LookAt:
+            egoSay("Standard issue hand scanner.");
+            waitForMessage();
+            egoSay("Detects most of the EM spectrum.");
+            return;
+        case Open:
+            egoSay("I'll open up the housing.");
+            waitForMessage();
+            pickupObject( batteries, InventoryItems );
+            /*
+            pickupObject( InventoryItems::batteries2, InventoryItems );
+            pickupObject( InventoryItems::batteries3, InventoryItems );
+            pickupObject( InventoryItems::batteries4, InventoryItems );
+            pickupObject( InventoryItems::batteries5, InventoryItems );
+            pickupObject( InventoryItems::batteries6, InventoryItems );
+            pickupObject( InventoryItems::batteries7, InventoryItems );
+            pickupObject( InventoryItems::batteries8, InventoryItems );
+            */
+            setObjectState( objA, 2 );
+            drawObject( objA, 2 );
+            egoSay("The batteries have fallen out.");
+
+            return;
+        }
+    }
+
+}
