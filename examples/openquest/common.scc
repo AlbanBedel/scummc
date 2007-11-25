@@ -40,10 +40,6 @@ room ResRoom {
     chset chtest = "vera.char";
     // dialog charset
     chset dialogCharset = "vera-small.char";
-    // and the costume for our actor
-    cost ensignZobCost = "zob.cost";
-    
-    cost commanderZifCost = "zif.cost";
 
 
     // an object for the cursor image
@@ -64,51 +60,6 @@ room ResRoom {
     }
 
     // some startup scripts
-
-    // set the actor costume, etc
-    script setupActors() {
-        dbgPrint("setupActors()");
-        // create the actor
-        setCurrentActor(ensignZob);
-        initActor();
-        setActorCostume(ensignZobCost);
-        setActorTalkPos(-60,-70);
-        setActorName("Ensign Zob");
-        //setActorWalkSpeed(2,1);
-        setActorWalkSpeed(2,1);
-        setActorTalkColor(ZOB_COLOR);
-        setActorWidth(20);
-        setActorAnimSpeed(4);
-        putActorAt(ensignZob,160,120,OfficeRoom);
-        // needs an angle
-        setActorDirection(90);
-
-
-        // set VAR_EGO so we can use the *Ego* functions
-        VAR_EGO = ensignZob;
-        
-        // initialize commanderZif
-        setCurrentActor(commanderZif);
-        initActor();
-        setActorCostume(commanderZifCost);
-        setActorTalkPos(-60,-80);
-        setActorName("Commander Zif");
-        setActorWalkSpeed(2,1);
-        setActorTalkColor(ZIF_COLOR);
-        setActorWidth(20);
-        setActorAnimSpeed(2);
-        actorObject[commanderZif] = OfficeRoom::commanderZifObj;
-        putActorAt(commanderZif,80,120,OfficeRoom);
-        //actorObject[commanderZif] = Actors::commanderZifObj;
-        //putActorAt(commanderZif,100,120,SecretRoom);
-        setActorDirection(270);
-
-
-        pickupObject( InventoryItems::scanner, InventoryItems );
-        invOffset = 0;
-        setCurrentActor(VAR_EGO);
-
-    }
 
 
     // this script run in the background cheking where the mouse is
@@ -658,15 +609,6 @@ room ResRoom {
         loadRoom(ResRoom);
         lockRoom(ResRoom);
 
-        //loadRoom(InventoryItems);
-        //lockRoom(InventoryItems);
-
-        //loadRoom(Actors);
-        //lockRoom(Actors);
-
-        loadCostume(ensignZobCost);
-        lockCostume(ensignZobCost);
-
         loadRoom(OfficeRoom);
         lockRoom(OfficeRoom);
 
@@ -687,7 +629,7 @@ room ResRoom {
         Verbs::setupVerbs();
         Verbs::showVerbs(1);
 
-        setupActors();
+        Actors::setupActors();
         showCursor();
 
         mouseWatch();
@@ -696,6 +638,7 @@ room ResRoom {
         screenEffect(0x0005);
         // start the room
         startRoom(OfficeRoom);
+        Actors::officeIntro();
     }
 
 }

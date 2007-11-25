@@ -17,37 +17,54 @@
  *
  */
 
-//palette([48-79]);
-//palette([0-31]);
-palette([144-175]);
+palette([224-255]);
 
 
 
-picture standS_ = {
-    glob = "../graphics/bluecup/bluecup_??.bmp",
-    position = { -12, -120 }
-    //position = { -12, -10 }
+picture walk_ = {
+    glob = "../graphics/carol/walkfrombehindwall_??.bmp",
+    position = { -40, -56 }
+};
+
+picture clean_ = {
+    glob = "../graphics/carol/clean_??.bmp",
+    position = { -40, -56 }
 };
 
 
-
-//limb body = {
-//    standS
-//};
 
 limb body = {
-    standS_00, standS_01, standS_02, standS_03, // 0-3
-    standS_04, standS_05, standS_06, standS_07  // 4-7
-
+    walk_00, walk_01, walk_02, walk_03, walk_04, walk_05, // 0-5
+    clean_00, clean_01, clean_02, clean_01 // 6-9
 
 };
 
+
+
 anim standS = {
-    body([0-7])
+    body([6-9]) LOOP
 };
 
 anim initS = {
-    body([0-7])
+    body([0-6]) !LOOP
+};
+
+anim talkStartS = {
+    body(7)
+};
+
+anim talkStopS = {
+    body([6-9]) LOOP
+};
+
+
+
+anim walkIntoRoom = {
+    body([0-5])
+};
+
+anim clean @ 32 = {
+    body([6-8]) LOOP
 };
 
 

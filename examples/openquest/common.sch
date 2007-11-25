@@ -67,6 +67,9 @@ actor ensignZob;
 actor commanderZif;
 #define ZIF_COLOR     243
 
+actor carol;
+#define CAROL_COLOR   249
+
 // The room we start in
 room Road;
 

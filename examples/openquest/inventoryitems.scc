@@ -81,7 +81,7 @@ room InventoryItems {
         };
         verb(int vrb,int objA,int objB) {
         case LookAt:
-            egoSay("A small box of projectiles.");
+            egoSay("This ammunition may be compatible with a projectile weapon.");
             return;
         case Preposition:
             if(vrb == Give)

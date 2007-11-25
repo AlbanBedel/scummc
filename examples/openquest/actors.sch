@@ -18,6 +18,10 @@
  */
 
 room Actors {
+    script setupActors();
+    script officeIntro();
     script zobTalkToZif();
+    script zobTalkToCarol();
+    script lookAtCarol();
     object commanderZifObj;
 }

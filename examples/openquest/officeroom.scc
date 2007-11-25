@@ -34,7 +34,7 @@ actor bulletsActor;
 bit hasSmelledPlate, hasPressedPlate, hasTalkedAboutPlate;
 
 // for the bullets behind the plant
-bit hasSeenBullets;
+bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
 
 room OfficeRoom {
 
@@ -78,6 +78,11 @@ room OfficeRoom {
     }
 
 
+    script setTalkedAboutPlant() {
+        hasTalkedAboutPlant = 1;
+    }
+
+    
     object plant {
         x = 104;
         y = 48;
@@ -92,17 +97,22 @@ room OfficeRoom {
         verb(int vrb,int objA, int objB) {
 
         case LookAt:
-            if( getObjectState( plant ) == 1 ) {
+            if( ! hasSeenBullets ) {
                 hasSeenBullets = 1;
                 egoSay( "There is a small object behind this plant beyond reach." );
             }
             else
-                egoSay( "There's nothing special about it." );
+                egoSay( "This plant appears to be undergoing photosynthesis." );
             return;
         case Push:
         case Pull:
             if( ! hasSeenBullets ) {
                 egoSay( "Moving this would accomplish nothing." );
+                return;
+            }
+            if( ! hasTalkedAboutPlant ) {
+                actorSay( carol, "Hey, I haven't cleaned there yet." );
+                hasTriedToMovePlant = 1;
                 return;
             }
             if( getObjectState( plant ) == 1 ) {
@@ -111,12 +121,13 @@ room OfficeRoom {
                 setCurrentActor(bulletsActor);
                 initActor();
                 setActorCostume(bulletsCost);
-                setActorName("Bullets");
+                setActorName("ammunition");
                 actorObject[bulletsActor] = bullets;
                 setActorWidth(10);
                 setActorIgnoreBoxes();
                 putActorAt(bulletsActor,113,94,OfficeRoom);
                 setCurrentActor(VAR_EGO);
+                egoSay( "There is a small box down here." );
             }
             else
                 egoSay("I've already moved the plant.");
@@ -162,20 +173,15 @@ room OfficeRoom {
     }
 
 
-    object exitToHallway {
-        x = 40;
-        y = 40;
-        w = 32;
-        h = 72;
-        hs_x = 50;
-        hs_y = 4;
-        name = "hallway";
-        dir = WEST;
-
-        verb(int vrb, int objA, int objB) {
-        case WalkTo:
-        case Use:
-            egoSay("The hallway is not used in this game.");
+    object carolObj {
+        name = "OfficeRoom::carolObj";
+        verb(int vrb,int objA,int objB) {
+        case TalkTo:
+            startScript( 2, Actors::zobTalkToCarol, [hasTriedToMovePlant, hasTalkedAboutPlant] );
+            return;
+        case LookAt:
+            startScript( 2, Actors::lookAtCarol, [] );
+            return;
         }
 
     }
@@ -221,6 +227,8 @@ room OfficeRoom {
                     setObjectState( exitToSecretRoom, i );
                 }
                 actorSay(commanderZif, "Continue your investigation.");
+                waitForMessage();
+                walkActorTo(commanderZif, 200, 120);
                 return;
             }
             if( hasSmelledPlate ) {
@@ -261,7 +269,6 @@ room OfficeRoom {
             }
             setCurrentActor(VAR_EGO);
             putActorAt(VAR_EGO,60,80,SecretRoom);
-            //putActorAt(commanderZif,160,120,SecretRoom);
             startRoom(SecretRoom);
             return;
         }

@@ -21,5 +21,7 @@
 room OfficeRoom {
     object exitToSecretRoom;
     object commanderZifObj;
+    object carolObj;
     script setTalkedAboutPlate();
+    script setTalkedAboutPlant();
 }
