@@ -41,30 +41,30 @@ limb body = {
 
 
 
-anim standS = {
-    body([6-9]) LOOP
+anim stand = {
+    S = { body([6-9]) LOOP };
 };
 
-anim initS = {
-    body([0-6]) !LOOP
+anim init = {
+    S = { body([0-6]) !LOOP };
 };
 
-anim talkStartS = {
-    body(7)
+anim talkStart = {
+    S = { body(7) };
 };
 
-anim talkStopS = {
-    body([6-9]) LOOP
+/*anim talkStop = {
+    S = { body([6-9]) LOOP };
 };
-
+*/
 
 
 anim walkIntoRoom = {
-    body([0-5])
+    S = { body([0-5]) !LOOP };
 };
 
-anim clean @ 32 = {
-    body([6-8]) LOOP
+anim clean @ 8 = {
+    S = { body([6-8]) LOOP };
 };
 
 

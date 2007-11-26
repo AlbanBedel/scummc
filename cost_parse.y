@@ -86,6 +86,8 @@
 
 #define COST_MAX_LIMBS 16
 #define LIMB_MAX_PICTURES 0x70
+#define COST_MAX_DIR 4
+
   typedef struct cost_limb {
     char* name;
     unsigned num_pic;
@@ -96,7 +98,7 @@
   static cost_limb_t limbs[COST_MAX_LIMBS];
   static cost_limb_t* cur_limb = NULL;
 
-#define COST_MAX_ANIMS 0xFF
+#define COST_MAX_ANIMS 0x3F
 #define COST_MAX_LIMB_CMDS 0x7F
 
   typedef struct cost_limb_anim {
@@ -105,14 +107,19 @@
     uint8_t cmd[COST_MAX_LIMB_CMDS];
   } cost_limb_anim_t;
 
-  typedef struct cost_anim {
-    char* name;
+  typedef struct cost_anim_dir {
     unsigned limb_mask;
     cost_limb_anim_t limb[COST_MAX_LIMBS];
+  } cost_anim_dir_t;
+
+  typedef struct cost_anim {
+    char* name;
+    cost_anim_dir_t dir[COST_MAX_DIR];
   } cost_anim_t;
   
   static cost_anim_t anims[COST_MAX_ANIMS];
   static cost_anim_t* cur_anim = NULL;
+  static cost_anim_dir_t* cur_dir = NULL;
 
 #define COST_MAX_PALETTE_SIZE 32
   static unsigned pal_size = 0;
@@ -137,30 +144,26 @@
     return p;
   }
 
+  struct dir_map {
+    char* name;
+    unsigned id;
+  } dir_map[] = {
+    { "W",   0 },
+    { "E",   1 },
+    { "S",   2 },
+    { "N",   3 },
+    { NULL,  0 }
+  };
+
   struct anim_map {
     char* name;
     unsigned id;
   } anim_map[] = {
-    { "initW",       4 },
-    { "initE",       5 },
-    { "initS",       6 },
-    { "initN",       7 },
-    { "walkW",       8 },
-    { "walkE",       9 },
-    { "walkS",      10 },
-    { "walkN",      11 },
-    { "standW",     12 },
-    { "standE",     13 },
-    { "standS",     14 },
-    { "standN",     15 },
-    { "talkStartW", 16 },
-    { "talkStartE", 17 },
-    { "talkStartS", 18 },
-    { "talkStartN", 19 },
-    { "talkStopW",  20 },
-    { "talkStopE",  21 },
-    { "talkStopS",  22 },
-    { "talkStopN",  23 },
+    { "init",       1 },
+    { "walk",       2 },
+    { "stand",      3 },
+    { "talkStart",  4 },
+    { "talkStop",   5 },
     { NULL, 0 }
   };
   
@@ -436,7 +439,7 @@ piclist: SYM
 ;
 
 
-anim: animdec '=' '{' limbanimlist '}'
+anim: animdec '=' '{' animdirlist '}'
 {
   cur_anim = NULL;
 }
@@ -488,6 +491,26 @@ animdec: ANIM SYM location
 }
 ;
 
+animdirlist: animdir ';'
+| animdirlist animdir ';'
+;
+
+animdir: animdirname '=' '{' limbanimlist  '}'
+;
+
+animdirname: SYM
+{
+  int n;
+  for(n = 0 ; dir_map[n].name ; n++)
+    if(!strcmp(dir_map[n].name,$1)) break;
+
+  if(!dir_map[n].name)
+    COST_ABORT(@1,"Bad direction name.\n");
+
+  cur_dir = cur_anim->dir+dir_map[n].id;
+}
+;
+
 limbanimlist: limbanim
 | limbanimlist ',' limbanim
 ;
@@ -505,15 +528,15 @@ limbanim: SYM '(' cmdlist ')' limbanimflags
     COST_ABORT(@3,"Too many commands. A limb anim can have only %d commands.\n",
                COST_MAX_LIMB_CMDS);
 
-  if(cur_anim->limb_mask & (1 << n))
+  if(cur_dir->limb_mask & (1 << n))
     COST_ABORT(@1,"Anim for limb %s is already defined.\n",
                limbs[n].name);
 
-  cur_anim->limb_mask |= (1 << n);
-  cur_anim->limb[n].len = $3[0];
-  cur_anim->limb[n].flags |=  $5[0];
-  cur_anim->limb[n].flags &= ~$5[1];
-  memcpy(cur_anim->limb[n].cmd,$3+1,$3[0]);
+  cur_dir->limb_mask |= (1 << n);
+  cur_dir->limb[n].len = $3[0];
+  cur_dir->limb[n].flags |=  $5[0];
+  cur_dir->limb[n].flags &= ~$5[1];
+  memcpy(cur_dir->limb[n].cmd,$3+1,$3[0]);
   free($3);
 }
 | SYM '(' ')' limbanimflags
@@ -525,12 +548,12 @@ limbanim: SYM '(' cmdlist ')' limbanimflags
   if(n == COST_MAX_LIMBS)
     COST_ABORT(@1,"There is no limb named %s.\n",$1);
 
-  if(cur_anim->limb_mask & (1 << n))
+  if(cur_dir->limb_mask & (1 << n))
     COST_ABORT(@1,"Anim for limb %s is already defined.\n",
                limbs[n].name);
-  cur_anim->limb_mask |= (1 << n);
-  cur_anim->limb[n].flags |=  $4[0];
-  cur_anim->limb[n].flags &= ~$4[1];
+  cur_dir->limb_mask |= (1 << n);
+  cur_dir->limb[n].flags |=  $4[0];
+  cur_dir->limb[n].flags &= ~$4[1];
 }
 ;
 
@@ -806,22 +829,23 @@ static int cost_get_size(int *na,unsigned* coff,unsigned* aoff,unsigned* loff) {
     if(anims[i].name) break;
   num_anim = i+1;
 
-  size += 2*num_anim; // anim offsets
+  size += 2*COST_MAX_DIR*num_anim; // anim offsets
 
-  for(i = 0 ; i < num_anim ; i++) {
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) {
+    cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
     if(aoff) {
-      if(anims[i].limb_mask)
+      if(anim->limb_mask)
         aoff[i] = size-clen;
       else
         aoff[i] = 0;
     }
     size += 2; // limb mask
-    if(!anims[i].limb_mask) continue;
+    if(!anim->limb_mask) continue;
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
-      if(!(anims[i].limb_mask & (1 << j))) continue;
-      if(anims[i].limb[j].len) {
-        size += 2 + 1 + anims[i].limb[j].len; // limb start/len + cmds
-        clen += anims[i].limb[j].len;
+      if(!(anim->limb_mask & (1 << j))) continue;
+      if(anim->limb[j].len) {
+        size += 2 + 1 + anim->limb[j].len; // limb start/len + cmds
+        clen += anim->limb[j].len;
       } else
         size += 2;
     }
@@ -859,7 +883,7 @@ static int cost_write(scc_fd_t* fd) {
   cost_pic_t* p;
   uint8_t fmt = 0x58 | cost_flags;
   unsigned coff,cpos = 0;
-  unsigned aoff[COST_MAX_ANIMS];
+  unsigned aoff[COST_MAX_ANIMS*COST_MAX_DIR];
   unsigned loff[COST_MAX_LIMBS];
 
   if(pal_size == 32) fmt |= 1;
@@ -881,7 +905,7 @@ static int cost_write(scc_fd_t* fd) {
   scc_fd_w8(fd,'C'); // header
   scc_fd_w8(fd,'O');
 
-  scc_fd_w8(fd,num_anim-1); // last anim
+  scc_fd_w8(fd,num_anim*COST_MAX_DIR-1); // last anim
 
   scc_fd_w8(fd,fmt); // format
 
@@ -892,30 +916,33 @@ static int cost_write(scc_fd_t* fd) {
   for(i = COST_MAX_LIMBS-1 ; i >= 0 ; i--) // limbs offset
     scc_fd_w16le(fd,loff[i]);
 
-  for(i = 0 ; i < num_anim ; i++) // anim offsets
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) // anim offsets
     scc_fd_w16le(fd,aoff[i]);
 
-  for(i = 0 ; i < num_anim ; i++) { // anims
-    scc_fd_w16le(fd,anims[i].limb_mask); // limb mask
-    if(!anims[i].limb_mask) continue;
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) { // anims
+    cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
+    scc_fd_w16le(fd,anim->limb_mask); // limb mask
+    if(!anim->limb_mask) continue;
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
-      if(!(anims[i].limb_mask & (1 << j))) continue;
-      if(anims[i].limb[j].len) {
+      if(!(anim->limb_mask & (1 << j))) continue;
+      if(anim->limb[j].len) {
         scc_fd_w16le(fd,cpos);  // cmd start
-        cpos += anims[i].limb[j].len;
+        cpos += anim->limb[j].len;
         // last cmd offset
-        scc_fd_w8(fd,((anims[i].limb[j].len-1)&0x7F) |
-                     (anims[i].limb[j].flags&0x80));
+        scc_fd_w8(fd,((anim->limb[j].len-1)&0x7F) |
+                    (anim->limb[j].flags&0x80));
       } else
         scc_fd_w16le(fd,0xFFFF); // stoped limb
     }
   }
 
-  for(i = 0 ; i < num_anim ; i++) // anim cmds
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) { // anim cmds
+    cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
-      if(!anims[i].limb[j].len ) continue;
-      scc_fd_write(fd,anims[i].limb[j].cmd,anims[i].limb[j].len);
+      if(!anim->limb[j].len ) continue;
+      scc_fd_write(fd,anim->limb[j].cmd,anim->limb[j].len);
     }
+  }
 
   for(i = COST_MAX_LIMBS-1 ; i >= 0 ; i--)  // limbs
     for(j = 0 ; j < limbs[i].num_pic ; j++) {
@@ -956,9 +983,9 @@ static int akos_write(scc_fd_t* fd) {
   int akci_size = 8;
   int akcd_size = 8;
   int akos_size;
-  int i,j;
+  int i,j,d;
   int cpos = 0;
-  int aoff[COST_MAX_ANIMS];
+  int aoff[COST_MAX_DIR*COST_MAX_ANIMS];
   cost_pic_t* pic;
   int num_anim = 0, num_pic = 0;
   int data_off = 0, header_off = 0;
@@ -978,20 +1005,22 @@ static int akos_write(scc_fd_t* fd) {
 
   // Compute the size needed for all commands
   for(i = 0 ; i < num_anim ; i++)
-    for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--)
-      aksq_size += anims[i].limb[j].len;
+    for(d = 0 ; d < COST_MAX_DIR ; d++)
+      for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--)
+        aksq_size += anims[i].dir[d].limb[j].len;
 
   // Compute the size needed for the anim definitions
-  akch_size += 2*num_anim;
-  for(i = 0 ; i < num_anim ; i++) {
-    if(!anims[i].limb_mask) {
+  akch_size += 2*COST_MAX_DIR*num_anim;
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) {
+    cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
+    if(!anim->limb_mask) {
       aoff[i] = 0;
       continue;
     }
     aoff[i] = akch_size-8;
     akch_size += 2;
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
-      if(!(anims[i].limb_mask & (1 << j))) continue;
+      if(!(anim->limb_mask & (1 << j))) continue;
       akch_size += 1 + 2 + 2;
     }
   }
@@ -1022,7 +1051,7 @@ static int akos_write(scc_fd_t* fd) {
   // Unknown
   scc_fd_w8(fd,0x80);
   // Num anim
-  scc_fd_w16le(fd,num_anim);
+  scc_fd_w16le(fd,num_anim*COST_MAX_DIR);
   // Num frame
   scc_fd_w16le(fd,num_pic);
   // Codec
@@ -1038,47 +1067,51 @@ static int akos_write(scc_fd_t* fd) {
   // to global picture.
   scc_fd_w32(fd,MKID('A','K','S','Q'));
   scc_fd_w32be(fd,aksq_size);
-  for(i = 0 ; i < num_anim ; i++)
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) {
+    cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
       int c;
-      for(c = 0 ; c < anims[i].limb[j].len ; c++) {
-        int cmd = anims[i].limb[j].cmd[c];
+      for(c = 0 ; c < anim->limb[j].len ; c++) {
+        int cmd = anim->limb[j].cmd[c];
         // Ignore high id atm, that include commands
         if(cmd >= 0x80) {
           scc_fd_w8(fd,cmd), c++;
-          scc_fd_w8(fd,anims[i].limb[j].cmd[c]);
+          scc_fd_w8(fd,anim->limb[j].cmd[c]);
           continue;
         }
         if(cmd >= limbs[j].num_pic ||
            !limbs[j].pic[cmd]) {
-          printf("Warning: Bad picture index in anim %s, limb %s at %d: %d\n",
-                 anims[i].name,limbs[j].name,c,cmd);
+          printf("Warning: Bad picture index in anim %s, "
+                 "limb %s at %d: %d\n",
+                 anims[i/COST_MAX_DIR].name,limbs[j].name,c,cmd);
           scc_fd_w8(fd,0);
         } else
           scc_fd_w8(fd,limbs[j].pic[cmd]->idx);
       }
     }
+  }
 
   // Write the anims
   scc_fd_w32(fd,MKID('A','K','C','H'));
   scc_fd_w32be(fd,akch_size);
   // offsets
-  for(i = 0 ; i < num_anim ; i++)
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++)
     scc_fd_w16le(fd,aoff[i]);
   // definitions
-  for(i = 0 ; i < num_anim ; i++) {
-    if(!anims[i].limb_mask) continue;
+  for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) {
+    cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
+    if(!anim->limb_mask) continue;
     // limb mask
-    scc_fd_w16le(fd,anims[i].limb_mask);
+    scc_fd_w16le(fd,anim->limb_mask);
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
-      if(!(anims[i].limb_mask & (1 << j))) continue;
+      if(!(anim->limb_mask & (1 << j))) continue;
       // mode
-      scc_fd_w8(fd,(anims[i].limb[j].flags&0x80) ? 0x03 : 0x02);
+      scc_fd_w8(fd,(anim->limb[j].flags&0x80) ? 0x03 : 0x02);
       // cmd start
       scc_fd_w16le(fd,cpos);
-      cpos += anims[i].limb[j].len;
+      cpos += anim->limb[j].len;
       // len
-      scc_fd_w16le(fd,anims[i].limb[j].len-1);
+      scc_fd_w16le(fd,anim->limb[j].len-1);
     }
   }
 

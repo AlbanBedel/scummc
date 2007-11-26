@@ -30,7 +30,7 @@ limb body = {
     standS
 };
 
-anim standS = {
-    body(0)
+anim stand = {
+    S = { body(0) };
 };
 

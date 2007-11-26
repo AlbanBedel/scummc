@@ -87,57 +87,24 @@ limb body = {
     standN04, standN05, standN06, standN07  // 60-63
 };
 
-anim walkE = {
-    body([0-7])
-};
-
-anim walkW = {
-    body([8-15])
-};
-
-anim walkS = {
-    body([16-23])
-};
-
-anim walkN = {
-    body([24-31])
+anim walk = {
+    E = { body([0-7]) };
+    W = { body([8-15]) };
+    S = { body([16-23]) };
+    N = { body([24-31]) };
 };
 
 
-anim standE = {
-    //body([32-39])
-    //body(32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39)
-    body(2)
+anim stand = {
+    E = { body(2) };
+    W = { body(10) };
+    S = { body(18) };
+    N = { body(26) };
 };
 
-anim standW = {
-    //body([40-47])
-    body(10)
+anim init = {
+    E = { body([32-39]) };
+    W = { body([40-47]) };
+    S = { body([48-55]) };
+    N = { body([56-63]) };
 };
-
-anim standS = {
-    //body([48-55])
-    body(18)
-};
-
-anim standN = {
-    //body([56-63])
-    body(26)
-};
-
-anim initE = {
-    body([32-39])
-};
-
-anim initW = {
-    body([40-47])
-};
-
-anim initS = {
-    body([48-55])
-};
-
-anim initN = {
-    body([56-63])
-};
-

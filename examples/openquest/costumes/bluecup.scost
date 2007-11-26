@@ -42,12 +42,13 @@ limb body = {
 
 };
 
-anim standS = {
-    body([0-7])
+anim stand = {
+    S = { body([0-7]) };
 };
 
-anim initS = {
-    body([0-7])
+anim init = {
+    S = { body([0-7]) };
 };
+
 
 

@@ -119,107 +119,50 @@ limb body = {
 
 };
 
-anim walkE = {
-    body([0-3])
+anim walk = {
+    E = { body([0-3]) };
+    W = { body([4-7]) };
+    S = { body([8-11]) };
+    N = { body([12-15]) };
 };
 
-anim walkW = {
-    body([4-7])
+anim stand = {
+    E = { body(16) };
+    W = { body(17) };
+    N = { body(18) };
+    S = { body(19) };
 };
 
-anim walkS = {
-    body([8-11])
+anim init = {
+    E = { body(16) };
+    W = { body(17) };
+    N = { body(18) };
+    S = { body(19) };
 };
 
-anim walkN = {
-    body([12-15])
-};
-
-
-anim standE = {
-    body(16)
-};
-
-anim standW = {
-    body(17)
-};
-
-anim standN = {
-    body(18)
-};
-
-anim standS = {
-    body(19)
-};
-
-
-anim initE = {
-    body(16)
-};
-
-anim initW = {
-    body(17)
-};
-
-anim initN = {
-    body(18)
-};
-
-anim initS = {
-    body(19)
-};
-
-
-anim talkStartE = {
-    body([20-22])
-};
-
-anim talkStartW = {
-    body([23-25])
-};
-
-anim talkStartS = {
-    body([26-28])
-};
-
-anim talkStartN = {
-    body([29-31])
+anim talkStart = {
+    E = { body([20-22]) };
+    W = { body([23-25]) };
+    S = { body([26-28]) };
+    N = { body([29-31]) };
 };
 
 
 //*
-anim talkStopE = {
-    body(16)
-};
-
-anim talkStopW = {
-    body(17)
-};
-
-anim talkStopN = {
-    body(18)
-};
-
-anim talkStopS = {
-    body(19)
+anim talkStop = {
+    E = { body(16) };
+    W = { body(17) };
+    N = { body(18) };
+    S = { body(19) };
 };
 //*/
 
 /*
-anim talkStopE = {
-    body([20-22])
-};
-
-anim talkStopW = {
-    body([23-25])
-};
-
-anim talkStopN = {
-    body([26-28])
-};
-
-anim talkStopS = {
-    body([29-31])
+anim talkStop = {
+    E = { body([20-22]) };
+    W = { body([23-25]) };
+    N = { body([26-28]) };
+    S = { body([29-31]) };
 };
 //*/
 

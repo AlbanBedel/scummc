@@ -29,10 +29,10 @@ limb body = {
     standS
 };
 
-anim standS = {
-    body(0)
+anim stand = {
+    S = { body(0) };
 };
 
-anim initS = {
-    body(0)
+anim init = {
+    S = { body(0) };
 };
