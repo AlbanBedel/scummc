@@ -466,7 +466,7 @@ static scc_func_t scc_func_v6_v7[] = {
     "actorNeverZClip", 0x9D5D, 0, 0, 0,
     {}
   },{
-    "setActorZClip", 0x9DE1, 0, 0, 0,
+    "setActorZClip", 0x9DE1, 0, 1, 0,
     { SCC_FA_VAL }
   },{
     "setActorIgnoreBoxes", 0x9D5F, 0, 0, 0,
@@ -948,8 +948,8 @@ static scc_func_t scc_func_v6_v7[] = {
     // use an alternative box set, we can't generate such thing atm anyway.
     "setBoxSet", 0xE4, 0, 1, 0,
     { SCC_FA_VAL }
-#endif
   },{
+#endif
     "getActorLayer", 0xEC, 1, 1, 0,
     { SCC_FA_VAL }
   },{
