@@ -167,7 +167,7 @@
     { NULL, 0 }
   };
   
-#define ANIM_USER_START 24
+#define ANIM_USER_START 6
 
 #define COST_CMD_SOUND 0x70
 #define COST_CMD_STOP  0x79
