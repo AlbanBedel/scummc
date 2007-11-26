@@ -179,6 +179,22 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj) {
     return 0;
   }
 
+  if(obj->trans >= 0) {
+    int x,y;
+    scc_roobj_state_t* state;
+    for(state = obj->states ; state ; state = state->next) {
+      uint8_t *optr = state->img->data;
+      uint8_t *rptr = ro->image->data+obj->y*ro->image->w+obj->x;
+      for(y = 0 ; y < state->img->h ; y++) {
+        for(x = 0 ; x < state->img->w ; x++)
+          if(optr[x] == obj->trans)
+            optr[x] = rptr[x];
+        optr += state->img->w;
+        rptr += ro->image->w;
+      }
+    }
+  }
+
   SCC_LIST_ADD(ro->obj,ro->last_obj,obj);
 
   return 1;
@@ -630,6 +646,7 @@ static int scc_roobj_set_scal(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
 scc_roobj_obj_t* scc_roobj_obj_new(scc_symbol_t* sym) {
   scc_roobj_obj_t* obj = calloc(1,sizeof(scc_roobj_obj_t));
   obj->sym = sym;
+  obj->trans = -1;
   return obj;
 }
 
@@ -761,6 +778,8 @@ int scc_roobj_obj_set_int_param(scc_roobj_obj_t* obj,char* sym,int val) {
     obj->hs_y = val;
   else if(!strcmp(sym,"dir"))
     obj->dir = val;
+  else if(!strcmp(sym,"trans"))
+    obj->trans = val;
   else if(!strcmp(sym,"state")) {
     scc_roobj_state_t* s;
     int i;

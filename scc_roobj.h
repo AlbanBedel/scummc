@@ -79,6 +79,8 @@ struct scc_roobj_obj_st {
   int state;
   /// Name of the object in game
   char* name;
+  /// Transparent color if >= 0
+  int trans;
 
   /// hotspot used if no extra state is defined
   int hs_x,hs_y;
