@@ -166,17 +166,13 @@ uint32_t scc_fd_r32be(scc_fd_t* f) {
 
 int scc_fd_write(scc_fd_t* f,void *buf, size_t count) {
   int w;
+  uint8_t tmp[count];
   uint8_t* ptr = buf;
 
   for(w = 0 ; w < count ; w++)
-    ptr[w] ^= f->enckey;
+    tmp[w] = ptr[w] ^ f->enckey;
 
-  w = write(f->fd,buf,count);
-
-  for(w = 0 ; w < count ; w++)
-    ptr[w] ^= f->enckey;
-
-  return w;
+  return write(f->fd,tmp,count);
 }
 
 int scc_fd_w8(scc_fd_t*f,uint8_t a) {
