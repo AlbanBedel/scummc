@@ -135,6 +135,10 @@
   // Output a AKOS instead of COST
   static int akos = 0;
 
+  // Ouput a header
+  static char* header_name = NULL;
+  static char* symbol_prefix = NULL;
+
   static int cost_pic_load(cost_pic_t* pic,char* file);
 
   static cost_pic_t* find_pic(char* name) {
@@ -1153,6 +1157,16 @@ static int akos_write(scc_fd_t* fd) {
   return 1;
 }
 
+static int header_write(scc_fd_t* fd,char *prefix) {
+  int i;
+  scc_fd_printf(fd,"/* This file was generated do not edit */\n\n");
+  for(i = 0 ; i < COST_MAX_ANIMS ; i++) {
+    if(!anims[i].name) continue;
+    scc_fd_printf(fd,"#define %s%s %d\n",prefix,anims[i].name,i);
+  }
+  return 1;
+}
+
 static scc_lex_t* cost_lex;
 extern int cost_main_lexer(YYSTYPE *lvalp, YYLTYPE *llocp,scc_lex_t* lex);
 
@@ -1186,6 +1200,8 @@ static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &cost_output },
   { "I", SCC_PARAM_STR, 0, 0, &img_path },
   { "akos", SCC_PARAM_FLAG, 0, 1, &akos },
+  { "prefix", SCC_PARAM_STR, 0, 0, &symbol_prefix },
+  { "header", SCC_PARAM_STR, 0, 0, &header_name },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1217,6 +1233,16 @@ int main (int argc, char** argv) {
     cost_write(out_fd);
 
   scc_fd_close(out_fd);
+
+  if(header_name) {
+    out_fd = new_scc_fd(header_name,O_WRONLY|O_CREAT|O_TRUNC,0);
+    if(!out_fd) {
+      printf("Failed to open output file %s.\n",out);
+      return -1;
+    }
+    header_write(out_fd,symbol_prefix);
+    scc_fd_close(out_fd);
+  }
 
   return 0;
 }
