@@ -1325,7 +1325,7 @@ int scc_write_obob(int version,scc_roobj_obj_t* obj,scc_fd_t* fd) {
 
   if(version == 7) {
     // version
-    scc_fd_w32le(fd,730);
+    scc_fd_w32le(fd,732);
     // parent
     scc_fd_w8(fd,obj->parent_id);
     // parent state
