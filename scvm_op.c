@@ -1180,6 +1180,24 @@ static int scvm_op_delay_minutes(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0xBA
+static int scvm_op_actor_say(scvm_t* vm, scvm_thread_t* thread) {
+    int r,len;
+    int actor;
+    if((r = scvm_pop(vm,&actor))) return r;
+
+    if((r = scvm_thread_strlen(thread,&len))) return r;
+    thread->code_ptr += len+1;
+
+    return 0;
+}
+
+// 0xBB
+static int scvm_op_ego_say(scvm_t* vm, scvm_thread_t* thread) {
+    scvm_push(vm, vm->var->ego);
+    return scvm_op_actor_say(vm, thread);
+}
+
 // 0xBC
 static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
   int r,addr;
@@ -1551,8 +1569,8 @@ scvm_op_t scvm_optable[0x100] = {
   // B8
   { scvm_op_dummy_print, "actor print" },
   { scvm_op_dummy_print, "ego print" },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_actor_say, "actor say" },
+  { scvm_op_ego_say, "ego say" },
   // BC
   { scvm_op_dim, "dim" },
   { NULL, NULL },
