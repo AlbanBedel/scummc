@@ -411,7 +411,9 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
   scc_statement_t *a = op->argv, *b = op->argv->next;
   scc_operator_t* oper;
 
-  if(!a->val.v.y) { // simple variable
+  if(!a->val.v.y &&
+     b->type != SCC_ST_LIST &&
+     b->type != SCC_ST_STR) { // simple variable
 
     if(op->op != '=') {
       c = scc_statement_gen_code(a,1);
@@ -454,7 +456,10 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
     c = scc_statement_gen_code(b,1);
     SCC_LIST_ADD(code,last,c);
 
-    c = scc_statement_gen_code(a->val.v.y,1);
+    if(a->val.v.y)
+        c = scc_statement_gen_code(a->val.v.y,1);
+    else
+        c = scc_code_push_val(SCC_OP_PUSH,0);
     SCC_LIST_ADD(code,last,c);
       
     c = scc_code_res_addr(a->val.v.x ? SCC_OP_ARRAY2_WRITE_LIST : SCC_OP_ARRAY_WRITE_LIST,
@@ -475,7 +480,10 @@ static scc_code_t* scc_assign_gen_code(scc_op_t* op, int ret_val) {
     if(a->val.v.x)
       scc_log(LOG_WARN,"Warning: strings can't be assigned to 2-dim arrays, ignoring second index.\n");
 
-    c = scc_statement_gen_code(a->val.v.y,1);
+    if(a->val.v.y)
+        c = scc_statement_gen_code(a->val.v.y,1);
+    else
+        c = scc_code_push_val(SCC_OP_PUSH,0);
     SCC_LIST_ADD(code,last,c);
 
     c = scc_code_res_addr(SCC_OP_ARRAY_WRITE_STR,a->val.v.r);

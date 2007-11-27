@@ -1426,6 +1426,12 @@ statement: dval
   if($1->type != SCC_ST_VAR)
     SCC_ABORT(@1,"rvalue is not a variable, so it can't be assigned.\n");
 
+  if(!($1->val.v.r->subtype & SCC_VAR_ARRAY) &&
+     ($3->type == SCC_ST_STR ||
+      $3->type == SCC_ST_LIST))
+      SCC_ABORT(@1,"list and strings can only be assigned to "
+                "array variables.\n");
+
   if($1->val.v.x && $3->type == SCC_ST_STR)
     SCC_ABORT(@1,"Strings can't be assigned to 2-dim arrays.\n");
 
