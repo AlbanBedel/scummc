@@ -572,7 +572,7 @@ static void cmd_run_usage(char* args) {
 }
 
 static int cmd_run(scvm_t* vm, char* args) {
-  sighandler_t oldsig;
+  sig_t oldsig;
   // todo: reset the vm
   dbg_interrupt = 0;
   oldsig = signal(SIGINT,dbg_interrupt_handler);

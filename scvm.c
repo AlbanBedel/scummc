@@ -720,9 +720,9 @@ typedef struct scvm_backend_priv {
 static int sdl_scvm_init_video(scvm_backend_sdl_t* be, unsigned width,
                                unsigned height, unsigned bpp) {
   if(!be->inited_video) {
-    sighandler_t oldint = signal(SIGINT,SIG_DFL);
-    sighandler_t oldquit = signal(SIGQUIT,SIG_DFL);
-    sighandler_t oldterm = signal(SIGTERM,SIG_DFL);
+    sig_t oldint = signal(SIGINT,SIG_DFL);
+    sig_t oldquit = signal(SIGQUIT,SIG_DFL);
+    sig_t oldterm = signal(SIGTERM,SIG_DFL);
     if(SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
       scc_log(LOG_ERR,"SDL video init failed.\n");
       return 0;
