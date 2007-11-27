@@ -396,11 +396,25 @@ static scc_code_t* scc_call_gen_code(scc_call_t* call, int ret_val) {
     SCC_LIST_ADD(code,last,c);
   }
 
-  // kick the return val if it's not needed
-  if(call->func->ret && (!ret_val)) {
-    c = scc_code_new(1);
-    c->data[0] = SCC_OP_POP;
-    SCC_LIST_ADD(code,last,c);
+  if(call->user_script) {
+    if(ret_val) {
+      // Pass VAR_RETURN back
+      c = scc_code_push_val(SCC_OP_VAR_READ,SCC_VAR_RETURN);
+      SCC_LIST_ADD(code,last,c);
+    }
+  } else {
+    // kick the return val if it's not needed
+    if(call->func->ret && (!ret_val)) {
+      c = scc_code_new(1);
+      c->data[0] = SCC_OP_POP;
+      SCC_LIST_ADD(code,last,c);
+    }
+    if(!call->func->ret && ret_val) {
+      scc_log(LOG_WARN,"Warning: the function %s doesn't return anything.\n",
+              call->func->sym);
+      c = scc_code_push_val(SCC_OP_PUSH,0);
+      SCC_LIST_ADD(code,last,c);
+    }
   }
 
   return code;
@@ -1011,14 +1025,21 @@ static scc_code_t* scc_do_gen_code(scc_instruct_t* inst) {
 }
 
 static scc_code_t* scc_branch_gen_code(scc_instruct_t* inst) {
-  scc_code_t* c;
+  scc_code_t *code=NULL,*last=NULL,*c;
   scc_loop_t* l;
 
   if(inst->subtype == SCC_BRANCH_RETURN) {
+    if(inst->pre) {
+      c = scc_statement_gen_code(inst->pre,1);
+      SCC_LIST_ADD(code,last,c);
+      c = scc_code_push_val(SCC_OP_VAR_WRITE,SCC_VAR_RETURN);
+      SCC_LIST_ADD(code,last,c);
+    }
     c = scc_code_new(1);
     c->data[0] = SCC_OP_SCR_RET;
     c->fix = SCC_FIX_RETURN;
-    return c;
+    SCC_LIST_ADD(code,last,c);
+    return code;
   }
 
   if(!loop_stack) {

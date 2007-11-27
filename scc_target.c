@@ -61,7 +61,7 @@ static int scc_addr_max_v6[] = {
 
 static int scc_addr_min_v6[] = {
     0,                       // nothing
-    140,                     // VAR (don't use the engine vars)
+    0x100,                   // VAR (don't use the engine vars)
     1,                       // ROOM
     1,                       // SCR
     1,                       // COST
@@ -106,7 +106,7 @@ static int scc_addr_max_v7[] = {
 
 static int scc_addr_min_v7[] = {
     0,                       // nothing
-    140,                     // VAR (don't use the engine vars)
+    0x100,                     // VAR (don't use the engine vars)
     1,                       // ROOM
     1,                       // SCR
     1,                       // COST

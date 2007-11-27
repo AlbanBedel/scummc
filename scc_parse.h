@@ -148,6 +148,7 @@ struct scc_func_st {
 /// Function call
 struct scc_call_st {
   scc_func_t* func;
+  int user_script;
   int argc;
   scc_statement_t* argv;
 };
@@ -458,6 +459,8 @@ struct scc_operator_st {
 #define SCC_OP_BAND              0xD6
 #define SCC_OP_BOR               0xD7
 //@}
+
+#define SCC_VAR_RETURN 0xFE
 
 typedef struct scc_target_st {
     /// Target version

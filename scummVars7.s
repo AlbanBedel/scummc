@@ -124,6 +124,7 @@ int VAR_BLAST_ABOVE_TEXT       @ 133;
 int VAR_MUSIC_BUNDLE_LOADED    @ 135;
 int VAR_VOICE_BUNDLE_LOADED    @ 136;
 
+int VAR_RETURN                 @ 254;
 
 //
 // Directions

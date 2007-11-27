@@ -164,6 +164,8 @@ int VAR_TIMEDATE_MINUTE        @ 126;
 int VAR_TIMEDATE_DAY           @ 128;
 int VAR_TIMEDATE_MONTH         @ 129;
 
+int VAR_RETURN                 @ 254;
+
 //
 // Directions
 //

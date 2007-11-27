@@ -62,7 +62,7 @@ static scc_keyword_t scc_keywords[] = {
     { "nibble",     TYPE,      SCC_VAR_NIBBLE },
     { "object",     OBJECT,    -1 },
     { "override",   OVERRIDE,  -1 },
-    { "return",     BRANCH,    SCC_BRANCH_RETURN },
+    { "return",     RETURN,    SCC_BRANCH_RETURN },
     { "room",       ROOM,      -1 },
     { "script",     SCRIPT,    -1 },
     { "sound",      RESTYPE,   SCC_RES_SOUND },

@@ -241,7 +241,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 %token <integer> TYPE
 %token <integer> NUL
 
-%token <integer> BRANCH
+%token <integer> BRANCH RETURN
 
 %token ROOM
 %token OBJECT
@@ -1109,6 +1109,34 @@ oneinstruct: statements
 
 | BRANCH
 {
+  scc_loop_t* l = scc_loop_get($1,NULL);
+  if(!l)
+    SCC_ABORT(@1,"Invalid branch instruction.\n");
+  $$ = calloc(1,sizeof(scc_instruct_t));
+  $$->type = SCC_INST_BRANCH;
+  $$->subtype = $1;
+}
+
+| BRANCH SYM
+{
+  scc_loop_t* l = scc_loop_get($1,$2);
+  if(!l)
+    SCC_ABORT(@1,"Invalid branch instruction.\n");
+  $$ = calloc(1,sizeof(scc_instruct_t));
+  $$->type = SCC_INST_BRANCH;
+  $$->subtype = $1;
+  $$->sym = $2;
+}
+
+| RETURN
+{
+  $$ = calloc(1,sizeof(scc_instruct_t));
+  $$->type = SCC_INST_BRANCH;
+  $$->subtype = $1;
+}
+
+| RETURN statements
+{
   if($1 != SCC_BRANCH_RETURN) {
     scc_loop_t* l = scc_loop_get($1,NULL);
     if(!l)
@@ -1117,19 +1145,7 @@ oneinstruct: statements
   $$ = calloc(1,sizeof(scc_instruct_t));
   $$->type = SCC_INST_BRANCH;
   $$->subtype = $1;
-}
-
-| BRANCH SYM
-{
-  if($1 != SCC_BRANCH_RETURN) {
-    scc_loop_t* l = scc_loop_get($1,$2);
-    if(!l)
-      SCC_ABORT(@1,"Invalid branch instruction.\n");
-  }
-  $$ = calloc(1,sizeof(scc_instruct_t));
-  $$->type = SCC_INST_BRANCH;
-  $$->subtype = $1;
-  $$->sym = $2;
+  $$->pre = $2;
 }
 ;
 
@@ -1665,6 +1681,7 @@ call: SYM '(' cargs ')'
   scc_func_t* f;
   scc_symbol_t* s;
   char* err;
+  int user_script = 0;
 
   f = scc_get_func(sccp,$1);
   if(!f) {
@@ -1690,12 +1707,14 @@ call: SYM '(' cargs ')'
     scr->next = list;
 
     $3 = scr;
+    user_script = 1;
   }
 
   $$ = calloc(1,sizeof(scc_statement_t));
   $$->type = SCC_ST_CALL;
 
   $$->val.c.func = f;
+  $$->val.c.user_script = user_script;
   $$->val.c.argv = $3;
 
   for(a = $3 ; a ; a = a->next)
@@ -1742,6 +1761,7 @@ call: SYM '(' cargs ')'
   $$->type = SCC_ST_CALL;
 
   $$->val.c.func = f;
+  $$->val.c.user_script = 1;
   $$->val.c.argv = scr;
   $$->val.c.argc = 2;
 }
