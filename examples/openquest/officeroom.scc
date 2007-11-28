@@ -66,9 +66,17 @@ room OfficeRoom {
             if(getObjectState(objA)==1 && VAR_EGO!=getObjectOwner(InventoryItems::gun)) {
                 egoSay("I'll look in here I think.");
                 waitForMessage();
+                animateActor(VAR_EGO, 24);
+                delay(20);
+                animateActor(VAR_EGO, 28);
+                delay(20);
                 egoSay("There appears to be a small sidearm in this container.");
                 pickupObject( InventoryItems::gun, InventoryItems );
                 waitForMessage();
+                animateActor(VAR_EGO, 24);
+                delay(20);
+                animateActor(VAR_EGO, 28);
+                delay(20);
                 egoSay("And a plastic card containing some kind of circuitry.");
                 pickupObject( InventoryItems::card, InventoryItems );
             }
@@ -111,11 +119,18 @@ room OfficeRoom {
                 return;
             }
             if( ! hasTalkedAboutPlant ) {
+                animateActor(VAR_EGO, 24);
+                delay(20);
                 actorSay( carol, "Hey, I haven't cleaned there yet." );
                 hasTriedToMovePlant = 1;
+                waitForMessage();
+                animateActor(VAR_EGO, 28);
+                delay(30);
                 return;
             }
             if( getObjectState( plant ) == 1 ) {
+                animateActor(VAR_EGO, 24);
+                delay(20);
                 setObjectState( plant, 2 );
                 // initialize bulletsActor
                 setCurrentActor(bulletsActor);
@@ -127,6 +142,9 @@ room OfficeRoom {
                 setActorIgnoreBoxes();
                 putActorAt(bulletsActor,113,94,OfficeRoom);
                 setCurrentActor(VAR_EGO);
+                delay(30);
+                animateActor(VAR_EGO, 28);
+                delay(30);
                 egoSay( "There is a small box down here." );
             }
             else
@@ -197,7 +215,7 @@ room OfficeRoom {
         y = 64;
         w = 8;
         h = 16;
-        hs_x = -10;
+        hs_x = -14;
         hs_y = 30;
         name = "plate";
         dir = EAST;
@@ -211,6 +229,7 @@ room OfficeRoom {
             waitForMessage();
             egoSay("It must be some kind of pressure plate.");
             return;
+        case Push:
         case Use:
             if( getObjectState( exitToSecretRoom ) == 7 ) {
                 egoSay("The door is already open.");
@@ -233,6 +252,10 @@ room OfficeRoom {
             }
             if( hasSmelledPlate ) {
                 hasPressedPlate = 1;
+                animateActor(VAR_EGO, 24);
+                delay(30);
+                animateActor(VAR_EGO, 28);
+                delay(30);
                 egoSay("Nothing happened.");
                 waitForMessage();
                 egoSay("The two plates appear to be connected.");

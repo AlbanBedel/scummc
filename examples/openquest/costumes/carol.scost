@@ -53,10 +53,10 @@ anim talkStart = {
     S = { body(7) };
 };
 
-/*anim talkStop = {
+anim talkStop = {
     S = { body([6-9]) LOOP };
 };
-*/
+
 
 
 anim walkIntoRoom = {
