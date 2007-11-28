@@ -65,6 +65,27 @@ picture standS = {
 };
 
 
+picture standWithPhoneE = {
+    path = "../graphics/zif/frames/standwithphone_SE.bmp",
+    position = { -13, -48 }
+};
+
+picture standWithPhoneW = {
+    path = "../graphics/zif/frames/standwithphone_SE.bmp",
+    position = { -13, -48 }
+};
+
+picture standWithPhoneN = {
+    path = "../graphics/zif/frames/standwithphone_N.bmp",
+    position = { -13, -48 }
+};
+
+picture standWithPhoneS = {
+    path = "../graphics/zif/frames/standwithphone_S.bmp",
+    position = { -13, -48 }
+};
+
+
 picture talking_e00 = {
     glob = "../graphics/zif/frames/talk_SE_??.bmp",
     position = { -13, -48 }
@@ -84,6 +105,39 @@ picture talking_s00 = {
     glob = "../graphics/zif/frames/talk_S_??.bmp",
     position = { -13, -48 }
 };
+
+
+picture talkToPhone_e00 = {
+    glob = "../graphics/zif/frames/talktophone_SE_??.bmp",
+    position = { -13, -48 }
+};
+
+picture talkToPhone_w00 = {
+    glob = "../graphics/zif/frames/talktophone_SE_??.bmp",
+    position = { -13, -48 }
+};
+
+picture talkToPhone_N = {
+    path = "../graphics/zif/frames/talktophone_N_02.bmp",
+    position = { -13, -48 }
+};
+
+picture talkToPhone_s00 = {
+    glob = "../graphics/zif/frames/talktophone_S_??.bmp",
+    position = { -13, -48 }
+};
+
+
+picture raisearmE = {
+    glob = "../graphics/zif/frames/raisearm_SE_??.bmp",
+    position = { -13, -48 }
+};
+
+picture lookaroundS = {
+    glob = "../graphics/zif/frames/lookaround_S_??.bmp",
+    position = { -13, -48 }
+};
+
 
 
 
@@ -115,7 +169,25 @@ limb body = {
 
     talking_s0000, talking_s0001, talking_s0002, // 26-28
 
-    standN, talking_N, standN // 29-31
+    standN, talking_N, standN, // 29-31
+
+    raisearmE00, raisearmE01, raisearmE00, standE, // 32-35
+    
+    standWithPhoneE, // 36
+    standWithPhoneW, // 37
+    standWithPhoneN, // 38
+    standWithPhoneS, // 39
+
+    talkToPhone_e0000, talkToPhone_e0001, talkToPhone_e0002, // 40-42
+
+    talkToPhone_w0000, talkToPhone_w0001, talkToPhone_w0002, // 43-45
+
+    talkToPhone_s0000, talkToPhone_s0001, talkToPhone_s0002, // 46-48
+
+    standWithPhoneN, talking_N, standWithPhoneN, // 49-51
+    
+    lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneS // 52-55
+
 
 };
 
@@ -147,23 +219,49 @@ anim talkStart = {
     N = { body([29-31]) };
 };
 
-
-//*
 anim talkStop = {
     E = { body(16) };
     W = { body(17) };
     N = { body(18) };
     S = { body(19) };
 };
-//*/
 
-/*
-anim talkStop = {
-    E = { body([20-22]) };
-    W = { body([23-25]) };
-    N = { body([26-28]) };
-    S = { body([29-31]) };
+anim raiseArm @ 24 = {
+    E = { body([32-33]) !LOOP };
+    W = { body([32-33]) !LOOP };
+    N = { body([32-33]) !LOOP };
+    S = { body([32-33]) !LOOP };
 };
-//*/
+
+anim lowerArm @ 28 = {
+    E = { body([33-35]) !LOOP };
+    W = { body([33-35]) !LOOP };
+    N = { body([33-35]) !LOOP };
+    S = { body([33-35]) !LOOP };
+};
+
+anim standWithPhone @ 32 = {
+    E = { body(36) };
+    W = { body(37) };
+    N = { body(38) };
+    S = { body(39) };
+};
+
+anim talkToPhoneStart @ 36 = {
+    E = { body([40-42]) };
+    W = { body([43-45]) };
+    S = { body([46-48]) };
+    N = { body([49-51]) };
+};
+
+anim lookAround @ 40 = {
+    E = { body([52-55]) };
+    W = { body([52-55]) };
+    S = { body([52-55]) };
+    N = { body([52-55]) };
+};
+
+
+
 
 

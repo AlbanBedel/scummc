@@ -35,6 +35,26 @@ room Actors {
     cost carolCost = "carol.cost";
     
     
+    script setZifOnThePhone() {
+        setCurrentActor(commanderZif);
+        setActorStandFrame( 32 );
+        setActorInitFrame( 32 );
+        setActorTalkFrame( 36, 32 );
+        setActorStanding();
+        setCurrentActor(VAR_EGO);
+    }
+
+    
+    script setZifOffThePhone() {
+        setCurrentActor(commanderZif);
+        setActorStandFrame( 3 );
+        setActorInitFrame( 1 );
+        setActorTalkFrame( 4, 5 );
+        setActorStanding();
+        setCurrentActor(VAR_EGO);
+    }
+
+    
     // set the actor costume, etc
     script setupActors() {
         dbgPrint("setupActors()");
@@ -49,7 +69,7 @@ room Actors {
         setActorTalkColor(ZOB_COLOR);
         setActorWidth(20);
         setActorAnimSpeed(4);
-        putActorAt(ensignZob,140,120,OfficeRoom);
+        putActorAt(ensignZob,170,110,OfficeRoom);
         setActorDirection(270);
 
 
@@ -65,20 +85,33 @@ room Actors {
         setActorWalkSpeed(2,1);
         setActorTalkColor(ZIF_COLOR);
         setActorWidth(20);
-        setActorAnimSpeed(2);
+        setActorAnimSpeed(3);
         actorObject[commanderZif] = OfficeRoom::commanderZifObj;
         putActorAt(commanderZif,200,120,OfficeRoom);
-        setActorDirection(90);
-
+        setActorDirection(180);
+        
 
         pickupObject( InventoryItems::scanner, InventoryItems );
         invOffset = 0;
         setCurrentActor(VAR_EGO);
 
     }
-
+    
     
     script officeIntro() {
+        setCurrentActor(commanderZif);
+        actorSay(commanderZif, "Hmmm");
+        waitForMessage();
+        startScript( 2, Actors::setZifOnThePhone, [] );
+        animateActor( commanderZif, 40 );
+        delay(30);
+        actorSay(commanderZif, "Commander's log, star date 432.1");
+        waitForMessage();
+        actorSay(commanderZif, "Arrival complete on the planet of mostly water.");
+        waitForMessage();
+        startScript( 2, Actors::setZifOffThePhone, [] );
+
+
         setCurrentActor(carol);
         initActor();
         setActorCostume(carolCost);

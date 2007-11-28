@@ -236,15 +236,21 @@ room OfficeRoom {
                 return;
             }
             if( hasTalkedAboutPlate ) {
-                walkActorTo(commanderZif, 300, 100);
+                walkActorTo(commanderZif, 276, 106);
                 waitForActor( commanderZif );
                 actorSay(commanderZif, "I'll operate the one over here.");
                 waitForMessage();
                 delay( 20 );
+                animateActor(VAR_EGO, 24);
+                animateActor(commanderZif, 24);
+                delay(30);
                 for(i = 2 ; i < 8 ; i++) {
                     delay( 10 );
                     setObjectState( exitToSecretRoom, i );
                 }
+                animateActor(VAR_EGO, 28);
+                animateActor(commanderZif, 28);
+                delay(30);
                 actorSay(commanderZif, "Continue your investigation.");
                 waitForMessage();
                 walkActorTo(commanderZif, 200, 120);
