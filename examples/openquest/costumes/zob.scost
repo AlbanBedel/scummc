@@ -95,6 +95,11 @@ picture raisearmN = {
     position = { -13, -42 }
 };
 
+picture scanS = {
+    glob = "../graphics/zob/frames/scan_S_??.bmp",
+    position = { -13, -42 }
+};
+
 
 
 //limb body = {
@@ -128,7 +133,9 @@ limb body = {
     standN, talking_N, standN, // 29-31
     
     raisearmE00, raisearmE01, raisearmE00, standE, // 32-35
-    raisearmN00, raisearmN01, raisearmN00, standN // 36-39
+    raisearmN00, raisearmN01, raisearmN00, standN, // 36-39
+
+    scanS00, scanS01, scanS00 // 40-43
 
 };
 
@@ -179,6 +186,13 @@ anim lowerArm @ 28 = {
     W = { body([33-35]) !LOOP };
     N = { body([37-39]) !LOOP };
     S = { body([29-31]) !LOOP };
+};
+
+anim scan @ 32 = {
+    E = { body([40-42]) !LOOP };
+    W = { body([40-42]) !LOOP };
+    N = { body([40-42]) !LOOP };
+    S = { body([40-42]) !LOOP };
 };
 
 

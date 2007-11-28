@@ -245,12 +245,31 @@ room InventoryItems {
             { 0, 0, "graphics/inventory_items/scanner_40.bmp" },
             { 0, 0, "graphics/inventory_items/scanner_dead_40.bmp" }
         };
+        state = 1;
 
         verb(int vrb,int objA,int objB) {
         case LookAt:
             egoSay("Standard issue hand scanner.");
             waitForMessage();
             egoSay("Detects most of the EM spectrum.");
+            return;
+        case Use:
+            if( getObjectState( scanner ) == 2 ) {
+                egoSay("The scanner no longer functions.");
+                return;
+            }
+            egoSay("I'll scan the area.");
+            waitForMessage();
+            animateActor(VAR_EGO, 32);
+            delay(30);
+            animateActor(VAR_EGO, 32);
+            delay(30);
+            animateActor(VAR_EGO, 32);
+            delay(30);
+            if( getActorRoom(VAR_EGO) == SecretRoom )
+                egoSay("The artifact is in this room.");
+            else
+                egoSay("I am detecting the artifact near this location.");
             return;
         case Open:
             egoSay("I'll open up the housing.");
