@@ -45,12 +45,12 @@ picture walking_s00 = {
 
 
 picture standE = {
-    path = "../graphics/zif/frames/stand_SW.bmp",
+    path = "../graphics/zif/frames/stand_SE.bmp",
     position = { -13, -48 }
 };
 
 picture standW = {
-    path = "../graphics/zif/frames/stand_SW.bmp",
+    path = "../graphics/zif/frames/stand_SE.bmp",
     position = { -13, -48 }
 };
 
@@ -66,12 +66,12 @@ picture standS = {
 
 
 picture talking_e00 = {
-    glob = "../graphics/zif/frames/talk_SW_??.bmp",
+    glob = "../graphics/zif/frames/talk_SE_??.bmp",
     position = { -13, -48 }
 };
 
 picture talking_w00 = {
-    glob = "../graphics/zif/frames/talk_SW_??.bmp",
+    glob = "../graphics/zif/frames/talk_SE_??.bmp",
     position = { -13, -48 }
 };
 
