@@ -445,7 +445,8 @@ room ResRoom {
             if(invOffset < 0) invOffset = 0;
             dbgPrint("Inventory offset: %i{invOffset}");
             Verbs::showVerbs(1);
-            startScript2( inventoryHandler, [0] );
+            //startScript2( inventoryHandler, [0] );
+            inventoryHandler( 0 );
             return;
         }
 

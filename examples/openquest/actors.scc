@@ -113,14 +113,14 @@ room Actors {
         setCurrentActor(commanderZif);
         actorSay(commanderZif, "Hmmm");
         waitForMessage();
-        startScript( 2, Actors::setZifOnThePhone, [] );
+        Actors::setZifOnThePhone();
         animateActor( commanderZif, 40 );
         delay(30);
         actorSay(commanderZif, "Commander's log, star date 432.1");
         waitForMessage();
         actorSay(commanderZif, "Arrival complete on the planet of mostly water.");
         waitForMessage();
-        startScript( 2, Actors::setZifOffThePhone, [] );
+        Actors::setZifOffThePhone();
 
         setCurrentActor(carol);
         putActorAt(carol,76,98,OfficeRoom);
@@ -130,11 +130,13 @@ room Actors {
 
         }
         override {
+            if(VAR_OVERRIDE) {
             stopTalking();
             putActorAt(carol,76,98,OfficeRoom);
             setActorStanding();
             animateActor( carol, 3 );
-            startScript( 2, Actors::setZifOffThePhone, [] );
+            Actors::setZifOffThePhone();
+            }
         }
     }
 
@@ -185,7 +187,9 @@ room Actors {
                         waitForMessage();
                         }
                         override {
-                            stopTalking();
+                            if(VAR_OVERRIDE) {
+                                stopTalking();
+                            }
                         }
                         break;
                     case 1:

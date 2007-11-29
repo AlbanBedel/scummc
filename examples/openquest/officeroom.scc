@@ -181,7 +181,7 @@ room OfficeRoom {
             char* sentence;
             int asked;
         case TalkTo:
-            startScript( 2, Actors::zobTalkToZif, [hasPressedPlate, hasTalkedAboutPlate] );
+            Actors::zobTalkToZif(hasPressedPlate, hasTalkedAboutPlate);
             return;
         case LookAt:
             egoSay("My commanding officer, Commander Zif.");
@@ -195,10 +195,10 @@ room OfficeRoom {
         name = "OfficeRoom::carolObj";
         verb(int vrb,int objA,int objB) {
         case TalkTo:
-            startScript( 2, Actors::zobTalkToCarol, [hasTriedToMovePlant, hasTalkedAboutPlant] );
+            Actors::zobTalkToCarol(hasTriedToMovePlant, hasTalkedAboutPlant);
             return;
         case LookAt:
-            startScript( 2, Actors::lookAtCarol, [] );
+            Actors::lookAtCarol();
             return;
         }
 
@@ -257,9 +257,11 @@ room OfficeRoom {
                 walkActorTo(commanderZif, 200, 120);
                 }
                 override {
-                    stopTalking();
-                    putActorAt(commanderZif, 200, 120, OfficeRoom);
-                    setObjectState( exitToSecretRoom, 7 );
+                    if(VAR_OVERRIDE) {
+                        stopTalking();
+                        putActorAt(commanderZif, 200, 120, OfficeRoom);
+                        setObjectState( exitToSecretRoom, 7 );
+                    }
                 }
                 return;
             }
