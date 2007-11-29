@@ -64,7 +64,7 @@ room InventoryItems {
             return;
         case Use:
             if(objB == bullets) {
-                setObjectState( gun, 1 );
+                setObjectState( gun, 2 );
                 setObjectOwner( bullets, 0 );
                 egoSay("The weapon has been loaded.");
             }

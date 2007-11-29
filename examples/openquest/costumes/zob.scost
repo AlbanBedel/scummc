@@ -24,12 +24,12 @@ flags = FLIP;
 
 
 picture walking_e00 = {
-    glob = "../graphics/zob/frames/walk_W_??.bmp",
+    glob = "../graphics/zob/frames/walk_E_??.bmp",
     position = { -13, -42 }
 };
 
 picture walking_w00 = {
-    glob = "../graphics/zob/frames/walk_W_??.bmp",
+    glob = "../graphics/zob/frames/walk_E_??.bmp",
     position = { -13, -42 }
 };
 
@@ -100,6 +100,16 @@ picture scanS = {
     position = { -13, -42 }
 };
 
+picture aimE = {
+    glob = "../graphics/zob/frames/aim_E_??.bmp",
+    position = { -13, -42 }
+};
+
+picture fireupE = {
+    path = "../graphics/zob/frames/fireup_E.bmp",
+    position = { -13, -50 }
+};
+
 
 
 //limb body = {
@@ -135,7 +145,9 @@ limb body = {
     raisearmE00, raisearmE01, raisearmE00, standE, // 32-35
     raisearmN00, raisearmN01, raisearmN00, standN, // 36-39
 
-    scanS00, scanS01, scanS00 // 40-43
+    scanS00, scanS01, scanS00, // 40-42
+
+    aimE00, aimE01, aimE02, fireupE, aimE02, aimE01, aimE00 // 43-49
 
 };
 
@@ -193,6 +205,13 @@ anim scan @ 32 = {
     W = { body([40-42]) !LOOP };
     N = { body([40-42]) !LOOP };
     S = { body([40-42]) !LOOP };
+};
+
+anim fireup @ 40 = {
+    E = { body([43-49]) !LOOP };
+    W = { body([43-49]) !LOOP };
+    N = { body([43-49]) !LOOP };
+    S = { body([43-49]) !LOOP };
 };
 
 

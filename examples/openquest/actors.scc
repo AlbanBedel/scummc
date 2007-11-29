@@ -90,6 +90,15 @@ room Actors {
         putActorAt(commanderZif,200,120,OfficeRoom);
         setActorDirection(180);
         
+        setCurrentActor(carol);
+        initActor();
+        setActorCostume(carolCost);
+        setActorName("indigenous lifeform");
+        setActorWidth(20);
+        setActorIgnoreBoxes();
+        setActorAnimSpeed( 7 );
+        setActorTalkColor(CAROL_COLOR);
+        actorObject[carol] = OfficeRoom::carolObj;
 
         pickupObject( InventoryItems::scanner, InventoryItems );
         invOffset = 0;
@@ -99,6 +108,8 @@ room Actors {
     
     
     script officeIntro() {
+    
+        try {
         setCurrentActor(commanderZif);
         actorSay(commanderZif, "Hmmm");
         waitForMessage();
@@ -111,23 +122,20 @@ room Actors {
         waitForMessage();
         startScript( 2, Actors::setZifOffThePhone, [] );
 
-
         setCurrentActor(carol);
-        initActor();
-        setActorCostume(carolCost);
-        setActorName("indigenous lifeform");
-        //actorObject[bulletsActor] = bullets;
-        setActorWidth(20);
-        setActorIgnoreBoxes();
-        setActorAnimSpeed( 7 );
-        setActorTalkColor(CAROL_COLOR);
-        actorObject[carol] = OfficeRoom::carolObj;
         putActorAt(carol,76,98,OfficeRoom);
         delay(120);
         setActorStanding();
         actorSay(carol, "Are you done in here?");
-        //animateActor(carol, 8);
 
+        }
+        override {
+            stopTalking();
+            putActorAt(carol,76,98,OfficeRoom);
+            setActorStanding();
+            animateActor( carol, 3 );
+            startScript( 2, Actors::setZifOffThePhone, [] );
+        }
     }
 
     

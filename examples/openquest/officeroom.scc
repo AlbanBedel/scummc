@@ -236,6 +236,7 @@ room OfficeRoom {
                 return;
             }
             if( hasTalkedAboutPlate ) {
+                try {
                 walkActorTo(commanderZif, 276, 106);
                 waitForActor( commanderZif );
                 actorSay(commanderZif, "I'll operate the one over here.");
@@ -254,6 +255,12 @@ room OfficeRoom {
                 actorSay(commanderZif, "Continue your investigation.");
                 waitForMessage();
                 walkActorTo(commanderZif, 200, 120);
+                }
+                override {
+                    stopTalking();
+                    putActorAt(commanderZif, 200, 120, OfficeRoom);
+                    setObjectState( exitToSecretRoom, 7 );
+                }
                 return;
             }
             if( hasSmelledPlate ) {

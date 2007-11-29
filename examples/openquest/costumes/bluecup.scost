@@ -25,8 +25,7 @@ palette([144-175]);
 
 picture standS_ = {
     glob = "../graphics/bluecup/bluecup_??.bmp",
-    position = { -12, -120 }
-    //position = { -12, -10 }
+    position = { -12, -10 }
 };
 
 
