@@ -44,13 +44,61 @@
 #include "scvm.h"
 
 
+static void scale_copy(uint8_t* dst, int dst_stride,
+                       unsigned clip_width, unsigned clip_height,
+                       int x, int y,
+                       int dst_width, int dst_height,
+                       uint8_t* src, int src_stride,
+                       int src_width, int src_height) {
+  int sx = 0,sy = 0,dx = 0,dy = 0,xerr = 0,yerr = 0,skip = 0;
+
+  dst += dst_stride*y;
+  dst += x;
+
+  while(dy < dst_height && dy+y < clip_height) {
+    if(!skip && dy+y >= 0) {
+      dx = sx = 0;
+      while(dx < dst_width) {
+        if(!skip && dx+x >= 0 && dx+x < clip_width)
+          dst[dx] = src[sx];
+        xerr += dst_width;
+        if(xerr<<1 >= src_width) {
+          xerr -= src_width;
+          dx++;
+          skip = 0;
+          if(xerr<<1 >= src_width) {
+            xerr -= dst_width;
+            continue;
+          }
+        } else
+          skip = 1;
+        sx++;
+      }
+    }
+    yerr += dst_height;
+    if(yerr<<1 >= src_height) {
+      yerr -= src_height;
+      dy++;
+      dst += dst_stride;
+      skip = 0;
+      if(yerr<<1 >= src_height) {
+        yerr -= dst_height;
+        continue;
+      }
+    } else
+      skip = 1;
+    sy++;
+    src += src_stride;
+  }
+}
+
+
 int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                    uint8_t* buffer, int stride,
                    unsigned width, unsigned height) {
-  int sx,dx,w,h,x,y,a;
+  int sx,dx,dy,w,h,a;
 
-  if(width < 320 || height < 200 ||
-     !vm->room) return 0;
+  if(!vm->room) return 0;
 
   h = vm->room->height;
   if(view->room_start + h != view->room_end)
@@ -61,23 +109,26 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
   
   if(h <= 0) return 0;  
   w = vm->room->width;
-  if(w > width) w = width;
+  if(w > view->screen_width) w = view->screen_width;
   
   sx = vm->view->camera_x-w/2;
   if(sx + w/2 > vm->room->width) sx = vm->room->width-w;
   if(sx < 0) sx = 0;
   
-  dx = (width-w)/2;
+  dx = (view->screen_width-w)*width/view->screen_width/2;
+  dy = view->room_start*height/view->screen_height;
 
-  for(y = 0 ; y < h ; y++)
-    memcpy(buffer + (view->room_start+y)*stride + dx,
-           vm->room->image.data + y*vm->room->width + sx,w);
-  
+  scale_copy(buffer,stride,width,height,
+             dx,dy,
+             w*width/view->screen_width,
+             h*height/view->screen_height,
+             vm->room->image.data+sx, vm->room->width,
+             w,h);
+
   for(a = 0 ; a < vm->room->num_object ; a++) {
     scvm_object_t* obj = vm->room->object[a];
     scvm_image_t* img;
     int obj_w,obj_h;
-    uint8_t *src,*dst;
     if(!obj->pdata->state ||
        obj->pdata->state > obj->num_image)
       continue;
@@ -89,26 +140,13 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
        obj->y >= h ||
        obj->y + obj_h < 0)
       continue;
-    src = img->data;
-    dst = buffer +  (view->room_start+obj->y)*stride + dx + obj->x;
-    if(obj->x-sx + obj_w >= w)
-      obj_w = w - (obj->x-sx);
-    if(obj->x < sx) {
-      int off = sx - obj->x;
-      src += off;
-      dst += off;
-      obj_w -= off;
-    }
-    
-    if(obj->y + obj_h >= h)
-      obj_h = h - obj->y;
-    for(y = 0 ; y < obj_h ; y++) {
-      for(x = 0 ; x < obj_w ; x++)
-        if(src[x] != vm->room->trans)
-          dst[x] = src[x];
-      dst += stride;
-      src += obj->width;
-    }
+
+    scale_copy(buffer,stride,width,height,
+               dx + (obj->x-sx)*width/view->screen_width,
+               dy + obj->y*height/view->screen_height,
+               obj_w*width/view->screen_width,
+               obj_h*height/view->screen_height,
+               img->data, obj_w, obj_w, obj_h);
   }
   
   for(a = 0 ; a < vm->num_actor ; a++) {
@@ -117,10 +155,12 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
        !vm->actor[a].costdec.cost) continue;
     scc_log(LOG_MSG,"Draw actor %d at %dx%d\n",a,vm->actor[a].x,vm->actor[a].y);
     scc_cost_dec_frame(&vm->actor[a].costdec,
-                       buffer + view->room_start*stride + dx,
-                       vm->actor[a].x-sx,vm->actor[a].y,
-                       w,h,stride,
-                       vm->actor[a].scale_x,vm->actor[a].scale_y);
+                       buffer + dy*stride + dx,
+                       (vm->actor[a].x-sx)*width/view->screen_width,
+                       vm->actor[a].y*height/view->screen_height,
+                       width,height,stride,
+                       vm->actor[a].scale_x*width/view->screen_width,
+                       vm->actor[a].scale_y*height/view->screen_height);
   }
   
   return 1;

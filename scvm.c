@@ -450,7 +450,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
     scc_log(LOG_MSG,"VM run threads state: %d\n",vm->state);
     switch(vm->state) {
     case SCVM_BOOT:
-      if(!scvm_init_video(vm,320,200,8)) {
+      if(!scvm_init_video(vm,640,480,8)) {
        scc_log(LOG_ERR,"Failed to open video output.\n");
         return SCVM_ERR_VIDEO_MODE;
       }
