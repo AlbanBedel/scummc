@@ -598,7 +598,20 @@ static scvm_debug_cmd_t debug_cmd[] = {
   { NULL }
 };
 
+#ifndef HAVE_READLINE
+char* readline(const char* prompt) {
+    char* line = malloc(512);
+    printf("%s",prompt);
+    if(!fgets(line,512,stdin)) {
+        free(line);
+        return NULL;
+    }
+    return line;
+}
 
+void add_history(const char* line) {
+}
+#endif
 
 int scvm_debugger(scvm_t* vm) {
   char* line = NULL, *ptr, *args;
@@ -610,23 +623,13 @@ int scvm_debugger(scvm_t* vm) {
 
   vm->dbg->check_interrupt = check_interrupt;
 
-#ifndef HAVE_READLINE
-  line = malloc(512);
-#endif
   do {
-#ifdef HAVE_READLINE
     if(line) free(line);
-    line = readline("(scvm) ");
-#else
-    printf("(scvm) ");
-    if(!fgets(line,512,stdin))
+    if(!(line = readline("(scvm) ")))
       continue;
-#endif
     for(ptr = line ; isspace(ptr[0]) ; ptr++);
     if(!ptr[0]) continue;
-#ifdef HAVE_READLINE
     add_history(ptr);
-#endif
     cmd = scvm_find_debug_cmd(vm,ptr,debug_cmd,&args,&found);
     if(!found) {
       if(cmd) {
