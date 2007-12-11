@@ -54,9 +54,13 @@ void scvm_actor_init(scvm_actor_t* a) {
     
     a->scale_x = a->scale_y = 0xFF;
     // a->charset
-    a->direction = 0;
+    a->direction = 2;
     a->flags = 0;
-    
+
+    scvm_actor_set_default_frames(a);
+}
+
+void scvm_actor_set_default_frames(scvm_actor_t* a) {
     a->init_frame = 1;
     a->walk_frame = 2;
     a->stand_frame = 3;
@@ -67,14 +71,23 @@ void scvm_actor_init(scvm_actor_t* a) {
 void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room) {
   a->x = x;
   a->y = y;
+  a->dstX = x;
+  a->dstY = y;
+  a->walking = 0;
   //if(room) 
   a->room = room;
+}
+
+void scvm_actor_walk_to(scvm_actor_t* a, int x, int y) {
+  a->dstX = x;
+  a->dstY = y;
+  a->walking = 1;
 }
 
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost) {
   scc_cost_dec_init(&a->costdec);
   a->costdec.cost = cost;
-  scc_cost_dec_load_anim(&a->costdec,a->init_frame<<2);
+  scc_cost_dec_load_anim(&a->costdec,(a->init_frame<<2)+a->direction);
 }
 
 void scvm_actor_animate(scvm_actor_t* a, int anim) {
@@ -108,13 +121,76 @@ void scvm_actor_step_anim(scvm_actor_t* a) {
   }
 }
 
+static int get_direction_to(int sx, int sy, int dx, int dy) {
+  int x = dx-sx;
+  int y = dy-sy;
+  return (abs(y) < abs(x)) ? ((x >= 0) ? SCC_EAST  : SCC_WEST) :
+                             ((y >= 0) ? SCC_SOUTH : SCC_NORTH);
+}
+
+void scvm_actor_walk_step(scvm_actor_t* a) {
+  int dstDir,step,len;
+
+  if(!a->walking) return;
+
+  if(a->x == a->dstX && a->y == a->dstY) {
+    a->walking = 0;
+    scvm_actor_animate(a,a->stand_frame);
+    return;
+  }
+
+  dstDir = get_direction_to(a->x,a->y,a->dstX,a->dstY);
+  if(dstDir != a->direction) {
+    // TODO: turn to the right direction
+    a->direction = dstDir;
+  }
+
+  if(a->walking == 1) {
+    a->walk_dx  = abs(a->dstX - a->x);
+    a->walk_dy  = abs(a->dstY - a->y);
+    a->walk_err = 0;
+    a->walking  = 2;
+    scvm_actor_animate(a,a->walk_frame);
+    return;
+  }
+
+  if(dstDir >= SCC_SOUTH) { // north/south
+    step = (dstDir == SCC_SOUTH) ? 1 : -1;
+    for(len = 0 ;
+        len < a->walk_speed_y && (a->x != a->dstX || a->y != a->dstY) ;
+        len++) {
+      a->y += step;
+      a->walk_err += a->walk_dx;
+      if(a->walk_err<<1 >= a->walk_dy) {
+        a->walk_err -= a->walk_dy;
+        a->x += (a->dstX >= a->x) ? 1 : -1;
+      }
+    }
+  } else { // east/west
+    step = (dstDir == SCC_EAST) ? 1 : -1;
+    for(len = 0 ;
+        len < a->walk_speed_x && (a->x != a->dstX || a->y != a->dstY) ;
+        len++) {
+      a->x += step;
+      a->walk_err += a->walk_dy;
+      if(a->walk_err<<1 >= a->walk_dx) {
+        a->walk_err -= a->walk_dx;
+        a->y += (a->dstY >= a->y) ? 1 : -1;
+      }
+    }
+  }
+
+}
+
 void scvm_step_actors(scvm_t* vm) {
   int a;
   for(a = 0 ; a < vm->num_actor ; a++) {
     if(!vm->actor[a].room ||
-       vm->actor[a].room != vm->room->id ||
-       !vm->actor[a].costdec.cost ||
-       !vm->actor[a].costdec.anim) continue;
-    scvm_actor_step_anim(&vm->actor[a]);
+       vm->actor[a].room != vm->room->id)
+      continue;
+    if(vm->actor[a].costdec.cost &&
+       vm->actor[a].costdec.anim)
+      scvm_actor_step_anim(&vm->actor[a]);
+    scvm_actor_walk_step(&vm->actor[a]);
   }
 }

@@ -23,6 +23,11 @@
  * @brief SCUMM costume parser and decoder
  */
 
+#define SCC_WEST  0
+#define SCC_EAST  1
+#define SCC_SOUTH 2
+#define SCC_NORTH 3
+
 typedef struct scc_cost_pic scc_cost_pic_t;
 struct scc_cost_pic {
   scc_cost_pic_t* next;

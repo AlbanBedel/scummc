@@ -700,6 +700,19 @@ static int scvm_op_stop_script(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x7E
+static int scvm_op_walk_actor_to(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a,x,y;
+
+  if((r=scvm_vpop(vm,&y,&x,&a,NULL)))
+    return r;
+
+  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  scvm_actor_walk_to(&vm->actor[a],x,y);
+  return 0;
+}
+
+
 // 0x7F
 static int scvm_op_put_actor_at(scvm_t* vm, scvm_thread_t* thread) {
   int r,a,x,y,room;
@@ -978,6 +991,15 @@ static int scvm_op_set_actor_elevation(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_pop(vm,&vm->current_actor->elevation);
 }
 
+// 0x9D54
+static int scvm_op_set_actor_default_frames(scvm_t* vm,
+                                            scvm_thread_t* thread) {
+  if(vm->current_actor)
+    scvm_actor_set_default_frames(vm->current_actor);
+  return 0;
+}
+
+
 // 0x9D57
 static int scvm_op_set_actor_talk_color(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_pop(vm,&vm->current_actor->talk_color);
@@ -1110,6 +1132,21 @@ static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
     if((r = scvm_pop(vm,&y))) return r;
     for(i = 0 ; i < len ; i++)
       if((r = scvm_write_array(vm,addr,x+i,y,list[i]))) return r;
+  }
+  return 0;
+}
+
+// 0xA9A8
+static int scvm_op_wait_for_actor(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned a;
+  int16_t off;
+  if((r=scvm_pop(vm,&a)) ||
+     (r=scvm_thread_r16(thread,&off))) return r;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  if(vm->actor[a].walking) {
+      thread->code_ptr += off;
+      return scvm_op_break_script(vm,thread);
   }
   return 0;
 }
@@ -1494,7 +1531,7 @@ scvm_op_t scvm_optable[0x100] = {
   // 7C
   { scvm_op_stop_script, "stop script" },
   { scvm_op_dummy_vvv, "walk actor to object" },
-  { scvm_op_dummy_vvv, "walk actor to" },
+  { scvm_op_walk_actor_to, "walk actor to" },
   { scvm_op_put_actor_at, "put actor at" },
   // 80
   { scvm_op_dummy_vvv,  "put actor at object" },
@@ -1766,7 +1803,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_actor_init, "init" },
   // 54
   { scvm_op_set_actor_elevation, "set elevation" },
-  { scvm_op_dummy, "default frames" },
+  { scvm_op_set_actor_default_frames, "default frames" },
   { NULL, NULL },
   { scvm_op_set_actor_talk_color, "set talk color" },
   // 58
@@ -1870,7 +1907,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // A8
-  { scvm_op_wait_for, "wait actor" },
+  { scvm_op_wait_for_actor, "wait actor" },
   { scvm_op_wait, "wait msg" },
   { scvm_op_wait, "wait camera" },
   { scvm_op_wait, "wait sentence" },
