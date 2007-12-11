@@ -658,7 +658,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
     rel_x = pic->rel_x*x_scale/255;
     rel_y = pic->rel_y*y_scale/255;
     width = pic->width*x_scale/255;
-    height = pic->width*y_scale/255;
+    height = pic->height*y_scale/255;
     if(flip) rel_x = -width-rel_x;
     l = c = 0;
     if(x+rel_x < 0) c = -x-rel_x;
