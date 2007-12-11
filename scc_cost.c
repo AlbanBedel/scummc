@@ -130,6 +130,8 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			int y_flip) {
   int shr,mask,x = 0,y = 0,end = 0,pos = 0, x_step;
   int yerr = 0, xerr = 0, xskip = 0, yskip = 0, dx = 0, dy = 0;
+  int col_start = 0;
+  uint8_t col_start_color = 0, col_start_rep = 0;
   uint8_t color,rep;
 
   switch(cost->pal_size) {
@@ -147,10 +149,21 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
   }
 
   if(y_flip) {
-    dx = pic->width-1;
+    dx = pic->width*x_scale/255-1;
     x_step = -1;
   } else
     x_step = 1;
+
+  // Store the initial color and repeat
+  // that might be needed if we must repeat the column
+  col_start_rep = pic->data[0];
+  col_start_color = cost->pal[col_start_rep >> shr];
+  col_start_rep &= mask;
+  col_start = 1;
+  if(!col_start_rep) {
+    col_start++;
+    col_start_rep = pic->data[1];
+  }
 
   while(!end) {
     if(pos >= pic->data_size) {
@@ -173,27 +186,48 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
          xskip == 0 && yskip == 0 &&
          trans != color)
 	dst[dst_stride*dy+dx] = color;
-      y++;
+
       yerr += y_scale;
       if(yerr<<1 >= 255) {
         yerr -= 255;
         dy++;
         yskip = 0;
+        if(yerr<<1 >= 255) {
+          yerr -= y_scale;
+          continue;
+        }
       } else
         yskip = 1;
+      y++;
       if(y >= pic->height) {
-	y = 0, dy = 0, x++;
+	y = 0, dy = 0;
+	xerr += x_scale;
+	if(xerr<<1 >= 255) {
+	  xerr -= 255;
+	  dx += x_step;
+	  xskip = 0;
+	  if(xerr<<1 >= 255) {
+	    xerr -= x_scale;
+	    // Jump back to the column start
+	    pos = col_start;
+	    color = col_start_color;
+	    rep = col_start_rep;
+	    goto repeatCol;
+	  }
+	} else
+	  xskip = 1;
+	x++;
 	if(x >= pic->width) {
 	  end = 1;
 	  break;
 	}
-        xerr += x_scale;
-        if(xerr<<1 >= 255) {
-          xerr -= 255;
-          dx += x_step;
-          xskip = 0;
-        } else
-          xskip = 1;
+	// Store the state at the column start
+	col_start = pos;
+	col_start_color = color;
+	col_start_rep = rep;
+      repeatCol:
+	yerr = 0;
+	yskip = 0;
       }
       rep--;
     }
