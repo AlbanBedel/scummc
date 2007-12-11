@@ -164,6 +164,10 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
     col_start++;
     col_start_rep = pic->data[1];
   }
+  // When we restart a column we do a rep-- right afterward,
+  // but that's not correct for the first column. So we
+  // compensate that here.
+  col_start_rep++;
 
   while(!end) {
     if(pos >= pic->data_size) {
