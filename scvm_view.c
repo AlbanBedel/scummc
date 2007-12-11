@@ -194,3 +194,92 @@ void scvm_view_scale_palette(scvm_view_t* view, scvm_color_t* palette,
   }
   
 }
+
+void scvm_pan_camera_to(scvm_t* vm, int x) {
+  if(x < vm->var->camera_min_x)
+    x = vm->var->camera_min_x;
+  if(x > vm->var->camera_max_x)
+    x = vm->var->camera_max_x;
+  vm->view->camera_dst_x = x & ~7;
+  vm->view->flags |= SCVM_VIEW_PAN;
+}
+
+
+int scvm_set_camera_at(scvm_t* vm, int x) {
+  int r;
+  if(x < vm->var->camera_min_x)
+    x = vm->var->camera_min_x;
+  if(x > vm->var->camera_max_x)
+    x = vm->var->camera_max_x;
+  vm->view->camera_x = x & ~7;
+  if(vm->var->camera_script) {
+    vm->var->camera_pos_x = vm->view->camera_x;
+    if((r = scvm_start_script(vm,0,vm->var->camera_script,NULL)) < 0)
+      return r;
+    return r+1;
+  }
+  return 0;
+}
+
+int scvm_move_camera(scvm_t* vm) {
+  int fast = vm->var->camera_fast_x;
+  int r, x = vm->view->camera_x;
+  // Keep into range. Such adjustement are not
+  // calling the camera script
+  if(x < vm->var->camera_min_x) {
+    if(fast)
+      vm->view->camera_x = vm->var->camera_min_x & ~7;
+    else
+      vm->view->camera_x += 8;
+    return 0;
+  }
+
+  if(x > vm->var->camera_max_x) {
+    if(fast)
+      vm->view->camera_x = vm->var->camera_max_x & ~7;
+    else
+      vm->view->camera_x -= 8;
+    return 0;
+  }
+
+  if(vm->view->follow) {
+    scvm_actor_t* a = &vm->actor[vm->view->follow];
+    // In wich strip is the actor
+    int stripe = (a->x-x)/8;
+    if(abs(stripe) < vm->view->screen_width/8/2-10)
+      return 0;
+
+    vm->view->camera_dst_x = a->x & ~7;
+  } else {
+    if(!(vm->view->flags & SCVM_VIEW_PAN))
+      return 0;
+
+    if(vm->view->camera_dst_x == vm->view->camera_x) {
+      vm->view->flags &= ~SCVM_VIEW_PAN;
+      return 0;
+    }
+  }
+
+  if(fast)
+    x = vm->view->camera_dst_x;
+  else {
+    if(x < vm->view->camera_dst_x)
+      x += 8;
+    else
+      x -= 8;
+  }
+
+  if(x < vm->var->camera_min_x)
+    x = vm->var->camera_min_x;
+  if(x > vm->var->camera_max_x)
+    x = vm->var->camera_max_x;
+
+  x &= ~7;
+
+  if(x == vm->view->camera_x) {
+    vm->view->flags &= ~SCVM_VIEW_PAN;
+    return 0;
+  }
+
+  return scvm_set_camera_at(vm,x);
+}

@@ -666,19 +666,36 @@ static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x78
+static int scvm_op_pan_camera_to(scvm_t* vm, scvm_thread_t* thread) {
+  int r,x;
+  if((r=scvm_pop(vm,&x))) return r;
+  scvm_pan_camera_to(vm,x);
+  return 0;
+}
+
+// 0x79
+static int scvm_op_camera_follow_actor(scvm_t* vm, scvm_thread_t* thread) {
+  unsigned a;
+  int r;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  vm->view->follow = a;
+  return SCVM_CAMERA_FOLLOW_ACTOR;
+}
+
 // 0x7A
 static int scvm_op_set_camera_at(scvm_t* vm, scvm_thread_t* thread) {
   int r,x;
-  if((r=scvm_pop(vm,&x))) return r;
-  if(x < vm->var->camera_min_x)
-    x = vm->var->camera_min_x;
-  if(x > vm->var->camera_max_x)
-    x = vm->var->camera_max_x;
-  vm->view->camera_x = x;
-  if(vm->var->camera_script) {
-    if((r=scvm_start_script(vm,0,vm->var->camera_script,NULL))) return r;
-    vm->next_thread = &vm->thread[r];
-    vm->var->camera_pos_x = vm->view->camera_x;
+  if((r=scvm_pop(vm,&x)) ||
+     (r=scvm_set_camera_at(vm,x)) < 0) return r;
+
+  // Stop following actors and panning
+  vm->view->follow = 0;
+  vm->view->flags &= ~ SCVM_VIEW_PAN;
+
+  if(r > 0) {
+    vm->next_thread = &vm->thread[r-1];
     return SCVM_START_SCRIPT;
   }
   return 0;
@@ -1524,8 +1541,8 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_dummy_v, "start music" },
   { NULL, NULL },
   // 78
-  { scvm_op_dummy_v, "pan camera to" },
-  { scvm_op_dummy_v, "camera follow actor" },
+  { scvm_op_pan_camera_to, "pan camera to" },
+  { scvm_op_camera_follow_actor, "camera follow actor" },
   { scvm_op_set_camera_at, "set camera at" },
   { scvm_op_start_room, "start room" },
   // 7C

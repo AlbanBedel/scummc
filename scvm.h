@@ -162,6 +162,7 @@ void scvm_actor_step_anim(scvm_actor_t* a);
 void scvm_step_actors(scvm_t* vm);
 
 #define SCVM_VIEW_SHAKE 1
+#define SCVM_VIEW_PAN   2
 
 #define SCVM_VIEW_PALETTE_CHANGED (1<<16)
 
@@ -169,9 +170,10 @@ typedef struct scvm_view {
   // room position on the screen
   int room_start,room_end;
   int scroll_left,scroll_right;
-  int camera_x;
+  int camera_x, camera_dst_x;
   int screen_width, screen_height;
   int effect;
+  unsigned follow;
   unsigned flags;
   // palette used with the current room
   scvm_palette_t palette;
@@ -183,6 +185,9 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
 void scvm_view_scale_palette(scvm_view_t* view,scvm_color_t* palette,
                              unsigned red, unsigned green, unsigned blue,
                              unsigned start, unsigned end);
+void scvm_pan_camera_to(scvm_t* vm, int x);
+int scvm_set_camera_at(scvm_t* vm, int x);
+int scvm_move_camera(scvm_t* vm);
 
 // variables used for communication between the scripts
 // and the VM.
@@ -371,6 +376,8 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 
 #define SCVM_BEGIN_CYCLE      10
 #define SCVM_RUNNING          20
+#define SCVM_FINISHED_SCRIPTS 30
+#define SCVM_FINISH_CYCLE     40
 
 #define SCVM_START_SCRIPT     100
 
@@ -383,6 +390,15 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 #define SCVM_RUN_ENCD         260
 #define SCVM_RUN_POST_ENTRY   270
 #define SCVM_OPENED_ROOM      280
+
+#define SCVM_CAMERA_FOLLOW_ACTOR                             300
+#define SCVM_CAMERA_START_FOLLOWING_ACTOR                    310
+#define SCVM_CAMERA_START_FOLLOWING_ACTOR_IN_ROOM            320
+
+#define SCVM_RUN_INVENTORY                                   400
+
+#define SCVM_MOVE_CAMERA                                     500
+#define SCVM_WALK_ACTORS                                     510
 
 struct scvm {
   // Debuging data
@@ -421,6 +437,7 @@ struct scvm {
   // current room
   scvm_room_t* room;
   unsigned next_room;
+  unsigned next_room_state;
   // view
   scvm_view_t* view;
   

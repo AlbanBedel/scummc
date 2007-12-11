@@ -500,10 +500,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
           if(vm->thread[i].state == SCVM_THREAD_RUNNING &&
              vm->thread[i].cycle <= vm->cycle) break;
         if(i >= vm->num_thread) {
-          scc_log(LOG_MSG,"\n == VM finished cycle %d == \n\n",vm->cycle);
-          cycles--;
-          vm->cycle++;
-          vm->state = SCVM_BEGIN_CYCLE;
+          vm->state = SCVM_FINISHED_SCRIPTS;
           break;
         }
         vm->current_thread = &vm->thread[i];
@@ -619,9 +616,72 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         scvm_switch_to_thread(vm,r,0);
         break;
       }      
+      if(vm->next_room_state) {
+        vm->state = vm->next_room_state;
+        vm->next_room_state = 0;
+      } else
+        vm->state = SCVM_RUNNING;
+      break;
+
+    case SCVM_CAMERA_FOLLOW_ACTOR:
+      if(vm->actor[vm->view->follow].room != vm->room->id) {
+        vm->next_room = vm->actor[vm->view->follow].room;
+        vm->next_room_state = SCVM_CAMERA_START_FOLLOWING_ACTOR_IN_ROOM;
+        vm->state = SCVM_OPEN_ROOM;
+      } else
+        vm->state = SCVM_CAMERA_START_FOLLOWING_ACTOR;
+      break;
+
+    case SCVM_CAMERA_START_FOLLOWING_ACTOR:
+      // TODO: We should only call set camera if needed here
+      // if(noNeedToSetCamera) {
+      //   vm->state = SCVM_RUN_INVENTORY;
+      //   break;
+      // }
+
+    case SCVM_CAMERA_START_FOLLOWING_ACTOR_IN_ROOM:
+      if((r = scvm_set_camera_at(vm,vm->actor[vm->view->follow].x)) < 0)
+        return r;
+      if(r > 0) {
+        scvm_switch_to_thread(vm,r-1,SCVM_RUN_INVENTORY);
+        break;
+      }
+      vm->state = SCVM_RUN_INVENTORY;
+
+
+    case SCVM_RUN_INVENTORY:
+      if(vm->var->inventory_script) {
+        if((r = scvm_start_script(vm,0,vm->var->inventory_script,NULL)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,0);
+        break;
+      }
       vm->state = SCVM_RUNNING;
       break;
-      
+
+    case SCVM_FINISHED_SCRIPTS:
+      vm->state = SCVM_MOVE_CAMERA;
+
+    case SCVM_MOVE_CAMERA:
+      if((r = scvm_move_camera(vm)) < 0)
+        return r;
+      if(r > 0) {
+        scvm_switch_to_thread(vm,r-1,SCVM_WALK_ACTORS);
+        break;
+      }
+      vm->state = SCVM_WALK_ACTORS;
+
+    case SCVM_WALK_ACTORS:
+      scvm_step_actors(vm);
+      vm->state = SCVM_FINISH_CYCLE;
+
+    case SCVM_FINISH_CYCLE:
+      scc_log(LOG_MSG,"\n == VM finished cycle %d == \n\n",vm->cycle);
+      cycles--;
+      vm->cycle++;
+      vm->state = SCVM_BEGIN_CYCLE;
+      break;
+
     default:
       scc_log(LOG_ERR,"Invalid VM state: %d\n",vm->state);
       return SCVM_ERR_BAD_STATE;
@@ -690,8 +750,6 @@ int scvm_run_once(scvm_t* vm) {
   }
 
   scvm_draw(vm,vm->view);
-
-  scvm_step_actors(vm);
 
   end = scvm_get_time(vm);
   if(end < start) end = start;
