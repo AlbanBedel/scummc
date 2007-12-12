@@ -965,9 +965,9 @@ static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9D4C
 static int scvm_op_set_actor_costume(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
-  scc_cost_t* cost;
+  scc_cost_t* cost = NULL;
   if((r=scvm_pop(vm,&a))) return r;
-  if(!(cost = scvm_load_res(vm,SCVM_RES_COSTUME,a)))
+  if(a && !(cost = scvm_load_res(vm,SCVM_RES_COSTUME,a)))
     return SCVM_ERR_BAD_COSTUME;
   if(vm->current_actor)
     scvm_actor_set_costume(vm->current_actor,cost);

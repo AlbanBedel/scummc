@@ -87,7 +87,9 @@ void scvm_actor_walk_to(scvm_actor_t* a, int x, int y) {
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost) {
   scc_cost_dec_init(&a->costdec);
   a->costdec.cost = cost;
-  scc_cost_dec_load_anim(&a->costdec,(a->init_frame<<2)+a->direction);
+  if(cost)
+    scc_cost_dec_load_anim(&a->costdec,(a->init_frame<<2)+a->direction);
+  // else release the current costume
 }
 
 void scvm_actor_animate(scvm_actor_t* a, int anim) {
