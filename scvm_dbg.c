@@ -226,6 +226,8 @@ static int cmd_show_actor(scvm_t* vm, char* args) {
   printf("  Name               : %s\n",actor->name);
   if(actor->costdec.cost)
     printf("  Costume            : %d\n",actor->costdec.cost->id);
+  if(actor->costdec.anim)
+    printf("  Animation          : %d\n",actor->costdec.anim_id);
   printf("  Room               : %d\n",actor->room);
   printf("  Position           : %dx%d\n",actor->x,actor->y);
   printf("  Size               : %dx%d\n",actor->width,actor->height);
