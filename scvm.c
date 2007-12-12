@@ -330,7 +330,25 @@ scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename, uint8_t key) {
   }
   
   // objects
-  
+  type = scc_fd_r32(fd);
+  len = scc_fd_r32be(fd);
+  if(type != MKID('D','O','B','J') || len < 10) {
+    scc_log(LOG_ERR,"Invalid index file, bad DOBJ block.\n");
+    return NULL;
+  }
+  num = scc_fd_r16le(fd);
+  if(len != 8+2+5*num || num > vm->num_object) {
+    scc_log(LOG_ERR,"Invalid index file, bad DOBJ block.\n");
+    return NULL;
+  }
+  for(i = 0 ; i < num ; i++) {
+    uint8_t owner_state = scc_fd_r8(fd);
+    vm->object_pdata[i].state = owner_state>>4;
+    vm->object_pdata[i].owner = owner_state&0x0F;
+  }
+  for(i = 0 ; i < num ; i++)
+    vm->object_pdata[i].klass = scc_fd_r32le(fd);
+
   // arrays
 
   // actors
