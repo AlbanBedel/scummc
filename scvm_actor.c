@@ -98,17 +98,16 @@ void scvm_actor_animate(scvm_actor_t* a, int anim) {
     scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
     a->direction = anim&3;
     // stop moving
+    a->walking = 0;
     return;
   }
   if(anim >= 0xF8) {
     // set direction
-    scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
     a->direction = anim&3;
     return;
   }
   if(anim >= 0xF4) {
     // turn to direction
-    scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
     a->direction = anim&3;
     return;
   }
