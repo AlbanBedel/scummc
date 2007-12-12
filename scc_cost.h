@@ -83,6 +83,7 @@ struct scc_cost {
 typedef struct scc_cost_dec {
   scc_cost_t* cost;
   scc_cost_anim_t* anim;
+  unsigned anim_id;
 
   uint16_t pc[16]; // limb pc
   uint8_t stopped;

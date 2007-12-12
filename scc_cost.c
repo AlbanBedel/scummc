@@ -567,6 +567,7 @@ int scc_cost_dec_load_anim(scc_cost_dec_t* dec,uint16_t aid) {
     return 0;
 
   dec->anim = anim;
+  dec->anim_id = aid;
 
   for(i = 0 ; i < 16 ; i++) {
     dec->pc[i] = anim->limb[i].start;
@@ -672,7 +673,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
   if(!dec->anim)
     return 0;
 
-  flip = (!(dec->cost->format & 0x80)) && (!(dec->anim->id&3));
+  flip = (!(dec->cost->format & 0x80)) && (!(dec->anim_id&3));
 
   for(i = 15 ; i >= 0 ; i--) {
     if(dec->pc[i] == 0xFFFF || dec->stopped & (1<<i)) continue;
