@@ -500,7 +500,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       vm->var->timer = 0;
       vm->var->timer1 += vm->var->timer_next;
       vm->var->timer2 += vm->var->timer_next;
-      vm->var->timer2 += vm->var->timer_next;
+      vm->var->timer3 += vm->var->timer_next;
       // Run the scripts      
       vm->state = SCVM_RUNNING;
       vm->time = now;
