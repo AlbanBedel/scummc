@@ -192,3 +192,99 @@ int scc_box_get_matrix(scc_box_t* box,uint8_t** ret) {
   return num;
 }
 
+long long scc_box_adjust_point(scc_box_t* b,int x, int y,
+                         int* dst_x, int* dst_y) {
+  long long dst_dist = -1;
+  scc_box_pts_t dst = { .x = x, .y = y };
+  int i,inside = 0;
+
+  // Project the point on each side and count
+  // how often it is on the inner side.
+  for(i = 0 ; i < b->npts ; i++) {
+    scc_box_pts_t pts;
+    int j = (i+1)%b->npts;
+    long long dist;
+    int dx = b->pts[j].x - b->pts[i].x;
+    int dy = b->pts[j].y - b->pts[i].y;
+
+    if(abs(dx) >= abs(dy)) { // Vertical projection
+      int left,right;
+      if(b->pts[i].x <= b->pts[j].x)
+        left = i, right = j;
+      else
+        left = j, right = i;
+      if(x < b->pts[left].x)
+        pts = b->pts[left];
+      else if(x > b->pts[right].x)
+        pts = b->pts[right];
+      else {
+        pts.x = x;
+        pts.y = b->pts[i].y;
+        if(dx) pts.y += (x-b->pts[i].x)*dy/dx;
+      }
+      if((dx >= 0 && pts.y <= y) ||
+         (dx < 0  && pts.y >= y))
+        inside++;
+    } else { // Horizontal projection
+      int top,bottom;
+      if(b->pts[i].y <= b->pts[j].y)
+        top = i, bottom = j;
+      else
+        top = j, bottom = i;
+      if(y < b->pts[top].y)
+        pts = b->pts[top];
+      else if(y > b->pts[bottom].y)
+        pts = b->pts[bottom];
+      else {
+        pts.y = y;
+        pts.x = b->pts[i].x;
+        if(dy) pts.x += (y-b->pts[i].y)*dx/dy;
+      }
+      if((dy >= 0 && pts.x >= x) ||
+         (dy < 0  && pts.x <= x))
+        inside++;
+    }
+
+    dx = pts.x-x;
+    dy = pts.y-y;
+    dist = (long long)dx*dx + (long long)dy*dy;
+    if(dst_dist < 0 || dist < dst_dist) {
+      dst = pts;
+      dst_dist = dist;
+    }
+  }
+  // Inside a box, no need to move the point
+  if(inside >= b->npts) {
+    *dst_x = x;
+    *dst_y = y;
+    return -1;
+  }
+  *dst_x = dst.x;
+  *dst_y = dst.y;
+  return dst_dist;
+}
+
+scc_box_t* scc_boxes_adjust_point(scc_box_t* box,int x, int y,
+                                  int* dst_x, int* dst_y) {
+  scc_box_t* b;
+  scc_box_t* dst_box = NULL;
+  long long dst_dist = 0;
+  scc_box_pts_t dst = { .x = x, .y = y };
+  for(b = box ; b ; b = b->next) {
+    scc_box_pts_t pts;
+    long long dist;
+    if((dist = scc_box_adjust_point(b,x,y,&pts.x,&pts.y)) < 0) {
+      dst_box = b;
+      dst = pts;
+      break;
+    }
+    if(!dst_box || dist < dst_dist) {
+      dst_box = b;
+      dst = pts;
+      dst_dist = dist;
+    }
+  }
+  *dst_x = dst.x;
+  *dst_y = dst.y;
+  return dst_box;
+}

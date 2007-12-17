@@ -38,6 +38,7 @@ typedef struct scc_box_st scc_box_t;
 struct scc_box_st {
   scc_box_t* next;
 
+  unsigned id;
   int npts,nsel;
   scc_box_pts_t pts[4];
   uint8_t mask;
@@ -54,3 +55,8 @@ int scc_box_are_neighbors(scc_box_t* box,int n1,int n2);
 
 int scc_box_get_matrix(scc_box_t* box,uint8_t** ret);
 
+scc_box_t* scc_boxes_adjust_point(scc_box_t* box,int x, int y,
+                                  int* dst_x, int* dst_y);
+
+long long scc_box_adjust_point(scc_box_t* b,int x, int y,
+                               int* dst_x, int* dst_y);

@@ -659,6 +659,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         vm->var->room = room->id;
         vm->room = room;
         vm->view->camera_x = vm->var->camera_min_x;
+        scvm_put_actors(vm);
         vm->state = SCVM_RUN_PRE_ENTRY;
       }
     case SCVM_RUN_PRE_ENTRY:

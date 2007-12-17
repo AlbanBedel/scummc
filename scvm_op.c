@@ -737,11 +737,7 @@ static int scvm_op_put_actor_at(scvm_t* vm, scvm_thread_t* thread) {
 
   if((r=scvm_vpop(vm,&room,&y,&x,&a,NULL)))
     return r;
-  
-  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
-  if(room == 0xFF) room = vm->actor[a].room;
-  scvm_actor_put_at(&vm->actor[a],x,y,room);
-  return 0;
+  return scvm_put_actor_at(vm,a,x,y,room);
 }
 
 // 0x82
@@ -815,6 +811,14 @@ static int scvm_op_get_object_y(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,obj->y);
 }
 
+// 0x90
+static int scvm_op_get_actor_walk_box(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  return scvm_push(vm,vm->actor[a].box);
+}
 
 // 0x95
 static int scvm_op_begin_override(scvm_t* vm, scvm_thread_t* thread) {
@@ -1053,6 +1057,26 @@ static int scvm_op_set_actor_scale(scvm_t* vm, scvm_thread_t* thread) {
   int r;
   if((r=scvm_pop(vm,&vm->current_actor->scale_x))) return r;
   vm->current_actor->scale_y = vm->current_actor->scale_x;
+  return 0;
+}
+
+// 0x9D5F
+static int scvm_op_set_actor_ignore_boxes(scvm_t* vm, scvm_thread_t* thread) {
+  if(!vm->current_actor) return 0;
+  vm->current_actor->flags |= SCVM_ACTOR_IGNORE_BOXES;
+  vm->current_actor->box = 0;
+  return 0;
+}
+
+// 0x9D60
+static int scvm_op_set_actor_follow_boxes(scvm_t* vm, scvm_thread_t* thread) {
+  if(!vm->current_actor) return 0;
+  vm->current_actor->flags &= ~SCVM_ACTOR_IGNORE_BOXES;
+  if(vm->current_actor->room == vm->room->id)
+    scvm_put_actor_at(vm,vm->current_actor->id,
+                      vm->current_actor->x,
+                      vm->current_actor->y,
+                      vm->current_actor->room);
   return 0;
 }
 
@@ -1589,7 +1613,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_get_object_y, "get object y" },
   { NULL, NULL },
   // 90
-  { NULL, NULL },
+  { scvm_op_get_actor_walk_box, "get actor walk box" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
@@ -1850,9 +1874,9 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_set_actor_scale, "set scale" },
   { scvm_op_dummy, "never z clip" },
   { NULL, NULL },
-  { scvm_op_dummy, "ignore boxes" },
+  { scvm_op_set_actor_ignore_boxes, "ignore boxes" },
   // 60
-  { scvm_op_dummy, "follow boxes" },
+  { scvm_op_set_actor_follow_boxes, "follow boxes" },
   { scvm_op_set_actor_anim_speed, "set anim speed" },
   { scvm_op_dummy_v, "set shadow mode" },
   { scvm_op_set_actor_talk_pos, "set talk pos" },

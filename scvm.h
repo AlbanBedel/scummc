@@ -122,6 +122,8 @@ typedef struct scvm_room {
   uint8_t* boxm;
 } scvm_room_t;
 
+#define SCVM_ACTOR_IGNORE_BOXES        1
+
 typedef struct scvm_actor {
   unsigned id;
   char* name;
@@ -129,6 +131,7 @@ typedef struct scvm_actor {
   //scvm_room_t* room;
   int room;
   int x,y;
+  unsigned box;
   unsigned width,height;
   unsigned direction;
   unsigned flags;
@@ -154,7 +157,8 @@ typedef struct scvm_actor {
 
   unsigned walking;
   int walk_dx, walk_dy, walk_err;
-  int dstX, dstY;
+  int walk_to_x, walk_to_y, walk_to_box;
+  int dstX, dstY, dst_box;
 } scvm_actor_t;
 
 void scvm_actor_init(scvm_actor_t* a);
@@ -164,6 +168,8 @@ void scvm_actor_walk_to(scvm_actor_t* a, int x, int y);
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost);
 void scvm_actor_animate(scvm_actor_t* a, int anim);
 void scvm_actor_step_anim(scvm_actor_t* a);
+int scvm_put_actor_at(scvm_t* vm, unsigned aid, int x, int y, unsigned rid);
+void scvm_put_actors(scvm_t* vm);
 void scvm_step_actors(scvm_t* vm);
 
 #define SCVM_VIEW_SHAKE 1

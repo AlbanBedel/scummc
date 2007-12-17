@@ -581,6 +581,8 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
       for(i = 0 ; i < room->num_box ; i++) {
         if(i+1 < room->num_box)
           room->box[i].next = &room->box[i+1];
+        room->box[i].id = i;
+        room->box[i].npts = 4;
         for(j = 0 ; j < 4 ; j++) {
           room->box[i].pts[j].x = scc_fd_r16le(fd);
           room->box[i].pts[j].y = scc_fd_r16le(fd);
