@@ -157,7 +157,7 @@ struct scc_obcd {
   char* name;
 };
 
-#define SCC_BOX_INVISIBLE 0x80
+//#define SCC_BOX_INVISIBLE 0x80
 
 typedef struct scc_boxd scc_boxd_t;
 struct scc_boxd {

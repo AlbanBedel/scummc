@@ -112,6 +112,7 @@ boxedit_SRCS=                   \
 	scc_param.c             \
 	boxedit.c               \
 	scc_util.c              \
+	scc_box.c               \
 
 boxedit_LIBS=                   \
 	GTK                     \
