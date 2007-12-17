@@ -39,6 +39,7 @@
 #include "scc_cost.h"
 #include "scc_char.h"
 #include "scc_codec.h"
+#include "scc_box.h"
 
 #include "scvm_res.h"
 #include "scvm_thread.h"
@@ -381,7 +382,7 @@ scvm_object_t* scvm_load_obcd(scvm_t* vm, scvm_room_t* room, scc_fd_t* fd) {
 void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
   uint32_t type,size,block_size,sub_block_size;
   unsigned len = 8,num_obim = 0, num_obcd = 0, num_lscr = 0;
-  int i;
+  int i,j;
   scvm_room_t* room;
   off_t next_block;
   scvm_object_t *objlist[vm->num_local_object],*obj;
@@ -569,7 +570,29 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
         goto bad_block;
       num_lscr++;
       break;
-      
+
+    case MKID('B','O','X','D'):
+      if(room->box) break;
+      if(block_size < 8+2) goto bad_block;
+      room->num_box = scc_fd_r16le(fd);
+      if(!room->num_box) break;
+      if(block_size != 8+2+(4*2*2+1+1+2)*room->num_box) goto bad_block;
+      room->box = calloc(room->num_box,sizeof(scc_box_t));
+      for(i = 0 ; i < room->num_box ; i++) {
+        if(i+1 < room->num_box)
+          room->box[i].next = &room->box[i+1];
+        for(j = 0 ; j < 4 ; j++) {
+          room->box[i].pts[j].x = scc_fd_r16le(fd);
+          room->box[i].pts[j].y = scc_fd_r16le(fd);
+        }
+        room->box[i].mask = scc_fd_r8(fd);
+        room->box[i].flags = scc_fd_r8(fd);
+        room->box[i].scale = scc_fd_r16le(fd);
+      }
+      // Compute the matrix
+      scc_box_get_matrix(room->box+1,&room->boxm);
+      break;
+
     default:
       scc_log(LOG_WARN,"Unhandled room block: %c%c%c%c %d\n",
               UNMKID(type),block_size);

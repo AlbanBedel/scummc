@@ -178,6 +178,7 @@ scvm_SRCS=                      \
 	scc_param.c             \
 	scc_cost.c              \
 	scc_char.c              \
+	scc_box.c               \
 	decode.c                \
 
 scvm_LIBS=                      \

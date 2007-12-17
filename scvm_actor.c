@@ -38,6 +38,7 @@
 #include "scc_util.h"
 #include "scc_param.h"
 #include "scc_cost.h"
+#include "scc_box.h"
 #include "scvm_res.h"
 #include "scvm_thread.h"
 #include "scvm.h"

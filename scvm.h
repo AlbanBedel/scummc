@@ -115,6 +115,11 @@ typedef struct scvm_room {
   scvm_script_t* exit;
   unsigned num_script;
   scvm_script_t** script;
+
+  // boxes
+  unsigned num_box;
+  scc_box_t* box;
+  uint8_t* boxm;
 } scvm_room_t;
 
 typedef struct scvm_actor {
