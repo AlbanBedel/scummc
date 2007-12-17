@@ -1204,6 +1204,23 @@ static int scvm_op_sound_kludge(scvm_t* vm, scvm_thread_t* thread) {
   return r;
 }
 
+// 0xAD
+static int scvm_op_is_any_of(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned len;
+  if((r=scvm_pop(vm,&len))) return r;
+  else {
+    int i,val,list[len];
+    for(i = len-1 ; i >= 0 ; i--)
+      if((r=scvm_pop(vm,list+i))) return r;
+    if((r=scvm_pop(vm,&val))) return r;
+    for(i = 0 ; i < len ; i++)
+      if(val == list[i])
+        return scvm_push(vm,1);
+  }
+  return scvm_push(vm,0);
+}
+
 // 0xB0
 static int scvm_op_delay(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -1607,7 +1624,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   // AC
   { scvm_op_sound_kludge, "sound kludge" },
-  { NULL, NULL },
+  { scvm_op_is_any_of, "is any of" },
   { NULL, NULL },
   { NULL, NULL },
   // B0
