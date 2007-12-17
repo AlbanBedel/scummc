@@ -341,7 +341,7 @@ static int scvm_op_array2_read_word(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_dup(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
   if((r=scvm_peek(vm,&a))) return r;
-  return scvm_push(vm,!a);
+  return scvm_push(vm,a);
 }
 
 // 0x0D
