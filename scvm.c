@@ -451,9 +451,46 @@ void scvm_uninit_video(scvm_t* vm) {
   vm->backend->uninit_video(vm->backend->priv);
 }
 
+void scvm_check_events(scvm_t* vm) {
+  vm->backend->check_events(vm->backend->priv,vm);
+}
+
+void scvm_press_key(scvm_t* vm, uint8_t key) {
+  vm->keypress = key;
+  vm->key_state[key>>3] |= 1<<(key&7);
+}
+
+void scvm_release_key(scvm_t* vm, uint8_t key) {
+  vm->key_state[key>>3] &= ~(1<<(key&7));
+}
+
+void scvm_press_button(scvm_t* vm, int btn) {
+  if(btn > 3) return;
+  vm->btnpress = btn;
+  vm->btn_state |= 1<<btn;
+}
+
+void scvm_release_button(scvm_t* vm, int btn) {
+  if(btn > 3) return;
+  vm->btn_state &= ~(1<<btn);
+}
+
+void scvm_set_mouse_position(scvm_t* vm, int x, int y) {
+    if(x < 0)
+        x = 0;
+    else if(x >= vm->view->screen_width)
+        x = vm->view->screen_width-1;
+    if(y < 0)
+        y = 0;
+    else if(y >= vm->view->screen_height)
+        y = vm->view->screen_height-1;
+    vm->var->mouse_x = x;
+    vm->var->mouse_y = y;
+}
 
 static void scvm_switch_to_thread(scvm_t* vm,unsigned thid, unsigned next_state) {
-  vm->current_thread->state = SCVM_THREAD_PENDED;
+  if(vm->current_thread)
+    vm->current_thread->state = SCVM_THREAD_PENDED;
   vm->thread[thid].parent = vm->current_thread;
   vm->thread[thid].next_state = next_state;
   vm->current_thread = &vm->thread[thid];
@@ -501,6 +538,17 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       vm->var->timer1 += vm->var->timer_next;
       vm->var->timer2 += vm->var->timer_next;
       vm->var->timer3 += vm->var->timer_next;
+      // Update the mouse virtual position
+      {
+          int x = vm->var->mouse_x, y = vm->var->mouse_y;
+          if(!scvm_abs_position_to_virtual(vm,&x,&y)) {
+              vm->var->virtual_mouse_x = x;
+              vm->var->virtual_mouse_y = y;
+          } else {
+              vm->var->virtual_mouse_x = -1;
+              vm->var->virtual_mouse_y = -1;
+          }
+      }
       // Run the scripts      
       vm->state = SCVM_RUNNING;
       vm->time = now;
@@ -679,6 +727,39 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       break;
 
     case SCVM_FINISHED_SCRIPTS:
+      vm->state = SCVM_CHECK_INPUT;
+
+    case SCVM_CHECK_INPUT:
+      if(!vm->var->verb_script /*|| !vm->userput*/) {
+        vm->state = SCVM_CHECKED_INPUT;
+        break;
+      }
+      if(vm->keypress) {
+        int args[] = { 3, SCVM_INPUT_KEY, vm->keypress, 1 };
+        vm->keypress = 0;
+        // TODO: check verb keys
+        if((r = scvm_start_script(vm,0,vm->var->verb_script,args)) < 0)
+          return r;
+        // Keep the same state to also check mouse button
+        // press in the same frame. ScummVM don't do that,
+        // but that seems more correct to me. Dunno what the
+        // original engine did.
+        scvm_switch_to_thread(vm,r,SCVM_CHECK_INPUT);
+        break;
+      }
+      if(vm->btnpress) {
+        int args[] = { 3, SCVM_INPUT_VERB, 0, vm->btnpress };
+        vm->btnpress = 0;
+        if(0 /* clickOnVerb */) {
+          //args[2] = verb->id;
+        } else if(vm->var->virtual_mouse_x >= 0)
+          args[1] = SCVM_INPUT_ROOM;
+        if((r = scvm_start_script(vm,0,vm->var->verb_script,args)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,SCVM_CHECKED_INPUT);
+        break;
+      }
+    case SCVM_CHECKED_INPUT:
       vm->state = SCVM_MOVE_CAMERA;
 
     case SCVM_MOVE_CAMERA:
@@ -751,6 +832,7 @@ int scvm_run_once(scvm_t* vm) {
     return SCVM_ERR_UNINITED_VM;;
 
   start = scvm_get_time(vm);
+  scvm_check_events(vm);
   r = scvm_run_threads(vm,1);
   if(r < 0) {
     if(vm->current_thread)
@@ -808,6 +890,8 @@ static int sdl_scvm_init_video(scvm_backend_sdl_t* be, unsigned width,
     signal(SIGINT,oldint);
     signal(SIGQUIT,oldquit);
     signal(SIGTERM,oldterm);
+    // Lame, but this must be called after initing the video
+    SDL_EnableUNICODE(1);
     be->inited_video = 1;
   }
   if(!(be->screen =
@@ -856,6 +940,37 @@ static unsigned sdl_scvm_get_time(scvm_backend_sdl_t* be) {
   return SDL_GetTicks();
 }
 
+static void sdl_scvm_check_events(scvm_backend_sdl_t* be, scvm_t* vm) {
+  SDL_Event ev;
+  while(SDL_PollEvent(&ev)) {
+    switch(ev.type) {
+    case SDL_MOUSEBUTTONDOWN:
+      scvm_press_button(vm,ev.button.button);
+      break;
+    case SDL_MOUSEBUTTONUP:
+      scvm_release_button(vm,ev.button.button);
+      break;
+    case SDL_MOUSEMOTION:
+      scvm_set_mouse_position(vm,ev.motion.x*
+                              vm->view->screen_width/be->screen->w,
+                              ev.motion.y*
+                              vm->view->screen_height/be->screen->h);
+      break;
+    case SDL_KEYDOWN:
+      if(!ev.key.keysym.unicode ||
+         ev.key.keysym.unicode > 255) break;
+      scvm_press_key(vm,ev.key.keysym.unicode);
+      break;
+
+    case SDL_KEYUP:
+      if(!ev.key.keysym.unicode ||
+         ev.key.keysym.unicode > 255) break;
+      scvm_release_key(vm,ev.key.keysym.unicode);
+      break;
+    }
+  }
+}
+
 static void sdl_backend_uninit(scvm_backend_t* be) {
   SDL_Quit();
   if(be->priv)
@@ -871,6 +986,7 @@ static int sdl_backend_init(scvm_backend_t* be) {
   be->sleep = sdl_scvm_sleep;
   be->flip = sdl_scvm_flip;
   be->uninit_video = sdl_scvm_uninit_video;
+  be->check_events = sdl_scvm_check_events;
   be->priv = calloc(1,sizeof(scvm_backend_sdl_t));
   if(SDL_Init(SDL_INIT_NOPARACHUTE) < 0) {
     scc_log(LOG_ERR,"SDL init failed.\n");

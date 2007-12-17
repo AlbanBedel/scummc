@@ -195,6 +195,17 @@ void scvm_view_scale_palette(scvm_view_t* view, scvm_color_t* palette,
   
 }
 
+int scvm_abs_position_to_virtual(scvm_t* vm, int* dx, int* dy) {
+    int x = *dx, y = *dy;
+    if(y < vm->view->room_start || y >= vm->view->room_end) return -1;
+    y -= vm->view->room_start;
+    x += (vm->view->camera_x-vm->view->screen_width/2);
+    if(x < 0 || x > vm->room->width) return -1;
+    *dx = x;
+    *dy = y;
+    return 0;
+}
+
 void scvm_pan_camera_to(scvm_t* vm, int x) {
   if(x < vm->var->camera_min_x)
     x = vm->var->camera_min_x;

@@ -185,6 +185,7 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
 void scvm_view_scale_palette(scvm_view_t* view,scvm_color_t* palette,
                              unsigned red, unsigned green, unsigned blue,
                              unsigned start, unsigned end);
+int scvm_abs_position_to_virtual(scvm_t* vm, int* dx, int* dy);
 void scvm_pan_camera_to(scvm_t* vm, int x);
 int scvm_set_camera_at(scvm_t* vm, int x);
 int scvm_move_camera(scvm_t* vm);
@@ -352,6 +353,8 @@ typedef struct scvm_backend {
     void (*draw)(struct scvm_backend_priv* be, scvm_t* vm, scvm_view_t* view);
     void (*flip)(struct scvm_backend_priv* be);
     void (*uninit_video)(struct scvm_backend_priv* be);
+    // input
+    void (*check_events)(struct scvm_backend_priv* be, scvm_t* vm);
 
     struct scvm_backend_priv* priv;
 } scvm_backend_t;
@@ -397,8 +400,15 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 
 #define SCVM_RUN_INVENTORY                                   400
 
+#define SCVM_CHECK_INPUT                                     480
+#define SCVM_CHECKED_INPUT                                   490
 #define SCVM_MOVE_CAMERA                                     500
 #define SCVM_WALK_ACTORS                                     510
+
+// Input zone
+#define SCVM_INPUT_VERB   1
+#define SCVM_INPUT_ROOM   2
+#define SCVM_INPUT_KEY    4
 
 struct scvm {
   // Debuging data
@@ -456,6 +466,11 @@ struct scvm {
   unsigned stack_size;
   unsigned stack_ptr;
   int *stack;
+
+  // input
+  int keypress, btnpress;
+  int key_state[256/8];
+  int btn_state;
 
   scvm_backend_t* backend;
 };
