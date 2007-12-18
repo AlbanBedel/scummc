@@ -40,6 +40,8 @@ room OfficeRoom {
 
     image = "graphics/rooms/back01_merged.bmp";
 
+    zplane = { "graphics/rooms/back01_mask1.bmp" };
+
     boxd = "graphics/rooms/back01.box";
     trans = 0;
     
