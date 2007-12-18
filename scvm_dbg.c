@@ -236,6 +236,10 @@ static int cmd_show_actor(scvm_t* vm, char* args) {
   printf("  Scaling            : %dx%d\n",actor->scale_x,actor->scale_y);
   printf("  Layer              : %d\n",actor->layer);
   printf("  Elevation          : %d\n",actor->elevation);
+  printf("  Follow boxes       : %s\n",
+         (actor->flags & SCVM_ACTOR_IGNORE_BOXES) ? "No" : "Yes");
+  if(!(actor->flags & SCVM_ACTOR_IGNORE_BOXES))
+      printf("  Box                : %d\n",actor->box);
   printf("\n");
   // flags
   printf("  Anim speed         : %d\n",actor->anim_speed);
@@ -243,6 +247,13 @@ static int cmd_show_actor(scvm_t* vm, char* args) {
   printf("  Walk speed         : %dx%d\n",actor->walk_speed_x,
          actor->walk_speed_y);
   printf("  Walk script        : %d\n",actor->walk_script);
+  printf("  Walk state         : %d\n",actor->walking);
+  if(actor->walking) {
+      printf("  Walk destination   : %dx%d (box %d)\n",
+             actor->walk_to_x,actor->walk_to_y,actor->walk_to_box);
+      printf("  Walk waypoint      : %dx%d (box %d)\n",
+             actor->dstX,actor->dstY,actor->dst_box);
+  }
   printf("\n");
   printf("  Init frame         : %d\n",actor->init_frame);
   printf("  Walk frame         : %d\n",actor->walk_frame);
