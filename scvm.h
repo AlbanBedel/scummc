@@ -52,6 +52,7 @@ typedef scvm_color_t scvm_palette_t[SCVM_PALETTE_SIZE];
 typedef struct scvm_image {
   uint8_t* data;
   uint8_t** zplane;  
+  unsigned have_trans;
 } scvm_image_t;
 
 typedef struct scvm_object_pdata {

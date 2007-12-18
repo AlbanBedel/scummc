@@ -50,7 +50,8 @@ static void scale_copy(uint8_t* dst, int dst_stride,
                        int x, int y,
                        int dst_width, int dst_height,
                        uint8_t* src, int src_stride,
-                       int src_width, int src_height) {
+                       int src_width, int src_height,
+                       int trans) {
   int sx = 0,sy = 0,dx = 0,dy = 0,xerr = 0,yerr = 0,skip = 0;
 
   dst += dst_stride*y;
@@ -60,7 +61,8 @@ static void scale_copy(uint8_t* dst, int dst_stride,
     if(!skip && dy+y >= 0) {
       dx = sx = 0;
       while(dx < dst_width) {
-        if(!skip && dx+x >= 0 && dx+x < clip_width)
+        if(!skip && dx+x >= 0 && dx+x < clip_width &&
+           (trans < 0 || trans != src[sx]))
           dst[dx] = src[sx];
         xerr += dst_width;
         if(xerr<<1 >= src_width) {
@@ -124,7 +126,7 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
              w*width/view->screen_width,
              h*height/view->screen_height,
              vm->room->image.data+sx, vm->room->width,
-             w,h);
+             w,h,-1);
 
   for(a = 0 ; a < vm->room->num_object ; a++) {
     scvm_object_t* obj = vm->room->object[a];
@@ -147,7 +149,8 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                dy + obj->y*height/view->screen_height,
                obj_w*width/view->screen_width,
                obj_h*height/view->screen_height,
-               img->data, obj_w, obj_w, obj_h);
+               img->data, obj_w, obj_w, obj_h,
+               img->have_trans ? vm->room->trans : -1);
   }
   
   for(a = 0 ; a < vm->num_actor ; a++) {

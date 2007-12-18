@@ -301,6 +301,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
   uint8_t type;
   uint32_t decomp_shr,decomp_mask;
   int stripe_size;
+  int have_trans = 0;
 
   scc_log(LOG_V,"\nDecode image: %dx%d smap: %d\n",width,height,smap_size);
 
@@ -347,6 +348,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
     case 36:
     case 37:
     case 38:
+      have_trans = 1;
       if(transparentColor < 0)
 	unkDecodeC(dst + i*8,dst_stride,&smap[o+1],
 		   height,0,
@@ -363,6 +365,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
     case 46:
     case 47:
     case 48:
+      have_trans = 1;
       if(transparentColor < 0)
 	unkDecodeB(dst + i*8,dst_stride,&smap[o+1],
 		   height,0,
@@ -403,7 +406,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
     case 126:
     case 127:
     case 128:
-
+      have_trans = 1;
       if(transparentColor < 0)
 	unkDecodeA(dst + i*8,dst_stride,&smap[o+1],
 		   height,0,
@@ -421,7 +424,7 @@ int scc_decode_image(uint8_t* dst, int dst_stride,
     }
   }
 
-  return 1;
+  return 1+have_trans;
 }
 
 static void decompMask(uint8_t *dst, int dst_stride,

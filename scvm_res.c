@@ -213,10 +213,11 @@ int scvm_load_image(unsigned width, unsigned height, unsigned num_zplane,
     if(scc_fd_read(fd,smap,size-8) != size-8)
       return 0;
     img->data = calloc(1,width*height);
-    if(!scc_decode_image(img->data,width,
-                         width,height,
-                         smap,size-8,-1))
+    if(!(i = scc_decode_image(img->data,width,
+                              width,height,
+                              smap,size-8,-1)))
       return 0;
+    img->have_trans = i-1;
   }
   if(!num_zplane) return 1;
   img->zplane = calloc(num_zplane+1,sizeof(uint8_t*));
