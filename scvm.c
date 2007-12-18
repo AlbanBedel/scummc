@@ -550,6 +550,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
               vm->var->virtual_mouse_y = -1;
           }
       }
+      vm->var->camera_pos_x = vm->view->camera_x;
       // Run the scripts      
       vm->state = SCVM_RUNNING;
       vm->time = now;
@@ -659,6 +660,8 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         vm->var->room = room->id;
         vm->room = room;
         vm->view->camera_x = vm->var->camera_min_x;
+        vm->view->camera_x = vm->var->camera_min_x;
+        vm->var->camera_pos_x = vm->view->camera_x;
         scvm_put_actors(vm);
         vm->state = SCVM_RUN_PRE_ENTRY;
       }
