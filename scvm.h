@@ -85,6 +85,9 @@ struct scvm_object {
   scvm_object_pdata_t* pdata;
 };
 
+int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y);
+
+
 typedef struct scvm_cycle {
   unsigned id;
   unsigned delay;

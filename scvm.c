@@ -875,6 +875,25 @@ int scvm_run(scvm_t* vm) {
   return r;
 }
 
+int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y) {
+  scvm_object_t* obj;
+  if(id < vm->num_actor) {
+    if(x) *x = vm->actor[id].x;
+    if(y) *y = vm->actor[id].y;
+    return 0;
+  }
+  if(id >= vm->res[SCVM_RES_OBJECT].num)
+    return SCVM_ERR_BAD_OBJECT;
+  if(!(obj = vm->res[SCVM_RES_OBJECT].idx[id].data)) {
+    if(x) *x = 0;
+    if(y) *y = 0;
+    return 1;
+  }
+  if(x) *x = obj->x;
+  if(y) *y = obj->y;
+  return 0;
+}
+
 /////////////////////
 
 typedef struct scvm_backend_priv {

@@ -34,6 +34,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <math.h>
 
 #include "scc_fd.h"
 #include "scc_util.h"
@@ -785,30 +786,26 @@ static int scvm_op_get_actor_room(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x8D
 static int scvm_op_get_object_x(scvm_t* vm, scvm_thread_t* thread) {
-  int r,o;
-  scvm_object_t* obj;
-  if((r=scvm_pop(vm,&o))) return r;
-  if(o < vm->num_actor)
-    return scvm_push(vm,vm->actor[o].x);
-  if(o >= vm->res[SCVM_RES_OBJECT].num)
-    return SCVM_ERR_BAD_OBJECT;
-  if(!(obj = vm->res[SCVM_RES_OBJECT].idx[o].data))
-    return scvm_push(vm,0);
-  return scvm_push(vm,obj->x);
+  int r,o,x;
+  if((r=scvm_pop(vm,&o)) ||
+     (r=scvm_get_object_position(vm,o,&x,NULL)) < 0) return r;
+  return scvm_push(vm,x);
 }
 
 // 0x8E
 static int scvm_op_get_object_y(scvm_t* vm, scvm_thread_t* thread) {
-  int r,o;
-  scvm_object_t* obj;
-  if((r=scvm_pop(vm,&o))) return r;
-  if(o < vm->num_actor)
-    return scvm_push(vm,vm->actor[o].y);
-  if(o >= vm->res[SCVM_RES_OBJECT].num)
-    return SCVM_ERR_BAD_OBJECT;
-  if(!(obj = vm->res[SCVM_RES_OBJECT].idx[o].data))
-    return scvm_push(vm,0);
-  return scvm_push(vm,obj->y);
+  int r,o,y;
+  if((r=scvm_pop(vm,&o)) ||
+     (r=scvm_get_object_position(vm,o,NULL,&y)) < 0) return r;
+  return scvm_push(vm,y);
+}
+
+// 0x8F
+static int scvm_op_get_object_direction(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  return scvm_push(vm,vm->actor[a].direction);
 }
 
 // 0x90
@@ -1216,6 +1213,15 @@ static int scvm_op_get_actor_x_scale(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,vm->actor[a].scale_x);
 }
 
+// 0xAB
+static int scvm_op_get_actor_anim_counter(scvm_t* vm, scvm_thread_t* thread) {
+  int r,a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  return scvm_push(vm,vm->actor[a].costdec.anim_counter);
+}
+
+
 // 0xAC
 static int scvm_op_sound_kludge(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -1331,6 +1337,18 @@ static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
   }
   if(addr < 0) return addr;
   return scvm_thread_write_var(vm,thread,vaddr,addr);
+}
+
+// 0xC5
+static int scvm_op_get_distance_obj_obj(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned objA, objB;
+  int ax,ay, bx,by;
+
+  if((r = scvm_vpop(vm,&objB,&objA,NULL)) ||
+     (r = scvm_get_object_position(vm,objA,&ax,&ay)) < 0 ||
+     (r = scvm_get_object_position(vm,objB,&bx,&by)) < 0) return r;
+  return scvm_push(vm,hypot(bx-ax,by-ay));
 }
 
 // 0xCA
@@ -1611,7 +1629,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_get_actor_room, "get actor room" },
   { scvm_op_get_object_x, "get object x" },
   { scvm_op_get_object_y, "get object y" },
-  { NULL, NULL },
+  { scvm_op_get_object_direction, "get object direction" },
   // 90
   { scvm_op_get_actor_walk_box, "get actor walk box" },
   { NULL, NULL },
@@ -1646,7 +1664,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_subop, "wait" },
   { scvm_op_get_actor_x_scale, "get actor x scale" },
-  { NULL, NULL },
+  { scvm_op_get_actor_anim_counter, "get actor anim counter" },
   // AC
   { scvm_op_sound_kludge, "sound kludge" },
   { scvm_op_is_any_of, "is any of" },
@@ -1679,7 +1697,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   // C4
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_get_distance_obj_obj, "get dist obj obj" },
   { NULL, NULL },
   { NULL, NULL },
   // C8

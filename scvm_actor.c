@@ -52,7 +52,10 @@ void scvm_actor_init(scvm_actor_t* a) {
     a->talk_x = 0;
     a->talk_y = -80;
     a->talk_script = 0;
-    
+
+    a->anim_speed = 0;
+    a->walk_speed_x = 8;
+    a->walk_speed_y = 2;
     a->scale_x = a->scale_y = 0xFF;
     // a->charset
     a->direction = 2;
@@ -74,7 +77,10 @@ void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room) {
   a->y = y;
   a->dstX = x;
   a->dstY = y;
-  a->walking = 0;
+  if(a->walking) {
+    a->walking = 0;
+    scvm_actor_animate(a,a->stand_frame);
+  }
   a->box = 0;
   a->room = room;
 }
@@ -95,6 +101,7 @@ void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost) {
 
 void scvm_actor_animate(scvm_actor_t* a, int anim) {
   a->anim_cycle = 0;
+  if(!a->costdec.cost) return;
   if(anim >= 0xFC) {
     scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
     a->direction = anim&3;
