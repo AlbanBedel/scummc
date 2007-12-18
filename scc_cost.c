@@ -568,6 +568,7 @@ int scc_cost_dec_load_anim(scc_cost_dec_t* dec,uint16_t aid) {
 
   dec->anim = anim;
   dec->anim_id = aid;
+  dec->anim_counter = 0;
 
   for(i = 0 ; i < 16 ; i++) {
     dec->pc[i] = anim->limb[i].start;
@@ -604,13 +605,11 @@ int scc_cost_dec_step(scc_cost_dec_t* dec) {
       cmd = dec->cost->cmds[dec->pc[i]];
     
       if(cmd == 0x7C) {
-	// anim counter ++ ?
-	if(dec->anim->limb[i].start != dec->anim->limb[i].end &&
-	   dec->pc[i] != dec->anim->limb[i].end) continue;
+	dec->anim_counter++;
+	if(dec->pc[i] < dec->anim->limb[i].end) continue;
       } else if(cmd > 0x70 && cmd < 0x79) {
 	// queue soound ?
-	if(dec->anim->limb[i].start != dec->anim->limb[i].end &&
-	   dec->pc[i] != dec->anim->limb[i].end) continue;
+	if(dec->pc[i] < dec->anim->limb[i].end) continue;
       }
       break;
     }

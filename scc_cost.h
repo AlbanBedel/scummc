@@ -87,6 +87,8 @@ typedef struct scc_cost_dec {
 
   uint16_t pc[16]; // limb pc
   uint8_t stopped;
+
+  unsigned anim_counter;
 } scc_cost_dec_t;
 
 
