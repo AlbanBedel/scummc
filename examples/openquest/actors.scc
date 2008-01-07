@@ -110,6 +110,9 @@ room Actors {
     script officeIntro() {
     
         try {
+        animateActor( commanderZif, 44 );
+        animateActor( ensignZob, 44 );
+        delay(150);
         setCurrentActor(commanderZif);
         actorSay(commanderZif, "Hmmm");
         waitForMessage();

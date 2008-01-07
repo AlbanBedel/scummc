@@ -138,6 +138,11 @@ picture lookaroundS = {
     position = { -13, -48 }
 };
 
+picture beam = {
+    glob = "../graphics/zif/frames/beam_??.bmp",
+    position = { -13, -48 }
+};
+
 
 
 
@@ -186,7 +191,9 @@ limb body = {
 
     standWithPhoneN, talking_N, standWithPhoneN, // 49-51
     
-    lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneS // 52-55
+    lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneS, // 52-55
+
+    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS // 56-67
 
 
 };
@@ -260,6 +267,15 @@ anim lookAround @ 40 = {
     S = { body([52-55]) };
     N = { body([52-55]) };
 };
+
+anim beam @ 44 = {
+    E = { body([56-67]) !LOOP };
+    W = { body([56-67]) !LOOP };
+    S = { body([56-67]) !LOOP };
+    N = { body([56-67]) !LOOP };
+};
+
+
 
 
 

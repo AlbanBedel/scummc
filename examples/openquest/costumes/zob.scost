@@ -110,6 +110,11 @@ picture fireupE = {
     position = { -13, -50 }
 };
 
+picture beam = {
+    glob = "../graphics/zob/frames/beam_??.bmp",
+    position = { -13, -42 }
+};
+
 
 
 //limb body = {
@@ -147,7 +152,9 @@ limb body = {
 
     scanS00, scanS01, scanS00, // 40-42
 
-    aimE00, aimE01, aimE02, fireupE, aimE02, aimE01, aimE00 // 43-49
+    aimE00, aimE01, aimE02, fireupE, aimE02, aimE01, aimE00, // 43-49
+
+    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS // 50-61
 
 };
 
@@ -212,6 +219,13 @@ anim fireup @ 40 = {
     W = { body([43-49]) !LOOP };
     N = { body([43-49]) !LOOP };
     S = { body([43-49]) !LOOP };
+};
+
+anim beam @ 44 = {
+    E = { body([50-61]) !LOOP };
+    W = { body([50-61]) !LOOP };
+    S = { body([50-61]) !LOOP };
+    N = { body([50-61]) !LOOP };
 };
 
 
