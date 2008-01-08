@@ -70,6 +70,10 @@ actor commanderZif;
 actor carol;
 #define CAROL_COLOR   249
 
+// animated item actors
+actor bluecupActor;
+actor cubeActor;
+
 // The room we start in
 room Road;
 

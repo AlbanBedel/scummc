@@ -23,6 +23,7 @@
 #include "dialog.sch"
 #include "inventoryitems.sch"
 #include "officeroom.sch"
+#include "secretroom.sch"
 
 
 bit knowsCarol;
@@ -33,6 +34,9 @@ room Actors {
     cost ensignZobCost = "zob.cost";
     cost commanderZifCost = "zif.cost";
     cost carolCost = "carol.cost";
+
+    cost bluecupCost = "bluecup.cost";
+    cost cubeCost = "cube.cost";
     
     
     script setZifOnThePhone() {
@@ -100,8 +104,33 @@ room Actors {
         setActorTalkColor(CAROL_COLOR);
         actorObject[carol] = OfficeRoom::carolObj;
 
+        setCurrentActor(bluecupActor);
+        initActor();
+        setActorCostume(bluecupCost);
+        setActorName("blue cup");
+        setActorAnimSpeed(2);
+        actorObject[bluecupActor] = SecretRoom::blueCup;
+        putActorAt(bluecupActor,159,97,SecretRoom);
+        setActorElevation( 55 );
+        setActorWidth(0);
+
+        setCurrentActor(cubeActor);
+        initActor();
+        setActorCostume(cubeCost);
+        // TODO: make the cube irresponsive to mouseover
+        setActorName("blue cup");
+        setActorAnimSpeed(2);
+        actorObject[cubeActor] = SecretRoom::blueCup;
+        putActorAt(cubeActor,160,98,SecretRoom);
+        setActorElevation( 55 );
+        setActorWidth(0);
+
         pickupObject( InventoryItems::scanner, InventoryItems );
+        pickupObject( InventoryItems::card, InventoryItems );
+        pickupObject( InventoryItems::gun, InventoryItems );
+        pickupObject( InventoryItems::bullets, InventoryItems );
         invOffset = 0;
+        
         setCurrentActor(VAR_EGO);
 
     }

@@ -101,6 +101,12 @@ room InventoryItems {
         case LookAt:
             egoSay("This device could be used to interact with some form of hardware.");
             return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "on";
+            return;
         }
     }
 

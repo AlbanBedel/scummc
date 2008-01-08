@@ -17,9 +17,32 @@
  *
  */
 
+palette([224-255]);
 
-room SecretRoom {
 
-    object blueCup;
 
-}
+picture standS_ = {
+    glob = "../graphics/cube/cube_??.bmp",
+    position = { -17, -17 }
+};
+
+
+
+limb body = {
+    standS_00, standS_01, standS_02, standS_03, standS_04, standS_05, standS_06 // 0-6
+};
+
+anim stand = {
+    S = { body(0) };
+};
+
+anim init = {
+    S = { body(0) };
+};
+
+anim dissolve @ 24 = {
+    S = { body([0-6]) !LOOP };
+};
+
+
+
