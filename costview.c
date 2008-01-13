@@ -614,7 +614,7 @@ static void expose_img_cb(GtkWidget *img,GdkEvent* ev,scc_cost_view_t* cv) {
 
   memset(cv->buf,0,cv->buf_h*cv->buf_w);
   scc_cost_dec_frame(&cv->dec,cv->buf,cv->buf_w/2,cv->buf_h/2,
-		     cv->buf_w,cv->buf_h,cv->buf_w,255,255);
+		     cv->buf_w,cv->buf_h,cv->buf_w,NULL,0,255,255);
 
   //printf("Draw Image !!!\n");
 
@@ -651,7 +651,7 @@ static void expose_limb_img_cb(GtkWidget *img,GdkEvent* ev,scc_cost_view_t* cv) 
     return;
   } else {
     uint8_t buf[pic->width*pic->height];
-    scc_cost_decode_pic(cv->dec.cost,pic,buf,pic->width,
+    scc_cost_decode_pic(cv->dec.cost,pic,buf,pic->width,NULL,0,
 			0,pic->width,0,pic->height,-1,255,255,0);
 
     gdk_draw_indexed_image(img->window,cv->img_gc,

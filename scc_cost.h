@@ -100,6 +100,7 @@ int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic);
 
 int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			uint8_t* dst,int dst_stride, 
+			uint8_t* mask, int mask_stride,
 			int x_min,int x_max,int y_min,int y_max,
 			int trans, int x_scale, int y_scale,
 			int y_flip);
@@ -124,4 +125,5 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
 		       int x, int y,
 		       int dst_width, int dst_height,
 		       int dst_stride,
+		       uint8_t* mask, int mask_stride,
 		       int x_scale, int y_scale);

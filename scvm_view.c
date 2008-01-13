@@ -95,11 +95,24 @@ static void scale_copy(uint8_t* dst, int dst_stride,
   }
 }
 
+uint8_t* make_zplane(scvm_t* vm, scvm_view_t* view,
+                     unsigned dst_width, unsigned dst_height,
+                     unsigned src_width, unsigned src_height,
+                     unsigned src_x, unsigned zid) {
+  uint8_t* zplane = malloc(dst_width*dst_height);
+  scale_copy(zplane,dst_width,dst_width,dst_height,
+             0,0,dst_width,dst_height,
+             vm->room->image.zplane[zid] + src_x,vm->room->width,
+             src_width, src_height,-1);
+  // TODO: copy objects zplanes from the visible area
+  return zplane;
+}
+
 
 int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                    uint8_t* buffer, int stride,
                    unsigned width, unsigned height) {
-  int sx,dx,dy,w,h,a;
+  int sx,dx,dy,w,h,dw,dh,a;
 
   if(!vm->room) return 0;
 
@@ -118,13 +131,13 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
   if(sx + w/2 > vm->room->width) sx = vm->room->width-w;
   if(sx < 0) sx = 0;
   
+  dw = w*width/view->screen_width;
+  dh = h*height/view->screen_height;
   dx = (view->screen_width-w)*width/view->screen_width/2;
   dy = view->room_start*height/view->screen_height;
 
   scale_copy(buffer,stride,width,height,
-             dx,dy,
-             w*width/view->screen_width,
-             h*height/view->screen_height,
+             dx,dy,dw,dh,
              vm->room->image.data+sx, vm->room->width,
              w,h,-1);
 
@@ -154,19 +167,39 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
   }
   
   for(a = 0 ; a < vm->num_actor ; a++) {
+    uint8_t* zplane = NULL;
     if(!vm->actor[a].room ||
        vm->actor[a].room != vm->room->id ||
        !vm->actor[a].costdec.cost) continue;
     scc_log(LOG_MSG,"Draw actor %d at %dx%d\n",a,vm->actor[a].x,vm->actor[a].y);
+    if(vm->actor[a].box) {
+      int mask = vm->room->box[vm->actor[a].box].mask;
+      if(mask <= vm->room->num_zplane) {
+        if(!vm->room->zplane[mask])
+          vm->room->zplane[mask] = make_zplane(vm,view,
+                                               dw,dh,
+                                               w,h,sx,mask);
+        zplane = vm->room->zplane[mask];
+      }
+    }
     scc_cost_dec_frame(&vm->actor[a].costdec,
                        buffer + dy*stride + dx,
                        (vm->actor[a].x-sx)*width/view->screen_width,
                        vm->actor[a].y*height/view->screen_height,
-                       width,height,stride,
+                       dw,dh,stride,
+                       zplane,dw,
                        vm->actor[a].scale_x*width/view->screen_width,
                        vm->actor[a].scale_y*height/view->screen_height);
   }
-  
+
+  // TODO: Use some invalidation to avoid recomputing the
+  //       whole thing when not needed
+  for(a = 0 ; a <= vm->room->num_zplane ; a++)
+    if(vm->room->zplane[a]) {
+      free(vm->room->zplane[a]);
+      vm->room->zplane[a] = NULL;
+    }
+
   return 1;
 }
 

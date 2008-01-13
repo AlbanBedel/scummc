@@ -29,6 +29,7 @@
 #define SCVM_ARRAY_BYTE   2
 #define SCVM_ARRAY_WORD   3
 
+#define SCVM_MAX_ZPLANE  16
 
 typedef struct scvm_array {
   unsigned type; // var type
@@ -102,6 +103,7 @@ typedef struct scvm_room {
   // graphics
   unsigned width,height;  
   unsigned num_zplane;
+  uint8_t* zplane[SCVM_MAX_ZPLANE];
   scvm_image_t image;
   unsigned num_palette;
   scvm_palette_t* palette;

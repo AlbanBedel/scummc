@@ -230,13 +230,18 @@ int scvm_load_image(unsigned width, unsigned height, unsigned num_zplane,
        size < 8+(width/8)*4) return 0;
     else {
       uint8_t zmap[size-8];
+      uint8_t zbit[width/8*height];
+      int j;
       if(scc_fd_read(fd,zmap,size-8) != size-8)
         return 0;
-      img->zplane[i] = calloc(1,width/8*height);
-      if(!scc_decode_zbuf(img->zplane[i],width/8,
+      if(!scc_decode_zbuf(zbit,width/8,
                           width,height,
                           zmap,size-8,0))
         return 0;
+      img->zplane[i] = malloc(width*height);
+      for(j = 0 ; j < width*height ; j++)
+        img->zplane[i][j] = (zbit[j/8] & (1<<(7-(j%8))) ? 1 : 0);
+        //img->zplane[i][j] = ((zbit[j>>3] << (j&7)) & 0x80) >> 7;
     }
   }
   return 1;

@@ -125,10 +125,11 @@ int scc_cost_add_pic(scc_cost_t* cost,uint8_t limb,scc_cost_pic_t* pic) {
 
 int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			uint8_t* dst,int dst_stride, 
+			uint8_t* mask_data,int mask_stride, 
 			int x_min,int x_max,int y_min,int y_max,
 			int trans, int x_scale, int y_scale,
 			int y_flip) {
-  int shr,mask,x = 0,y = 0,end = 0,pos = 0, x_step;
+  int shr,mask,x = 0,y = 0,end = 0,pos = 0, x_step, sx;
   int yerr = 0, xerr = 0, xskip = 0, yskip = 0, dx = 0, dy = 0;
   int col_start = 0;
   uint8_t col_start_color = 0, col_start_rep = 0;
@@ -150,9 +151,12 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 
   if(y_flip) {
     dx = pic->width*x_scale/255-1;
+    sx = pic->width-1;
     x_step = -1;
-  } else
+  } else {
     x_step = 1;
+    sx = 0;
+  }
 
   // Store the initial color and repeat
   // that might be needed if we must repeat the column
@@ -188,7 +192,8 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
       if(dx >= x_min && dx < x_max &&
          dy >= y_min && dy < y_max &&
          xskip == 0 && yskip == 0 &&
-         trans != color)
+         trans != color &&
+         (!mask_data || !mask_data[mask_stride*dy+dx]))
 	dst[dst_stride*dy+dx] = color;
 
       yerr += y_scale;
@@ -664,6 +669,7 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
 		       int x, int y,
 		       int dst_width, int dst_height,
 		       int dst_stride,
+                       uint8_t* mask, int mask_stride,
                        int x_scale, int y_scale) {
   int i,l,c,l_max,c_max,rel_x,rel_y,width,height,flip;
   scc_cost_pic_t* pic;
@@ -714,6 +720,8 @@ int scc_cost_dec_frame(scc_cost_dec_t* dec,uint8_t* dst,
     scc_cost_decode_pic(dec->cost,pic,
 			&dst[dst_stride*(y+rel_y)+x+rel_x],
 			dst_stride,
+			mask ? &mask[mask_stride*(y+rel_y)+x+rel_x] : NULL,
+			mask_stride,
 			c,c_max,l,l_max,trans,x_scale,y_scale,flip);
   }
 
