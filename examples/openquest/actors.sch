@@ -23,5 +23,6 @@ room Actors {
     script zobTalkToZif();
     script zobTalkToCarol();
     script lookAtCarol();
+    script outro();
     object commanderZifObj;
 }

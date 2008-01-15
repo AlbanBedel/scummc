@@ -143,6 +143,26 @@ picture beam = {
     position = { -13, -48 }
 };
 
+picture aimE = {
+    glob = "../graphics/zif/frames/aim_E_??.bmp",
+    position = { -13, -48 }
+};
+
+picture aimupE = {
+    path = "../graphics/zif/frames/aimup_E.bmp",
+    position = { -13, -49 }
+};
+
+picture fireupE = {
+    path = "../graphics/zif/frames/fireup_E.bmp",
+    position = { -13, -57 }
+};
+
+picture firestraightE = {
+    path = "../graphics/zif/frames/firestraight_E.bmp",
+    position = { -13, -48 }
+};
+
 
 
 
@@ -193,7 +213,11 @@ limb body = {
     
     lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneS, // 52-55
 
-    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS // 56-67
+    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS, // 56-67
+
+    aimE00, aimE01, aimupE, fireupE, aimupE, aimE01, aimE00, // 68-74
+
+    aimE00, aimE01, aimE02, firestraightE, aimE02, aimE01, aimE00 // 75-81
 
 
 };
@@ -273,6 +297,20 @@ anim beam @ 44 = {
     W = { body([56-67]) !LOOP };
     S = { body([56-67]) !LOOP };
     N = { body([56-67]) !LOOP };
+};
+
+anim fireup @ 48 = {
+    E = { body([68-74]) !LOOP };
+    W = { body([68-74]) !LOOP };
+    S = { body([68-74]) !LOOP };
+    N = { body([68-74]) !LOOP };
+};
+
+anim firestraight @ 52 = {
+    E = { body([75-81]) !LOOP };
+    W = { body([75-81]) !LOOP };
+    S = { body([75-81]) !LOOP };
+    N = { body([75-81]) !LOOP };
 };
 
 

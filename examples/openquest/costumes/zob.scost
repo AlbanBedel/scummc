@@ -115,6 +115,11 @@ picture beam = {
     position = { -13, -42 }
 };
 
+picture die = {
+    glob = "../graphics/zob/frames/die_SE_??.bmp",
+    position = { -13, -42 }
+};
+
 
 
 //limb body = {
@@ -154,7 +159,9 @@ limb body = {
 
     aimE00, aimE01, aimE02, fireupE, aimE02, aimE01, aimE00, // 43-49
 
-    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS // 50-61
+    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS, // 50-61
+
+    die00, die01, die02, die03, die04, die05, die06, die07 // 62-69
 
 };
 
@@ -226,6 +233,13 @@ anim beam @ 44 = {
     W = { body([50-61]) !LOOP };
     S = { body([50-61]) !LOOP };
     N = { body([50-61]) !LOOP };
+};
+
+anim die @ 48 = {
+    E = { body([62-69]) !LOOP };
+    W = { body([62-69]) !LOOP };
+    S = { body([62-69]) !LOOP };
+    N = { body([62-69]) !LOOP };
 };
 
 
