@@ -142,7 +142,6 @@ room Actors {
         animateActor( commanderZif, 44 );
         animateActor( ensignZob, 44 );
         delay(150);
-        setCurrentActor(commanderZif);
         actorSay(commanderZif, "Hmmm");
         waitForMessage();
         Actors::setZifOnThePhone();
@@ -152,19 +151,54 @@ room Actors {
         waitForMessage();
         actorSay(commanderZif, "Arrival complete on the planet of mostly water.");
         waitForMessage();
-        Actors::setZifOffThePhone();
 
         setCurrentActor(carol);
         putActorAt(carol,76,98,OfficeRoom);
         delay(120);
         setActorStanding();
         actorSay(carol, "Are you done in here?");
+        waitForMessage();
+        
+        actorFace(commanderZif, carol);
+        actorFace(ensignZob, carol);
+        delay(50);
+        actorSay(commanderZif, "An indigenous lifeform...");
+        waitForMessage();
+        walkActorTo(ensignZob, 115, 80);
+        waitForActor( ensignZob );
+        actorSay(commanderZif, "Ensign Zob and I shall proceed to locate the artifact.");
+        waitForMessage();
+        actorSay(commanderZif, "We shall eliminate any resistance we encounter.");
+        waitForMessage();
+        walkActorTo(commanderZif, 160, 120);
+        waitForActor( commanderZif );
+        actorSay(commanderZif, "This appears to be a crude society.");
+        waitForMessage();
+        actorSay(commanderZif, "The defenses of the compound were negligible.");
+        waitForMessage();
+        actorSay(commanderZif, "I expect the relic to be in our possession shortly.");
+        waitForMessage();
+        Actors::setZifOffThePhone();
+        actorSay(ensignZob, "What of this lifeform, Sir?");
+        waitForMessage();
+        actorSay(commanderZif, "Proceed with caution.");
+        waitForMessage();
+        actorSay(commanderZif, "That may be some kind of weapon.");
+        waitForMessage();
+        walkActorTo(ensignZob, 115, 120);
+        waitForActor( ensignZob );
+        actorSay(ensignZob, "I'll begin my search.");
+        waitForMessage();
+        actorSay(commanderZif, "Keep me updated, ensign.");
+        waitForMessage();
 
         }
         override {
             if(VAR_OVERRIDE) {
             stopTalking();
             putActorAt(carol,76,98,OfficeRoom);
+            putActorAt(commanderZif,160,120,OfficeRoom);
+            putActorAt(ensignZob,115,120,OfficeRoom);
             setActorStanding();
             animateActor( carol, 3 );
             Actors::setZifOffThePhone();
