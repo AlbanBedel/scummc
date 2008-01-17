@@ -1,0 +1,65 @@
+/* ScummC
+ * Copyright (C) 2006  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+
+#include <scummVars6.s>
+#include "common.sch"
+#include "officeroom.sch"
+#include "actors.sch"
+
+
+actor ufoActor;
+
+
+room Skyline {
+
+    image = "graphics/rooms/skyline.bmp";
+
+    cost ufoCost = "ufo.cost";
+    
+    local script entry() {
+        setCurrentActor(ufoActor);
+        initActor();
+        setActorCostume(ufoCost);
+        setActorTalkPos(-60,-70);
+        setActorName("Ufo");
+        setActorWalkSpeed(2,1);
+        setActorTalkColor(ZIF_COLOR);
+        setActorWidth(20);
+        setActorIgnoreBoxes();
+        setActorAnimSpeed(4);
+        
+        putActorAt(ufoActor,-50,80,Skyline);
+        walkActorTo(ufoActor, 140, 80);
+        waitForActor( ufoActor );
+        actorSay(ufoActor, "These are the coordinates.");
+        waitForMessage();
+        actorSay(ufoActor, "Ensign, bring the teleportation device online.");
+        waitForMessage();
+        
+        delay(100);
+        
+        Verbs::setupVerbs();
+        Verbs::showVerbs(1);
+        Actors::setupActors();
+        Actors::officeIntro();
+        startRoom(OfficeRoom);
+    }
+
+}

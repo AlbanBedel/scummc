@@ -62,19 +62,17 @@ room Actors {
     // set the actor costume, etc
     script setupActors() {
         dbgPrint("setupActors()");
-        // create the actor
+        
+        // initialize ensignZob
         setCurrentActor(ensignZob);
         initActor();
         setActorCostume(ensignZobCost);
         setActorTalkPos(-60,-70);
         setActorName("Ensign Zob");
-        //setActorWalkSpeed(2,1);
         setActorWalkSpeed(2,1);
         setActorTalkColor(ZOB_COLOR);
         setActorWidth(20);
         setActorAnimSpeed(4);
-        putActorAt(ensignZob,170,110,OfficeRoom);
-        setActorDirection(270);
 
 
         // set VAR_EGO so we can use the *Ego* functions
@@ -89,10 +87,8 @@ room Actors {
         setActorWalkSpeed(2,1);
         setActorTalkColor(ZIF_COLOR);
         setActorWidth(20);
-        setActorAnimSpeed(3);
+        setActorAnimSpeed(4);
         actorObject[commanderZif] = OfficeRoom::commanderZifObj;
-        putActorAt(commanderZif,200,120,OfficeRoom);
-        setActorDirection(180);
         
         setCurrentActor(carol);
         initActor();
@@ -139,9 +135,14 @@ room Actors {
     script officeIntro() {
     
         try {
+        delay(150);
+        putActorAt(ensignZob,170,110,OfficeRoom);
+        putActorAt(commanderZif,200,120,OfficeRoom);
         animateActor( commanderZif, 44 );
         animateActor( ensignZob, 44 );
         delay(150);
+        setCurrentActor(ensignZob);
+        setActorStanding();
         actorSay(commanderZif, "Hmmm");
         waitForMessage();
         Actors::setZifOnThePhone();
@@ -206,6 +207,11 @@ room Actors {
         }
     }
 
+    
+    script quit( int area, int cmd, int btn ) {
+        shutdown();
+    }
+    
     
     script outro() {
         int i;
@@ -303,6 +309,7 @@ room Actors {
             Actors::setZifOffThePhone();
             }
         }
+        VAR_VERB_SCRIPT = Actors::quit;
     }
     
     

@@ -25,6 +25,7 @@
 #include "verbs.sch"
 #include "actors.sch"
 #include "officeroom.sch"
+#include "titlescreen.scc"
 
 int selVerb,altVerb;
 int tryPick;
@@ -627,10 +628,6 @@ room ResRoom {
         initCharset(chtest);
 
 
-        Verbs::setupVerbs();
-        Verbs::showVerbs(1);
-
-        Actors::setupActors();
         showCursor();
 
         mouseWatch();
@@ -638,8 +635,7 @@ room ResRoom {
         // do the box effect
         screenEffect(0x0005);
         // start the room
-        startRoom(OfficeRoom);
-        Actors::officeIntro();
+        startRoom(TitleScreen);
     }
 
 }
