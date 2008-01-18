@@ -122,9 +122,9 @@ room Actors {
         setActorWidth(0);
 
         pickupObject( InventoryItems::scanner, InventoryItems );
-        pickupObject( InventoryItems::card, InventoryItems );
-        pickupObject( InventoryItems::gun, InventoryItems );
-        pickupObject( InventoryItems::bullets, InventoryItems );
+        //pickupObject( InventoryItems::card, InventoryItems );
+        //pickupObject( InventoryItems::gun, InventoryItems );
+        //pickupObject( InventoryItems::bullets, InventoryItems );
         invOffset = 0;
         
         setCurrentActor(VAR_EGO);

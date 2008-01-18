@@ -25,7 +25,7 @@
 
 room TitleScreen {
 
-    image = "graphics/rooms/titlescreen.bmp";
+    image = "graphics/rooms/titlescreen_small.bmp";
 
     script proceed( int area, int cmd, int btn ) {
 
