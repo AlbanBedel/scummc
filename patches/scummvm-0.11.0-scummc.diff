@@ -1,0 +1,57 @@
+--- scummvm-0.11.0/engines/scumm/detection_tables.h	2008-01-13 00:08:41.000000000 +0100
++++ scummvm-0.11.0-scummc/engines/scumm/detection_tables.h	2008-01-16 18:37:43.000000000 +0100
+@@ -66,6 +66,8 @@
+ 	{ "samnmax", "Sam & Max Hit the Road" },
+ 	{ "tentacle", "Day of the Tentacle" },
+ 	{ "zak", "Zak McKracken and the Alien Mindbenders" },
++	{ "scummc6", "ScummC games for v6" },
++	{ "scummc7", "ScummC games for v7" },
+ 
+ #ifndef DISABLE_SCUMM_7_8
+ 	{ "ft", "Full Throttle" },
+@@ -230,11 +232,15 @@
+ 
+ 	{"samnmax",  0, 0, GID_SAMNMAX,  6, 0, MDT_ADLIB | MDT_MIDI, GF_USE_KEY, UNK},
+ 
++	{"scummc6",  0, 0, GID_SCUMMC6,  6, 0, MDT_ADLIB | MDT_MIDI, 0, UNK},
++
+ #ifndef DISABLE_SCUMM_7_8
+ 	{"ft",       0, 0, GID_FT,  7, 0, MDT_NONE, 0, UNK},
+ 
+ 	{"dig",      0, 0, GID_DIG, 7, 0, MDT_NONE, 0, UNK},
+ 
++	{"scummc7",  0, 0, GID_SCUMMC7,  7, 0, MDT_NONE, 0, UNK},
++
+ 	{"comi",     0, 0, GID_CMI, 8, 0, MDT_NONE, 0, Common::kPlatformWindows},
+ #endif
+ 
+@@ -440,6 +446,9 @@
+ 	{ "samnmax", "snmidemo.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ 	{ "samnmax", "sdemo.sm%d", kGenDiskNum, Common::DE_DEU, UNK, 0 },
+ 
++	{ "scummc6", "scummc.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
++	{ "scummc6", "scummc6.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
++
+ #ifndef DISABLE_SCUMM_7_8
+ 	{ "dig", "dig.la%d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ 	{ "dig", "The Dig Data", kGenUnchanged, UNK_LANG, Common::kPlatformMacintosh, 0 },
+@@ -453,6 +462,8 @@
+ 	{ "ft", "Vollgas Data", kGenUnchanged, Common::DE_DEU, Common::kPlatformMacintosh, 0 },
+ 	{ "ft", "Vollgas Demo Data", kGenUnchanged, Common::DE_DEU, Common::kPlatformMacintosh, "Demo" },
+ 
++	{ "scummc7", "scummc7.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
++
+ 	{ "comi", "comi.la%d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ #endif
+ 
+--- scummvm-0.11.0/engines/scumm/scumm.h	2008-01-13 00:08:41.000000000 +0100
++++ scummvm-0.11.0-scummc/engines/scumm/scumm.h	2008-01-16 18:37:43.000000000 +0100
+@@ -215,6 +215,8 @@
+ 	GID_SAMNMAX,
+ 	GID_TENTACLE,
+ 	GID_ZAK,
++	GID_SCUMMC6,
++	GID_SCUMMC7,
+ 
+ 	GID_HEGAME,      // Generic name for all HE games with default behaviour
+ 	GID_PUTTDEMO,
