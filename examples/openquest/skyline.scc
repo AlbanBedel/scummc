@@ -36,26 +36,26 @@ room Skyline {
     local script entry() {
         cutscene(0) {
             try {
-        setCurrentActor(ufoActor);
-        initActor();
-        setActorCostume(ufoCost);
-        setActorTalkPos(-60,-70);
-        setActorName("Ufo");
-        setActorWalkSpeed(2,1);
-        setActorTalkColor(ZIF_COLOR);
-        setActorWidth(20);
-        setActorIgnoreBoxes();
-        setActorAnimSpeed(4);
+                setCurrentActor(ufoActor);
+                initActor();
+                setActorCostume(ufoCost);
+                setActorTalkPos(-60,-70);
+                setActorName("Ufo");
+                setActorWalkSpeed(2,1);
+                setActorTalkColor(ZIF_COLOR);
+                setActorWidth(20);
+                setActorIgnoreBoxes();
+                setActorAnimSpeed(4);
+                
+                putActorAt(ufoActor,-50,80,Skyline);
+                walkActorTo(ufoActor, 140, 80);
+                waitForActor( ufoActor );
+                actorSay(ufoActor, "These are the coordinates.");
+                waitForMessage();
+                actorSay(ufoActor, "Ensign, bring the teleportation device online.");
+                waitForMessage();
         
-        putActorAt(ufoActor,-50,80,Skyline);
-        walkActorTo(ufoActor, 140, 80);
-        waitForActor( ufoActor );
-        actorSay(ufoActor, "These are the coordinates.");
-        waitForMessage();
-        actorSay(ufoActor, "Ensign, bring the teleportation device online.");
-        waitForMessage();
-        
-        delay(100);
+                delay(100);
             }
             override {
                 if(VAR_OVERRIDE) {

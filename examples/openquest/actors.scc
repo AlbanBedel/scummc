@@ -135,77 +135,77 @@ room Actors {
     script officeIntro() {
     
         cutscene(2) {
-        try {
-        delay(150);
-        putActorAt(ensignZob,170,110,OfficeRoom);
-        putActorAt(commanderZif,200,120,OfficeRoom);
-        animateActor( commanderZif, 44 );
-        animateActor( ensignZob, 44 );
-        delay(150);
-        setCurrentActor(ensignZob);
-        setActorStanding();
-        actorSay(commanderZif, "Hmmm");
-        waitForMessage();
-        Actors::setZifOnThePhone();
-        animateActor( commanderZif, 40 );
-        delay(30);
-        actorSay(commanderZif, "Commander's log, star date 432.1");
-        waitForMessage();
-        actorSay(commanderZif, "Arrival complete on the planet of mostly water.");
-        waitForMessage();
+            try {
+                delay(150);
+                putActorAt(ensignZob,170,110,OfficeRoom);
+                putActorAt(commanderZif,200,120,OfficeRoom);
+                animateActor( commanderZif, 44 );
+                animateActor( ensignZob, 44 );
+                delay(150);
+                setCurrentActor(ensignZob);
+                setActorStanding();
+                actorSay(commanderZif, "Hmmm");
+                waitForMessage();
+                Actors::setZifOnThePhone();
+                animateActor( commanderZif, 40 );
+                delay(30);
+                actorSay(commanderZif, "Commander's log, star date 432.1");
+                waitForMessage();
+                actorSay(commanderZif, "Arrival complete on the planet of mostly water.");
+                waitForMessage();
 
-        setCurrentActor(carol);
-        putActorAt(carol,76,98,OfficeRoom);
-        delay(120);
-        setActorStanding();
-        actorSay(carol, "Are you done in here?");
-        waitForMessage();
-        
-        actorFace(commanderZif, carol);
-        actorFace(ensignZob, carol);
-        delay(50);
-        actorSay(commanderZif, "An indigenous lifeform...");
-        waitForMessage();
-        walkActorTo(ensignZob, 115, 80);
-        waitForActor( ensignZob );
-        actorSay(commanderZif, "Ensign Zob and I shall proceed to locate the artifact.");
-        waitForMessage();
-        actorSay(commanderZif, "We shall eliminate any resistance we encounter.");
-        waitForMessage();
-        walkActorTo(commanderZif, 160, 120);
-        waitForActor( commanderZif );
-        actorSay(commanderZif, "This appears to be a crude society.");
-        waitForMessage();
-        actorSay(commanderZif, "The defenses of the compound were negligible.");
-        waitForMessage();
-        actorSay(commanderZif, "I expect the relic to be in our possession shortly.");
-        waitForMessage();
-        Actors::setZifOffThePhone();
-        actorSay(ensignZob, "What of this lifeform, Sir?");
-        waitForMessage();
-        actorSay(commanderZif, "Proceed with caution.");
-        waitForMessage();
-        actorSay(commanderZif, "That may be some kind of weapon.");
-        waitForMessage();
-        walkActorTo(ensignZob, 115, 120);
-        waitForActor( ensignZob );
-        actorSay(ensignZob, "I'll begin my search.");
-        waitForMessage();
-        actorSay(commanderZif, "Keep me updated, ensign.");
-        waitForMessage();
+                setCurrentActor(carol);
+                putActorAt(carol,76,98,OfficeRoom);
+                delay(120);
+                setActorStanding();
+                actorSay(carol, "Are you done in here?");
+                waitForMessage();
+                
+                actorFace(commanderZif, carol);
+                actorFace(ensignZob, carol);
+                delay(50);
+                actorSay(commanderZif, "An indigenous lifeform...");
+                waitForMessage();
+                walkActorTo(ensignZob, 115, 80);
+                waitForActor( ensignZob );
+                actorSay(commanderZif, "Ensign Zob and I shall proceed to locate the artifact.");
+                waitForMessage();
+                actorSay(commanderZif, "We shall eliminate any resistance we encounter.");
+                waitForMessage();
+                walkActorTo(commanderZif, 160, 120);
+                waitForActor( commanderZif );
+                actorSay(commanderZif, "This appears to be a crude society.");
+                waitForMessage();
+                actorSay(commanderZif, "The defenses of the compound were negligible.");
+                waitForMessage();
+                actorSay(commanderZif, "I expect the relic to be in our possession shortly.");
+                waitForMessage();
+                Actors::setZifOffThePhone();
+                actorSay(ensignZob, "What of this lifeform, Sir?");
+                waitForMessage();
+                actorSay(commanderZif, "Proceed with caution.");
+                waitForMessage();
+                actorSay(commanderZif, "That may be some kind of weapon.");
+                waitForMessage();
+                walkActorTo(ensignZob, 115, 120);
+                waitForActor( ensignZob );
+                actorSay(ensignZob, "I'll begin my search.");
+                waitForMessage();
+                actorSay(commanderZif, "Keep me updated, ensign.");
+                waitForMessage();
 
-        }
-        override {
-            if(VAR_OVERRIDE) {
-            stopTalking();
-            putActorAt(carol,76,98,OfficeRoom);
-            putActorAt(commanderZif,160,120,OfficeRoom);
-            putActorAt(ensignZob,115,120,OfficeRoom);
-            setActorStanding();
-            animateActor( carol, 3 );
-            Actors::setZifOffThePhone();
             }
-        }
+            override {
+                if(VAR_OVERRIDE) {
+                    stopTalking();
+                    putActorAt(carol,76,98,OfficeRoom);
+                    putActorAt(commanderZif,160,120,OfficeRoom);
+                    putActorAt(ensignZob,115,120,OfficeRoom);
+                    setActorStanding();
+                    animateActor( carol, 3 );
+                    Actors::setZifOffThePhone();
+                }
+            }
         }
     }
 
@@ -218,100 +218,100 @@ room Actors {
     script outro() {
         int i;
         cutscene(1) {
-        try {
-        egoSay("I'm having problems hitting the target, Sir.");
-        waitForMessage();
-        actorSay(commanderZif, "You're not a soldier. Give it here.");
-        waitForMessage();
-        setObjectOwner( InventoryItems::gun, commanderZif );
-        animateActor(ensignZob, 24);
-        delay(15);
-        animateActor(commanderZif, 24);
-        delay(15);
-        animateActor(ensignZob, 28);
-        delay(15);
-        animateActor(commanderZif, 28);
-        delay(15);
-        actorSay(commanderZif, "Right, stand back.");
-        waitForMessage();
-        walkActorTo(ensignZob, 276, 110);
-        waitForActor( ensignZob );
-        actorFace(ensignZob,commanderZif);
-        actorSay(commanderZif, "I shall disable the suspension field thusly.");
-        waitForMessage();
-        delay(100);
-        animateActor(commanderZif,48);
-        delay(30);
-        setCurrentActor(bluecupActor);
-        for(i = 11 ; i > 0 ; i--) {
-            delay( 2 );
-            setActorElevation( i*5 );
-        }                
-        delay(100);
-        walkActorToObj(commanderZif,bluecupActor,0);
-        waitForActor( commanderZif );
-        setCurrentActor(commanderZif);
-        setActorDirection(180);
-        delay(100);
-        putActorAt( bluecupActor,0,0,InventoryItems );
-        actorSay(commanderZif, "At last, the power of the relic is mine.");
-        waitForMessage();
-        egoSay("Expertly done, Sir.");
-        waitForMessage();
-        egoSay("Pass over the relic, and I shall place it in the containment vessel.");
-        waitForMessage();
-        walkActorTo(commanderZif, 100, 115);
-        waitForActor( commanderZif );
-        actorFace(commanderZif,ensignZob);
-        actorSay(commanderZif, "Never!");
-        waitForMessage();
-        actorSay(commanderZif, "The relic shall never leave my side.");
-        waitForMessage();
-        egoSay("But commander, the power is too much for one man.");
-        waitForMessage();
-        egoSay("Yield it, before it destroys you!");
-        waitForMessage();
-        actorSay(commanderZif, "Error, number one.");
-        waitForMessage();
-        actorSay(commanderZif, "Never give up the gun.");
-        waitForMessage();
-        animateActor(commanderZif,52);
-        delay(50);
-        animateActor( ensignZob, 48 );
-        delay(150);
-        walkActorTo(commanderZif, 170, 120);
-        waitForActor( commanderZif );
-        actorSay(commanderZif, "What a shame...");
-        waitForMessage();
-        actorSay(commanderZif, "We could have ruled the cosmos together.");
-        waitForMessage();
-        setCurrentActor(commanderZif);
-        setActorDirection(180);
-        Actors::setZifOnThePhone();
-        animateActor( commanderZif, 40 );
-        delay(30);
-        actorSay(commanderZif, "Commander's log, star date 432.2");
-        waitForMessage();
-        actorSay(commanderZif, "I have obtained the stolen artifact.");
-        waitForMessage();
-        actorSay(commanderZif, "In a slight contradiction to my orders, I have decided to enslave this planet.");
-        waitForMessage();
-        actorSay(commanderZif, "Mwaaah huh huh huh huh huh huh...");
-        waitForMessage();
-        Actors::setZifOffThePhone();
+            try {
+                egoSay("I'm having problems hitting the target, Sir.");
+                waitForMessage();
+                actorSay(commanderZif, "You're not a soldier. Give it here.");
+                waitForMessage();
+                setObjectOwner( InventoryItems::gun, commanderZif );
+                animateActor(ensignZob, 24);
+                delay(15);
+                animateActor(commanderZif, 24);
+                delay(15);
+                animateActor(ensignZob, 28);
+                delay(15);
+                animateActor(commanderZif, 28);
+                delay(15);
+                actorSay(commanderZif, "Right, stand back.");
+                waitForMessage();
+                walkActorTo(ensignZob, 276, 110);
+                waitForActor( ensignZob );
+                actorFace(ensignZob,commanderZif);
+                actorSay(commanderZif, "I shall disable the suspension field thusly.");
+                waitForMessage();
+                delay(100);
+                animateActor(commanderZif,48);
+                delay(30);
+                setCurrentActor(bluecupActor);
+                for(i = 11 ; i > 0 ; i--) {
+                    delay( 2 );
+                    setActorElevation( i*5 );
+                }
+                delay(100);
+                walkActorToObj(commanderZif,bluecupActor,0);
+                waitForActor( commanderZif );
+                setCurrentActor(commanderZif);
+                setActorDirection(180);
+                delay(100);
+                putActorAt( bluecupActor,0,0,InventoryItems );
+                actorSay(commanderZif, "At last, the power of the relic is mine.");
+                waitForMessage();
+                egoSay("Expertly done, Sir.");
+                waitForMessage();
+                egoSay("Pass over the relic, and I shall place it in the containment vessel.");
+                waitForMessage();
+                walkActorTo(commanderZif, 100, 115);
+                waitForActor( commanderZif );
+                actorFace(commanderZif,ensignZob);
+                actorSay(commanderZif, "Never!");
+                waitForMessage();
+                actorSay(commanderZif, "The relic shall never leave my side.");
+                waitForMessage();
+                egoSay("But commander, the power is too much for one man.");
+                waitForMessage();
+                egoSay("Yield it, before it destroys you!");
+                waitForMessage();
+                actorSay(commanderZif, "Error, number one.");
+                waitForMessage();
+                actorSay(commanderZif, "Never give up the gun.");
+                waitForMessage();
+                animateActor(commanderZif,52);
+                delay(50);
+                animateActor( ensignZob, 48 );
+                delay(150);
+                walkActorTo(commanderZif, 170, 120);
+                waitForActor( commanderZif );
+                actorSay(commanderZif, "What a shame...");
+                waitForMessage();
+                actorSay(commanderZif, "We could have ruled the cosmos together.");
+                waitForMessage();
+                setCurrentActor(commanderZif);
+                setActorDirection(180);
+                Actors::setZifOnThePhone();
+                animateActor( commanderZif, 40 );
+                delay(30);
+                actorSay(commanderZif, "Commander's log, star date 432.2");
+                waitForMessage();
+                actorSay(commanderZif, "I have obtained the stolen artifact.");
+                waitForMessage();
+                actorSay(commanderZif, "In a slight contradiction to my orders, I have decided to enslave this planet.");
+                waitForMessage();
+                actorSay(commanderZif, "Mwaaah huh huh huh huh huh huh...");
+                waitForMessage();
+                Actors::setZifOffThePhone();
 
-        }
-        override {
-            if(VAR_OVERRIDE) {
-            stopTalking();
-            putActorAt(ensignZob,276,110,SecretRoom);
-            putActorAt(commanderZif,170,120,SecretRoom);
-            putActorAt( bluecupActor,0,0,InventoryItems );
-            setCurrentActor(commanderZif);
-            setActorDirection(180);
-            Actors::setZifOffThePhone();
             }
-        }
+            override {
+                if(VAR_OVERRIDE) {
+                    stopTalking();
+                    putActorAt(ensignZob,276,110,SecretRoom);
+                    putActorAt(commanderZif,170,120,SecretRoom);
+                    putActorAt( bluecupActor,0,0,InventoryItems );
+                    setCurrentActor(commanderZif);
+                    setActorDirection(180);
+                    Actors::setZifOffThePhone();
+                }
+            }
         }
         VAR_VERB_SCRIPT = Actors::quit;
     }

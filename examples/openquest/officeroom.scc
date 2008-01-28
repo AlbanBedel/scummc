@@ -67,21 +67,21 @@ room OfficeRoom {
         case LookAt:
             if(getObjectState(objA)==1 && VAR_EGO!=getObjectOwner(InventoryItems::gun)) {
                 cutscene(0) {
-                egoSay("I'll look in here I think.");
-                waitForMessage();
-                animateActor(VAR_EGO, 24);
-                delay(20);
-                animateActor(VAR_EGO, 28);
-                delay(20);
-                egoSay("There appears to be a small sidearm in this container.");
-                pickupObject( InventoryItems::gun, InventoryItems );
-                waitForMessage();
-                animateActor(VAR_EGO, 24);
-                delay(20);
-                animateActor(VAR_EGO, 28);
-                delay(20);
-                egoSay("And a plastic card containing some kind of circuitry.");
-                pickupObject( InventoryItems::card, InventoryItems );
+                    egoSay("I'll look in here I think.");
+                    waitForMessage();
+                    animateActor(VAR_EGO, 24);
+                    delay(20);
+                    animateActor(VAR_EGO, 28);
+                    delay(20);
+                    egoSay("There appears to be a small sidearm in this container.");
+                    pickupObject( InventoryItems::gun, InventoryItems );
+                    waitForMessage();
+                    animateActor(VAR_EGO, 24);
+                    delay(20);
+                    animateActor(VAR_EGO, 28);
+                    delay(20);
+                    egoSay("And a plastic card containing some kind of circuitry.");
+                    pickupObject( InventoryItems::card, InventoryItems );
                 }
             }
             else
@@ -124,34 +124,34 @@ room OfficeRoom {
             }
             if( ! hasTalkedAboutPlant ) {
                 cutscene(0) {
-                animateActor(VAR_EGO, 24);
-                delay(20);
-                actorSay( carol, "Hey, I haven't cleaned there yet." );
-                hasTriedToMovePlant = 1;
-                waitForMessage();
-                animateActor(VAR_EGO, 28);
-                delay(30);
+                    animateActor(VAR_EGO, 24);
+                    delay(20);
+                    actorSay( carol, "Hey, I haven't cleaned there yet." );
+                    hasTriedToMovePlant = 1;
+                    waitForMessage();
+                    animateActor(VAR_EGO, 28);
+                    delay(30);
                 }
                 return;
             }
             if( getObjectState( plant ) == 1 ) {
                 cutscene(0) {
-                animateActor(VAR_EGO, 24);
-                delay(20);
-                setObjectState( plant, 2 );
-                // initialize bulletsActor
-                setCurrentActor(bulletsActor);
-                initActor();
-                setActorCostume(bulletsCost);
-                setActorName("ammunition");
-                actorObject[bulletsActor] = bullets;
-                setActorWidth(10);
-                setActorIgnoreBoxes();
-                putActorAt(bulletsActor,113,94,OfficeRoom);
-                setCurrentActor(VAR_EGO);
-                delay(30);
-                animateActor(VAR_EGO, 28);
-                delay(30);
+                    animateActor(VAR_EGO, 24);
+                    delay(20);
+                    setObjectState( plant, 2 );
+                    // initialize bulletsActor
+                    setCurrentActor(bulletsActor);
+                    initActor();
+                    setActorCostume(bulletsCost);
+                    setActorName("ammunition");
+                    actorObject[bulletsActor] = bullets;
+                    setActorWidth(10);
+                    setActorIgnoreBoxes();
+                    putActorAt(bulletsActor,113,94,OfficeRoom);
+                    setCurrentActor(VAR_EGO);
+                    delay(30);
+                    animateActor(VAR_EGO, 28);
+                    delay(30);
                 }
                 egoSay( "There is a small box down here." );
             }
@@ -245,43 +245,43 @@ room OfficeRoom {
             }
             if( hasTalkedAboutPlate ) {
                 cutscene(2) {
-                try {
-                walkActorTo(commanderZif, 276, 106);
-                waitForActor( commanderZif );
-                actorSay(commanderZif, "I'll operate the one over here.");
-                waitForMessage();
-                delay( 20 );
-                animateActor(VAR_EGO, 24);
-                animateActor(commanderZif, 24);
-                delay(30);
-                for(i = 2 ; i < 8 ; i++) {
-                    delay( 10 );
-                    setObjectState( exitToSecretRoom, i );
-                }
-                animateActor(VAR_EGO, 28);
-                animateActor(commanderZif, 28);
-                delay(30);
-                actorSay(commanderZif, "Continue your investigation.");
-                waitForMessage();
-                walkActorTo(commanderZif, 200, 120);
-                }
-                override {
-                    if(VAR_OVERRIDE) {
-                        stopTalking();
-                        putActorAt(commanderZif, 200, 120, OfficeRoom);
-                        setObjectState( exitToSecretRoom, 7 );
+                    try {
+                        walkActorTo(commanderZif, 276, 106);
+                        waitForActor( commanderZif );
+                        actorSay(commanderZif, "I'll operate the one over here.");
+                        waitForMessage();
+                        delay( 20 );
+                        animateActor(VAR_EGO, 24);
+                        animateActor(commanderZif, 24);
+                        delay(30);
+                        for(i = 2 ; i < 8 ; i++) {
+                            delay( 10 );
+                            setObjectState( exitToSecretRoom, i );
+                        }
+                        animateActor(VAR_EGO, 28);
+                        animateActor(commanderZif, 28);
+                        delay(30);
+                        actorSay(commanderZif, "Continue your investigation.");
+                        waitForMessage();
+                        walkActorTo(commanderZif, 200, 120);
                     }
-                }
+                    override {
+                        if(VAR_OVERRIDE) {
+                            stopTalking();
+                            putActorAt(commanderZif, 200, 120, OfficeRoom);
+                            setObjectState( exitToSecretRoom, 7 );
+                        }
+                    }
                 }
                 return;
             }
             if( hasSmelledPlate ) {
                 cutscene(2) {
-                hasPressedPlate = 1;
-                animateActor(VAR_EGO, 24);
-                delay(30);
-                animateActor(VAR_EGO, 28);
-                delay(30);
+                    hasPressedPlate = 1;
+                    animateActor(VAR_EGO, 24);
+                    delay(30);
+                    animateActor(VAR_EGO, 28);
+                    delay(30);
                 }
                 egoSay("Nothing happened.");
                 waitForMessage();
