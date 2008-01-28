@@ -333,13 +333,13 @@ room Actors {
                 sentence[0] = "What are your orders?";
                 Dialog::dialogAdd(sentence);
                 sentence = 0;
+                if( hasPressedPlate && ! hasTalkedAboutPlate )
+                    sentence[0] = "I require your assistance with this opening mechanism.";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
                 sentence[0] = "I'll continue my search.";
                 Dialog::dialogAdd(sentence);
-                if( hasPressedPlate && ! hasTalkedAboutPlate ) {
-                    sentence = 0;
-                    sentence[0] = "I require your assistance with this opening mechanism.";
-                    Dialog::dialogAdd(sentence);
-                }
+                sentence = 0;
 
                 Dialog::dialogStart(ZOB_DIM_COLOR,ZOB_COLOR);
                 do breakScript() while(selectedSentence < 0);
@@ -372,10 +372,10 @@ room Actors {
                             }
                         }
                         break;
-                    case 1:
+                    case 2:
                         actorSay(commanderZif,"Very good.");
                         break;
-                    case 2:
+                    case 1:
                         actorSay(commanderZif,"Have you deciphered its secrets?");
                         waitForMessage();
                         egoSay("Yes, I believe two persons are required.");
@@ -388,7 +388,7 @@ room Actors {
                     waitForMessage();
                 }
                 Dialog::dialogClear(1);
-                if(selectedSentence == 1) break dialogLoop;
+                if(selectedSentence == 2) break dialogLoop;
             }
             Dialog::dialogEnd();
 
@@ -491,13 +491,13 @@ room Actors {
                 sentence[0] = "Look out behind you, a three-headed monkey!";
                 Dialog::dialogAdd(sentence);
                 sentence = 0;
+                if( hasTriedToMovePlant && ! hasTalkedAboutPlant )
+                    sentence[0] = "May I move this plant?";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
                 sentence[0] = "As you were";
                 Dialog::dialogAdd(sentence);
-                if( hasTriedToMovePlant && ! hasTalkedAboutPlant ) {
-                    sentence = 0;
-                    sentence[0] = "May I move this plant?";
-                    Dialog::dialogAdd(sentence);
-                }
+                sentence = 0;
 
                 Dialog::dialogStart(ZOB_DIM_COLOR,ZOB_COLOR);
                 do breakScript() while(selectedSentence < 0);
@@ -545,9 +545,9 @@ room Actors {
                         actorSay(carol,"He works in HR.");
                         waitForMessage();
                         break;
-                    case 4:
-                        break;
                     case 5:
+                        break;
+                    case 4:
                         actorSay(carol,"I haven't cleaned down there yet.");
                         waitForMessage();
                         egoSay("Then by moving the plant I am providing assistance.");
@@ -561,7 +561,7 @@ room Actors {
                     waitForMessage();
                 }
                 Dialog::dialogClear(1);
-                if(selectedSentence == 4) break dialogLoop;
+                if(selectedSentence == 5) break dialogLoop;
             }
             Dialog::dialogEnd();
 
