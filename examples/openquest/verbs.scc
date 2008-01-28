@@ -58,6 +58,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('g');
         
         setCurrentVerb(PickUp);
@@ -67,6 +68,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('p');
 
         setCurrentVerb(Use);
@@ -76,6 +78,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('u');
 
         setCurrentVerb(Open);
@@ -85,6 +88,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('o');
 
         setCurrentVerb(LookAt);
@@ -94,6 +98,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('l');
 
         setCurrentVerb(Push);
@@ -103,6 +108,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         //setVerbKey('');
 
         setCurrentVerb(Close);
@@ -112,6 +118,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('c');
 
         setCurrentVerb(TalkTo);
@@ -121,6 +128,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         setVerbKey('t');
 
         setCurrentVerb(Pull);
@@ -130,6 +138,7 @@ room Verbs {
         setVerbColor(color);
         setVerbHiColor(hiColor);
         setVerbDimColor(dimColor);
+        setVerbOn();
         //setVerbKey('');
 
         setCurrentVerb(invUp);
@@ -156,10 +165,12 @@ room Verbs {
                 initVerb();
                 //verbCenter();
                 setVerbXY(160 + c*40,160 + l*20);
+                setVerbOn();
             }
         dimInt(invObj,8);
 
-
+        saveVerbs(Give, Pull, 2); // Main verbs (stored in slot 2)
+        saveVerbs(invSlot0, invSlot0+7, 3); // Inventory items (stored in slot 3)
     }
 
     // turn on all the verb for the interface 
@@ -167,29 +178,41 @@ room Verbs {
     script showVerbs(int show) {
         int* vrb;
         int i;
-       
+
         if(!!show == verbsOn) return;
+
+        if (show)
+        {
+            restoreVerbs(Give, Pull, 2); // Show main verbs
+            restoreVerbs(invSlot0, invSlot0+7, 3); // Show inventory items
  
-        vrb[0] = [ Give, PickUp, Use, Open,
-                   LookAt, Push, Close, TalkTo,
-                   Pull, SntcLine, invUp, invDown ];
-        
-        for(i = 0 ; i < 12 ; i++) {
-            setCurrentVerb(vrb[i]);
-            if(show)
-                setVerbOn();
-            else
-                setVerbOff();
+            ResRoom::inventoryHandler( 0 ); // reset display in case any items have been picked up
+            
+            // The rest can be turned on manually
+            setCurrentVerb(SntcLine);
+            setVerbOn();
+            redrawVerb();
+            setCurrentVerb(invUp);
+            setVerbOn();
+            redrawVerb();
+            setCurrentVerb(invDown);
+            setVerbOn();
             redrawVerb();
         }
-        undim(vrb);
+        else
+        {
+            saveVerbs(Give, Pull, 2); // Hide main verbs
+            saveVerbs(invSlot0, invSlot0+7, 3); // Hide inventory items
 
-        for(i = 0 ; i < 8 ; i++) {
-            setCurrentVerb(invSlot0+i);
-            if(show)
-                setVerbOn();
-            else
-                setVerbOff();
+            // The rest can be turned off manually
+            setCurrentVerb(SntcLine);
+            setVerbOff();
+            redrawVerb();
+            setCurrentVerb(invUp);
+            setVerbOff();
+            redrawVerb();
+            setCurrentVerb(invDown);
+            setVerbOff();
             redrawVerb();
         }
 
