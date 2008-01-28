@@ -120,6 +120,12 @@ room InventoryItems {
         case LookAt:
             egoSay("They used to power the hand scanner.");
             return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "with";
+            return;
         }
     }
 
@@ -157,6 +163,12 @@ room InventoryItems {
                 egoSay("The artifact is in this room.");
             else
                 egoSay("I am detecting the artifact near this location.");
+            return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "on";
             return;
         case Open:
             egoSay("I'll open up the housing.");
