@@ -66,6 +66,7 @@ room OfficeRoom {
         case PickUp:
         case LookAt:
             if(getObjectState(objA)==1 && VAR_EGO!=getObjectOwner(InventoryItems::gun)) {
+                cutscene(0) {
                 egoSay("I'll look in here I think.");
                 waitForMessage();
                 animateActor(VAR_EGO, 24);
@@ -81,6 +82,7 @@ room OfficeRoom {
                 delay(20);
                 egoSay("And a plastic card containing some kind of circuitry.");
                 pickupObject( InventoryItems::card, InventoryItems );
+                }
             }
             else
                 egoSay("Some kind of containing vessel for multiple instances of parchment.");
@@ -121,6 +123,7 @@ room OfficeRoom {
                 return;
             }
             if( ! hasTalkedAboutPlant ) {
+                cutscene(0) {
                 animateActor(VAR_EGO, 24);
                 delay(20);
                 actorSay( carol, "Hey, I haven't cleaned there yet." );
@@ -128,9 +131,11 @@ room OfficeRoom {
                 waitForMessage();
                 animateActor(VAR_EGO, 28);
                 delay(30);
+                }
                 return;
             }
             if( getObjectState( plant ) == 1 ) {
+                cutscene(0) {
                 animateActor(VAR_EGO, 24);
                 delay(20);
                 setObjectState( plant, 2 );
@@ -147,6 +152,7 @@ room OfficeRoom {
                 delay(30);
                 animateActor(VAR_EGO, 28);
                 delay(30);
+                }
                 egoSay( "There is a small box down here." );
             }
             else
@@ -238,6 +244,7 @@ room OfficeRoom {
                 return;
             }
             if( hasTalkedAboutPlate ) {
+                cutscene(2) {
                 try {
                 walkActorTo(commanderZif, 276, 106);
                 waitForActor( commanderZif );
@@ -265,14 +272,17 @@ room OfficeRoom {
                         setObjectState( exitToSecretRoom, 7 );
                     }
                 }
+                }
                 return;
             }
             if( hasSmelledPlate ) {
+                cutscene(2) {
                 hasPressedPlate = 1;
                 animateActor(VAR_EGO, 24);
                 delay(30);
                 animateActor(VAR_EGO, 28);
                 delay(30);
+                }
                 egoSay("Nothing happened.");
                 waitForMessage();
                 egoSay("The two plates appear to be connected.");

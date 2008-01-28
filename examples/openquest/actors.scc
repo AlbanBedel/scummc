@@ -134,6 +134,7 @@ room Actors {
     
     script officeIntro() {
     
+        cutscene(2) {
         try {
         delay(150);
         putActorAt(ensignZob,170,110,OfficeRoom);
@@ -205,6 +206,7 @@ room Actors {
             Actors::setZifOffThePhone();
             }
         }
+        }
     }
 
     
@@ -215,6 +217,7 @@ room Actors {
     
     script outro() {
         int i;
+        cutscene(1) {
         try {
         egoSay("I'm having problems hitting the target, Sir.");
         waitForMessage();
@@ -308,6 +311,7 @@ room Actors {
             setActorDirection(180);
             Actors::setZifOffThePhone();
             }
+        }
         }
         VAR_VERB_SCRIPT = Actors::quit;
     }
