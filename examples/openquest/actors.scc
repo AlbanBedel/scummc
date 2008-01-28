@@ -313,6 +313,10 @@ room Actors {
                 }
             }
         }
+        
+        // Kill the mouseWatch
+        if(isScriptRunning(ResRoom::mouseWatch))
+            stopScript(ResRoom::mouseWatch);
         VAR_VERB_SCRIPT = Actors::quit;
     }
     
