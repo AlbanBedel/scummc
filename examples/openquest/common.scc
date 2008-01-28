@@ -238,12 +238,11 @@ room ResRoom {
 
        case Give:
            if(objB && objA <= 0xF) {
-               egoSay("I'll give it to him.");
-               setObjectOwner(objB,objA);
+               egoSay("I don't think i should be giving this away.");
                break;
            }
            else
-               egoSay("Can't give things to non-persons.");
+               egoSay("I can't do that !");
            break;
 
         case LookAt:
