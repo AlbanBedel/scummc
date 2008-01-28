@@ -631,6 +631,11 @@ room ResRoom {
 
         mouseWatch();
 
+        // init the print slot for actor talking
+        printBegin();
+        printOverhead();
+        printEnd();
+
         // do the box effect
         screenEffect(0x0005);
         // start the room
