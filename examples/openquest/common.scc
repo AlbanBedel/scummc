@@ -145,7 +145,7 @@ room ResRoom {
 
 
             if(obj) {
-                if(obj <= 0xF)
+                if(obj is Person)
                     alt = TalkTo;
                 else if(obj is Openable)
                     alt = getObjectState(obj) ? Close : Open;
@@ -235,14 +235,14 @@ room ResRoom {
             return;
             
         case PickUp:
-            if(objA <= 0xF)
+            if(objA is Person)
                 egoSay("I can't carry him around.");
             else
                 egoSay("I can't pick that up.");
             break;
             
        case Use:
-           if(objA <= 0xF) {
+           if(objA is Person) {
                if(objB)
                    egoSay("I can't use that on someone!");
                else {
@@ -259,7 +259,7 @@ room ResRoom {
            break;
 
        case Give:
-           if(objB && objA <= 0xF) {
+           if(objB && objA is Person) {
                egoSay("I don't think i should be giving this away.");
                break;
            }
@@ -268,7 +268,7 @@ room ResRoom {
            break;
 
         case LookAt:
-            if(objA <= 0xF)
+            if(objA is Person)
                 egoSay("There is nothing special about him.");
             else
                 egoSay("There is nothing special about it.");
@@ -276,14 +276,14 @@ room ResRoom {
             
         case Push:
         case Pull:
-            if(objA <= 0xF)
+            if(objA is Person)
                 egoSay("That wouldn't be very nice.");
             else
                 egoSay("I don't feel in shape today.");
             break;
             
         case Open:
-            if(objA <= 0xF) {
+            if(objA is Person) {
                 egoSay("You know these human bodies aren't very resistant, if i open it he might die.");
                 break;
             }
@@ -302,7 +302,7 @@ room ResRoom {
             break;
             
         case Close:
-            if(objA <= 0xF) {
+            if(objA is Person) {
                 egoSay("Closing someone ?\wThat hardly make any sense.");
                 break;
             }            

@@ -50,7 +50,7 @@ int invOffset;
 verb Icon,Preposition,SetBoxes;
 
 // Object class
-class Openable,Pickable;
+class Openable,Pickable, Person;
 
 // Allow the objects to insert a word (like "to" or "with") between the
 // verb and object in the sentence.

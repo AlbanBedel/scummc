@@ -74,6 +74,7 @@ room Actors {
         setActorTalkColor(ZOB_COLOR);
         setActorWidth(20);
         setActorAnimSpeed(4);
+        setObjectClass(ensignZob, [ 0x80 + Person ]);
         actorObject[ensignZob] = ensignZobObj;
 
 
@@ -90,6 +91,7 @@ room Actors {
         setActorTalkColor(ZIF_COLOR);
         setActorWidth(20);
         setActorAnimSpeed(4);
+        setObjectClass(commanderZif, [ 0x80 + Person ]);
         actorObject[commanderZif] = commanderZifObj;
         
         setCurrentActor(carol);
@@ -100,6 +102,7 @@ room Actors {
         setActorIgnoreBoxes();
         setActorAnimSpeed( 7 );
         setActorTalkColor(CAROL_COLOR);
+        setObjectClass(carol, [ 0x80 + Person ]);
         actorObject[carol] = OfficeRoom::carolObj;
 
         setCurrentActor(bluecupActor);
@@ -118,6 +121,7 @@ room Actors {
         // TODO: make the cube irresponsive to mouseover
         setActorName("blue cup");
         setActorAnimSpeed(2);
+        setObjectClass(cubeActor, [ 0x80 + ClassUntouchable ]);
         actorObject[cubeActor] = SecretRoom::blueCup;
         putActorAt(cubeActor,160,98,SecretRoom);
         setActorElevation( 55 );
