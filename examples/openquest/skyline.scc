@@ -59,7 +59,7 @@ room Skyline {
             }
             override {
                 if(VAR_OVERRIDE) {
-                    stopTalking();
+                    actorSay(0xFF, ""); //stopTalking();
                 }
             }
         }

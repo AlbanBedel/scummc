@@ -270,7 +270,7 @@ room OfficeRoom {
                     }
                     override {
                         if(VAR_OVERRIDE) {
-                            stopTalking();
+                            actorSay(0xFF, ""); //stopTalking();
                             putActorAt(commanderZif, 200, 120, OfficeRoom);
                             setObjectState( exitToSecretRoom, 7 );
                         }

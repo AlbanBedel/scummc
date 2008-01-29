@@ -198,7 +198,7 @@ room Actors {
             }
             override {
                 if(VAR_OVERRIDE) {
-                    stopTalking();
+                    actorSay(0xFF, ""); //stopTalking();
                     putActorAt(carol,76,98,OfficeRoom);
                     putActorAt(commanderZif,160,120,OfficeRoom);
                     putActorAt(ensignZob,115,120,OfficeRoom);
@@ -304,7 +304,7 @@ room Actors {
             }
             override {
                 if(VAR_OVERRIDE) {
-                    stopTalking();
+                    actorSay(0xFF, ""); //stopTalking();
                     putActorAt(ensignZob,276,110,SecretRoom);
                     putActorAt(commanderZif,170,120,SecretRoom);
                     putActorAt( bluecupActor,0,0,InventoryItems );
@@ -369,7 +369,7 @@ room Actors {
                         }
                         override {
                             if(VAR_OVERRIDE) {
-                                stopTalking();
+                                actorSay(0xFF, ""); //stopTalking();
                             }
                         }
                         break;
