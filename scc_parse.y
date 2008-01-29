@@ -137,12 +137,15 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
   }
 
   char* scc_statement_check_func(scc_call_t* c) {
-    int n;
+    int n,min_argc = c->func->argc;
     scc_statement_t* a;
     // should be big enouth
     static char func_err[2048];
 
-    if(c->argc != c->func->argc) {
+    while(min_argc > 0 && (c->func->argt[min_argc-1] & SCC_FA_DEFAULT))
+      min_argc--;
+
+    if(c->argc > c->func->argc || c->argc < min_argc) {
       sprintf(func_err,"Function %s needs %d args, %d found.\n",
 	      c->func->sym,c->func->argc,c->argc);
       return func_err;

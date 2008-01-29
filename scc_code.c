@@ -362,6 +362,14 @@ static scc_code_t* scc_call_gen_code(scc_call_t* call, int ret_val) {
     c = scc_statement_gen_code(a,1);
     SCC_LIST_ADD(code,last,c);
   }
+
+  // Add the arguments using the default value
+  for( ; n < call->func->argc ; n++) {
+    if(call->func->argt[n] & SCC_FA_REF) continue;
+    if((call->func->argt[n] & 0xFFFF) != SCC_FA_VAL) continue;
+    c = scc_code_push_val(SCC_OP_PUSH,call->func->dfault[n]);
+    SCC_LIST_ADD(code,last,c);
+  }
   
   // If we had an extra op code close the list
   if(call->func->hidden_args > 0 &&

@@ -89,6 +89,9 @@ typedef struct scc_verb_script_st scc_verb_script_t;
 /// String reference
 #define SCC_FA_SREF   0x400
 
+/// Argument have a default value
+#define SCC_FA_DEFAULT  0x10000
+
 /// value, on stack
 #define SCC_FA_VAL      0
 /// list of value, on stack
@@ -142,7 +145,8 @@ struct scc_func_st {
   int hidden_args;
   /// Argument types
   int argt[SCC_MAX_ARGS];
-    
+  /// Default argument value
+  int dfault[SCC_MAX_ARGS];
 };
 
 /// Function call

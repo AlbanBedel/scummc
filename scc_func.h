@@ -246,7 +246,8 @@ static scc_func_t scc_func_v6_v7[] = {
     { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
   },{
     "putActorAt", 0x7F, 0, 4, 0,
-    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL }
+    { SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL, SCC_FA_VAL|SCC_FA_DEFAULT },
+    { 0,          0,          0,          0xFF }
   },{
     "actorFace", 0x81, 0, 2, 0,
     { SCC_FA_VAL, SCC_FA_VAL }
