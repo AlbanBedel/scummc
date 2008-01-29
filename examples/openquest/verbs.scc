@@ -40,7 +40,7 @@ room Verbs {
 
         setCurrentVerb(SntcLine);
         initVerb();
-        setVerbName("%v{sntcVerb} %n{sntcObjA} %s{sntcPrepo} %n{sntcObjB}");
+        setVerbName("%v{sntcVerb} %n{sntcObjADesc} %s{sntcPrepo} %n{sntcObjBDesc}");
         setVerbXY(160,145);
         setVerbColor(color);
         setVerbHiColor(hiColor);

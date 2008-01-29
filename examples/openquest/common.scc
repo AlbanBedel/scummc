@@ -66,7 +66,7 @@ room ResRoom {
     // this script run in the background cheking where the mouse is
     // and update the sentence and set the alt verb
     script mouseWatch() {
-        int vrb,obj,target,alt;
+        int vrb,obj,target,alt,desc;
 
         // we run forever (well until someone kill us)
         while(1) {
@@ -90,9 +90,13 @@ room ResRoom {
             // find what verb should be displayed and the
             // object under the pointer
             vrb = 0;
+            desc = 0;
             obj = getActorAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
             if(obj == VAR_EGO)
                 obj = 0;
+            else if (actorObject[obj])
+            	desc = actorObject[obj];
+
             unless(obj)
                 obj = getObjectAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
             unless(obj) {
@@ -109,16 +113,32 @@ room ResRoom {
             unless(vrb)
                 vrb = selVerb ? selVerb : WalkTo;                    
             
+            // Set description object
+            unless(desc)
+            	desc = obj;
+            
             if(sntcPrepo) {
                 target = sntcObjB;
-                if(obj == sntcObjA) obj = 0;
+                if(obj == sntcObjA) {
+                	obj = 0;
+                	desc = 0;
+                }
             } else target = sntcObjA;
             
             //dbgPrint("%i{vrb} <> %i{sntcVerb} | %i{obj} <> %i{target}");
             unless(vrb == sntcVerb && obj == target) {
                 sntcVerb = vrb;
-                if(sntcPrepo) sntcObjB = obj;
-                else sntcObjA = obj;
+                
+                // Set sentence line
+                if(sntcPrepo) {
+                	sntcObjB = obj;
+                	sntcObjBDesc = desc;
+                }
+                else {
+                	sntcObjA = obj;
+                	sntcObjADesc = desc;
+                }
+                
                 setCurrentVerb(SntcLine);
                 redrawVerb();
             }
@@ -198,9 +218,11 @@ room ResRoom {
 
     script resetSntc(int vrb) {
         sntcObjA = 0;
+        sntcObjADesc = 0;
         if(sntcPrepo) {
             undim(sntcPrepo);
             sntcObjB = 0;
+            sntcObjBDesc = 0;
         }
         selVerb = vrb;
         setCurrentVerb(SntcLine);

@@ -184,7 +184,7 @@ room OfficeRoom {
 
 
     object commanderZifObj {
-        name = "OfficeRoom::commanderZifObj";
+        name = "Commander Zif";
         verb(int vrb,int objA,int objB) {
             char* sentence;
             int asked;
@@ -200,7 +200,7 @@ room OfficeRoom {
 
 
     object carolObj {
-        name = "OfficeRoom::carolObj";
+        name = "Carol";
         verb(int vrb,int objA,int objB) {
         case TalkTo:
             Actors::zobTalkToCarol(hasTriedToMovePlant, hasTalkedAboutPlant);
@@ -212,7 +212,10 @@ room OfficeRoom {
 
     }
 
-    
+    object ensignZobObj {
+        name = "Ensign Zob";
+    }
+
     script setTalkedAboutPlate() {
         hasTalkedAboutPlate = 1;
     }

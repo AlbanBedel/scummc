@@ -20,6 +20,7 @@
 
 room OfficeRoom {
     object exitToSecretRoom;
+    object ensignZobObj;
     object commanderZifObj;
     object carolObj;
     script setTalkedAboutPlate();

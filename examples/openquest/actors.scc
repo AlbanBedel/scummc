@@ -73,6 +73,7 @@ room Actors {
         setActorTalkColor(ZOB_COLOR);
         setActorWidth(20);
         setActorAnimSpeed(4);
+        actorObject[ensignZob] = OfficeRoom::ensignZobObj;
 
 
         // set VAR_EGO so we can use the *Ego* functions

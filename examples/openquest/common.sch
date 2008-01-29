@@ -25,7 +25,7 @@ verb Close, TalkTo, Pull;
 verb WalkTo, WalkToXY;
 
 bit verbsOn,cursorOn,cursorLoaded;
-int sntcVerb,sntcObjA,sntcObjB;
+int sntcVerb,sntcObjA,sntcObjADesc,sntcObjB,sntcObjBDesc;
 int* invObj;
 
 
