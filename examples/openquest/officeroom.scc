@@ -28,8 +28,6 @@
 
 
 
-actor bulletsActor;
-
 // for the bullets behind the plant
 bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
 
@@ -45,10 +43,9 @@ room OfficeRoom {
 
     boxd = "graphics/rooms/back01.box";
     trans = 0;
-    
-    cost bulletsCost = "bullets.cost";
 
     object bullets;
+    object plant;
     
 
     local script entry() {
@@ -302,6 +299,35 @@ room OfficeRoom {
         hasTalkedAboutPlant = 1;
     }
 
+    // The bullets must be BEFORE the plant to be displayed above it.
+    object bullets {
+        x = 112;
+        y = 80;
+        dir = EAST;
+        name = "ammunition";
+        class = { Pickable };
+        states = {
+            { -18, -16, "graphics/background_items/bullets.bmp", { "", "" } }
+        };
+        state = 1;
+        trans = 0;
+        // This is object is inexistant as long as the plant object
+        // is not in state 2.
+        parent = plant;
+        parent_state = 2;
+
+        verb(int vrb,int objA, int objB) {
+
+        case PickUp:
+            pickupObject( InventoryItems::bullets, InventoryItems );
+            // Put the plant in state 3 to hide the bullets object
+            setObjectState( plant, 3 );
+            return;
+        case LookAt:
+            egoSay("A small box of projectiles.");
+        }
+    }
+
     
     object plant {
         x = 104;
@@ -310,6 +336,7 @@ room OfficeRoom {
         name = "plant";
         states = { 
             { -10, 16, "graphics/background_items/plant_unmoved.bmp", { "", "" } },
+            { -10, 16, "graphics/background_items/plant_moved.bmp", { "", "" } },
             { -10, 16, "graphics/background_items/plant_moved.bmp", { "", "" } }
         };
         state = 1;
@@ -347,16 +374,6 @@ room OfficeRoom {
                     animateActor(VAR_EGO, 24);
                     delay(20);
                     setObjectState( plant, 2 );
-                    // initialize bulletsActor
-                    setCurrentActor(bulletsActor);
-                    initActor();
-                    setActorCostume(bulletsCost);
-                    setActorName("ammunition");
-                    actorObject[bulletsActor] = bullets;
-                    setActorWidth(10);
-                    setActorIgnoreBoxes();
-                    putActorAt(bulletsActor,113,94,OfficeRoom);
-                    setCurrentActor(VAR_EGO);
                     delay(30);
                     animateActor(VAR_EGO, 28);
                     delay(30);
@@ -368,28 +385,6 @@ room OfficeRoom {
             return;
         }
     }
-
-
-    object bullets {
-        x = 160;
-        y = 100;
-        dir = WEST;
-        name = "ammunition";
-        class = { Pickable };
-        state = 0;
-
-        verb(int vrb,int objA, int objB) {
-
-        case PickUp:
-            pickupObject( InventoryItems::bullets, InventoryItems );
-            putActorAt( bulletsActor,0,0,InventoryItems );
-            setObjectState( bullets, 1 );
-            return;
-        case LookAt:
-            egoSay("A small box of projectiles.");
-        }
-    }
-
 
     object carolObj {
         name = "Indigenous lifeform";
