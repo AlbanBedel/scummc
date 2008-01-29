@@ -19,10 +19,7 @@
 
 room Actors {
     script setupActors();
-    script officeIntro();
-    script zobTalkToZif();
-    script zobTalkToCarol();
-    script lookAtCarol();
-    script outro();
-    object commanderZifObj;
+    script loadObjects();
+    script setZifOnThePhone();
+    script setZifOffThePhone();
 }

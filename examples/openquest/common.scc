@@ -550,6 +550,15 @@ room ResRoom {
 
     }
 
+    script preEntry() {
+        // Load the actors object for actors moving
+        // between several rooms
+        Actors::loadObjects();
+    }
+
+    script quit() {
+        shutdown();
+    }
 
     // The main script is the first thing started by the engine.
     // At that point no room is loaded yet.
@@ -624,6 +633,7 @@ room ResRoom {
         VAR_INVENTORY_SCRIPT = inventoryHandler;
         VAR_CUTSCENE_START_SCRIPT = cutsceneStart;
         VAR_CUTSCENE_END_SCRIPT = cutsceneEnd;
+        VAR_PRE_ENTRY_SCRIPT = preEntry;
 
         // keep this room in memory even if we leave it,
         // as it contain the charset, costume, etc

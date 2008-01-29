@@ -70,6 +70,11 @@ actor commanderZif;
 actor carol;
 #define CAROL_COLOR   249
 
+// for the plate
+bit hasSmelledPlate, hasPressedPlate, hasTalkedAboutPlate;
+// for the end
+bit cubeDisappeared, hasShotAtNode;
+
 // animated item actors
 actor bluecupActor;
 actor cubeActor;
@@ -95,5 +100,5 @@ room ResRoom {
     script hideCursor();
     script mouseWatch();
 
-
+    script quit();
 }

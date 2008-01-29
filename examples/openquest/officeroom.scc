@@ -30,11 +30,13 @@
 
 actor bulletsActor;
 
-// for the plate
-bit hasSmelledPlate, hasPressedPlate, hasTalkedAboutPlate;
-
 // for the bullets behind the plant
 bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
+
+// for the intro
+bit didOfficeIntro;
+
+bit knowsCarol;
 
 room OfficeRoom {
 
@@ -49,6 +51,194 @@ room OfficeRoom {
 
     object bullets;
     
+
+    local script entry() {
+
+        if(didOfficeIntro) return;
+        didOfficeIntro = 1;
+
+        cutscene(2) {
+            try {
+                delay(150);
+                putActorAt(ensignZob,170,110,OfficeRoom);
+                putActorAt(commanderZif,200,120,OfficeRoom);
+                animateActor( commanderZif, 44 );
+                animateActor( ensignZob, 44 );
+                delay(150);
+                setCurrentActor(ensignZob);
+                setActorStanding();
+                actorSay(commanderZif, "Hmmm");
+                waitForMessage();
+                Actors::setZifOnThePhone();
+                animateActor( commanderZif, 40 );
+                delay(30);
+                actorSay(commanderZif, "Commander's log, star date 432.1");
+                waitForMessage();
+                actorSay(commanderZif, "Arrival complete on the planet of mostly water.");
+                waitForMessage();
+
+                setCurrentActor(carol);
+                putActorAt(carol,76,98,OfficeRoom);
+                delay(120);
+                setActorStanding();
+                actorSay(carol, "Are you done in here?");
+                waitForMessage();
+                
+                actorFace(commanderZif, carol);
+                actorFace(ensignZob, carol);
+                delay(50);
+                actorSay(commanderZif, "An indigenous lifeform...");
+                waitForMessage();
+                walkActorTo(ensignZob, 115, 80);
+                waitForActor( ensignZob );
+                actorSay(commanderZif, "Ensign Zob and I shall proceed to locate the artifact.");
+                waitForMessage();
+                actorSay(commanderZif, "We shall eliminate any resistance we encounter.");
+                waitForMessage();
+                walkActorTo(commanderZif, 160, 120);
+                waitForActor( commanderZif );
+                actorSay(commanderZif, "This appears to be a crude society.");
+                waitForMessage();
+                actorSay(commanderZif, "The defenses of the compound were negligible.");
+                waitForMessage();
+                actorSay(commanderZif, "I expect the relic to be in our possession shortly.");
+                waitForMessage();
+                Actors::setZifOffThePhone();
+                actorSay(ensignZob, "What of this lifeform, Sir?");
+                waitForMessage();
+                actorSay(commanderZif, "Proceed with caution.");
+                waitForMessage();
+                actorSay(commanderZif, "That may be some kind of weapon.");
+                waitForMessage();
+                walkActorTo(ensignZob, 115, 120);
+                waitForActor( ensignZob );
+                actorSay(ensignZob, "I'll begin my search.");
+                waitForMessage();
+                actorSay(commanderZif, "Keep me updated, ensign.");
+                waitForMessage();
+
+            }
+            override {
+                if(VAR_OVERRIDE) {
+                    actorSay(0xFF, ""); //stopTalking();
+                    putActorAt(carol,76,98,OfficeRoom);
+                    putActorAt(commanderZif,160,120,OfficeRoom);
+                    putActorAt(ensignZob,115,120,OfficeRoom);
+                    setActorStanding();
+                    animateActor( carol, 3 );
+                    Actors::setZifOffThePhone();
+                }
+            }
+        }
+    }
+
+    local script zobTalkToCarol() {
+            char* sentence;
+
+            cutscene(1) {
+                if( ! knowsCarol ) {
+                    egoSay("Speak, lifeform!");
+                    waitForMessage();
+                    egoSay("Is this translation matrix working?");
+                    waitForMessage();
+                    actorSay(carol, "You're that guy from accounts, right?");
+                    waitForMessage();
+                }
+                else {
+                    egoSay("Greetings, Carol.");
+                    waitForMessage();
+                    actorSay(carol, "You again?");
+                    waitForMessage();
+                }
+            }
+            dialogLoop: while(1) {
+                sentence[0] = "What is your designation?";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "What is located through that passageway?";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Stand aside, I need to pass!";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "Look out behind you, a three-headed monkey!";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+                if( hasTriedToMovePlant && ! hasTalkedAboutPlant )
+                    sentence[0] = "May I move this plant?";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+                sentence[0] = "As you were";
+                Dialog::dialogAdd(sentence);
+                sentence = 0;
+
+                Dialog::dialogStart(ZOB_DIM_COLOR,ZOB_COLOR);
+                do breakScript() while(selectedSentence < 0);
+                Dialog::dialogHide();
+                cutscene() {
+                    sentence = dialogList[selectedSentence];
+                    egoSay("%s{sentence}");
+                    waitForMessage();
+                    switch(selectedSentence) {
+                    case 0:
+                        actorSay(carol,"What you on about?");
+                        waitForMessage();
+                        egoSay("How are you addressed by a superior officer?");
+                        waitForMessage();
+                        actorSay(carol,"Carol");
+                        waitForMessage();
+                        egoSay("Greetings, Carol.");
+                        waitForMessage();
+                        setCurrentActor(carol);
+                        setActorName("Carol");
+                        knowsCarol = 1;
+                        setCurrentActor(VAR_EGO);
+                        break;
+                    case 1:
+                        actorSay(carol,"Err, reception, canteen...");
+                        waitForMessage();
+                        egoSay("Any stolen relics within those realms?");
+                        waitForMessage();
+                        actorSay(carol,"Do you mean that new tea maker they installed?");
+                        waitForMessage();
+                        egoSay("No.");
+                        waitForMessage();
+                        actorSay(carol,"Dunno then.");
+                        waitForMessage();
+                        break;
+                    case 2:
+                        actorSay(carol,"I just cleaned down there, you'll get the floor dirty.");
+                        waitForMessage();
+                        egoSay("In which case I shall remain here.");
+                        waitForMessage();
+                        break;
+                    case 3:
+                        actorSay(carol,"Yeah, that's Terry.");
+                        waitForMessage();
+                        actorSay(carol,"He works in HR.");
+                        waitForMessage();
+                        break;
+                    case 5:
+                        break;
+                    case 4:
+                        actorSay(carol,"I haven't cleaned down there yet.");
+                        waitForMessage();
+                        egoSay("Then by moving the plant I am providing assistance.");
+                        waitForMessage();
+                        actorSay(carol,"Oh yeah, go on then.");
+                        waitForMessage();
+                        hasTalkedAboutPlant = 1;
+                        break;
+                    }
+                    waitForMessage();
+                }
+                Dialog::dialogClear(1);
+                if(selectedSentence == 5) break dialogLoop;
+            }
+            Dialog::dialogEnd();
+
+    }
+
 
     object cabinetDrawer {
         x = 128;
@@ -183,37 +373,24 @@ room OfficeRoom {
     }
 
 
-    object commanderZifObj {
-        name = "Commander Zif";
-        verb(int vrb,int objA,int objB) {
-            char* sentence;
-            int asked;
-        case TalkTo:
-            Actors::zobTalkToZif(hasPressedPlate, hasTalkedAboutPlate);
-            return;
-        case LookAt:
-            egoSay("My commanding officer, Commander Zif.");
-            return;
-        }
-
-    }
-
-
     object carolObj {
         name = "Carol";
         verb(int vrb,int objA,int objB) {
         case TalkTo:
-            Actors::zobTalkToCarol(hasTriedToMovePlant, hasTalkedAboutPlant);
+            zobTalkToCarol();
             return;
         case LookAt:
-            Actors::lookAtCarol();
+            if( ! knowsCarol ) {
+                egoSay("A large carbon based mammal, it seems.");
+                waitForMessage();
+            }
+            else {
+                egoSay("It is Carol, one of the local lifeforms.");
+                waitForMessage();
+            }
             return;
         }
 
-    }
-
-    object ensignZobObj {
-        name = "Ensign Zob";
     }
 
     script setTalkedAboutPlate() {

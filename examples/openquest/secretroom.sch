@@ -21,5 +21,5 @@
 room SecretRoom {
 
     object blueCup;
-
+    script outro();
 }
