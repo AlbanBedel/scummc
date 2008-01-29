@@ -29,7 +29,7 @@ actor ufoActor;
 
 room Skyline {
 
-    image = "graphics/rooms/skyline_small.bmp";
+    image = "graphics/rooms/skyline.bmp";
 
     cost ufoCost = "ufo.cost";
     
@@ -60,6 +60,9 @@ room Skyline {
             override {
                 if(VAR_OVERRIDE) {
                     actorSay(0xFF, ""); //stopTalking();
+                    screenEffect(0x8186);
+                } else {
+                    screenEffect(0x8686);
                 }
             }
         }

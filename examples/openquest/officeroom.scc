@@ -39,7 +39,11 @@ room OfficeRoom {
 
     image = "graphics/rooms/back01_merged.bmp";
 
-    zplane = { "graphics/rooms/back01_mask1.bmp" };
+    zplane = {
+        "graphics/rooms/back01_mask1.bmp",
+        "graphics/rooms/back01_mask2.bmp",
+        "graphics/rooms/back01_mask2.bmp"
+    };
 
     boxd = "graphics/rooms/back01.box";
     trans = 0;
@@ -58,6 +62,10 @@ room OfficeRoom {
             initedGame = 1;
             Verbs::setupVerbs();
             Actors::setupActors();
+        } else {
+            putActorAt(VAR_EGO,296,110,OfficeRoom);
+            walkActorTo(VAR_EGO,250,110);
+            return;
         }
 
         unless(didOfficeIntro) cutscene(2) {
@@ -93,7 +101,7 @@ room OfficeRoom {
                 delay(50);
                 actorSay(commanderZif, "An indigenous lifeform...");
                 waitForMessage();
-                walkActorTo(ensignZob, 115, 80);
+                walkActorTo(ensignZob, 105, 105);
                 waitForActor( ensignZob );
                 actorSay(commanderZif, "Ensign Zob and I shall proceed to locate the artifact.");
                 waitForMessage();
@@ -307,7 +315,7 @@ room OfficeRoom {
         name = "ammunition";
         class = { Pickable };
         states = {
-            { -18, -16, "graphics/background_items/bullets.bmp", { "", "" } }
+            { -8, 16, "graphics/background_items/bullets.bmp", { "", "" } }
         };
         state = 1;
         trans = 0;
@@ -335,9 +343,15 @@ room OfficeRoom {
         dir = EAST;
         name = "plant";
         states = { 
-            { -10, 16, "graphics/background_items/plant_unmoved.bmp", { "", "" } },
-            { -10, 16, "graphics/background_items/plant_moved.bmp", { "", "" } },
-            { -10, 16, "graphics/background_items/plant_moved.bmp", { "", "" } }
+            { 0, 48, "graphics/background_items/plant_unmoved.bmp",
+              { "", "graphics/background_items/plant_mask2.bmp",
+                "graphics/background_items/plant_unmoved_mask3.bmp"} },
+            { 0, 48, "graphics/background_items/plant_moved.bmp",
+              { "", "graphics/background_items/plant_mask2.bmp",
+                "graphics/background_items/plant_moved_mask3.bmp"} },
+            { 0, 48, "graphics/background_items/plant_moved.bmp",
+              { "", "graphics/background_items/plant_mask2.bmp",
+                "graphics/background_items/plant_moved_mask3.bmp" } }
         };
         state = 1;
 
@@ -439,7 +453,7 @@ room OfficeRoom {
             if( hasTalkedAboutPlate ) {
                 cutscene(2) {
                     try {
-                        walkActorTo(commanderZif, 276, 106);
+                        walkActorTo(commanderZif, 267, 116);
                         waitForActor( commanderZif );
                         actorSay(commanderZif, "I'll operate the one over here.");
                         waitForMessage();
@@ -494,13 +508,13 @@ room OfficeRoom {
         name = "secret room";
         dir = EAST;
         states = {
-            { 0, 0, "graphics/door/door_closed.bmp" },
-            { 0, 0, "graphics/door/door_opening_01.bmp" },
-            { 0, 0, "graphics/door/door_opening_02.bmp" },
-            { 0, 0, "graphics/door/door_opening_03.bmp" },
-            { 0, 0, "graphics/door/door_opening_04.bmp" },
-            { 0, 0, "graphics/door/door_opening_05.bmp" },
-            { 0, 0, "graphics/door/door_open.bmp" }
+            { 8, 78, "graphics/door/door_closed.bmp" },
+            { 8, 78, "graphics/door/door_opening_01.bmp" },
+            { 8, 78, "graphics/door/door_opening_02.bmp" },
+            { 8, 78, "graphics/door/door_opening_03.bmp" },
+            { 8, 78, "graphics/door/door_opening_04.bmp" },
+            { 8, 78, "graphics/door/door_opening_05.bmp" },
+            { 8, 78, "graphics/door/door_open.bmp" }
         };
         state = 1;
 
@@ -510,8 +524,9 @@ room OfficeRoom {
                 egoSay( "It's closed." );
                 return;
             }
-            setCurrentActor(VAR_EGO);
-            putActorAt(VAR_EGO,60,80,SecretRoom);
+            walkActorTo(VAR_EGO,290,110);
+            waitForActor(VAR_EGO);
+            screenEffect(0x0083);
             startRoom(SecretRoom);
             return;
         }

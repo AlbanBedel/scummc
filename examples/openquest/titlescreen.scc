@@ -30,6 +30,7 @@ room TitleScreen {
     script proceed( int area, int cmd, int btn ) {
 
         VAR_VERB_SCRIPT = ResRoom::inputHandler;
+        screenEffect(0x8787);
         startRoom(Skyline);
     }
     
