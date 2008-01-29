@@ -668,10 +668,19 @@ room ResRoom {
         printOverhead();
         printEnd();
 
-        // do the box effect
-        screenEffect(0x0005);
-        // start the room
-        startRoom(TitleScreen);
+        switch(bootParam) {
+        case 2:
+            setObjectState( OfficeRoom::exitToSecretRoom, 7 );
+        case 1:
+            didOfficeIntro = 1;
+            startRoom(OfficeRoom);
+            break;
+        default:
+            // do the box effect
+            screenEffect(0x0005);
+            // start the room
+            startRoom(TitleScreen);
+        }
     }
 
 }

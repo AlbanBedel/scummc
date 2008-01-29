@@ -64,9 +64,6 @@ room Skyline {
             }
         }
         
-        Verbs::setupVerbs();
-        Verbs::showVerbs(1);
-        Actors::setupActors();
         startRoom(OfficeRoom);
     }
 

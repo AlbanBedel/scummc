@@ -70,6 +70,8 @@ actor commanderZif;
 actor carol;
 #define CAROL_COLOR   249
 
+// for the intro
+bit didOfficeIntro;
 // for the plate
 bit hasSmelledPlate, hasPressedPlate, hasTalkedAboutPlate;
 // for the end

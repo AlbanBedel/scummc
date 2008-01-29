@@ -33,10 +33,9 @@ actor bulletsActor;
 // for the bullets behind the plant
 bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
 
-// for the intro
-bit didOfficeIntro;
-
 bit knowsCarol, askedPassageway;
+
+bit initedGame;
 
 room OfficeRoom {
 
@@ -53,11 +52,19 @@ room OfficeRoom {
     
 
     local script entry() {
+        int firstInit, quickInit;
 
-        if(didOfficeIntro) return;
-        didOfficeIntro = 1;
+        firstInit = !initedGame;
+        quickInit = firstInit && didOfficeIntro;
 
-        cutscene(2) {
+        unless(initedGame) {
+            initedGame = 1;
+            Verbs::setupVerbs();
+            Actors::setupActors();
+        }
+
+        unless(didOfficeIntro) cutscene(2) {
+            didOfficeIntro = 1;
             try {
                 delay(150);
                 putActorAt(ensignZob,170,110,OfficeRoom);
@@ -130,6 +137,14 @@ room OfficeRoom {
                 }
             }
         }
+        if(quickInit) {
+            putActorAt(carol,76,98,OfficeRoom);
+            putActorAt(commanderZif,160,120,OfficeRoom);
+            putActorAt(ensignZob,115,120,OfficeRoom);
+            animateActor( carol, 3 );
+        }
+        if(firstInit)
+            Verbs::showVerbs(1);
     }
 
     local script zobTalkToCarol() {
