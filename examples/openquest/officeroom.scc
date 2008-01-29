@@ -192,8 +192,7 @@ room OfficeRoom {
                         waitForMessage();
                         egoSay("Greetings, Carol.");
                         waitForMessage();
-                        setCurrentActor(carol);
-                        setActorName("Carol");
+                        setObjectName(actorObject[carol],"Carol");
                         knowsCarol = 1;
                         setCurrentActor(VAR_EGO);
                         break;
@@ -378,7 +377,7 @@ room OfficeRoom {
 
 
     object carolObj {
-        name = "Carol";
+        name = "Indigenous lifeform";
         verb(int vrb,int objA,int objB) {
         case TalkTo:
             zobTalkToCarol();
