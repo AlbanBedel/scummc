@@ -42,9 +42,10 @@ int invOffset;
 #define MAX_INVENTORY_DISPLAY    8
 
 // The verb colors
-#define VERB_COLOR       241
-#define VERB_HI_COLOR    250
-#define VERB_DIM_COLOR   228
+#define VERB_COLOR       104
+#define VERB_HI_COLOR    10
+#define VERB_DIM_COLOR   93
+#define VERB_BACK_COLOR  60
 
 // Object callbacks
 verb Icon,Preposition,SetBoxes;
