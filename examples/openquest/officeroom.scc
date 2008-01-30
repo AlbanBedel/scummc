@@ -148,8 +148,11 @@ room OfficeRoom {
             putActorAt(ensignZob,115,120,OfficeRoom);
             animateActor( carol, 3 );
         }
-        if(firstInit)
+        if(firstInit) {
             Verbs::showVerbs(1);
+            delay(getRandomNumberRange(20,60));
+            Actors::startRoaming(commanderZif,20,260,105,130);
+        }
     }
 
     local script zobTalkToCarol() {
@@ -451,6 +454,7 @@ room OfficeRoom {
                 return;
             }
             if( hasTalkedAboutPlate ) {
+                Actors::pauseRoaming(commanderZif);
                 cutscene(2) {
                     try {
                         walkActorTo(commanderZif, 267, 116);
@@ -480,6 +484,7 @@ room OfficeRoom {
                         }
                     }
                 }
+                Actors::resumeRoaming(commanderZif);
                 return;
             }
             if( hasSmelledPlate ) {

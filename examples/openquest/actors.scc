@@ -25,6 +25,20 @@
 #include "officeroom.sch"
 #include "secretroom.sch"
 
+// 2-dim array used like a struct array
+nibble *roaming;
+
+#define RM_STATE        0
+#define RM_MIN_X        1
+#define RM_MAX_X        2
+#define RM_MIN_Y        3
+#define RM_MAX_Y        4
+#define RM_NUM_FIELD    5
+
+// Roaming state
+#define RM_STOPPED      0
+#define RM_PAUSED       1
+#define RM_RUNNING      2
 
 room Actors {
 
@@ -59,6 +73,84 @@ room Actors {
         setCurrentActor(VAR_EGO);
     }
 
+    script roam(int a) {
+        int event, dstX, dstY, paused;
+        dbgPrint("Roaming script for %n{a} started");
+        while(roaming[a,RM_STATE] > RM_STOPPED) {
+            // Debug stuff
+            paused = 0;
+            until(VAR_EGO != a && roaming[a,RM_STATE] > RM_PAUSED) {
+                unless(paused) {
+                    paused = 1;
+                    dbgPrint("Roaming script for %n{a} paused");
+                }
+                breakScript();
+            }
+            if(paused) dbgPrint("Roaming script for %n{a} resumed");
+            // Select a new state
+            event = getRandomNumber(1);
+            switch(event) {
+            case 1: // go somewhere else
+                do {
+                    breakScript();
+                    dstX = getRandomNumberRange(roaming[a,RM_MIN_X],
+                                                roaming[a,RM_MAX_X]);
+                    dstY = getRandomNumberRange(roaming[a,RM_MIN_Y],
+                                                roaming[a,RM_MAX_Y]);
+                } while(getActorRoom(a) == VAR_ROOM && getActorAt(dstX,dstY));
+                dbgPrint("%n{a} roam to %i{dstX}x%i{dstY}");
+                walkActorTo(a,dstX,dstY);
+                break;
+                // TODO: add more stuff. For that we probably want
+                //       to call the actor object to know how many extra
+                //       event the actor support, and to execute them.
+            }
+            delay(getRandomNumberRange(50,200));
+        }
+        dbgPrint("Roaming script for %n{a} finished");
+    }
+
+    script startRoaming(int a, int x_min, int x_max, int y_min, int y_max) {
+        unless(a < 0xF) {
+            dbgPrint("Invalid actor id (%i{a}), can't make it roam.");
+            return;
+        }
+        dbgPrint("Starting roam script for %n{a}");
+        unless(roaming) dimNibble2(roaming,0xF,RM_NUM_FIELD);
+        roaming[a,RM_MIN_X] = x_min; roaming[a,RM_MAX_X] = x_max;
+        roaming[a,RM_MIN_Y] = y_min; roaming[a,RM_MAX_Y] = y_max;
+        if(roaming[a,RM_STATE] > RM_STOPPED)
+            roaming[a,RM_STATE] = RM_RUNNING;
+        else {
+            roaming[a,RM_STATE] = RM_RUNNING;
+            startScript(1,roam,[a]);
+        }
+    }
+
+    script pauseRoaming(int a) {
+        unless(a < 0xF && roaming) return;
+        unless(roaming[a,RM_STATE] > RM_STOPPED) return;
+        dbgPrint("Pausing roam script for %n{a}");
+        setCurrentActor(a);
+        setActorStanding();
+        roaming[a,RM_STATE] = RM_PAUSED;
+    }
+
+    script resumeRoaming(int a) {
+        unless(a < 0xF && roaming) return;
+        unless(roaming[a,RM_STATE] > RM_STOPPED) return;
+        dbgPrint("Resuming roam script for %n{a}");
+        roaming[a,RM_STATE] = RM_RUNNING;
+    }
+
+    script stopRoaming(int a) {
+        unless(a < 0xF && roaming) return;
+        unless(roaming[a,RM_STATE] > RM_STOPPED) return;
+        dbgPrint("Stoping roam script for %n{a}");
+        setCurrentActor(a);
+        setActorStanding();
+        roaming[a,RM_STATE] = RM_STOPPED;
+    }
     
     // set the actor costume, etc
     script setupActors() {
@@ -274,10 +366,15 @@ room Actors {
             char* sentence;
             int asked;
         case TalkTo:
-            if(cubeDisappeared)
+            pauseRoaming(commanderZif);
+            if(cubeDisappeared) {
                 zobTalkToZifInSecretRoom();
-            else
+                while(isScriptRunning(zobTalkToZifInSecretRoom)) breakScript();
+            } else {
                 zobTalkToZif(hasPressedPlate, hasTalkedAboutPlate);
+                while(isScriptRunning(zobTalkToZif)) breakScript();
+            }
+            resumeRoaming(commanderZif);
             return;
         case LookAt:
             egoSay("My commanding officer, Commander Zif.");

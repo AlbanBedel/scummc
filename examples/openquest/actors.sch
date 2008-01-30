@@ -22,4 +22,9 @@ room Actors {
     script loadObjects();
     script setZifOnThePhone();
     script setZifOffThePhone();
+
+    script startRoaming(int a);
+    script pauseRoaming(int a);
+    script resumeRoaming(int a);
+    script stopRoaming(int a);
 }
