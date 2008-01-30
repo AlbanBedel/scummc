@@ -127,7 +127,7 @@ room Verbs {
         setVerbOn();
         setVerbKey('e');
 
-        setCurrentVerb(Push);
+        setCurrentVerb(Smell);
         initVerb();
         setVerbName("Smell");
         setVerbXY(188,174);
@@ -151,7 +151,7 @@ room Verbs {
         setVerbOn();
         setVerbKey('t');
 
-        setCurrentVerb(Pull);
+        setCurrentVerb(Move);
         initVerb();
         setVerbName("Move");
         setVerbXY(188,187);
@@ -193,7 +193,7 @@ room Verbs {
             }
         dimInt(invObj,8);
 
-        saveVerbs(Give, Pull, 2); // Main verbs (stored in slot 2)
+        saveVerbs(Give, Move, 2); // Main verbs (stored in slot 2)
         saveVerbs(invSlot0, invSlot0+7, 3); // Inventory items (stored in slot 3)
 
         initCharset(ResRoom::chtest);
@@ -213,7 +213,7 @@ room Verbs {
             setVerbOn();
             redrawVerb();
 
-            restoreVerbs(Give, Pull, 2); // Show main verbs
+            restoreVerbs(Give, Move, 2); // Show main verbs
             restoreVerbs(invSlot0, invSlot0+7, 3); // Show inventory items
  
             ResRoom::inventoryHandler( 0 ); // reset display in case any items have been picked up
@@ -231,7 +231,7 @@ room Verbs {
         }
         else
         {
-            saveVerbs(Give, Pull, 2); // Hide main verbs
+            saveVerbs(Give, Move, 2); // Hide main verbs
             saveVerbs(invSlot0, invSlot0+7, 3); // Hide inventory items
 
             // The rest can be turned off manually

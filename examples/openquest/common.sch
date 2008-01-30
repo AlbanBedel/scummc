@@ -19,8 +19,8 @@
 
 // The action verbs
 verb Give,  PickUp, Use;
-verb Open,  LookAt, Push;
-verb Close, TalkTo, Pull;
+verb Open,  LookAt, Smell;
+verb TalkTo,Move;
 
 verb WalkTo, WalkToXY;
 

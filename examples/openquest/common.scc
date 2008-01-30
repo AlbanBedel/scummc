@@ -148,7 +148,7 @@ room ResRoom {
                 if(obj is Person)
                     alt = TalkTo;
                 else if(obj is Openable)
-                    alt = getObjectState(obj) ? Close : Open;
+                    alt = Open;
                 else
                     alt = LookAt;
             } else
@@ -274,8 +274,7 @@ room ResRoom {
                 egoSay("There is nothing special about it.");
             break;
             
-        case Push:
-        case Pull:
+        case Move:
             if(objA is Person)
                 egoSay("That wouldn't be very nice.");
             else
@@ -291,32 +290,14 @@ room ResRoom {
                 egoSay("It's not the kind of thing that can be opened.");
                 break;
             }
-            if(getObjectState(objA)) {
-                egoSay("It's already open.");
-                break;
-            }
             // some sound would be nice
-            setObjectState(objA,1);
+            setObjectState(objA,!getObjectState(objA));
             if(getObjectVerbEntrypoint(objA,SetBoxes))
                 startObject2(objA,SetBoxes, [ vrb, objA ]);
             break;
             
-        case Close:
-            if(objA is Person) {
-                egoSay("Closing someone ?\wThat hardly make any sense.");
-                break;
-            }            
-            if(objA is !Openable) {
-                egoSay("I don't think that this can be closed.");
-                break;
-            }
-            unless(getObjectState(objA)) {
-                egoSay("It's already closed.");
-                break;
-            }
-            setObjectState(objA,0);
-            if(getObjectVerbEntrypoint(objA,SetBoxes))
-                startObject2(objA,SetBoxes, [ vrb, objA ]);
+        case Smell:
+            egoSay("No, thanks!");
             break;
 
         default:
@@ -452,8 +433,8 @@ room ResRoom {
 
         // A verb was clicked
         if(isAnyOf(cmd, [ Give,  PickUp, Use, 
-                          Open,  LookAt, Push,
-                          Close, TalkTo, Pull ])) {
+                          Open,  LookAt, Smell,
+                          TalkTo,Move ])) {
             resetSntc(cmd);
             return;
         }

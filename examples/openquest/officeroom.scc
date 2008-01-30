@@ -368,8 +368,7 @@ room OfficeRoom {
             else
                 egoSay( "This plant appears to be undergoing photosynthesis." );
             return;
-        case Push:
-        case Pull:
+        case Move:
             if( ! hasSeenBullets ) {
                 egoSay( "Moving this would accomplish nothing." );
                 return;
@@ -440,14 +439,13 @@ room OfficeRoom {
 
         verb(int vrb, int objA, int objB) {
         int i;
-        case LookAt:
-            // this should be "smell"
+        case Smell:
             hasSmelledPlate = 1;
             egoSay("I can smell the residue left by the indigenous lifeforms.");
             waitForMessage();
             egoSay("It must be some kind of pressure plate.");
             return;
-        case Push:
+        case Move:
         case Use:
             if( getObjectState( exitToSecretRoom ) == 7 ) {
                 egoSay("The door is already open.");
