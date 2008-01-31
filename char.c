@@ -244,10 +244,10 @@ void import_char(scc_char_t* ch,char* src, int stride,int w, int h) {
         memcpy(&ch->data[y*ch->w],&src[(y+ch->y)*stride+ch->x],ch->w);
 }
 
-scc_charmap_t* new_charmap_from_bitmap(char* path) {
+scc_charmap_t* new_charmap_from_bitmap(char* path, int base_idx) {
     scc_img_t* img = scc_img_open(path);
     char bcol = img->ncol-1;
-    int x,y,x2,y2,w,h,idx = 0;
+    int x,y,x2,y2,w,h,idx = base_idx;
     char* src;
     scc_charmap_t* chmap;
 
@@ -548,6 +548,7 @@ static char* obmp_file = NULL;
 static char* ibmp_file = NULL;
 static char* ochar_file = NULL;
 static char* ichar_file = NULL;
+static int   ibmp_base = 0;
 #ifdef HAVE_FT
 static int char_width = 0;
 static int char_height = 24*64;
@@ -564,6 +565,7 @@ static scc_param_t scc_parse_params[] = {
   { "ibmp", SCC_PARAM_STR, 0, 0, &ibmp_file },
   { "ochar", SCC_PARAM_STR, 0, 0, &ochar_file },
   { "ichar", SCC_PARAM_STR, 0, 0, &ichar_file },
+  { "ibmp-base", SCC_PARAM_INT, 0, 255, &ibmp_base },
 #ifdef HAVE_FT
   { "font", SCC_PARAM_STR, 0, 0, &font_file },
   { "cw", SCC_PARAM_INT, 1, 1000*64, &char_width },
@@ -651,7 +653,7 @@ int main(int argc,char** argv) {
   if(ichar_file)
       chmap = charmap_from_char(ichar_file);
   else
-      chmap = new_charmap_from_bitmap(ibmp_file);
+      chmap = new_charmap_from_bitmap(ibmp_file,ibmp_base);
 
   if(!chmap) return 1;
 
