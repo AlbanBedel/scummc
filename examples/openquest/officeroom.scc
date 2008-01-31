@@ -555,4 +555,83 @@ room OfficeRoom {
     }
 
 
+    object lightSwitch {
+        x    = 34;
+        y    = 71;
+        w    = 7;
+        h    = 9;
+        name = "light switch";
+        dir  = WEST;
+        hs_x = 20;
+        hs_y = 40;
+        verb(int vrb, int objA, int objB) {
+        case LookAt:
+            egoSay("Some kind of power distribution grid.");
+            return;
+        case Use:
+        case Move:
+            unless(getObjectState(lightSwitch)) {
+                cutscene(0) {
+                    egoSay("I'll turn this off.");
+                    waitForMessage();
+                    animateActor(VAR_EGO, 24);
+                    delay(20);
+                    setRoomRGBIntensity(143,123,119,0,255);
+                    animateActor(VAR_EGO, 28);
+                    delay(20);
+                    setObjectState(lightSwitch,1);
+                }
+            } else {
+                cutscene(0) {
+                    egoSay("I'll turn this back on.");
+                    waitForMessage();
+                    animateActor(VAR_EGO, 24);
+                    delay(20);
+                    setRoomPalette(0);
+                    animateActor(VAR_EGO, 28);
+                    delay(20);
+                    setObjectState(lightSwitch,0);
+                }
+            }
+            return;
+        }
+    }
+
+    object powerSocket {
+        x    = 220;
+        y    = 84;
+        w    = 11;
+        h    = 6;
+        name = "power socket";
+        dir  = NORTH;
+        hs_x = 5;
+        hs_y = 20;
+        verb(int vrb, int objA, int objB) {
+        case LookAt:
+            egoSay("Some kind of power distribution grid.");
+            return;
+        }
+    }
+
+    object bulletinBoard {
+        x    = 65;
+        y    = 39;
+        w    = 14;
+        h    = 24;
+        name = "bulletin board";
+        dir  = WEST;
+        hs_x = 20;
+        hs_y = 46;
+        verb(int vrb, int objA, int objB) {
+        case LookAt:
+            egoSay("This parchment appears to contain some kind of glyphs.\w"
+                   "Most are directed to an individual called Memorandum.");
+            return;
+        case Smell:
+            egoSay("The substance fused to this parchment possesses "
+                   "an interesting aroma.");
+            return;
+        }
+    }
+
 }
