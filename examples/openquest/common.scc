@@ -91,14 +91,17 @@ room ResRoom {
             // object under the pointer
             vrb = 0;
             desc = 0;
-            obj = getActorAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
-            if(obj == VAR_EGO)
-                obj = 0;
-            else if (actorObject[obj])
-            	desc = actorObject[obj];
 
-            unless(obj)
-                obj = getObjectAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
+            obj = getObjectAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
+
+            unless(obj) {
+                obj = getActorAt(VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
+                if(obj == VAR_EGO)
+                    obj = 0;
+                else if (actorObject[obj])
+                    desc = actorObject[obj];
+            }
+
             unless(obj) {
                 obj = getVerbAt(VAR_MOUSE_X,VAR_MOUSE_Y);
                 if(obj >= invSlot0 && obj <= invSlot7) {
