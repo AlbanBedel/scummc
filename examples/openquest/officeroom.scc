@@ -48,6 +48,15 @@ room OfficeRoom {
     boxd = "graphics/rooms/back01.box";
     trans = 0;
 
+    voice beamedSnd = { "sounds/beamed.voc" };
+    voice phoneSnd = { "sounds/phone.voc" };
+    voice openCabinetSnd = { "sounds/open_cabinet.voc"  };
+    voice closeCabinetSnd = { "sounds/close_cabinet.voc" };
+    voice switchSnd = { "sounds/switch.voc" };
+    voice movePlantSnd = { "sounds/move_plant.voc" };
+    voice openDoorSnd = { "sounds/open_door.voc" };
+    voice openedDoorSnd = { "sounds/opened_door.voc" };
+
     object bullets;
     object plant;
     
@@ -74,6 +83,7 @@ room OfficeRoom {
                 delay(150);
                 putActorAt(ensignZob,170,110,OfficeRoom);
                 putActorAt(commanderZif,200,120,OfficeRoom);
+                dbgPrint("%V{beamedSnd}");
                 animateActor( commanderZif, 44 );
                 animateActor( ensignZob, 44 );
                 delay(150);
@@ -82,6 +92,7 @@ room OfficeRoom {
                 actorSay(commanderZif, "Hmmm");
                 waitForMessage();
                 Actors::setZifOnThePhone();
+                dbgPrint("%V{phoneSnd}");
                 animateActor( commanderZif, 40 );
                 delay(30);
                 actorSay(commanderZif, "Commander's log, star date 432.1");
@@ -311,6 +322,14 @@ room OfficeRoom {
             }
             else
                 egoSay("Nothing else in here.");
+            return;
+        case Open:
+            unless(getObjectState(cabinetDrawer))
+                dbgPrint("%V{openCabinetSnd}");
+            else
+                dbgPrint("%V{closeCabinetSnd}");
+            ResRoom::defaultAction(vrb,objA,objB);
+            return;
         }
     }
 
@@ -397,6 +416,7 @@ room OfficeRoom {
             if( getObjectState( plant ) == 1 ) {
                 cutscene(0) {
                     animateActor(VAR_EGO, 24);
+                    dbgPrint("%V{movePlantSnd}");
                     delay(20);
                     setObjectState( plant, 2 );
                     delay(30);
@@ -481,10 +501,12 @@ room OfficeRoom {
                         animateActor(VAR_EGO, 24);
                         animateActor(commanderZif, 24);
                         delay(30);
+                        dbgPrint("%V{openDoorSnd}");
                         for(i = 2 ; i < 8 ; i++) {
                             delay( 10 );
                             setObjectState( exitToSecretRoom, i );
                         }
+                        dbgPrint("%V{openedDoorSnd}");
                         animateActor(VAR_EGO, 28);
                         animateActor(commanderZif, 28);
                         delay(30);
@@ -576,6 +598,7 @@ room OfficeRoom {
                     waitForMessage();
                     animateActor(VAR_EGO, 24);
                     delay(20);
+                    dbgPrint("%V{switchSnd}");
                     setRoomRGBIntensity(143,123,119,0,255);
                     animateActor(VAR_EGO, 28);
                     delay(20);
@@ -587,6 +610,7 @@ room OfficeRoom {
                     waitForMessage();
                     animateActor(VAR_EGO, 24);
                     delay(20);
+                    dbgPrint("%V{switchSnd}");
                     setRoomPalette(0);
                     animateActor(VAR_EGO, 28);
                     delay(20);
