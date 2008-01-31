@@ -235,31 +235,50 @@ room ResRoom {
             return;
             
         case PickUp:
+            // If the object is pickable and use an object from the
+            // inventory room
+            if(objA is Pickable && getObjectVerbEntrypoint(objA,InventoryObject)) {
+                startObject2(objA,InventoryObject, [ InventoryObject, objA ]);
+                if(VAR_RETURN) {
+                    pickupObject(VAR_RETURN, InventoryItems);
+                    setObjectClass(objA,[ 0x80 + ClassUntouchable ]);
+                    setObjectState(objA, 0);
+                    return;
+                }
+            }
             if(objA is Person)
-                egoSay("I can't carry him around.");
+                egoSay("I don't need them.");
             else
-                egoSay("I can't pick that up.");
+                egoSay("I don't need that.");
             break;
             
-       case Use:
+        case Use:
+        case UsedWith:
            if(objA is Person) {
-               if(objB)
-                   egoSay("I can't use that on someone!");
-               else {
-                   // switch to another ego
-                   if( objA == commanderZif || objA == ensignZob ) {
-                     VAR_EGO = objA;
-                     cameraFollowActor(VAR_EGO);
-                   }
-                   else
-                     egoSay("I can't just *use* someone.");
+               // switch to another ego
+               if( objA == commanderZif || objA == ensignZob ) {
+                   VAR_EGO = objA;
+                   cameraFollowActor(VAR_EGO);
                }
+               else
+                   egoSay("I can't just *use* someone.");
+               break;
+           }
+           if(objB) {
+               if(vrb == Use) if(getObjectVerbEntrypoint(objB,UsedWith)) {
+                   startObject2(objB,UsedWith,[ UsedWith, objB, objA ]);
+                   break;
+               }
+               if(objB is Person)
+                   egoSay("I can't use that on someone!");
+               else
+                   egoSay("That doesn't work.");
            } else
-               egoSay("I can't use that !");
+               egoSay("I don't know how to operate that.");
            break;
 
        case Give:
-           if(objB && objA is Person) {
+           if(objB && objB is Person) {
                egoSay("I don't think i should be giving this away.");
                break;
            }
@@ -269,25 +288,25 @@ room ResRoom {
 
         case LookAt:
             if(objA is Person)
-                egoSay("There is nothing special about him.");
+                egoSay("Some kind of lifeform.");
             else
-                egoSay("There is nothing special about it.");
+                egoSay("Looks pretty ordinary.");
             break;
             
         case Move:
             if(objA is Person)
-                egoSay("That wouldn't be very nice.");
+                egoSay("Moving them would accomplish nothing.");
             else
-                egoSay("I don't feel in shape today.");
+                egoSay("Moving that would accomplish nothing.");
             break;
             
         case Open:
             if(objA is Person) {
-                egoSay("You know these human bodies aren't very resistant, if i open it he might die.");
+                egoSay("They don't seem to open.");
                 break;
             }
             if(objA is !Openable) {
-                egoSay("It's not the kind of thing that can be opened.");
+                egoSay("That doesn't seem to open.");
                 break;
             }
             // some sound would be nice
@@ -297,7 +316,17 @@ room ResRoom {
             break;
             
         case Smell:
-            egoSay("No, thanks!");
+            if(objA is Person)
+                egoSay("They have no odour.");
+            else
+                egoSay("That has no odour.");
+            break;
+
+        case TalkTo:
+            if(objA is Person)
+                egoSay("I don't know how to communicate with them.");
+            else
+                egoSay("I don't know how to communicate with that.");
             break;
 
         default:
@@ -342,9 +371,15 @@ room ResRoom {
                     tryPick = 0;
                     return;
                 }
+                // if a different object is used once it is in the inventory
+                // use this one when resending the sentence
+                if(getObjectVerbEntrypoint(objA,InventoryObject)) {
+                    startObject2(objA,InventoryObject,[ InventoryObject, objA ]);
+                    tryPick = VAR_RETURN;
+                } else
+                    tryPick = objA;
                 // try to pickup then do our action again
-                tryPick = objA;
-                doSentence(vrb,objA,0,objB);
+                doSentence(vrb,tryPick,0,objB);
                 doSentence(PickUp,objA,0,0);
                 return;
             } else
@@ -364,14 +399,6 @@ room ResRoom {
             waitForActor(VAR_EGO);
             if(objB <= 0xF)
                 actorFace(VAR_EGO,objB);
-        }
-
-        // switch the objects
-        if(objB) {
-            dbgPrint("Switch objects");
-            tmp = objA;
-            objA = objB;
-            objB = tmp;
         }
 
         // Take the actorObject if it exist

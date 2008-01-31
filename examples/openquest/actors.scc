@@ -379,16 +379,14 @@ room Actors {
         case LookAt:
             egoSay("My commanding officer, Commander Zif.");
             return;
-        case Give:
-            if(objB == InventoryItems::gun) {
-                if( ! hasShotAtNode ) {
-                    egoSay("And lose my advantage?");
-                    return;
-                }
-                SecretRoom::outro();
-            }
-            else
-                egoSay("I might need this.");
+        case Smell:
+            pauseRoaming(commanderZif);
+            egoSay("Is that a new cologne Sir?");
+            waitForMessage();
+            actorSay(commanderZif,"I thought we got past these... feelings.");
+            waitForMessage();
+            egoSay("Sorry Sir.");
+            resumeRoaming(commanderZif);
             return;
         }
 

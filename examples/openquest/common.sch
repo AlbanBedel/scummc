@@ -24,6 +24,9 @@ verb TalkTo,Move;
 
 verb WalkTo, WalkToXY;
 
+verb UsedWith;
+verb InventoryObject;
+
 bit verbsOn,cursorOn,cursorLoaded;
 int sntcVerb,sntcObjA,sntcObjADesc,sntcObjB,sntcObjBDesc;
 int* invObj;
@@ -102,6 +105,7 @@ room ResRoom {
     script showCursor();
     script hideCursor();
     script mouseWatch();
+    script defaultAction(int vrb, int objA, int objB);
 
     script quit();
 }

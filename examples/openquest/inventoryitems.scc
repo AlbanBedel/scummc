@@ -20,6 +20,8 @@
 #include <scummVars6.s>
 #include "common.sch"
 #include "inventoryitems.sch"
+#include "actors.sch"
+#include "secretroom.sch"
 
 
 room InventoryItems {
@@ -63,15 +65,40 @@ room InventoryItems {
                 sntcPrepo[0] = "on";
             return;
         case Use:
-            if(objB == bullets) {
-                setObjectState( gun, 2 );
-                setObjectOwner( bullets, 0 );
-                egoSay("The weapon has been loaded.");
+            switch(objB) {
+            case carol:
+                egoSay("Terminating this lifeform could attract unwarranted attention.");
+                if(getObjectState(gun) < 2) {
+                    waitForMessage();
+                    egoSay("And the weapon is not loaded anyway.");
+                }
+                break;
+            default:
+                ResRoom::defaultAction(vrb,objA,objB);
             }
-            else
-                egoSay("That would accomplish nothing.");
+            return;
+        case Give:
+            switch(objB) {
+            case commanderZif:
+                if( ! hasShotAtNode ) {
+                    egoSay("And lose my advantage?");
+                    return;
+                }
+                SecretRoom::outro();
+                break;
+            default:
+                egoSay("I might need this.");
+            }
             return;
         }
+    }
+
+    // This is in a separate script because calling setObjectOwner()
+    // kill the object's script
+    script loadGun() {
+        setObjectState( gun, 2 );
+        setObjectOwner( bullets, 0 );
+        egoSay("The weapon has been loaded.");
     }
 
     object bullets {
@@ -88,6 +115,16 @@ room InventoryItems {
                 sntcPrepo[0] = "to";
             else
                 sntcPrepo[0] = "with";
+            return;
+        case UsedWith:
+        case Use:
+            switch(objB) {
+            case gun:
+                loadGun();
+                break;
+            default:
+                ResRoom::defaultAction(vrb,objA,objB);
+            }
             return;
         }
     }
@@ -106,6 +143,35 @@ room InventoryItems {
                 sntcPrepo[0] = "to";
             else
                 sntcPrepo[0] = "on";
+            return;
+        case Use:
+            switch(objB) {
+            case scanner:
+                egoSay("The key isn't compatible with this model.");
+                break;
+            default:
+                ResRoom::defaultAction(vrb,objA,objB);
+                break;
+            }
+            return;
+        case Give:
+            switch(objB) {
+            case carol:
+                actorSay(carol,"I see you've got mainframe clearance.\w"
+                         "I'm gonna be dusting in there soon.\w"
+                         "Try and keep it tidy.");
+                break;
+            case commanderZif:
+                Actors::pauseRoaming(commanderZif);
+                actorSay(commanderZif,"Excellent work Zob, a key.\w"
+                         "Keep this, use it to infiltrate the mainframe.");
+                waitForMessage();
+                Actors::resumeRoaming(commanderZif);
+                break;
+            default:
+                ResRoom::defaultAction(vrb,objA,objB);
+                break;
+            }
             return;
         }
     }
@@ -126,6 +192,15 @@ room InventoryItems {
             else
                 sntcPrepo[0] = "with";
             return;
+        case Use:
+            switch(objB) {
+            case scanner:
+                egoSay("They won't go back in.");
+                break;
+            default:
+                ResRoom::defaultAction(vrb,objA,objB);
+                break;
+            }
         }
     }
 
@@ -167,10 +242,24 @@ room InventoryItems {
         case Preposition:
             if(vrb == Give)
                 sntcPrepo[0] = "to";
-            else
-                sntcPrepo[0] = "on";
+            return;
+        case Give:
+            switch(objB) {
+            case commanderZif:
+                Actors::pauseRoaming(commanderZif);
+                actorSay(commanderZif,"You're the scientist on this team, you use it.");
+                waitForMessage();
+                Actors::resumeRoaming(commanderZif);
+                break;
+            default:
+                ResRoom::defaultAction(vrb,objA,objB);
+            }
             return;
         case Open:
+            if( getObjectState( scanner ) == 2 ) {
+                egoSay("The casing appears to be broken.");
+                return;
+            }
             egoSay("I'll open up the housing.");
             waitForMessage();
             pickupObject( batteries, InventoryItems );

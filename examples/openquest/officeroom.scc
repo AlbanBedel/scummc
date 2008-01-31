@@ -279,9 +279,18 @@ room OfficeRoom {
 
         verb(int vrb,int objA, int objB) {
 
-        case PickUp:
         case LookAt:
-            if(getObjectState(objA)==1 && VAR_EGO!=getObjectOwner(InventoryItems::gun)) {
+            unless(getObjectState(cabinetDrawer)) {
+                egoSay("Some kind of containing vessel for multiple instances of parchment.");
+                return;
+            }
+            // Fallback on pick up when the drawer is open
+        case PickUp:
+            unless(getObjectState(cabinetDrawer)) {
+                ResRoom::defaultAction(vrb,objA,objB);
+                return;
+            }
+            if(getObjectOwner(InventoryItems::gun) == 0xF) {
                 cutscene(0) {
                     egoSay("I'll look in here I think.");
                     waitForMessage();
@@ -301,7 +310,7 @@ room OfficeRoom {
                 }
             }
             else
-                egoSay("Some kind of containing vessel for multiple instances of parchment.");
+                egoSay("Nothing else in here.");
         }
     }
 
@@ -328,14 +337,17 @@ room OfficeRoom {
         parent_state = 2;
 
         verb(int vrb,int objA, int objB) {
-
-        case PickUp:
-            pickupObject( InventoryItems::bullets, InventoryItems );
-            // Put the plant in state 3 to hide the bullets object
-            setObjectState( plant, 3 );
-            return;
         case LookAt:
             egoSay("A small box of projectiles.");
+            return;
+        case Preposition:
+            if(vrb == Give)
+                sntcPrepo[0] = "to";
+            else
+                sntcPrepo[0] = "with";
+            return;
+        case InventoryObject:
+            return InventoryItems::bullets;
         }
     }
 
@@ -351,10 +363,7 @@ room OfficeRoom {
                 "graphics/background_items/plant_unmoved_mask3.bmp"} },
             { 0, 48, "graphics/background_items/plant_moved.bmp",
               { "", "graphics/background_items/plant_mask2.bmp",
-                "graphics/background_items/plant_moved_mask3.bmp"} },
-            { 0, 48, "graphics/background_items/plant_moved.bmp",
-              { "", "graphics/background_items/plant_mask2.bmp",
-                "graphics/background_items/plant_moved_mask3.bmp" } }
+                "graphics/background_items/plant_moved_mask3.bmp"} }
         };
         state = 1;
 
@@ -397,7 +406,7 @@ room OfficeRoom {
                 egoSay( "There is a small box down here." );
             }
             else
-                egoSay("I've already moved the plant.");
+                egoSay("It's fine over there.");
             return;
         }
     }
@@ -417,6 +426,12 @@ room OfficeRoom {
                 egoSay("It is Carol, one of the local lifeforms.");
                 waitForMessage();
             }
+            return;
+        case Smell:
+            egoSay("This creature has an overwhelming pungent smell.");
+            return;
+        case Move:
+            egoSay("The lifeform is surprisingly sturdy, I don't believe I can use force.");
             return;
         }
 
@@ -439,6 +454,9 @@ room OfficeRoom {
 
         verb(int vrb, int objA, int objB) {
         int i;
+        case LookAt:
+            egoSay("It appears to be connected to the door mechanism.");
+            return;
         case Smell:
             hasSmelledPlate = 1;
             egoSay("I can smell the residue left by the indigenous lifeforms.");
