@@ -446,7 +446,7 @@ room ResRoom {
     // This script receive the keyboard and mouse events
     script inputHandler(int area,int cmd, int btn) {
         int vrb,obj,objB,x;
-        int invCount;
+        int invCount,invOffsetMax;
 
         dbgPrintBegin();
         dbgPrint("Area=%i{area} cmd=%i{cmd} button=%i{btn}");
@@ -472,13 +472,14 @@ room ResRoom {
 
         if(cmd == invUp || cmd == invDown) {
             invCount = getInventoryCount(VAR_EGO);
-            invOffset += (cmd == invUp ? -1 : 1)*MAX_INVENTORY_DISPLAY/2;
-            if(invOffset > invCount) //-MAX_INVENTORY_DISPLAY)
-                invOffset = (invCount/MAX_INVENTORY_DISPLAY) * MAX_INVENTORY_DISPLAY;
+            invOffset += (cmd == invUp ? -1 : 1)*INVENTORY_COL;
+            invOffsetMax = ((invCount+INVENTORY_COL-1)/INVENTORY_COL -
+                            INVENTORY_LINE)*INVENTORY_COL;
+            if(invOffset > invOffsetMax)
+                invOffset = invOffsetMax;
             if(invOffset < 0) invOffset = 0;
             dbgPrint("Inventory offset: %i{invOffset}");
             Verbs::showVerbs(1);
-            //startScript2( inventoryHandler, [0] );
             inventoryHandler( 0 );
             return;
         }
@@ -543,15 +544,10 @@ room ResRoom {
         dbgPrint("%i{count} obj in inv");
 
 
-        for(i = 0 ; i < 8 ; i++) {
-        //for(i = invOffset ; i < invOffset+8 ; i++) {
+        for(i = 0 ; i < INVENTORY_SLOTS ; i++) {
             if(i+invOffset < count) {
                 obj = findInventory(VAR_EGO,i+1+invOffset);
-                //if( isObjectOfClass( obj, [Pickable] ) ) {
-                    //startObject2(obj,Icon, [ setInventoryIcon, invSlot0+i ]);
-                //}
-                //else
-                    startScript0( setInventoryIcon, [obj, invSlot0+i] );
+                setInventoryIcon(obj,invSlot0+i);
             } else {
                 setCurrentVerb(invSlot0+i);
                 setVerbNameString(0);

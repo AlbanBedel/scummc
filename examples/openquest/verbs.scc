@@ -183,8 +183,8 @@ room Verbs {
         setVerbDimColor(dimColor);
         //verbCenter();
 
-        for(l = 0,vrb = invSlot0 ; l < 2 ; l++)
-            for(c = 0 ; c < 2 ; c++, vrb++) {
+        for(l = 0,vrb = invSlot0 ; l < INVENTORY_LINE ; l++)
+            for(c = 0 ; c < INVENTORY_COL ; c++, vrb++) {
                 setCurrentVerb(vrb);
                 initVerb();
                 //verbCenter();

@@ -42,7 +42,9 @@ verb invSlot0 @ 100, invSlot1 @ 101, invSlot2 @ 102, invSlot3 @ 103,
 // The inventory arrows
 verb invUp, invDown;
 int invOffset;
-#define MAX_INVENTORY_DISPLAY    8
+#define INVENTORY_COL   2
+#define INVENTORY_LINE  2
+#define INVENTORY_SLOTS (INVENTORY_COL*INVENTORY_LINE)
 
 // The verb colors
 #define VERB_COLOR       104
