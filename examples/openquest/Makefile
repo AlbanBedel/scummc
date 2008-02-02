@@ -47,7 +47,7 @@ OBJS=$(SRCS:%.scc=%.roobj)
 EXP_SRCS=$(SRCS:%=$(EXP_DIR)/%)
 
 
-all: scummc.000 scummc.001 scummc.sou
+all: scummc6.000 scummc6.001 scummc6.sou
 
 
 %.cost: $(COST_DIR)/%.scost $(COST)
@@ -59,11 +59,11 @@ all: scummc.000 scummc.001 scummc.sou
 %.roobj: $(EXP_DIR)/%.scc $(SCC)
 	$(SCC) -o $@ $(SCC_FLAGS) $<
 
-scummc.000: $(OBJS)
+scummc6.000: $(OBJS)
 	$(SLD) -v $^ 
 #-key 0x69
 
-scummc.001 scummc.sou: scummc.000 ;
+scummc6.001 scummc.sou: scummc6.000 ;
 
 clean:
 	rm -f openquest.dep scummc.0?? *.char scummc.sou *.roobj *.cost
@@ -79,11 +79,11 @@ openquest.dep: $(EXP_SRCS)
 ### Regression testing
 
 ## Update the reference hash.
-test-ref: scummc.000 scummc.001 scummc.sou
+test-ref: scummc6.000 scummc6.001 scummc6.sou
 	@for f in $+ ; do printf "%s: " $$f ; $(MD5SUM) < $$f | cut -d ' ' -f 1 ; done > $(REF_FILE)
 	@echo "Reference hash updated."
 
-test: scummc.000 scummc.001 scummc.sou
+test: scummc6.000 scummc6.001 scummc6.sou
 	@[ -f $(REF_FILE) ] || ( echo "No reference hash available" ; false )
 	@for f in $+ ; do \
            printf "%s: " $$f ; \
