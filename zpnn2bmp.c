@@ -42,6 +42,8 @@
 #include "scc_codec.h"
 #include "scc_img.h"
 
+#include "zpnn2bmp_help.h"
+
 static int w = -1, h = -1;
 static char* out_name = NULL;
 
@@ -49,6 +51,7 @@ static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &out_name },
   { "w", SCC_PARAM_INT, 0, 0xFFFF, &w },
   { "h", SCC_PARAM_INT, 0, 0xFFFF, &h },
+  { "help", SCC_PARAM_HELP, 0, 0, &zpnn2bmp_help },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -61,13 +64,8 @@ int main(int argc,char** argv) {
   scc_img_t* img;
   int i;
 
-  if(argc < 2) {
-    printf("Usage: %s -w nn -h nn [-o out] file.zpnn\n",argv[0]);
-    return -1;
-  }
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
-  if(!files) return -1;
+  if(!files) scc_print_help(&zpnn2bmp_help,1);
 
   if(w < 0 || h < 0) {
     printf("You must specify the width and height of the zplanes.\n");

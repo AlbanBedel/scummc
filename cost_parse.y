@@ -47,6 +47,8 @@
 #include "cost_parse.tab.h"
 #include "scc_lex.h"
 
+#include "cost_help.h"
+
 #define YYERROR_VERBOSE 1
 
   int yylex(void);
@@ -1191,17 +1193,13 @@ int yyerror (const char *s)  /* Called by yyparse on error */
   return 0;
 }
 
-static void usage(char* prog) {
-  printf("Usage: %s [-o output] input.scost\n",prog);
-  exit(-1);
-}
-
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &cost_output },
   { "I", SCC_PARAM_STR, 0, 0, &img_path },
   { "akos", SCC_PARAM_FLAG, 0, 1, &akos },
   { "prefix", SCC_PARAM_STR, 0, 0, &symbol_prefix },
   { "header", SCC_PARAM_STR, 0, 0, &header_name },
+  { "help", SCC_PARAM_HELP, 0, 0, &cost_help },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1209,11 +1207,9 @@ int main (int argc, char** argv) {
   scc_cl_arg_t* files;
   char* out;
 
-  if(argc < 2) usage(argv[0]);
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
-  if(!files) usage(argv[0]);
+  if(!files) scc_print_help(&cost_help,1);
 
   out = cost_output ? cost_output : "output.cost";
   out_fd = new_scc_fd(out,O_WRONLY|O_CREAT|O_TRUNC,0);

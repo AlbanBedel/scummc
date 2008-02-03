@@ -39,6 +39,7 @@
 
 #include "scc_param.h"
 
+#include "raw2voc_help.h"
 
 static int srate = 22050;
 static char* output = NULL;
@@ -46,13 +47,9 @@ static char* output = NULL;
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &output },
   { "r", SCC_PARAM_INT, 0, 0xFFFF, &srate },
+  { "help", SCC_PARAM_HELP, 0, 0, &raw2voc_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-void usage(char* name) {
-  printf("Usage: %s [ -r rate ] [ -o out.voc ] input.raw\n",name);
-  exit(1);
-}
 
 int main(int argc, char** argv) {
   scc_fd_t* ifd,*ofd;
@@ -62,10 +59,8 @@ int main(int argc, char** argv) {
   char* data;
   int r,blen;
   
-  if(argc < 2) usage(argv[0]);
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
-  if(!files) usage(argv[0]);
+  if(!files) scc_print_help(&raw2voc_help,1);
 
   ifd = new_scc_fd(files->val,O_RDONLY,0);
   if(!ifd) {

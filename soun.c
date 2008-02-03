@@ -38,6 +38,8 @@
 #include "scc_fd.h"
 #include "scc_param.h"
 
+#include "soun_help.h"
+
 static char* out_file = NULL;
 static char* midi_file = NULL;
 static char* adl_file = NULL;
@@ -51,13 +53,9 @@ static scc_param_t scc_parse_params[] = {
   { "adl", SCC_PARAM_STR, 0, 0, &adl_file },
   { "rol", SCC_PARAM_STR, 0, 0, &rol_file },
   { "gmd", SCC_PARAM_STR, 0, 0, &gmd_file },
+  { "help", SCC_PARAM_HELP, 0, 0, &soun_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-static void usage(char* prog) {
-  printf("Usage: %s [ -o output.soun ] ( -midi in.midi | -adl in.midi )\n",prog);
-  exit(-1);
-}
 
 static int load_file(char* path,char** rdata, unsigned *pos, unsigned *size) {
   scc_fd_t *fd = new_scc_fd(path,O_RDONLY,0);
@@ -101,12 +99,10 @@ int main(int argc,char** argv) {
   char *data;
   int s,ssize = 0,spos;
 
-  if(argc < 2) usage(argv[0]);
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
   if(files || !(midi_file || adl_file || rol_file || gmd_file))
-    usage(argv[0]);
+    scc_print_help(&soun_help,1);
 
   data = malloc(size);
   SCC_SET_32(data,0,MKID('S','O','U','N'));

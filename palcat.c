@@ -40,6 +40,7 @@
 #include "scc_param.h"
 #include "scc_img.h"
 
+#include "palcat_help.h"
 
 static char* outname = NULL;
 static char* inname = NULL;
@@ -48,24 +49,18 @@ static char* inname = NULL;
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &outname },
   { "i", SCC_PARAM_STR, 0, 0, &inname },
+  { "help", SCC_PARAM_HELP, 0, 0, &palcat_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-static void usage(char* prog) {
-  printf("Usage: %s -o merged.bmp [-i in.bmp] inputA.bmp in.bmp inputB.bmp\n",prog);
-  exit(-1);
-}
 
 int main(int argc,char** argv) {
   scc_cl_arg_t* files,*f;
   scc_img_t *out = NULL,*in;
   unsigned pre_off = 0;
   
-  if(argc < 5) usage(argv[0]);
-  
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
-  if(!files || !outname) usage(argv[0]);
+  if(!files || !outname) scc_print_help(&palcat_help,1);
 
   if (inname) {
     out = scc_img_open(inname);

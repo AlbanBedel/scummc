@@ -40,6 +40,8 @@
 #include "scc.h"
 #include "scc_param.h"
 
+#include "costview_help.h"
+
 #include <gtk/gtk.h>
 
 
@@ -850,17 +852,13 @@ static scc_cost_t* open_cost_file(char * path) {
   return cost;
 }
 
-static void usage(char* prog) {
-  printf("Usage: %s [-pals file.pals] [-bmp palette.bmp] file.cost\n",prog);
-  exit(-1);
-}
-
 static char* pals_path = NULL;
 static char* bmp_path = NULL;
 
 static scc_param_t costview_params[] = {
   { "pals", SCC_PARAM_STR, 0, 0, &pals_path },
   { "bmp", SCC_PARAM_STR, 0, 0, &bmp_path },
+  { "help", SCC_PARAM_HELP, 0, 0, &costview_help },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -871,12 +869,11 @@ int main(int argc,char** argv) {
   scc_cost_t* cost;
   scc_pal_t* pal;
 
-  if(argc < 2) usage(argv[0]);
   // make gtk pump his args
   gtk_init(&argc,&argv);
 
   files = scc_param_parse_argv(costview_params,argc-1,&argv[1]);
-  if(!files) usage(argv[0]);
+  if(!files) scc_print_help(&costview_help,1);
 
   cv = create_win();
 

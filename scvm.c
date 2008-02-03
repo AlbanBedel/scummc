@@ -46,6 +46,8 @@
 #include "scvm_thread.h"
 #include "scvm.h"
 
+#include "scvm_help.h"
+
 static char* scvm_error[0x100] = {
   "no error",
   "script bound",
@@ -1027,6 +1029,7 @@ static scc_param_t scc_parse_params[] = {
   { "dir", SCC_PARAM_STR, 0, 0, &basedir },
   { "key", SCC_PARAM_INT, 0, 0xFF, &file_key },
   { "dbg", SCC_PARAM_FLAG, 0, 1, &run_debugger },
+  { "help", SCC_PARAM_HELP, 0, 0, &scvm_help },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1036,13 +1039,8 @@ int main(int argc,char** argv) {
   scc_cl_arg_t* files;
   scvm_backend_t backend = { sdl_backend_init };
 
-  if(argc < 2) {
-    scc_log(LOG_ERR,"Usage: scvm [-dir dir] [-key nn] basename\n");
-    return 1;
-  }
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
-  if(!files) return -1;
+  if(!files) scc_print_help(&scvm_help,1);
 
   vm = scvm_new(&backend,basedir,files->val,file_key);
 

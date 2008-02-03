@@ -41,6 +41,7 @@
 //#include "scc.h"
 #include "scc_img.h"
 
+#include "imgsplit_help.h"
 
 static int dw = 0, dh = 0;
 static char* outbase = NULL;
@@ -51,14 +52,9 @@ static scc_param_t scc_parse_params[] = {
   { "outfmt", SCC_PARAM_STR, 0, 0, &outfmt },
   { "dw", SCC_PARAM_INT, 1, 100000, &dw },
   { "dh", SCC_PARAM_INT, 1, 100000, &dh },
-  
+  { "help", SCC_PARAM_HELP, 0, 0, &imgsplit_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-static void usage(char* prog) {
-  printf("Usage: %s [-outbase base] [-outfmt fmt] -dw width -dh height input.bmp\n",prog);
-  exit(-1);
-}
 
 int main(int argc,char** argv) {
   scc_cl_arg_t* files,*f;
@@ -66,11 +62,9 @@ int main(int argc,char** argv) {
   char outname[1024];
   scc_img_t *in,*out;
   
-  if(argc < 6) usage(argv[0]);
-  
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
-  if(!files || !dw || !dh) usage(argv[0]);
+  if(!files || !dw || !dh) scc_print_help(&imgsplit_help,1);
 
   if(!outbase) outbase = "frame";
   if(!outfmt) outfmt = "%s-%02d.bmp";

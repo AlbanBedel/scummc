@@ -43,6 +43,7 @@
 #include "scc_ns.h"
 #include "scc_code.h"
 #include "scc_param.h"
+#include "sld_help.h"
 
 
 
@@ -1370,10 +1371,6 @@ int scc_ld_write_sou(scc_ld_voice_t* v,scc_fd_t* fd) {
   return 1;
 }
 
-static void usage(char* prog) {
-  scc_log(LOG_MSG,"Usage: %s [-o basename] [-rooms] [-write-room-names] input.roobj [file2.roobj ...]\n",prog);
-  exit(-1);
-}
 
 static char* out_file = NULL;
 static int dump_rooms = 0;
@@ -1396,6 +1393,7 @@ static scc_param_t scc_ld_params[] = {
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { "vv", SCC_PARAM_FLAG, LOG_MSG, LOG_DBG, &scc_log_level },
   { "write-room-names", SCC_PARAM_FLAG, 0, 1, &write_room_names },
+  { "help", SCC_PARAM_HELP, 0, 0, &sld_help },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -1405,10 +1403,8 @@ int main(int argc,char** argv) {
   int obj_n;
   char default_name[255];
 
-  if(argc < 2) usage(argv[0]);
-
   files = scc_param_parse_argv(scc_ld_params,argc-1,&argv[1]);
-  if(!files) usage(argv[0]);
+  if(!files) scc_print_help(&sld_help,1);
 
   // The global ns is now created just before loading the
   // the first to get the target vm version.

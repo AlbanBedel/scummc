@@ -45,6 +45,8 @@
 #include "scc_param.h"
 #include "scc_char.h"
 
+#include "char_help.h"
+
 uint8_t default_pal[] = {
     0x00, 0x00, 0x00, // 0
     0xFF, 0xFF, 0xFF,
@@ -577,38 +579,9 @@ static scc_param_t scc_parse_params[] = {
   { "palsize", SCC_PARAM_INT, 2, 256, &palsize },
   { "bmp-width", SCC_PARAM_INT, 1, 10000, &bmp_width },
   { "bmp-space", SCC_PARAM_INT, 3, 10000, &bmp_space },
+  { "help", SCC_PARAM_HELP, 0, 0, &char_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-static void usage(char* prog) {
-  printf("Usage: %s [ OPTIONS ] INPUT OUTPUT\n"
-         "\n  INPUT:\n"
-#ifdef HAVE_FT
-         "    -font FONT          Use a font supported by Freetype (TTF, Type 1, etc)\n"
-#endif
-         "    -ibmp FILE          Use a BMP font\n"
-         "    -char FILE          Use a SCUMM charset\n"
-         "\n  OUTPUT:\n"
-         "    -ochar FILE         Create a SCUMM charset\n"
-         "    -obmp FILE          Create a BMP font\n"
-#ifdef HAVE_FT
-         "\n  Freetype input options:\n"
-         "    -cw w               Character width in 1/64th of points (default: auto)\n"
-         "    -ch h               Character height in 1/64th of points (default: 24 pts)\n"
-         "                        Values less than 128 are interpreted in points.\n"
-         "    -vdpi r             Vertical resolution in dpi (default: 30)\n"
-         "    -hdpi r             Horizontal resolution in dpi (default: 30)\n"
-         "    -vspace s           Extra interline space in pixel (default: 0)\n"
-#endif
-         "\n  BMP output options:\n"
-         "    -palsize <2-256>    Force the palette size\n"
-         "    -bmp-width w        Image width (default: 800)\n"
-         "    -bmp-space s        Character spacing (default: 8)\n"
-         "\n"
-         ,prog);
-  exit(-1);
-}
-
 
 int main(int argc,char** argv) {
   scc_cl_arg_t* files;
@@ -617,12 +590,10 @@ int main(int argc,char** argv) {
   int chars[SCC_MAX_CHAR];
   int i;
 
-  if(argc < 2) usage(argv[0]);
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
   if(files || !(font_file || ibmp_file || ichar_file) ||
-     !(obmp_file || ochar_file)) usage(argv[0]);
+     !(obmp_file || ochar_file)) scc_print_help(&char_help,1);
 
   // init some default chars
   memset(chars,0,SCC_MAX_CHAR*sizeof(int));

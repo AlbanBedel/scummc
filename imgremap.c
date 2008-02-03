@@ -41,6 +41,7 @@
 //#include "scc.h"
 #include "scc_img.h"
 
+#include "imgremap_help.h"
 
 static int from = -1, to = -1;
 
@@ -48,13 +49,9 @@ static int from = -1, to = -1;
 static scc_param_t scc_parse_params[] = {
   { "from", SCC_PARAM_INT, 0, 255, &from },
   { "to", SCC_PARAM_INT, 0, 255, &to },
+  { "help", SCC_PARAM_HELP, 0, 0, &imgremap_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-static void usage(char* prog) {
-  printf("Usage: %s -from colorA -to colorB input.bmp\n",prog);
-  exit(-1);
-}
 
 int main(int argc,char** argv) {
   scc_cl_arg_t* files,*f;
@@ -63,11 +60,9 @@ int main(int argc,char** argv) {
   scc_img_t *in;
   uint8_t* src;
   
-  if(argc < 6) usage(argv[0]);
-  
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
-  if(!files || from < 0 || to < 0) usage(argv[0]);
+  if(!files || from < 0 || to < 0) scc_print_help(&imgremap_help,1);
 
 
   for(f = files ; f ; f = f->next) {

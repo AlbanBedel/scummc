@@ -42,6 +42,8 @@
 #include "scc_img.h"
 #include "scc_box.h"
 
+#include "boxedit_help.h"
+
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
@@ -2400,17 +2402,13 @@ scc_boxedit_t* scc_boxedit_new(scc_img_t* rmim) {
   return be;
 }
 
-static void usage(char* prog) {
-  printf("Usage: %s [-img file.bmp] [file.boxd]\n",prog);
-  exit(-1);
-}
-
 static char* rmim_file = NULL;
 static char* scal_file = NULL;
 
 static scc_param_t boxedit_params[] = {
   { "img", SCC_PARAM_STR, 0, 0, &rmim_file },
   { "scal", SCC_PARAM_STR, 0, 0, &scal_file },
+  { "help", SCC_PARAM_HELP, 0, 0, &boxedit_help },
   { NULL, 0, 0, 0, NULL }
 };
 

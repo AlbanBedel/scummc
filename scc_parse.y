@@ -52,6 +52,8 @@
 
 #include "scc_lex.h"
 
+#include "scc_help.h"
+
 #define YYERROR_VERBOSE 1
 
 typedef struct scc_parser {
@@ -2070,11 +2072,6 @@ int scc_parser_error(scc_parser_t* sccp,YYLTYPE *loc, const char *s)  /* Called 
   return 0;
 }
 
-static void usage(char* prog) {
-  scc_log(LOG_MSG,"Usage: %s [-o output] [-V version] input.scc [input2.scc ...]\n",prog);
-  exit(-1);
-}
-
 static char** scc_include = NULL;
 static char** scc_res_path = NULL;
 static int scc_do_deps = 0;
@@ -2088,6 +2085,7 @@ static scc_param_t scc_parse_params[] = {
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { "vv", SCC_PARAM_FLAG, LOG_MSG, LOG_DBG, &scc_log_level },
   { "V", SCC_PARAM_INT, 6, 7, &scc_vm_version },
+  { "help", SCC_PARAM_HELP, 0, 0, &scc_help },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -2101,11 +2099,9 @@ int main (int argc, char** argv) {
   scc_fd_t* out_fd;
   int i;
 
-  if(argc < 2) usage(argv[0]);
-
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
-  if(!files) usage(argv[0]);
+  if(!files) scc_print_help(&scc_help,1);
 
   sccp = scc_parser_new(scc_include,scc_res_path,scc_vm_version);
 

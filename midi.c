@@ -40,6 +40,7 @@
 #include "scc_param.h"
 #include "scc_smf.h"
 
+#include "midi_help.h"
 
 static int strip_track = -1;
 static int set_type = -1;
@@ -51,23 +52,17 @@ static scc_param_t scc_parse_params[] = {
   { "set-type", SCC_PARAM_INT, 0, 2, &set_type },
   { "merge-track", SCC_PARAM_INT_LIST, 0, 255, &merge },
   { "dump", SCC_PARAM_FLAG, 0, 1, &dump },
+  { "help", SCC_PARAM_HELP, 0, 0, &midi_help },
   { NULL, 0, 0, 0, NULL }
 };
-
-static void usage(char* prog) {
-  scc_log(LOG_MSG,"Usage: %s [-strip-track n] [-set-type t] input.mid output.mid\n",prog);
-  exit(-1);
-}
 
 int main(int argc,char** argv) {
   scc_cl_arg_t* files;
   scc_smf_t* smf;
   
-  if(argc < 3) usage(argv[0]);
-  
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
 
-  if(!files) usage(argv[0]);
+  if(!files) scc_print_help(&midi_help,1);
 
   smf = scc_smf_parse_file(files->val);
   if(!smf) return 1;
