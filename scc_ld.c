@@ -1207,7 +1207,7 @@ int scc_ld_write_idx(scc_ld_room_t* room, scc_fd_t* fd,
   int cost_n = scc_ns_res_max(scc_ns,SCC_RES_COST)+1;
   int snd_n = scc_ns_res_max(scc_ns,SCC_RES_SOUND)+1;
   int var_n = scc_ns_res_max(scc_ns,SCC_RES_VAR)+1;
-  int bvar_n = scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1;
+  int bvar_n = (scc_ns_res_max(scc_ns,SCC_RES_BVAR)+1)&0x7FFF;
   int i;
   char rnam_buf[10];
   scc_ld_room_t* r;
