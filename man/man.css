@@ -1,0 +1,127 @@
+/* ScummC
+ * Copyright (C) 2008  Alban Bedel
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
+
+h1 { font-size: 140%; }
+h2 { font-size: 130%; }
+h3 { font-size: 120%; }
+h4 { font-size: 110%; }
+
+h1,h2,h3,h4 {
+  text-transform: uppercase;
+}
+
+em {
+  text-decoration: underline;
+}
+
+.man {
+  max-width: 21cm;
+  margin: 0em auto;
+  border: solid thin;
+}
+
+.man > .part-block {
+  margin: 0em 1em;
+}
+
+.toc {
+  background: lightgrey;
+  padding: 0.2em 0em;
+  border-bottom: solid thin;
+  text-align: center;
+}
+
+.toc a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.toc a:visited {
+  color: inherit;
+}
+
+.toc a:hover {
+  color: blue;
+}
+
+.toc > .toc-entry {
+  display: inline;
+  text-transform: uppercase;
+  padding-bottom: 0.2em;
+}
+
+.toc-entry {
+  position: relative;
+  white-space: nowrap;
+  padding: 0em 1em;
+}
+
+.toc-entry-childs {
+  position: absolute;
+  top: -1px;
+  left: 100%;
+  background: lightgrey;
+  visibility: hidden;
+  border: solid 1px;
+}
+
+.toc > .toc-entry > .toc-entry-childs {
+  top: 100%;
+  left: -1px;
+}
+
+.toc-entry:hover > .toc-entry-childs {
+  visibility: visible;
+}
+
+.part {
+  margin-left: 2em;
+}
+
+.command-synopsis-name {
+  font-weight: bold;
+}
+
+.synopsis-param-group {
+  text-transform: uppercase;
+}
+
+.cmd-name {
+  font-weight: bold;
+}
+
+.param-group-description {
+  margin: 1em 0em;
+}
+
+.param {
+  margin: 1em 0em;
+}
+
+.param-usage {
+  font-weight: bold;
+}
+
+.param-name {
+  font-weight: bold;
+}
+
+.param-description {
+  margin-left: 2em;
+}

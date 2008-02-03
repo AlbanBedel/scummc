@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="imgremap" long-name="ScummC's color remapper">
+
+  <description>
+    <cmd>imgremap</cmd> allow swapping two colors in a BMP file.
+    The output is saved in a file name $input.map.
+    This tool is mostly useful to fix inverted mask images.
+  </description>
+
+  <command name="imgremap">
+    <param-group name="options">
+      <param name="from" arg="c" required="true">
+        Set the first color.
+      </param>
+      <param name="to" arg="c" required="true">
+        Set the second color.
+      </param>
+    </param-group>
+    <file name="input.bmp" required="true" repeat="true"/>
+  </command>
+
+  <see-also>
+    <cmd>imgsplit</cmd>, <cmd>palcat</cmd>
+  </see-also>
+
+</man>

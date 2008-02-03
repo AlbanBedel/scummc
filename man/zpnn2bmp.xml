@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="zpnn2bmp" long-name="ScummC's zplane converter">
+
+  <description>
+    <cmd>zpnn2bmp</cmd> allow to convert ZPnn blocks from SCUMM games to
+    bmp files that can be used with <cmd>scc</cmd>.
+  </description>
+
+  <command name="zpnn2bmp">
+    <param-group name="options">
+      <param name="o" arg="file.bmp" default="zplane.bmp">
+        Set the output filename.
+      </param>
+      <param name="w" arg="w" required="true">
+        Set the zplane width.
+      </param>
+      <param name="h" arg="h" required="true">
+        Set the zplane height.
+      </param>
+    </param-group>
+    <file name="file.zpnn" required="true"/>
+  </command>
+
+</man>

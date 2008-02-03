@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="char" long-name="ScummC's charset converter">
+
+  <description>
+    <cmd>char</cmd> it a tool to manipulate charset. It can convert from
+    scumm charset format, bitmap or any format support by Freetype
+    (TTF, Type1, etc) to scumm charset or bitmap.
+  </description>
+
+  <command name="char">
+    <param-group name="input" required="true">
+      <param name="font" arg="font.ttf">
+        Use a font supported by Freetype (TTF, Type1, etc).
+      </param>
+      <param name="ibmp" arg="file.bmp">
+        Use a BMP font.
+      </param>
+      <param name="char" arg="file.char">
+        Use a SCUMM charset.
+      </param>
+    </param-group>
+    <param-group name="output" required="true">
+      <param name="ochar" arg="file.char">
+        Create a SCUMM charset.
+      </param>
+      <param name="obmp" arg="file.bmp">
+        Create a BMP font.
+      </param>
+    </param-group>
+    <param-group name="options">
+      <param-group name="BMP input">
+        <param name="ibmp-base" arg="b" default="0">
+          Set the index of the first character in the BMP font.
+        </param>
+      </param-group>
+      <param-group name="freetype input">
+        <param name="cw" arg="w" default="auto">
+          Set the character width in 1/64th of points.
+        </param>
+        <param name="ch" arg="h" default="auto">
+          Set the character height in 1/64th of points.
+        </param>
+        <param name="vdpi" arg="r" default="30">
+          Set the vertical resolution in dpi.
+        </param>
+        <param name="hdpi" arg="r" default="30">
+          Set the horizontal resolution in dpi.
+        </param>
+        <param name="vspace" arg="s" default="0">
+          Set the extra inter line space in pixel.
+        </param>
+      </param-group>
+      <param-group name="BMP output">
+        <param name="palsize" arg="s" default="auto">
+          Force the palette size (from 2 to 255).
+        </param>
+        <param name="bmp-width" arg="w" default="800">
+          Set the output image width.
+        </param>
+        <param name="bmp-space" arg="s" default="8">
+          Set the character spacing.
+        </param>
+      </param-group>
+    </param-group>
+  </command>
+
+  <see-also>
+    <cmd>scc</cmd>
+  </see-also>
+
+</man>

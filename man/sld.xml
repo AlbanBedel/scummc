@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="sld" long-name="ScummC's linker">
+
+  <description>
+    <cmd>sld</cmd> generate game files for SCUMM interpreters from roobj
+    files previously created by <cmd>scc</cmd>.
+  </description>
+
+  <command name="sld">
+    <param-group name="options">
+      <param name="o" arg="basename" default="scummc$VERSION">
+        <short>Set the output file basename.</short>
+        By default it will output 3 files: <arg>basename</arg>.000,
+        <arg>basename</arg>.001 and <arg>basename</arg>.sou.
+      </param>
+      <param name="key" arg="val" default="0">
+        <short>Set the output encryption key.</short>
+        DOTT use 0x69, this is needed to generate a game which can be
+        used with the original LEC interpreter or an unpatched ScummVM.
+      </param>
+      <param name="max-local" arg="val" default="200">
+        <short>
+          Set the maximal number of object per room in the MAXS block.
+        </short>
+        The default is <default/> like in DOTT. This value could be computed
+        but it seemed to be set to arbitrary values in the original LEC
+        games.
+      </param>
+      <param name="max-array" arg="val" default="100">
+        <short>
+          Set the maximal number of array in the MAXS block.
+        </short>
+        As scripts can dynamically create arrays this value can't be computed.
+        Ideally it should be set as tight as possible to catch any script
+        leaking memory. But during development you probably want to use
+        a large enough value. Default to <default/>.
+      </param>
+      <param name="max-flobj" arg="val" default="20">
+        <short>
+          Set the maximal number of flobject in the MAXS block.
+        </short>
+        Script can load objects from other room by creating flobjects.
+        This is however expensive memory wise (at least for the hardware
+        originally targeted by v6) and the limit is usely set low.
+        Default to <default/>.
+      </param>
+      <param name="max-inventory" arg="val" default="20">
+        <short>
+          Set the maximal number of inventory slot in the MAXS block.
+        </short>
+        Default to <default/>.
+      </param>
+      <param name="write-room-names">
+        Fill the RNAM block with the room names.
+      </param>
+      <param name="v">
+        Enable verbose output.
+      </param>
+      <param name="vv">
+        Enable debug output.
+      </param>
+      <param name="room">
+        <short>Output .lfl files instead of bundles.</short>
+        This option is only useful when debugging ScummC.
+      </param>
+    </param-group>
+    <file name="input.roobj" repeat="true" required="true"/>
+  </command>
+
+  <see-also>
+    <cmd>scc</cmd>
+  </see-also>
+
+</man>

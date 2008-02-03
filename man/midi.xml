@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="midi" long-name="ScummC's midi converter">
+
+  <description>
+    <cmd>midi</cmd> allow to convert MIDI files from multi tracks file
+    to a single track file as needed by SCUMM engines.
+  </description>
+
+  <command name="midi">
+    <param-group name="options">
+      <param name="strip-track" arg="id">
+        Remove the given track.
+      </param>
+      <param name="set-type" arg="type">
+        Set the type of the output MIDI file.
+      </param>
+      <param name="merge-track" arg="track" repeat="true">
+        <short>Set tracks to be merged.</short>
+        This options must be used at least two times. All the give tracks
+        get merged in the first one.
+      </param>
+      <param name="dump">
+        <short>Print a dump of the parsed MIDI file.</short>
+        Only useful to debug the MIDI parser.
+      </param>
+    </param-group>
+    <file name="input.mid" required="true"/>
+    <file name="output.mid" required="true"/>
+  </command>
+
+  <see-also>
+    <cmd>soun</cmd>
+  </see-also>
+
+</man>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="scc" long-name="ScummC's compiler">
+
+  <description>
+    <cmd>scc</cmd> generate roobj files which can be linked
+    with <cmd>sld</cmd> to produces game files for SCUMM interpreters.
+  </description>
+
+  <command name="scc">
+    <param-group name="options">
+      <param name="o" arg="output" default="output.roobj">
+        Set the output filename.
+      </param>
+      <param name="I" arg="dir">
+        Add a directory to be searched for header files.
+      </param>
+      <param name="R" arg="dir">
+        Add a directory to be searched for resource files.
+      </param>
+      <param name="d">
+        Generate a make dependency file.
+      </param>
+      <param name="V" arg="version" default="6">
+        <short>Set the targeted SCUMM version.</short>
+        Currently version 6 and 7 are supported, version <default/>
+        is the default target.
+      </param>
+      <param name="v">
+        Enable verbose output.
+      </param>
+      <param name="vv">
+        Enable debug output.
+      </param>
+    </param-group>
+    <file name="input.scc" required="true" repeat="true"/>
+  </command>
+
+  <see-also>
+    <cmd>sld</cmd>, <cmd>boxedit</cmd>, <cmd>cost</cmd>,
+    <cmd>char</cmd>, <cmd>soun</cmd>
+  </see-also>
+
+</man>

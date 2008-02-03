@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="palcat" long-name="ScummC's palette manipulation tool">
+
+  <description>
+    <cmd>palcat</cmd> allow to create BMP files with a palette generated
+    by combining the palette from several other files.
+  </description>
+
+  <command name="palcat">
+    <param-group name="options">
+      <param name="o" arg="output.bmp" required="true">
+        Set the output file name.
+      </param>
+      <param name="i" arg="input.bmp">
+        <short>Set the image to use for the picture.</short>
+        By default the first file is used. With this option another
+        file can be selected and the colors will be adjusted to match
+        the new palette.
+      </param>
+    </param-group>
+    <file name="input.bmp" required="true" repeat="true"/>
+  </command>
+
+  <see-also>
+    <cmd>imgremap</cmd>, <cmd>imgsplit</cmd>
+  </see-also>
+
+</man>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="cost" long-name="ScummC's costume compiler">
+
+  <description>
+    <cmd>cost</cmd> allow to create costumes files for <cmd>scc</cmd>.
+    It can output files in the COST format (used by v6, the default) or
+    in the AKOS format (used by v7).
+  </description>
+
+  <command name="cost">
+    <param-group name="options">
+      <param name="o" arg="file.cost" default="output.cost">
+        Set the output file.
+      </param>
+      <param name="I" arg="path" default=".">
+        Set the directory where the images are searched.
+      </param>
+      <param name="akos">
+        Output an AKOS (for v7) instead of a COST (for v6).
+      </param>
+      <param name="header" arg="file.h">
+        Output a header file with defines for the animation names, etc.
+      </param>
+      <param name="prefix" arg="p">
+        Set a prefix on all the defines in the generated header.
+      </param>
+    </param-group>
+    <file name="file.scost" required="true"/>
+  </command>
+
+  <see-also>
+    <cmd>scc</cmd>, <cmd>costview</cmd>, <cmd>imgsplit</cmd>
+  </see-also>
+
+</man>

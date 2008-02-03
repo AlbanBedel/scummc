@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ScummC
+ Copyright (C) 2008  Alban Bedel
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+<man name="imgsplit" long-name="ScummC's image splitter">
+
+  <description>
+    <cmd>imgsplit</cmd> allow to split an image in several files.
+    This is mostly useful to convert animations with all frames in
+    a single image to use them for costumes.
+  </description>
+
+  <command name="imgsplit">
+    <param-group name="options">
+      <param name="outbase" arg="base" default="frame">
+        Set the basename to use for the generated files.
+      </param>
+      <param name="outfmt" arg="fmt" default="%s-%02d.bmp">
+        <short>Set the format to use for the generated file names.</short>
+        The argument is a printf string taking two parameters: the basename
+        (set with -outbase) and the frame number.
+      </param>
+      <param name="dw" arg="width" required="true">
+        Set the output frame width.
+      </param>
+      <param name="dh" arg="height" required="true">
+        Set the output frame height.
+      </param>
+    </param-group>
+    <file name="input.bmp" required="true" repeat="true"/>
+  </command>
+
+  <see-also>
+    <cmd>imgremap</cmd>, <cmd>palcat</cmd>
+  </see-also>
+
+</man>
