@@ -27,8 +27,6 @@
 #include "officeroom.sch"
 #include "titlescreen.scc"
 
-int selVerb,altVerb;
-int tryPick;
 
 
 
@@ -42,6 +40,8 @@ room ResRoom {
     // dialog charset
     chset dialogCharset = "vera-small.char";
 
+    int selVerb,altVerb;
+    int tryPick;
 
     // an object for the cursor image
     object cursor {
@@ -679,7 +679,7 @@ room ResRoom {
         case 2:
             setObjectState( OfficeRoom::exitToSecretRoom, 7 );
         case 1:
-            didOfficeIntro = 1;
+            OfficeRoom::didOfficeIntro = 1;
             startRoom(OfficeRoom);
             break;
         default:

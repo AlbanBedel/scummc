@@ -80,7 +80,7 @@ room InventoryItems {
         case Give:
             switch(objB) {
             case commanderZif:
-                if( ! hasShotAtNode ) {
+                if( ! SecretRoom::hasShotAtNode ) {
                     egoSay("And lose my advantage?");
                     return;
                 }

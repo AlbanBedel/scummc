@@ -248,7 +248,8 @@ room Actors {
                 sentence[0] = "What are your orders?";
                 Dialog::dialogAdd(sentence);
                 sentence = 0;
-                if( hasPressedPlate && ! hasTalkedAboutPlate )
+                if( OfficeRoom::hasPressedPlate &&
+                    ! OfficeRoom::hasTalkedAboutPlate )
                     sentence[0] = "I require your assistance with this opening mechanism.";
                 Dialog::dialogAdd(sentence);
                 sentence = 0;
@@ -296,7 +297,7 @@ room Actors {
                         egoSay("Yes, I believe two persons are required.");
                         waitForMessage();
                         actorSay(commanderZif,"In which case I shall follow you, ensign.");
-                        hasTalkedAboutPlate = 1;
+                        OfficeRoom::hasTalkedAboutPlate = 1;
                         break;
                     }
                     waitForMessage();
@@ -367,11 +368,11 @@ room Actors {
             int asked;
         case TalkTo:
             pauseRoaming(commanderZif);
-            if(cubeDisappeared) {
+            if(SecretRoom::cubeDisappeared) {
                 zobTalkToZifInSecretRoom();
                 while(isScriptRunning(zobTalkToZifInSecretRoom)) breakScript();
             } else {
-                zobTalkToZif(hasPressedPlate, hasTalkedAboutPlate);
+                zobTalkToZif();
                 while(isScriptRunning(zobTalkToZif)) breakScript();
             }
             resumeRoaming(commanderZif);

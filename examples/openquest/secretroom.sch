@@ -19,6 +19,8 @@
 
 
 room SecretRoom {
+    // for the end
+    bit cubeDisappeared, hasShotAtNode;
 
     object blueCup;
     script outro();

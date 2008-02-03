@@ -19,6 +19,11 @@
 
 
 room OfficeRoom {
+    // for the intro
+    bit didOfficeIntro;
+    // for the plate
+    bit hasSmelledPlate, hasPressedPlate, hasTalkedAboutPlate;
+
     object exitToSecretRoom;
     object ensignZobObj;
     object commanderZifObj;

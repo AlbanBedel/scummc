@@ -28,13 +28,6 @@
 
 
 
-// for the bullets behind the plant
-bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
-
-bit knowsCarol, askedPassageway;
-
-bit initedGame;
-
 room OfficeRoom {
 
     image = "graphics/rooms/back01_merged.bmp";
@@ -56,6 +49,11 @@ room OfficeRoom {
     voice movePlantSnd = { "sounds/move_plant.voc" };
     voice openDoorSnd = { "sounds/open_door.voc" };
     voice openedDoorSnd = { "sounds/opened_door.voc" };
+
+    // for the bullets behind the plant
+    bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
+    bit knowsCarol, askedPassageway;
+    bit initedGame;
 
     object bullets;
     object plant;
