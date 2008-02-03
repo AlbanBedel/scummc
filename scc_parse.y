@@ -542,6 +542,8 @@ roombodyentry: roomscrdecl '{' scriptbody '}'
 {}
 | resdecl ';'
 {}
+| gvardecl ';'
+{}
 ;
 
 roomscrdecl: scripttype SCRIPT SYM  '(' scriptargs ')' location

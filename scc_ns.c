@@ -134,7 +134,6 @@ scc_symbol_t* scc_ns_get_sym_with_id(scc_ns_t* ns,int type, int id) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->rid == id) return r;
     }
-    return NULL;
   }
 
   // local vars are in the current sym
