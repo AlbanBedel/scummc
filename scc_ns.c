@@ -73,6 +73,15 @@ int scc_sym_is_global(int type) {
   return 0;
 }
 
+int scc_sym_is_only_global(int type) {
+  if(type == SCC_RES_ROOM ||
+     type == SCC_RES_VERB ||
+     type == SCC_RES_ACTOR ||
+     type == SCC_RES_CLASS)
+    return 1;
+  return 0;
+}
+
 scc_ns_t* scc_ns_new(scc_target_t* target) {
   scc_ns_t* ns = calloc(1,sizeof(scc_ns_t));
   ns->target = target;
@@ -134,6 +143,8 @@ scc_symbol_t* scc_ns_get_sym_with_id(scc_ns_t* ns,int type, int id) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->rid == id) return r;
     }
+    if(scc_sym_is_only_global(type))
+      return NULL;
   }
 
   // local vars are in the current sym
@@ -482,7 +493,8 @@ int scc_ns_res_max(scc_ns_t* ns,int type) {
     if(type == SCC_RES_BVAR)
       n &= 0x7FFF;
 
-    return n;
+    if(scc_sym_is_only_global(type))
+      return n;
   }
    
   for(r = ns->glob_sym ; r ; r = r->next) {
@@ -509,7 +521,8 @@ scc_symbol_t* scc_ns_get_sym_at(scc_ns_t* ns,int type,int addr) {
     for(r = ns->glob_sym ; r ; r = r->next) {
       if(r->type == type && r->addr == addr) return r;
     }
-    return NULL;
+    if(scc_sym_is_only_global(type))
+      return NULL;
   }
 
   // local vars are in the current sym
