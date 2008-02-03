@@ -85,6 +85,10 @@ while [ -n "$1" ] ; do
 	    BISON=$2
 	    shift
 	    ;;
+	--xsltproc)
+	    XSLTPROC=$2
+	    shift
+	    ;;
 	--target)
 	    TARGET=$2
 	    shift
@@ -210,6 +214,7 @@ Usage: $0 [OPTIONS]...
   --cc COMPILER             use this compiler
   --make MAKE               use this make
   --bison BISON             use this bison
+  --xsltproc XSLTPROC       use this XSLT processor
   --pager PAGER             use this pager to show the logs
   --md5sum MD5SUM           use this md5 sum
   --doxygen DOXYGEN         use this doxygen
@@ -508,6 +513,19 @@ else
     BISONFLAGS="$BISONFLAGS -d"
 fi
 
+##
+## XSLT processor for the help messages
+##
+
+if [ -z "$XSLTPROC" ] ; then
+    if type xsltproc 2> /dev/null >&2 ; then
+	XSLTPROC=xsltproc
+    fi
+else
+    type $XSLTPROC 2> /dev/null >&2 || XSLTPROC=
+fi
+[ -z "$XSLTPROC" ] && echo "XSLT processor: no"  || \
+    echo "XSLT processor: $XSLTPROC"
 
 ##
 ## Pager for the log viewer
@@ -818,6 +836,7 @@ BUILDDIR=$BUILDDIR
 CC=$CC
 MAKE=$MAKE
 BISON=$BISON
+XSLTPROC=$XSLTPROC
 
 EXESUF=$EXESUF
 

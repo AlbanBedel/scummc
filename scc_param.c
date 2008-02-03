@@ -131,7 +131,12 @@ static int scc_parse_int_list(scc_param_t* param,char* val) {
 
   return 1;
 }
-    
+
+static int scc_parse_help(scc_param_t* param,char* val) {
+  scc_print_help(param->ptr,0);
+  return 0;
+}
+
 
 scc_param_parser_t scc_param_parser[] = {
   { SCC_PARAM_FLAG, SCC_PARAM_TYPE_NO_ARG, scc_parse_flag },
@@ -140,6 +145,7 @@ scc_param_parser_t scc_param_parser[] = {
   { SCC_PARAM_STR, 0, scc_parse_str },
   { SCC_PARAM_STR_LIST, 0, scc_parse_str_list },
   { SCC_PARAM_INT_LIST, 0, scc_parse_int_list },
+  { SCC_PARAM_HELP, SCC_PARAM_TYPE_NO_ARG, scc_parse_help },
   { 0, 0, NULL }
 };
 
@@ -221,4 +227,35 @@ scc_cl_arg_t* scc_param_parse_argv(scc_param_t* params,int argc,char** argv) {
   }
 
   return list;
+}
+
+static void scc_param_print_help(scc_param_help_t* help, unsigned ident_size) {
+  char ident[ident_size+1];
+  if(ident_size > 0) memset(ident,' ',ident_size);
+  ident[ident_size] = 0;
+  if(help->group) {
+    int i;
+    scc_log(LOG_MSG,"\n%s%s:\n",ident,help->name);
+    for(i = 0 ; help->group[i].name ; i++)
+      scc_param_print_help(&help->group[i],ident_size+2);
+  } else {
+    int len = strlen(help->name) + (help->arg ? (2+strlen(help->arg)+1) : 0);
+    char tmp[len+1];
+    if(help->arg)
+      sprintf(tmp,"%s <%s>",help->name,help->arg);
+    else
+      sprintf(tmp,"%s",help->name);
+    scc_log(LOG_MSG,"%s-%-20s  %s\n",ident,tmp,help->desc);
+  }
+}
+
+void scc_print_help(scc_help_t* help, int exit_code) {
+  scc_param_help_t* phelp;
+  scc_log(LOG_MSG,"Usage: %s %s\n",help->name,help->usage);
+  if(help->param_help) {
+    for(phelp = help->param_help ; phelp->name ; phelp++)
+      scc_param_print_help(phelp,0);
+    scc_log(LOG_MSG,"\n");
+  }
+  if(exit_code >= 0) exit(exit_code);
 }

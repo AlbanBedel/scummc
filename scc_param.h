@@ -29,6 +29,7 @@
 #define SCC_PARAM_DBL  4
 #define SCC_PARAM_STR_LIST 5
 #define SCC_PARAM_INT_LIST 6
+#define SCC_PARAM_HELP     7
 
 #define SCC_PARAM_TYPE_NO_ARG 1
 
@@ -54,3 +55,20 @@ struct scc_cl_arg_st {
 int scc_param_parse(scc_param_t* params,char* k,char* v);
 
 scc_cl_arg_t* scc_param_parse_argv(scc_param_t* params,int argc,char** argv);
+
+typedef struct scc_param_help_st scc_param_help_t;
+struct scc_param_help_st {
+  char* name;
+  char* arg;
+  char* dfault;
+  char* desc;
+  scc_param_help_t* group;
+};
+
+typedef struct scc_help_st {
+  char* name;
+  char* usage;
+  scc_param_help_t* param_help;
+} scc_help_t;
+
+void scc_print_help(scc_help_t* help,int exit_code);
