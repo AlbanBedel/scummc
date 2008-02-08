@@ -62,6 +62,8 @@ struct scc_lex {
     scc_lexer_pos_f set_end_pos;
     /// include paths
     char** include;
+    /// If set just continue when an include is missing
+    int ignore_missing_include;
     /// callback to track deps
     scc_lexer_opened_f opened;
     void* userdata;

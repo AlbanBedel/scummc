@@ -227,6 +227,10 @@ int scc_lex_push_buffer(scc_lex_t* lex,char* file) {
     }
     // try the filename alone
     if(!fd && !(fd = new_scc_fd(file,O_RDONLY,0))) {
+        if(lex->ignore_missing_include) {
+            if(lex->opened) lex->opened(lex->userdata,file);
+            return 1;
+        }
         scc_lex_error(lex,"Failed to open %s: %s",file,strerror(errno));
         return 0;
     }
