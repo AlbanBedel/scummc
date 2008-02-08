@@ -23,6 +23,7 @@
 #include "actors.sch"
 #include "secretroom.sch"
 
+#include "zob_anim.sch"
 
 room InventoryItems {
 
@@ -229,11 +230,11 @@ room InventoryItems {
             }
             egoSay("I'll scan the area.");
             waitForMessage();
-            animateActor(VAR_EGO, 32);
+            animateActor(VAR_EGO, zob_anim_scan);
             delay(30);
-            animateActor(VAR_EGO, 32);
+            animateActor(VAR_EGO, zob_anim_scan);
             delay(30);
-            animateActor(VAR_EGO, 32);
+            animateActor(VAR_EGO, zob_anim_scan);
             delay(30);
             if( getActorRoom(VAR_EGO) == SecretRoom )
                 egoSay("The artifact is in this room.");

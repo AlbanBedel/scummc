@@ -26,6 +26,9 @@
 #include "verbs.sch"
 #include "actors.sch"
 
+#include "zob_anim.sch"
+#include "zif_anim.sch"
+#include "carol_anim.sch"
 
 
 room OfficeRoom {
@@ -82,8 +85,8 @@ room OfficeRoom {
                 putActorAt(ensignZob,170,110,OfficeRoom);
                 putActorAt(commanderZif,200,120,OfficeRoom);
                 dbgPrint("%V{beamedSnd}");
-                animateActor( commanderZif, 44 );
-                animateActor( ensignZob, 44 );
+                animateActor( commanderZif, zif_anim_beam );
+                animateActor( ensignZob, zob_anim_beam );
                 delay(150);
                 setCurrentActor(ensignZob);
                 setActorStanding();
@@ -91,7 +94,7 @@ room OfficeRoom {
                 waitForMessage();
                 Actors::setZifOnThePhone();
                 dbgPrint("%V{phoneSnd}");
-                animateActor( commanderZif, 40 );
+                animateActor( commanderZif, zif_anim_lookAround );
                 delay(30);
                 actorSay(commanderZif, "Commander's log, star date 432.1");
                 waitForMessage();
@@ -146,7 +149,7 @@ room OfficeRoom {
                     putActorAt(commanderZif,160,120,OfficeRoom);
                     putActorAt(ensignZob,115,120,OfficeRoom);
                     setActorStanding();
-                    animateActor( carol, 3 );
+                    animateActor( carol, carol_anim_stand );
                     Actors::setZifOffThePhone();
                 }
             }
@@ -155,7 +158,7 @@ room OfficeRoom {
             putActorAt(carol,76,98,OfficeRoom);
             putActorAt(commanderZif,160,120,OfficeRoom);
             putActorAt(ensignZob,115,120,OfficeRoom);
-            animateActor( carol, 3 );
+            animateActor( carol, carol_anim_stand );
         }
         if(firstInit) {
             Verbs::showVerbs(1);
@@ -303,16 +306,16 @@ room OfficeRoom {
                 cutscene(0) {
                     egoSay("I'll look in here I think.");
                     waitForMessage();
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(20);
                     egoSay("There appears to be a small sidearm in this container.");
                     pickupObject( InventoryItems::gun, InventoryItems );
                     waitForMessage();
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(20);
                     egoSay("And a plastic card containing some kind of circuitry.");
                     pickupObject( InventoryItems::card, InventoryItems );
@@ -401,24 +404,24 @@ room OfficeRoom {
             }
             if( ! hasTalkedAboutPlant ) {
                 cutscene(0) {
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
                     actorSay( carol, "Hey, I haven't cleaned there yet." );
                     hasTriedToMovePlant = 1;
                     waitForMessage();
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(30);
                 }
                 return;
             }
             if( getObjectState( plant ) == 1 ) {
                 cutscene(0) {
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     dbgPrint("%V{movePlantSnd}");
                     delay(20);
                     setObjectState( plant, 2 );
                     delay(30);
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(30);
                 }
                 egoSay( "There is a small box down here." );
@@ -496,8 +499,8 @@ room OfficeRoom {
                         actorSay(commanderZif, "I'll operate the one over here.");
                         waitForMessage();
                         delay( 20 );
-                        animateActor(VAR_EGO, 24);
-                        animateActor(commanderZif, 24);
+                        animateActor(VAR_EGO, zob_anim_raiseArm);
+                        animateActor(commanderZif, zif_anim_raiseArm);
                         delay(30);
                         dbgPrint("%V{openDoorSnd}");
                         for(i = 2 ; i < 8 ; i++) {
@@ -505,8 +508,8 @@ room OfficeRoom {
                             setObjectState( exitToSecretRoom, i );
                         }
                         dbgPrint("%V{openedDoorSnd}");
-                        animateActor(VAR_EGO, 28);
-                        animateActor(commanderZif, 28);
+                        animateActor(VAR_EGO, zob_anim_lowerArm);
+                        animateActor(commanderZif, zif_anim_lowerArm);
                         delay(30);
                         actorSay(commanderZif, "Continue your investigation.");
                         waitForMessage();
@@ -526,9 +529,9 @@ room OfficeRoom {
             if( hasSmelledPlate ) {
                 cutscene(2) {
                     hasPressedPlate = 1;
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(30);
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(30);
                 }
                 egoSay("Nothing happened.");
@@ -594,11 +597,11 @@ room OfficeRoom {
                 cutscene(0) {
                     egoSay("I'll turn this off.");
                     waitForMessage();
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
                     dbgPrint("%V{switchSnd}");
                     setRoomRGBIntensity(143,123,119,0,255);
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(20);
                     setObjectState(lightSwitch,1);
                 }
@@ -606,11 +609,11 @@ room OfficeRoom {
                 cutscene(0) {
                     egoSay("I'll turn this back on.");
                     waitForMessage();
-                    animateActor(VAR_EGO, 24);
+                    animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
                     dbgPrint("%V{switchSnd}");
                     setRoomPalette(0);
-                    animateActor(VAR_EGO, 28);
+                    animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(20);
                     setObjectState(lightSwitch,0);
                 }

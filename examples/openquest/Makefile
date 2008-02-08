@@ -51,7 +51,9 @@ all: scummc6.000 scummc6.001 scummc6.sou
 
 
 %.cost: $(COST_DIR)/%.scost $(COST)
-	$(COST) -o $@ -I $(COST_DIR) $<
+	$(COST) -o $@ -I $(COST_DIR) -header $*_anim.sch -prefix $*_anim_ $<
+
+%_anim.sch: %.cost ;
 
 %.char: $(FONT_DIR)/%.bmp $(CHAR)
 	$(CHAR) -ochar $@ -ibmp $<
@@ -66,7 +68,8 @@ scummc6.000: $(OBJS)
 scummc6.001 scummc.sou: scummc6.000 ;
 
 clean:
-	rm -f openquest.dep scummc.0?? *.char scummc.sou *.roobj *.cost
+	rm -f openquest.dep scummc.0?? *.char scummc.sou *.roobj *.cost \
+	      *_anim.sch
 
 distclean: clean
 

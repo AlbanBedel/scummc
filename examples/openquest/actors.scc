@@ -25,6 +25,8 @@
 #include "officeroom.sch"
 #include "secretroom.sch"
 
+#include "zif_anim.sch"
+
 // 2-dim array used like a struct array
 nibble *roaming;
 
@@ -56,9 +58,10 @@ room Actors {
     
     script setZifOnThePhone() {
         setCurrentActor(commanderZif);
-        setActorStandFrame( 32 );
-        setActorInitFrame( 32 );
-        setActorTalkFrame( 36, 32 );
+        setActorStandFrame( zif_anim_standWithPhone );
+        setActorInitFrame( zif_anim_standWithPhone );
+        setActorTalkFrame( zif_anim_talkToPhoneStart,
+                           zif_anim_standWithPhone  );
         setActorStanding();
         setCurrentActor(VAR_EGO);
     }
@@ -66,9 +69,9 @@ room Actors {
     
     script setZifOffThePhone() {
         setCurrentActor(commanderZif);
-        setActorStandFrame( 3 );
-        setActorInitFrame( 1 );
-        setActorTalkFrame( 4, 5 );
+        setActorStandFrame( zif_anim_stand );
+        setActorInitFrame( zif_anim_init );
+        setActorTalkFrame( zif_anim_talkStart, zif_anim_talkStop );
         setActorStanding();
         setCurrentActor(VAR_EGO);
     }
