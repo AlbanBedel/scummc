@@ -1647,6 +1647,9 @@ var: SYM
 {
   scc_symbol_t* v = scc_ns_get_sym(sccp->ns,NULL,$1);
 
+  if(sccp->do_deps && !v)
+    v = scc_ns_decl(sccp->ns,NULL,$1,SCC_RES_VAR,SCC_VAR_WORD,-1);
+
   if(!v)
     SCC_ABORT(@1,"%s is not a declared resource.\n",$1);
 
@@ -1664,6 +1667,9 @@ var: SYM
 | SYM NS SYM
 {
   scc_symbol_t* v = scc_ns_get_sym(sccp->ns,$1,$3);
+
+  if(sccp->do_deps && !v)
+    v = scc_ns_decl(sccp->ns,$1,$3,SCC_RES_VAR,SCC_VAR_WORD,-1);
 
   if(!v)
     SCC_ABORT(@1,"%s::%s is not a declared resource.\n",$1,$3);
@@ -2017,8 +2023,13 @@ void scc_parser_add_dep(scc_parser_t* sccp, char* dep) {
 scc_source_t* scc_parser_parse(scc_parser_t* sccp,char* file,char do_deps) {
   scc_source_t* src;
 
-  if(do_deps) sccp->lex->opened = (scc_lexer_opened_f)scc_parser_add_dep;
-  else sccp->lex->opened = NULL;
+  if(do_deps) {
+      sccp->lex->opened = (scc_lexer_opened_f)scc_parser_add_dep;
+      sccp->lex->ignore_missing_include = 1;
+  } else {
+      sccp->lex->opened = NULL;
+      sccp->lex->ignore_missing_include = 0;
+  }
 
   if(!scc_lex_push_buffer(sccp->lex,file)) return NULL;
 
