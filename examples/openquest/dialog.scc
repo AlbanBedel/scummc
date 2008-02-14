@@ -32,10 +32,15 @@ room Dialog {
     // Reset the dialog list
     script dialogClear(int kill) {
         int i;
+        char* j;
         if(dialogList) {
             if(kill) {
-                for(i = 0 ; i < numDialog ; i++)
-                    undim(dialogList[i]);
+                for(i = 0 ; i < numDialog ; i++) {
+                    // Undim can't work on array members directly.
+                    // Hopefully the compiler can hide that out one day.
+                    j = dialogList[i];
+                    undim(j);
+                }
             }
             undim(dialogList);
             dialogList = 0;
