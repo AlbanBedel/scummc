@@ -60,6 +60,7 @@ room OfficeRoom {
 
     object bullets;
     object plant;
+    object lightSwitch;
     
 
     local script entry() {
@@ -75,6 +76,8 @@ room OfficeRoom {
         } else {
             putActorAt(VAR_EGO,296,110,OfficeRoom);
             walkActorTo(VAR_EGO,250,110);
+            if( getObjectState( lightSwitch ) == 1 )
+                setRoomRGBIntensity(143,123,119,0,255);
             return;
         }
 
