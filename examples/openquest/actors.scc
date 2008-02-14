@@ -163,7 +163,6 @@ room Actors {
         setCurrentActor(ensignZob);
         initActor();
         setActorCostume(ensignZobCost);
-        setActorTalkPos(-60,-70);
         setActorName("Ensign Zob");
         setActorWalkSpeed(2,1);
         setActorTalkColor(ZOB_COLOR);
@@ -180,7 +179,6 @@ room Actors {
         setCurrentActor(commanderZif);
         initActor();
         setActorCostume(commanderZifCost);
-        setActorTalkPos(-60,-80);
         setActorName("Commander Zif");
         setActorWalkSpeed(2,1);
         setActorTalkColor(ZIF_COLOR);

@@ -672,6 +672,7 @@ room ResRoom {
 
         // init the print slot for actor talking
         printBegin();
+        printCenter();
         printOverhead();
         printEnd();
 
