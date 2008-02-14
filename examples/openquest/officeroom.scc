@@ -93,7 +93,7 @@ room OfficeRoom {
                 delay(150);
                 setCurrentActor(ensignZob);
                 setActorStanding();
-                actorSay(commanderZif, "Hmmm");
+                actorSay(commanderZif, "Hmmm...");
                 waitForMessage();
                 Actors::setZifOnThePhone();
                 dbgPrint("%V{phoneSnd}");
@@ -209,7 +209,7 @@ room OfficeRoom {
                     sentence[0] = "May I move this plant?";
                 Dialog::dialogAdd(sentence);
                 sentence = 0;
-                sentence[0] = "As you were";
+                sentence[0] = "As you were.";
                 Dialog::dialogAdd(sentence);
                 sentence = 0;
 
@@ -226,7 +226,7 @@ room OfficeRoom {
                         waitForMessage();
                         egoSay("How are you addressed by a superior officer?");
                         waitForMessage();
-                        actorSay(carol,"Carol");
+                        actorSay(carol,"Carol.");
                         waitForMessage();
                         egoSay("Greetings, Carol.");
                         waitForMessage();

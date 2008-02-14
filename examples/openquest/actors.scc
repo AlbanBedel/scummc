@@ -340,7 +340,7 @@ room Actors {
                         waitForMessage();
                         actorSay(commanderZif,"We need to leave orbit quickly.");
                         waitForMessage();
-                        egoSay("i see what I can do.");
+                        egoSay("I'll see what I can do.");
                         waitForMessage();
                         }
                         override {
@@ -383,11 +383,11 @@ room Actors {
             return;
         case Smell:
             pauseRoaming(commanderZif);
-            egoSay("Is that a new cologne Sir?");
+            egoSay("Is that a new cologne, Sir?");
             waitForMessage();
             actorSay(commanderZif,"I thought we got past these... feelings.");
             waitForMessage();
-            egoSay("Sorry Sir.");
+            egoSay("Sorry, Sir.");
             resumeRoaming(commanderZif);
             return;
         }
