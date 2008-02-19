@@ -352,6 +352,30 @@ scc_charmap_t* charmap_from_char(char* path) {
     return chmap;
 }
 
+scc_charmap_t* charmap_from_nut(char* path) {
+    scc_fd_t* fd = new_scc_fd(path,O_RDONLY,0);
+    uint32_t size,fmt;
+    scc_charmap_t* chmap;
+
+    if(!fd) {
+        printf("Failed to open %s\n",path);
+        return NULL;
+    }
+
+    // read the scumm block header
+    fmt = scc_fd_r32(fd);
+    size = scc_fd_r32be(fd);
+
+    if(fmt != MKID('A','N','I','M') || size < 16) {
+        printf("%s doesn't seem to be a valid NUT file.\n",path);
+        scc_fd_close(fd);
+        return NULL;
+    }
+    chmap = scc_parse_nutmap(fd,size);
+    scc_fd_close(fd);
+    return chmap;
+}
+
 void charmap_render_char(uint8_t* dst,unsigned dst_stride,
                          uint8_t* src,unsigned src_stride,
                          unsigned h) {
@@ -367,7 +391,7 @@ void charmap_render_char(uint8_t* dst,unsigned dst_stride,
 scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space,
                              int pal_size) {
   scc_img_t* img;
-  int cpl,rows,ncol;
+  int cpl,rows,ncol,total_color,border;
   int i,j,x,y;
   scc_char_t* ch;
 
@@ -380,49 +404,50 @@ scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space
   cpl = width / (chmap->width+2*space);
   rows = (chmap->max_char+cpl-1)/cpl;
 
-  switch(chmap->bpp) {
-  case 1:
-    ncol = 2;
-    break;
-  case 2:
-    ncol = 4;
-    break;
-  case 3:
-    ncol = 8;
-    break;
-  case 4:
-    ncol = 16;
-    break;
-  default:
-    printf("Charmap has bad bpp: %d ??\n",chmap->bpp);
-    return NULL;
+  ncol = 1<<chmap->bpp;
+  if(chmap->bpp < 8) {
+    total_color = ncol+1;
+    border = ncol;
+  } else {
+    total_color = ncol;
+    border = 0xFF;
   }
 
   if(pal_size) {
-      if(ncol+1 > pal_size) {
+      if(total_color > pal_size) {
           printf("A bigger palette is needed for this charset (at least %d colors).\n",
-                 ncol+1);
+                 total_color);
           return NULL;
       }
-      ncol = pal_size-1;
+      total_color = pal_size;
   }
 
-  img = scc_img_new(width,rows*(chmap->height+ 2*space),ncol+1);
-  memcpy(img->pal,default_pal,3*ncol);
-  img->pal[3*ncol+0] = 0xFF;
-  img->pal[3*ncol+1] = 0;
-  img->pal[3*ncol+2] = 0;
+  img = scc_img_new(width,rows*(chmap->height+ 2*space),total_color);
+  if(chmap->rgb_pal) {
+    memcpy(img->pal,chmap->rgb_pal,3*ncol);
+    if(ncol < total_color)
+      memset(img->pal+3*ncol,0,(total_color-ncol)*3);
+  } else {
+    int n = sizeof(default_pal)/3;
+    if(n > total_color) n = total_color;
+    memcpy(img->pal,default_pal,3*n);
+    if(n < total_color)
+      memset(img->pal+3*n,0,(total_color-n)*3);
+  }
+  img->pal[3*border+0] = 0xFF;
+  img->pal[3*border+1] = 0;
+  img->pal[3*border+2] = 0;
 
 
   y = x = space;
   for(i = 0 ; i <= chmap->max_char ; i++) {
     ch = &chmap->chars[i];
       
-    memset(&img->data[width*(y-1)+x],ncol,ch->x+ch->w);
-    memset(&img->data[width*(y+chmap->height)+x],ncol,ch->x+ch->w);
+    memset(&img->data[width*(y-1)+x],border,ch->x+ch->w);
+    memset(&img->data[width*(y+chmap->height)+x],border,ch->x+ch->w);
     for(j = -1 ; j <= chmap->height ; j++) {
-        img->data[width*(y+j)+x-1] = ncol;
-        img->data[width*(y+j)+x+ch->x+ch->w] = ncol;
+        img->data[width*(y+j)+x-1] = border;
+        img->data[width*(y+j)+x+ch->x+ch->w] = border;
     }
 
     if(ch->data) charmap_render_char(&img->data[width*(y+ch->y)+x+ch->x],
@@ -550,6 +575,7 @@ static char* obmp_file = NULL;
 static char* ibmp_file = NULL;
 static char* ochar_file = NULL;
 static char* ichar_file = NULL;
+static char* inut_file = NULL;
 static int   ibmp_base = 0;
 #ifdef HAVE_FT
 static int char_width = 0;
@@ -567,6 +593,7 @@ static scc_param_t scc_parse_params[] = {
   { "ibmp", SCC_PARAM_STR, 0, 0, &ibmp_file },
   { "ochar", SCC_PARAM_STR, 0, 0, &ochar_file },
   { "ichar", SCC_PARAM_STR, 0, 0, &ichar_file },
+  { "inut",  SCC_PARAM_STR, 0, 0, &inut_file },
   { "ibmp-base", SCC_PARAM_INT, 0, 255, &ibmp_base },
 #ifdef HAVE_FT
   { "font", SCC_PARAM_STR, 0, 0, &font_file },
@@ -592,7 +619,7 @@ int main(int argc,char** argv) {
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
-  if(files || !(font_file || ibmp_file || ichar_file) ||
+  if(files || !(font_file || ibmp_file || ichar_file || inut_file) ||
      !(obmp_file || ochar_file)) scc_print_help(&char_help,1);
 
   // init some default chars
@@ -623,6 +650,8 @@ int main(int argc,char** argv) {
 #endif
   if(ichar_file)
       chmap = charmap_from_char(ichar_file);
+  else if(inut_file)
+      chmap = charmap_from_nut(inut_file);
   else
       chmap = new_charmap_from_bitmap(ibmp_file,ibmp_base);
 

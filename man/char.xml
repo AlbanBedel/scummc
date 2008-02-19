@@ -37,6 +37,9 @@
       <param name="char" arg="file.char">
         Use a SCUMM charset.
       </param>
+      <param name="inut" arg="file.nut">
+        Use a NUT charset.
+      </param>
     </param-group>
     <param-group name="output" required="true">
       <param name="ochar" arg="file.char">

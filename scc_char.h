@@ -35,6 +35,7 @@ typedef struct scc_char_st {
 typedef struct scc_charmap_st {
   unsigned   id;
   uint8_t    pal[15];             // palette used
+  uint8_t*   rgb_pal;
   uint8_t    bpp;                 // bpp used for coding
   uint8_t    height;              // font height
   uint8_t    width;               // max width
@@ -43,3 +44,5 @@ typedef struct scc_charmap_st {
 } scc_charmap_t;
 
 scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size);
+
+scc_charmap_t* scc_parse_nutmap(scc_fd_t* fd, unsigned block_size);

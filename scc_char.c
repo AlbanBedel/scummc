@@ -130,3 +130,196 @@ scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size) {
   }
   return chmap; 
 }
+
+static int decode_smush1(scc_fd_t* fd, unsigned size,
+                         unsigned w, unsigned h,
+                         uint8_t* dst, int dst_stride) {
+  unsigned x, y, line_size;
+
+  for(y = 0 ; y < h && size > 1 ; y++) {
+    line_size = scc_fd_r16le(fd), size -= 2;
+    if(line_size > size) {
+        scc_log(LOG_WARN,"Too long line in smush1 image.\n");
+        line_size = size;
+    }
+    size -= line_size;
+    x = 0;
+    while(x < w && line_size > 1) {
+      uint8_t code = scc_fd_r8(fd);
+      uint8_t length = (code>>1)+1;
+      line_size--;
+      if(x + length > w) {
+        scc_log(LOG_WARN,"Too long block length in smush1 image.\n");
+        length = w-x;
+      }
+      if(code & 1) {
+        memset(dst+x,scc_fd_r8(fd),length);
+        line_size--, x += length;
+      } else {
+        if(length > line_size) {
+          scc_log(LOG_WARN,"Too long code length in smush1 image.\n");
+          length = line_size;
+        }
+        line_size -= length;
+        while(length > 0)
+          dst[x] = scc_fd_r8(fd), x++, length--;
+      }
+    }
+    if(x < w) memset(dst+x,0,w-x);
+    dst += dst_stride;
+  }
+
+  while(y < h)
+    memset(dst,0,w), y++, dst += dst_stride;
+
+  if(size > 0)
+    scc_fd_seek(fd,SEEK_CUR,size);
+
+  return 1;
+}
+
+static int decode_nut21(scc_fd_t* fd, unsigned size,
+                          unsigned w, unsigned h,
+                          uint8_t* dst, int dst_stride) {
+  unsigned x, y, line_size;
+
+  for(y = 0 ; y < h && size > 1 ; y++) {
+    line_size = scc_fd_r16le(fd), size -= 2;
+    if(line_size > size) {
+        scc_log(LOG_WARN,"Too long line in smush21 image.\n");
+        line_size = size;
+    }
+    size -= line_size;
+    x = 0;
+    while(x < w && line_size >= 2) {
+      // Skip
+      unsigned len = scc_fd_r16le(fd);
+      line_size -= 2;
+      if(x + len > w) {
+        //scc_log(LOG_WARN,"Too long skip length in smush21 image.\n");
+        len = w-x;
+      }
+      if(len) {
+        memset(dst+x,0,len);
+        x += len;
+        if(x >= w) break;
+      }
+      // Draw
+      line_size -= 2;
+      if((len = scc_fd_r16le(fd)+1) > line_size) {
+        scc_log(LOG_WARN,"Too long draw code in smush21 image.\n");
+        len = line_size;
+      }
+      if(x + len > w) {
+        scc_log(LOG_WARN,"Too long draw length in smush21 image.\n");
+        len = w-x;
+      }
+      line_size -= len;
+      while(len > 0)
+        dst[x] = scc_fd_r8(fd), x++, len--;
+    }
+    if(line_size > 0)
+      scc_fd_seek(fd,line_size,SEEK_CUR);
+    if(x < w) memset(dst+x,0,w-x);
+    dst += dst_stride;
+  }
+
+  while(y < h)
+    memset(dst,0,w), y++, dst += dst_stride;
+
+  if(size > 0)
+    scc_fd_seek(fd,size,SEEK_CUR);
+
+  return 1;
+
+}
+
+scc_charmap_t* scc_parse_nutmap(scc_fd_t* fd, unsigned block_size) {
+  uint32_t block, size;
+  uint8_t pal[3*256];
+  scc_charmap_t* chmap;
+  scc_char_t *ch;
+  unsigned num_char,i,codec;
+
+  if(block_size < 8+3*2+3*256) {
+    scc_log(LOG_ERR,"Invalid ANIM block.\n");
+    return NULL;
+  }
+
+  block = scc_fd_r32(fd);
+  size = scc_fd_r32be(fd);
+
+  if(block != MKID('A','H','D','R') || size != 3*2 + 3*256) {
+    scc_log(LOG_ERR,"Invalid AHDR block.\n");
+    return NULL;
+  }
+
+  scc_fd_r16(fd); // unk
+  num_char = scc_fd_r16le(fd);
+  scc_fd_r16(fd); // unk
+
+  if(scc_fd_read(fd,pal,sizeof(pal)) != sizeof(pal)) {
+    scc_log(LOG_ERR,"Failed to read palette.\n");
+    return NULL;
+  }
+
+  block_size -= 8 + 3*2 + 3*256;
+
+  chmap = calloc(1,sizeof(scc_charmap_t));
+  chmap->bpp = 8;
+  chmap->rgb_pal = malloc(sizeof(pal));
+  memcpy(chmap->rgb_pal,pal,sizeof(pal));
+
+  for(i = 0 ; i < num_char ; i++) {
+    block = scc_fd_r32(fd);
+    size = scc_fd_r32be(fd);
+    block_size -= 8;
+    if(block != MKID('F','R','M','E') ||
+       size > block_size || size < 4*2+7*2) {
+      scc_log(LOG_ERR,"Invalid FRME block (%d).\n",i);
+      return NULL;
+    }
+    block = scc_fd_r32(fd);
+    size = scc_fd_r32be(fd);
+    if(block != MKID('F','O','B','J') || size < 7*2) {
+      scc_log(LOG_ERR,"Invalid FOBJ block.\n");
+      return NULL;
+    }
+    // Read the header
+    ch = &chmap->chars[i];
+    codec  = scc_fd_r16le(fd);
+    ch->x  = scc_fd_r16le(fd);
+    ch->y  = scc_fd_r16le(fd);
+    ch->w  = scc_fd_r16le(fd);
+    ch->h  = scc_fd_r16le(fd);
+    /*unk*/  scc_fd_r32(fd);
+
+    if(ch->w + ch->x > chmap->width) chmap->width = ch->w + ch->x;
+    if(ch->h + ch->y > chmap->height) chmap->height = ch->h + ch->y;
+    if(!ch->w || !ch->h) continue;
+
+    // Decode the pic
+    ch->data = malloc(ch->w*ch->h);
+    switch(codec) {
+    case 1:
+      if(!decode_smush1(fd,size-7*2,ch->w,ch->h,ch->data,ch->w))
+        return NULL;
+      break;
+    case 21:
+    case 44:
+      if(!decode_nut21(fd,size-7*2,ch->w,ch->h,ch->data,ch->w))
+        return NULL;
+      break;
+    default:
+      scc_log(LOG_ERR,"Unknown NUT codec (%d) for char %d.\n",codec,i);
+      scc_fd_seek(fd,size-7*2,SEEK_CUR);
+      ch->w = ch->h = ch->x = ch->y = 0;
+      free(ch->data);
+      ch->data = NULL;
+      continue;
+    }
+    chmap->max_char = i;
+  }
+
+  return chmap;
+}
