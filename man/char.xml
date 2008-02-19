@@ -34,7 +34,7 @@
       <param name="ibmp" arg="file.bmp">
         Use a BMP font.
       </param>
-      <param name="char" arg="file.char">
+      <param name="ichar" arg="file.char">
         Use a SCUMM charset.
       </param>
       <param name="inut" arg="file.nut">
