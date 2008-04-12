@@ -3,26 +3,46 @@ OpenQuest (ScummC version)
 
 I. What is this?
 
-This is a ScummC port of Michael Sheail's demo adventure game "OpenQuest". This ScummC version of the game is compiled to Scumm bytecode and thus runs in ScummVM.
+This is a ScummC port of Michael Sheail's demo adventure game "OpenQuest".
+This ScummC version of the game is compiled to Scumm bytecode and thus runs
+in ScummVM.
 
-The game binaries and sources are provided under the GNU General Public License, Version 2, or later. The images, sounds, dialogs and the story of the game are copyright of Michael Sheail. Additional contributions and modifications as well as the ScummC code are copyright of the respective authors.
+The game binaries and sources are provided under the GNU General Public
+License, Version 2, or later. The images, sounds, dialogs and the story of
+the game are copyright of Michael Sheail. Additional contributions and
+modifications as well as the ScummC code are copyright of their respective
+authors.
 
 
 II. How to run the game
 
-To play the game, start ScummVM, choose "Add Game..." and point to the "bin" folder. The game will be recognized as "Day of the Tentacle". Change the name to "OpenQuest" if you want. You can then press "Start" to play the game.
+To play the game, start ScummVM, choose "Add Game..." and point to the "bin"
+folder. The game will be recognized as "Day of the Tentacle". Change the
+name to "OpenQuest" if you want. You can then press "Start" to play the game.
 
-(The masking as "Day of the Tentacle" is necessary, because ScummVM doesn't currently support detection of ScummC games and has to be patched to recognize them. Patches for several versions are available with the ScummC source code.)
+(The masking as "Day of the Tentacle" is necessary, because ScummVM doesn't
+currently support detection of ScummC games and has to be patched to recognize
+them. Patches for several versions are available with the ScummC source code.)
 
 
 III. How to compile the game
 
-To compile the game from source, you need to download the sources for ScummC and compile them. OpenQuest is already included with ScummC, otherwise you'd have to copy the "openquest" source folder into the ScummC "examples" folder. You can now cd into the "openquest" folder and type "make" to compile the game. To mask the game as "Day of the Tentacle", change the Makefile to use the SLD parameters "-o tentacle -key 0x69", as specified in the ScummC README.
+To compile the game from source, you need to download the sources for ScummC
+and compile them. OpenQuest is already included with ScummC, otherwise you'd
+have to copy the "openquest" source folder into the ScummC "examples" folder.
+You can now cd into the "openquest" folder and type "make" to compile the game.
+To mask the game as "Day of the Tentacle", change the Makefile to use the SLD
+parameters "-o tentacle -key 0x69", as specified in the ScummC README.
 
 
 IV. Help needed!
 
-If you like, play the original AGS version of OpenQuest and compare the two. You will see that much work still remains to be done for the ScummC version. If you are a programmer who likes adventure games, or if you are a Scumm expert, please consider contributing to the game code or the ScummC compiler itself, to help making the dream of a free Scumm compiler and many free Scumm games come true!
+If you like, play the original AGS version of OpenQuest and compare the two.
+You will see that much work still remains to be done for the ScummC version.
+If you are a programmer who likes adventure games, or if you are a SCUMM
+expert, please consider contributing to the game code or the ScummC compiler
+itself, to help making the dream of a free SCUMM compiler and many free SCUMM
+games come true!
 
 
 V. Download links and resources
@@ -30,11 +50,14 @@ V. Download links and resources
 ScummVM is available for download at the scummvm.org website:
 http://www.scummvm.org/downloads.php
 
-The ScummC compiler and tool suite can be obtained from the ScummC SVN repository:
+The ScummC compiler and tool suite can be obtained from the ScummC SVN
+repository:
 https://dotsec.net/repos/scummc
 
-More information about ScummC is found on the ScummC website:
-http://alban.dotsec.net/7.html
+More information about ScummC can be found on the ScummC website:
+http://alban.dotsec.net/Projects/ScummC
 
 You can download Michael Sheail's original AGS version of OpenQuest here:
 http://new.bigbluecup.com/games.php?action=detail&id=945
+or here:
+http://alban.dotsec.net/data/OpenQuest.zip
