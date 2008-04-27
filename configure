@@ -403,6 +403,9 @@ case $sys in
     *mingw*)
 	EXESUF=.exe
 	;;
+    *cygwin*)
+	EXESUF=.exe
+	;;
 esac
 sys_def='#define IS_'`echo $sys | tr [a-z] [A-Z] | tr -c -d [A-Z]`' 1'
 

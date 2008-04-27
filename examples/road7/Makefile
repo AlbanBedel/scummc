@@ -32,10 +32,12 @@ REF_FILE=$(EXP_DIR)/road.md5
 
 BIN_PATH=$(SRCDIR)/$(BUILDROOT)/$(TARGET)
 
-SCC=$(BIN_PATH)/scc
-SLD=$(BIN_PATH)/sld
-COST=$(BIN_PATH)/cost
-CHAR=$(BIN_PATH)/char
+include $(BIN_PATH)/config.mak
+
+SCC=$(BIN_PATH)/scc$(EXESUF)
+SLD=$(BIN_PATH)/sld$(EXESUF)
+COST=$(BIN_PATH)/cost$(EXESUF)
+CHAR=$(BIN_PATH)/char$(EXESUF)
 
 SCC_FLAGS= -V 7 -I $(SRCDIR) -I $(EXP_DIR) -R $(EXP_DIR)
 
