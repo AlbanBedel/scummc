@@ -401,9 +401,11 @@ fi
 
 case $sys in
     *mingw*)
+	sys=mingw
 	EXESUF=.exe
 	;;
     *cygwin*)
+	sys=cygwin
 	EXESUF=.exe
 	;;
 esac
