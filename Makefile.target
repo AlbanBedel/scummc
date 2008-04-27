@@ -307,6 +307,7 @@ distrib-data: $(DO_ALL)
 	@svn export $(SRCDIR)/include $(DISTRIB)/include > /dev/null
 	@svn export $(SRCDIR)/examples $(DISTRIB)/examples > /dev/null
 	@svn export $(SRCDIR)/man $(DISTRIB)/man > /dev/null
+	@rm $(DISTRIB)/examples/scummc-config.mak.sample
 	@sed 's/^ *# *EXESUF *=.*/EXESUF = $(EXESUF)/' \
 	  < $(SRCDIR)/examples/scummc-config.mak.sample \
 	  > $(DISTRIB)/examples/scummc-config.mak
