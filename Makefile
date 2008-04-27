@@ -81,12 +81,18 @@ SUBTARGETS=                                      \
 	$(shell echo $(GROUPS) | tr [A-Z] [a-z]) \
 	all                                      \
 	test $(TESTS:%=test_%)                   \
+	distrib                                  \
+	distrib.tar.gz                           \
+	distrib.tar.bz2                          \
+	distrib.zip                              \
+	distribs                                 \
 
 CLEAN_SUBTARGETS=                                \
 	cleanlog                                 \
 	clean                                    \
 	cleangen                                 \
 	cleanbin                                 \
+	cleandistrib                             \
 
 ## All possible subtargets
 ALL_SUBTARGETS=                                  \

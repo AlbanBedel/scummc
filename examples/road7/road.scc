@@ -37,7 +37,7 @@ room Road {
     trans = 0;
 
     //cycle testCycl = { 60, 0, 103, 111 };
-    cost santaCost = "santa.cost";
+    cost santaCost = "santa.akos";
 
     voice letsgothere = { "letsgothere.voc", 500 };
     voice welcome = { "welcome.voc" };

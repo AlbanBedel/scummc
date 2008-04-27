@@ -1,7 +1,7 @@
 #
-#  ScummC Makefile
-#  Copyright (C) 2006  Alban Bedel
-# 
+#  ScummC Makefile.distrib
+#  Copyright (C) 2008  Alban Bedel
+#
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
 #  as published by the Free Software Foundation; either version 2
@@ -17,13 +17,31 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-GAME_NAME = road
+#EXAMPLES =
 
-SRCS = common.scc \
-       road.scc \
+all: $(EXAMPLES)
 
-COST_DIR = $(GAME_DIR)
-FONT_DIR = $(GAME_DIR)
+define BUILD_example
 
-MAK_DIR ?= ..
-include $(MAK_DIR)/example.mak
+$(1):
+	$(MAKE) -C examples/$(1)
+
+clean_$(1):
+	$(MAKE) -C examples/$(1) clean
+
+test_$(1):
+	$(MAKE) -C examples/$(1) test
+
+
+PHONY_TARGETS+= $(1) clean_$(1) test_$(1)
+
+endef
+
+$(foreach example,$(EXAMPLES),$(eval $(call BUILD_example,$(example))))
+
+
+clean: $(EXAMPLES:%=clean_%)
+
+test: $(EXAMPLES:%=test_%)
+
+.PHONY: $(PHONY_TARGETS)

@@ -262,11 +262,17 @@ imgtest: $(SRCDIR)/scc_img.c scc_fd.o
 
 ## Testing
 ifeq ($(CAN_TEST),yes)
+
+TEST_PARAMS = -f $(SRCDIR)/examples/$(1)/Makefile \
+              SRCDIR=$(SRCDIR) \
+              MAK_DIR=$(SRCDIR)/examples \
+
 define TEST_template
 test_$(1): progs
 	@echo "Testing $(1) for $(TARGET)"  $(MSGLOG)
-	@$$(MAKE) -f $(SRCDIR)/examples/$(1)/Makefile SRCDIR=$(SRCDIR) clean 2> /dev/null >&2
-	$(call CMD_template,$$(MAKE) -f $(SRCDIR)/examples/$(1)/Makefile SRCDIR=$(SRCDIR) test,$(LOG))
+	@$$(MAKE) -C $(SRCDIR)/examples/$(1) clean 2> /dev/null >&2
+	@$$(MAKE) $(TEST_PARAMS) clean 2> /dev/null >&2
+	$(call CMD_template,$$(MAKE) $(TEST_PARAMS) test,$(LOG))
 
 PHONY_TARGETS+= test_$(1)
 
@@ -286,6 +292,59 @@ $(foreach tst,$(TESTS),$(eval $(call TEST_template,$(tst))))
 test: $(TESTS:%=test_%)
 
 PHONY_TARGETS+= test
+
+## Distrib generation
+DISTRIB  = scummc-$(VERSION)-$(shell echo $(TARGET) | cut -d - -f 1-2)
+
+distrib-data: $(DO_ALL)
+	@echo "Creating the distrib data for $(TARGET)"
+	@echo
+	@rm -rf $(DISTRIB)
+	@mkdir $(DISTRIB)
+	@cp $(SRCDIR)/README $(SRCDIR)/LICENSE $(DISTRIB)
+	@mkdir $(DISTRIB)/bin
+	@cp $(DO_ALL:%=%$(EXESUF)) $(DISTRIB)/bin
+	@svn export $(SRCDIR)/include $(DISTRIB)/include > /dev/null
+	@svn export $(SRCDIR)/examples $(DISTRIB)/examples > /dev/null
+	@svn export $(SRCDIR)/man $(DISTRIB)/man > /dev/null
+	@sed 's/^ *# *EXESUF *=.*/EXESUF = $(EXESUF)/' \
+	  < $(SRCDIR)/examples/scummc-config.mak.sample \
+	  > $(DISTRIB)/examples/scummc-config.mak
+	@EXAMPLES=$$(echo $$(cd $(DISTRIB)/examples && find . -type d -maxdepth 1 | grep / | sed 's,\./,,')) ; \
+	sed "s/^ *# *EXAMPLES *=.*/EXAMPLES = $$EXAMPLES/" \
+	  < $(SRCDIR)/Makefile.distrib \
+	  > $(DISTRIB)/Makefile
+
+define DISTRIB_template
+$(DISTRIB).$(1): distrib-data
+	@echo "Creating $$@ for $(TARGET)"
+	@echo
+	@$(2) $$@ $(DISTRIB)
+
+distrib.$(1): $(DISTRIB).$(1)
+
+PHONY_TARGETS += distrib.$(1)
+
+$(DISTRIB).$(1)_DEPS = $(all_DEPS)
+distrib.$(1)_DEPS    = $(all_DEPS)
+
+ALL_DISTRIB += distrib.$(1)
+endef
+
+$(eval $(call DISTRIB_template,tar.gz,tar zcf))
+$(eval $(call DISTRIB_template,tar.bz2,tar jcf))
+$(eval $(call DISTRIB_template,zip,zip -qr))
+
+distrib: distrib.tar.gz
+distribs: $(ALL_DISTRIB)
+
+PHONY_TARGETS+= distrib-data    \
+	        distrib         \
+                distribs        \
+
+distrib_DEPS     = $(all_DEPS)
+distribs_DEPS    = $(all_DEPS)
+
 
 ## Clean the log
 cleanlog:
@@ -308,8 +367,13 @@ cleanbin: cleangen
 	@echo
 	@rm -f $(ALL:%=%$(EXESUF)) imgtest
 
+cleandistrib:
+	@echo "Cleaning the distrib for $(TARGET)"
+	@echo
+	@rm -rf $(DISTRIB) $(DISTRIB).*
+
 ## Also kill the config
-distclean: cleanbin
+distclean: cleanbin cleandistrib
 	@echo "Cleaning the build config for $(TARGET)"
 	@echo
 	@rm -f Makefile.bak config.h config.mak

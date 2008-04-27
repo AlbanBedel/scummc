@@ -20,6 +20,9 @@
 ##
 ## This makefile define all the programs that can be built.
 ## 
+
+VERSION = 0.2.0
+
 ## We start by defining the different groups. By default only the
 ## first group is built. Group names MUST be in capital.
 ##
@@ -50,6 +53,8 @@ UTILS=                          \
 
 TESTS=                          \
 	road                    \
+	road7                   \
+	openquest               \
 
 ##
 ## Each program must have a x_SRCS defined with all the source it

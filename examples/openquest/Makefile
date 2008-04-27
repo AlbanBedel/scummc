@@ -17,82 +17,16 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+GAME_NAME = openquest
 
-SRCS= common.scc officeroom.scc inventoryitems.scc secretroom.scc dialog.scc verbs.scc actors.scc
+SRCS= common.scc \
+      officeroom.scc \
+      inventoryitems.scc \
+      secretroom.scc \
+      dialog.scc \
+      verbs.scc \
+      actors.scc \
 
-host=$(shell uname -n | cut -d . -f 1)
+MAK_DIR ?= ..
+include $(MAK_DIR)/example.mak
 
-SRCDIR?=../..
-
-include $(SRCDIR)/config.$(host).mak
-
-EXP_DIR=$(SRCDIR)/examples/openquest
-
-COST_DIR=$(EXP_DIR)/costumes
-
-FONT_DIR=$(EXP_DIR)/fonts
-
-REF_FILE=$(EXP_DIR)/openquest.md5
-
-BIN_PATH=$(SRCDIR)/$(BUILDROOT)/$(TARGET)
-
-include $(BIN_PATH)/config.mak
-
-SCC=$(BIN_PATH)/scc$(EXESUF)
-SLD=$(BIN_PATH)/sld$(EXESUF)
-COST=$(BIN_PATH)/cost$(EXESUF)
-CHAR=$(BIN_PATH)/char$(EXESUF)
-
-SCC_FLAGS= -I $(SRCDIR) -I $(EXP_DIR) -R $(EXP_DIR)
-
-OBJS=$(SRCS:%.scc=%.roobj)
-EXP_SRCS=$(SRCS:%=$(EXP_DIR)/%)
-
-
-all: scummc6.000 scummc6.001 scummc6.sou
-
-
-%.cost: $(COST_DIR)/%.scost $(COST)
-	$(COST) -o $@ -I $(COST_DIR) -header $*_anim.sch -prefix $*_anim_ $<
-
-%_anim.sch: %.cost ;
-
-%.char: $(FONT_DIR)/%.bmp $(CHAR)
-	$(CHAR) -ochar $@ -ibmp $<
-
-%.roobj: $(EXP_DIR)/%.scc $(SCC)
-	$(SCC) -o $@ $(SCC_FLAGS) $<
-
-scummc6.000: $(OBJS)
-	$(SLD) -v $^ 
-#-key 0x69
-
-scummc6.001 scummc.sou: scummc6.000 ;
-
-clean:
-	rm -f openquest.dep scummc.0?? *.char scummc.sou *.roobj *.cost \
-	      *_anim.sch
-
-distclean: clean
-
-
-openquest.dep: $(EXP_SRCS)
-	$(SCC) -d -o $@ $(SCC_FLAGS) $^
-
--include openquest.dep
-
-### Regression testing
-
-## Update the reference hash.
-test-ref: scummc6.000 scummc6.001 scummc6.sou
-	@for f in $+ ; do printf "%s: " $$f ; $(MD5SUM) < $$f | cut -d ' ' -f 1 ; done > $(REF_FILE)
-	@echo "Reference hash updated."
-
-test: scummc6.000 scummc6.001 scummc6.sou
-	@[ -f $(REF_FILE) ] || ( echo "No reference hash available" ; false )
-	@for f in $+ ; do \
-           printf "%s: " $$f ; \
-           $(MD5SUM) < $$f | cut -d ' ' -f 1 ; \
-        done | diff -u $(REF_FILE) -
-
-.PHONY: clean distclean test-ref test

@@ -17,74 +17,16 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+TARGET_VERSION = 7
 
-SRCS= common.scc road.scc
+GAME_NAME = road7
 
-host=$(shell uname -n | cut -d . -f 1)
-
-SRCDIR?=../..
-
-include $(SRCDIR)/config.$(host).mak
-
-EXP_DIR=$(SRCDIR)/examples/road7
-
-REF_FILE=$(EXP_DIR)/road.md5
-
-BIN_PATH=$(SRCDIR)/$(BUILDROOT)/$(TARGET)
-
-include $(BIN_PATH)/config.mak
-
-SCC=$(BIN_PATH)/scc$(EXESUF)
-SLD=$(BIN_PATH)/sld$(EXESUF)
-COST=$(BIN_PATH)/cost$(EXESUF)
-CHAR=$(BIN_PATH)/char$(EXESUF)
-
-SCC_FLAGS= -V 7 -I $(SRCDIR) -I $(EXP_DIR) -R $(EXP_DIR)
-
-OBJS=$(SRCS:%.scc=%.roobj)
-EXP_SRCS=$(SRCS:%=$(EXP_DIR)/%)
+SRCS = common.scc \
+       road.scc \
 
 
-all: scummc7.000 scummc7.001 scummc7.sou
+COST_DIR = $(GAME_DIR)
+FONT_DIR = $(GAME_DIR)
 
-
-%.cost: $(EXP_DIR)/%.scost $(COST)
-	$(COST) -o $@ -akos -I $(EXP_DIR) $<
-
-%.char: $(EXP_DIR)/%.bmp $(CHAR)
-	$(CHAR) -ochar $@ -ibmp $<
-
-%.roobj: $(EXP_DIR)/%.scc $(SCC)
-	$(SCC) -o $@ $(SCC_FLAGS) $<
-
-scummc7.000: $(OBJS)
-	$(SLD) -vv $^
-
-scummc7.001 scummc7.sou: scummc7.000 ;
-
-clean:
-	rm -f road.dep scummc7.0?? *.char scummc7.sou *.roobj *.cost
-
-distclean: clean
-
-
-road.dep: $(EXP_SRCS)
-	$(SCC) -d -o $@ $(SCC_FLAGS) $^
-
--include road.dep
-
-### Regression testing
-
-## Update the reference hash.
-test-ref: scummc.000 scummc.001 scummc.sou
-	@for f in $+ ; do printf "%s: " $$f ; $(MD5SUM) < $$f | cut -d ' ' -f 1 ; done > $(REF_FILE)
-	@echo "Reference hash updated."
-
-test: scummc.000 scummc.001 scummc.sou
-	@[ -f $(REF_FILE) ] || ( echo "No reference hash available" ; false )
-	@for f in $+ ; do \
-           printf "%s: " $$f ; \
-           $(MD5SUM) < $$f | cut -d ' ' -f 1 ; \
-        done | diff -u $(REF_FILE) -
-
-.PHONY: clean distclean test-ref test
+MAK_DIR ?= ..
+include $(MAK_DIR)/example.mak

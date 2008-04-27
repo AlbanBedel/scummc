@@ -41,7 +41,7 @@ room ResRoom {
     // dialog charset
     chset dialogCharset = "vera-small.char";
     // and the costume for our actor
-    cost egoCost = "devil.cost";
+    cost egoCost = "devil.akos";
 
     // an object for the cursor image
     object cursor {
