@@ -310,7 +310,7 @@ distrib-data: $(DO_ALL)
 	@sed 's/^ *# *EXESUF *=.*/EXESUF = $(EXESUF)/' \
 	  < $(SRCDIR)/examples/scummc-config.mak.sample \
 	  > $(DISTRIB)/examples/scummc-config.mak
-	@EXAMPLES=$$(echo $$(cd $(DISTRIB)/examples && find . -type d -maxdepth 1 | grep / | sed 's,\./,,')) ; \
+	@EXAMPLES=$$(echo $$(cd $(DISTRIB)/examples && find . -maxdepth 1 -type d | grep / | sed 's,\./,,')) ; \
 	sed "s/^ *# *EXAMPLES *=.*/EXAMPLES = $$EXAMPLES/" \
 	  < $(SRCDIR)/Makefile.distrib \
 	  > $(DISTRIB)/Makefile
