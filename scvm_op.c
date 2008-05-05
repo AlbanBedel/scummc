@@ -817,6 +817,15 @@ static int scvm_op_get_actor_walk_box(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,vm->actor[a].box);
 }
 
+// 0x93
+static int scvm_op_get_inventory_count(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned a;
+  if((r=scvm_pop(vm,&a))) return r;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  return scvm_push(vm,0);
+}
+
 // 0x95
 static int scvm_op_begin_override(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -1300,10 +1309,9 @@ static int scvm_op_ego_say(scvm_t* vm, scvm_thread_t* thread) {
     return scvm_op_actor_say(vm, thread);
 }
 
-// 0xBC
-static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
+static int scvm_op_dim_array(scvm_t* vm, scvm_thread_t* thread, int dim) {
   int r,addr;
-  unsigned size;
+  unsigned size, size_y = 0;
   uint8_t op;
   uint16_t vaddr;
   
@@ -1318,25 +1326,38 @@ static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
   }
   
   if(op < 0xC7 || op > 0xCB) return SCVM_ERR_NO_OP;
+
   if((r=scvm_pop(vm,&size))) return r;
+  if(dim > 1 && (r=scvm_pop(vm,&size_y))) return r;
   
   switch(op) {
   case 0xC7:
-    addr = scvm_alloc_array(vm,SCVM_ARRAY_WORD,size,0);
+    addr = scvm_alloc_array(vm,SCVM_ARRAY_WORD,size,size_y);
     break;
   case 0xC8:
-    addr = scvm_alloc_array(vm,SCVM_ARRAY_BIT,size,0);
+    addr = scvm_alloc_array(vm,SCVM_ARRAY_BIT,size,size_y);
     break;
   case 0xC9:
-    addr = scvm_alloc_array(vm,SCVM_ARRAY_NIBBLE,size,0);
+    addr = scvm_alloc_array(vm,SCVM_ARRAY_NIBBLE,size,size_y);
     break;
   case 0xCA: // byte
   case 0xCB: // char
-    addr = scvm_alloc_array(vm,SCVM_ARRAY_BYTE,size,0);
+    addr = scvm_alloc_array(vm,SCVM_ARRAY_BYTE,size,size_y);
     break;
   }
   if(addr < 0) return addr;
   return scvm_thread_write_var(vm,thread,vaddr,addr);
+}
+
+// 0xBC
+static int scvm_op_dim(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_op_dim_array(vm,thread,1);
+}
+
+
+// 0xC0
+static int scvm_op_dim2(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_op_dim_array(vm,thread,2);
 }
 
 // 0xC5
@@ -1407,6 +1428,17 @@ static int scvm_op_dummy_l(scvm_t* vm, scvm_thread_t* thread) {
   }
   return 0;
 }
+
+static int scvm_op_dummy_vl(scvm_t* vm, scvm_thread_t* thread) {
+  int r,len;
+  if((r=scvm_pop(vm,&len))) return r;
+  while(len > 0) {
+    if((r=scvm_pop(vm,NULL))) return r;
+    len--;
+  }
+  return scvm_pop(vm,NULL);
+}
+
 
 static int scvm_op_dummy_s(scvm_t* vm, scvm_thread_t* thread) {
   int r,len;
@@ -1579,16 +1611,16 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_stop_thread, "stop thread" },
   { scvm_op_stop_thread, "stop thread" },
-  { NULL, NULL },
+  { scvm_op_dummy, "end thread" },
   // 68
-  { NULL, NULL },
+  { scvm_op_dummy_l, "begin cutscene" },
   { NULL, NULL },
   { NULL, NULL },
   { scvm_op_subop, "interface op" },
   // 6C
   { scvm_op_break_script, "break script" },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_vl, "set classes" },
   { scvm_op_dummy_v, "set object state" },
   // 70
   { scvm_op_dummy_vv, "set object state" },
@@ -1634,7 +1666,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_get_actor_walk_box, "get actor walk box" },
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_get_inventory_count, "get inventory count" },
   // 94
   { scvm_op_dummy_get_at, "get verb at" },
   { scvm_op_begin_override, "begin override" },
@@ -1657,7 +1689,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   // A4
   { scvm_op_subop, "array write" },
-  { NULL, NULL },
+  { scvm_op_subop, "save-load verbs" },
   { NULL, NULL },
   { NULL, NULL },
   // A8
@@ -1691,7 +1723,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_start_script_recursive, "start script recursive" },
   // C0
-  { NULL, NULL },
+  { scvm_op_dim2, "dim 2d" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
@@ -1950,9 +1982,9 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_dummy_vv, "set object" },
   // 8C
   { scvm_op_dummy_v, "set back color" },
-  { NULL, NULL },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy_vvv, "save verbs" },
+  { scvm_op_dummy_vvv, "restore verbs" },
+  { scvm_op_dummy_vvv, "delete verbs" },
   // 90
   { scvm_op_dummy, "cursor on" },
   { scvm_op_dummy, "cursor off" },
@@ -1971,10 +2003,10 @@ scvm_op_t scvm_suboptable[0x100] = {
   // 9C
   { scvm_op_dummy_v, "init charset" },
   { scvm_op_dummy_l, "set charset colors" },
-  { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_dummy, "restart" },
+  { scvm_op_dummy, "pause" },
   // A0
-  { NULL, NULL },
+  { scvm_op_dummy, "quit" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
