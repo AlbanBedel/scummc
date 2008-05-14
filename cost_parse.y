@@ -100,6 +100,33 @@
   static cost_limb_t limbs[COST_MAX_LIMBS];
   static cost_limb_t* cur_limb = NULL;
 
+#define COST_MAX_CMD_ARG 1
+
+  // Show a picture
+#define COST_CMD_DISPLAY      0x00
+  // Play a sound?
+#define COST_CMD_SOUND        0x70
+  // Hide the track
+#define COST_CMD_HIDE         0x79
+  // Show the track
+#define COST_CMD_SHOW         0x7A
+  // Display nothing
+#define COST_CMD_NOP          0x7B
+  // Increment the anim counter
+#define COST_CMD_COUNT        0x7C
+
+  typedef struct cost_cmd cost_cmd_t;
+
+  struct cost_cmd {
+    cost_cmd_t* next;
+    unsigned type;
+    union {
+      unsigned     u;
+      int          i;
+      cost_pic_t*  pic;
+    } arg[COST_MAX_CMD_ARG];
+  };
+
 #define COST_MAX_ANIMS 0x3F
 #define COST_MAX_LIMB_CMDS 0x7F
 
@@ -107,6 +134,7 @@
     unsigned len;
     unsigned flags;
     uint8_t cmd[COST_MAX_LIMB_CMDS];
+    cost_cmd_t* cmd_list;
   } cost_limb_anim_t;
 
   typedef struct cost_anim_dir {
@@ -175,12 +203,6 @@
   
 #define ANIM_USER_START 6
 
-#define COST_CMD_SOUND 0x70
-#define COST_CMD_STOP  0x79
-#define COST_CMD_START 0x7A
-#define COST_CMD_HIDE  0x7B
-#define COST_CMD_SKIP  0x7C
-  
 %}
 
 
@@ -189,6 +211,7 @@
   char* str;      // STRING, ID
   int intpair[2];
   uint8_t* intlist;
+  struct cost_cmd* cmd;
 }
 
 %token PALETTE
@@ -203,12 +226,13 @@
 %token PATH GLOB
 %token POSITION
 %token MOVE
-%token START STOP HIDE SKIP SOUND
+%token SHOW HIDE NOP COUNT SOUND
 %token ERROR
 
 %type <integer> number location
 %type <intpair> numberpair
-%type <intlist> intlist intlistitem cmdlist cmdlistitem
+%type <intlist> intlist intlistitem
+%type <cmd>     cmdlist cmdlistitem
 %type <intpair> limbanimflags flaglist flag flagvalue
 
 %%
@@ -229,7 +253,6 @@ statementlist: ';'
 
 statement: dec
 | picture
-| limb
 | anim
 ;
 
@@ -374,10 +397,6 @@ picparam: PATH '=' STRING
 }
 ;
 
-
-limb: limbdec '=' '{' piclist '}'
-;
-
 limbdec: LIMB SYM location
 {
   int n;
@@ -411,39 +430,8 @@ limbdec: LIMB SYM location
   // alloc it
   if(!limbs[n].name)
     limbs[n].name = strdup($2);
-
-  cur_limb = &limbs[n];
 }
 ;
-
-piclist: SYM
-{
-  cost_pic_t* p = find_pic($1);
-
-  if(!p)
-    COST_ABORT(@1,"There is no picture named %s.\n",$1);
-    
-  cur_limb->pic[0] = p;
-  cur_limb->num_pic = 1;
-  p->ref++;
-}
-| piclist ',' SYM
-{
-  cost_pic_t* p = find_pic($3);
-
-  if(!p)
-    COST_ABORT(@3,"There is no picture named %s.\n",$3);
-
-  if(cur_limb->num_pic >= LIMB_MAX_PICTURES)
-    COST_ABORT(@3,"Too many pictures in limb. A limb can only have up to %d pictures.\n",
-               LIMB_MAX_PICTURES);
-
-  cur_limb->pic[cur_limb->num_pic] = p;
-  cur_limb->num_pic++;
-  p->ref++;
-}
-;
-
 
 anim: animdec '=' '{' animdirlist '}'
 {
@@ -530,20 +518,14 @@ limbanim: SYM '(' cmdlist ')' limbanimflags
   if(n == COST_MAX_LIMBS)
     COST_ABORT(@1,"There is no limb named %s.\n",$1);
 
-  if($3[0] > COST_MAX_LIMB_CMDS)
-    COST_ABORT(@3,"Too many commands. A limb anim can have only %d commands.\n",
-               COST_MAX_LIMB_CMDS);
-
   if(cur_dir->limb_mask & (1 << n))
     COST_ABORT(@1,"Anim for limb %s is already defined.\n",
                limbs[n].name);
 
   cur_dir->limb_mask |= (1 << n);
-  cur_dir->limb[n].len = $3[0];
   cur_dir->limb[n].flags |=  $5[0];
   cur_dir->limb[n].flags &= ~$5[1];
-  memcpy(cur_dir->limb[n].cmd,$3+1,$3[0]);
-  free($3);
+  cur_dir->limb[n].cmd_list = $3;
 }
 | SYM '(' ')' limbanimflags
 {
@@ -566,48 +548,53 @@ limbanim: SYM '(' cmdlist ')' limbanimflags
 cmdlist: cmdlistitem
 | cmdlist ',' cmdlistitem
 {
-  int l = $1[0] + $3[0];
-
-  $$ = realloc($1,l+1);
-  memcpy($$+$$[0]+1,$3+1,$3[0]);
-  $$[0] = l;
-  free($3);
+  cost_cmd_t* cmd = $1;
+  while(cmd->next) cmd = cmd->next;
+  cmd->next = $3;
+  $$ = $1;
 }
 ;
 
-cmdlistitem: intlistitem
-| START
+cmdlistitem: SYM
 {
-  $$ = malloc(2);
-  $$[0] = 1;
-  $$[1] = COST_CMD_START;
+  cost_pic_t* p = find_pic($1);
+
+  if(!p)
+    COST_ABORT(@1,"There is no picture named %s.\n",$1);
+
+  $$ = calloc(1,sizeof(cost_cmd_t));
+  $$->type = COST_CMD_DISPLAY;
+  $$->arg[0].pic = p;
+  p->ref++;
 }
-| STOP
+| SHOW
 {
-  $$ = malloc(2);
-  $$[0] = 1;
-  $$[1] = COST_CMD_STOP;
+  $$ = calloc(1,sizeof(cost_cmd_t));
+  $$->type = COST_CMD_SHOW;
 }
 | HIDE
 {
-  $$ = malloc(2);
-  $$[0] = 1;
-  $$[1] = COST_CMD_HIDE;
+  $$ = calloc(1,sizeof(cost_cmd_t));
+  $$->type = COST_CMD_HIDE;
 }
-| SKIP
+| NOP
 {
-  $$ = malloc(2);
-  $$[0] = 1;
-  $$[1] = COST_CMD_SKIP;
+  $$ = calloc(1,sizeof(cost_cmd_t));
+  $$->type = COST_CMD_NOP;
+}
+| COUNT
+{
+  $$ = calloc(1,sizeof(cost_cmd_t));
+  $$->type = COST_CMD_COUNT;
 }
 | SOUND '(' INTEGER ')'
 {
   if($3 < 1 || $3 > 8)
     COST_ABORT(@3,"Invalid costume sound index: %d.\n",$3);
-  
-  $$ = malloc(2);
-  $$[0] = 1;
-  $$[1] = COST_CMD_SOUND + $3;
+
+  $$ = calloc(1,sizeof(cost_cmd_t));
+  $$->type = COST_CMD_SOUND;
+  $$->arg[0].i = $3;
 }
 ;
 
@@ -884,6 +871,65 @@ static int cost_get_size(int *na,unsigned* coff,unsigned* aoff,unsigned* loff) {
   return size;
 }
 
+// Get the id of a picture inside a limb.
+// If the picture is not present in the limb it is added to it.
+static int cost_get_pic_limb_id(int limb_n, cost_pic_t* pic) {
+  cost_limb_t* limb = &limbs[limb_n];
+  int n;
+  for(n = 0 ; n < limb->num_pic ; n++)
+    if(limb->pic[n] == pic) break;
+  if(n < limb->num_pic) return n;
+  if(n+1 >= LIMB_MAX_PICTURES) {
+      printf("Too many pictures in limb %d (max %d)\n",
+             limb_n,LIMB_MAX_PICTURES);
+      return -1;
+  }
+  limb->pic[n] = pic;
+  limb->num_pic++;
+  return n;
+}
+
+static int cost_create_limbs(void) {
+  int a,d,l;
+  for(a = 0 ; a < COST_MAX_ANIMS ; a++) {
+    if(!anims[a].name) continue;
+    for(d = 0 ; d < COST_MAX_DIR ; d++) {
+      for(l = 0 ; l < COST_MAX_LIMBS ; l++) {
+        cost_limb_anim_t* anim = &anims[a].dir[d].limb[l];
+        cost_cmd_t* cmd = anim->cmd_list;
+        unsigned id;
+        anim->len = 0;
+        while(cmd) {
+          if(anim->len+1 > COST_MAX_LIMB_CMDS) goto too_many_cmd;
+          switch(cmd->type) {
+          case COST_CMD_DISPLAY:
+            if((id = cost_get_pic_limb_id(l,cmd->arg[0].pic)) < 0)
+              return -1;
+            anim->cmd[anim->len] = id;              anim->len++;
+            break;
+          case COST_CMD_HIDE:
+          case COST_CMD_SHOW:
+          case COST_CMD_NOP:
+          case COST_CMD_COUNT:
+            anim->cmd[anim->len] = cmd->type;       anim->len++;
+            break;
+          case COST_CMD_SOUND:
+            if(anim->len+2 > COST_MAX_LIMB_CMDS) goto too_many_cmd;
+            anim->cmd[anim->len] = cmd->type;       anim->len++;
+            anim->cmd[anim->len] = cmd->arg[0].i;   anim->len++;
+            break;
+          }
+          cmd = cmd->next;
+        }
+      }
+    }
+  }
+  return 0;
+ too_many_cmd:
+  printf("Too many commands in limb %d (max %d)\n",l,COST_MAX_LIMB_CMDS);
+  return -1;
+}
+
 static int cost_write(scc_fd_t* fd) {
   int size,num_anim,i,j,pad = 0;
   cost_pic_t* p;
@@ -891,6 +937,8 @@ static int cost_write(scc_fd_t* fd) {
   unsigned coff,cpos = 0;
   unsigned aoff[COST_MAX_ANIMS*COST_MAX_DIR];
   unsigned loff[COST_MAX_LIMBS];
+
+  if(cost_create_limbs()) return -1;
 
   if(pal_size == 32) fmt |= 1;
 
@@ -1009,11 +1057,23 @@ static int akos_write(scc_fd_t* fd) {
     num_pic++;
   }
 
-  // Compute the size needed for all commands
+  // Generate the command sequence
   for(i = 0 ; i < num_anim ; i++)
     for(d = 0 ; d < COST_MAX_DIR ; d++)
-      for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--)
-        aksq_size += anims[i].dir[d].limb[j].len;
+      for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
+        cost_limb_anim_t* anim = &anims[i].dir[d].limb[j];
+        cost_cmd_t* cmd = anim->cmd_list;
+        anim->len = 0;
+        while(cmd) {
+          switch(cmd->type) {
+          case COST_CMD_DISPLAY:
+            anim->cmd[anim->len] = pic->idx;        anim->len++;
+            break;
+          }
+          cmd = cmd->next;
+        }
+        aksq_size += anim->len;
+      }
 
   // Compute the size needed for the anim definitions
   akch_size += 2*COST_MAX_DIR*num_anim;
@@ -1068,32 +1128,14 @@ static int akos_write(scc_fd_t* fd) {
   scc_fd_w32be(fd,akpl_size);
   scc_fd_write(fd,pal,pal_size);
 
-  // Write the commands, a bit tricky because
-  // need to relocate the picture id from limb picture
-  // to global picture.
+  // Write the commands
   scc_fd_w32(fd,MKID('A','K','S','Q'));
   scc_fd_w32be(fd,aksq_size);
   for(i = 0 ; i < num_anim*COST_MAX_DIR ; i++) {
     cost_anim_dir_t* anim = &anims[i/COST_MAX_DIR].dir[i%COST_MAX_DIR];
     for(j = COST_MAX_LIMBS-1 ; j >= 0 ; j--) {
-      int c;
-      for(c = 0 ; c < anim->limb[j].len ; c++) {
-        int cmd = anim->limb[j].cmd[c];
-        // Ignore high id atm, that include commands
-        if(cmd >= 0x80) {
-          scc_fd_w8(fd,cmd), c++;
-          scc_fd_w8(fd,anim->limb[j].cmd[c]);
-          continue;
-        }
-        if(cmd >= limbs[j].num_pic ||
-           !limbs[j].pic[cmd]) {
-          printf("Warning: Bad picture index in anim %s, "
-                 "limb %s at %d: %d\n",
-                 anims[i/COST_MAX_DIR].name,limbs[j].name,c,cmd);
-          scc_fd_w8(fd,0);
-        } else
-          scc_fd_w8(fd,limbs[j].pic[cmd]->idx);
-      }
+      if(anim->limb[j].len > 0)
+        scc_fd_write(fd,anim->limb[j].cmd,anim->limb[j].len);
     }
   }
 

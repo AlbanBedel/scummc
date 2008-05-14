@@ -28,36 +28,23 @@ picture ufo = {
 
 
 
-limb body = {
-    ufo00, ufo01 // 0-1
-
-};
+limb body;
 
 
 
 anim stand = {
-    S = { body([0-1]) LOOP };
-    E = { body([0-1]) LOOP };
+    S = { body(ufo00, ufo01) LOOP };
+    E = { body(ufo00, ufo01) LOOP };
 };
 
 anim init = {
-    S = { body([0-1]) LOOP };
-    E = { body([0-1]) LOOP };
-};
-
-anim talkStart = {
-    S = { body([0-1]) LOOP };
-    E = { body([0-1]) LOOP };
-};
-
-anim talkStop = {
-    S = { body([0-1]) LOOP };
-    E = { body([0-1]) LOOP };
+    S = { body(ufo00, ufo01) LOOP };
+    E = { body(ufo00, ufo01) LOOP };
 };
 
 anim walk = {
-    S = { body([0-1]) LOOP };
-    E = { body([0-1]) LOOP };
+    S = { body(ufo00, ufo01) LOOP };
+    E = { body(ufo00, ufo01) LOOP };
 };
 
 

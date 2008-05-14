@@ -36,16 +36,16 @@
 // List of all the keywords
 // it must be kept sorted bcs a binary search is used on it
 static scc_keyword_t cost_keywords[] = {
+    { "COUNT",      COUNT,      -1 },
     { "EAST",       INTEGER,     1 },
     { "FLIP",       FLIP,       -1 },
     { "HIDE",       HIDE,       -1 },
     { "LOOP",       LOOP,       -1 },
+    { "NOP",        NOP,        -1 },
     { "NORTH",      INTEGER,     3 },
-    { "SKIP",       SKIP,       -1 },
+    { "SHOW",       SHOW,       -1 },
     { "SOUND",      SOUND,      -1 },
     { "SOUTH",      INTEGER,     2 },
-    { "START",      START,      -1 },
-    { "STOP",       STOP,       -1 },
     { "WEST",       INTEGER,     0 },
     { "anim",       ANIM,       -1 },
     { "flags",      FLAGS,      -1 },

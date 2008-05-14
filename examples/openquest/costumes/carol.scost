@@ -33,38 +33,34 @@ picture clean_ = {
 
 
 
-limb body = {
-    walk_00, walk_01, walk_02, walk_03, walk_04, walk_05, // 0-5
-    clean_00, clean_01, clean_02, clean_01 // 6-9
-
-};
+limb body;
 
 
 
 anim stand = {
-    S = { body([6-9]) LOOP };
+    S = { body(clean_00, clean_01, clean_02, clean_01) LOOP };
 };
 
 anim init = {
-    S = { body([0-6]) !LOOP };
+    S = { body(walk_00, walk_01, walk_02, walk_03, walk_04, walk_05, clean_00) !LOOP };
 };
 
 anim talkStart = {
-    S = { body(7) };
+    S = { body(clean_01) };
 };
 
 anim talkStop = {
-    S = { body([6-9]) LOOP };
+    S = { body(clean_00, clean_01, clean_02, clean_01) LOOP };
 };
 
 
 
 anim walkIntoRoom = {
-    S = { body([0-5]) !LOOP };
+    S = { body(walk_00, walk_01, walk_02, walk_03, walk_04, walk_05) !LOOP };
 };
 
 anim clean @ 8 = {
-    S = { body([6-8]) LOOP };
+    S = { body(clean_00, clean_01, clean_02) LOOP };
 };
 
 

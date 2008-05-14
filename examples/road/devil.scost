@@ -60,51 +60,34 @@ picture standS = {
 };
 
 
-limb body = {
-    walkE00, walkE01, walkE02, walkE03, // 0-3
-    walkE04, walkE05, walkE06, walkE07, // 4-7
-
-    walkW00, walkW01, walkW02, walkW03, // 8-11
-    walkW04, walkW05, walkW06, walkW07, // 12-15
-
-    walkS00, walkS01, walkS02, walkS03, // 16-19
-    walkS04, walkS05, walkS06, walkS07, // 20-23
-
-    walkN00, walkN01, walkN02, walkN03, // 24-27
-    walkN04, walkN05, walkN06, walkN07,  // 28-31
-
-
-    standE00, standE01, standE02, standE03, // 32-35
-    standE04, standE05, standE06, standE07, // 36-39
-
-    standW00, standW01, standW02, standW03, // 40-43
-    standW04, standW05, standW06, standW07, // 44-47
-
-    standS00, standS01, standS02, standS03, // 48-51
-    standS04, standS05, standS06, standS07, // 52-55
-
-    standN00, standN01, standN02, standN03, // 56-59
-    standN04, standN05, standN06, standN07  // 60-63
-};
+limb body;
 
 anim walk = {
-    E = { body([0-7]) };
-    W = { body([8-15]) };
-    S = { body([16-23]) };
-    N = { body([24-31]) };
+    E = { body(walkE00, walkE01, walkE02, walkE03,
+               walkE04, walkE05, walkE06, walkE07) };
+    W = { body(walkW00, walkW01, walkW02, walkW03,
+               walkW04, walkW05, walkW06, walkW07) };
+    S = { body(walkS00, walkS01, walkS02, walkS03,
+               walkS04, walkS05, walkS06, walkS07) };
+    N = { body(walkN00, walkN01, walkN02, walkN03,
+               walkN04, walkN05, walkN06, walkN07) };
 };
 
 
 anim stand = {
-    E = { body(2) };
-    W = { body(10) };
-    S = { body(18) };
-    N = { body(26) };
+    E = { body(walkE02) };
+    W = { body(walkW02) };
+    S = { body(walkS02) };
+    N = { body(walkN02) };
 };
 
 anim init = {
-    E = { body([32-39]) };
-    W = { body([40-47]) };
-    S = { body([48-55]) };
-    N = { body([56-63]) };
+    E = { body(standE00, standE01, standE02, standE03,
+               standE04, standE05, standE06, standE07) };
+    W = { body(standW00, standW01, standW02, standW03,
+               standW04, standW05, standW06, standW07) };
+    S = { body(standS00, standS01, standS02, standS03,
+               standS04, standS05, standS06, standS07) };
+    N = { body(standN00, standN01, standN02, standN03,
+               standN04, standN05, standN06, standN07) };
 };

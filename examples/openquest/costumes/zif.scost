@@ -163,154 +163,97 @@ picture firestraightE = {
     position = { -13, -48 }
 };
 
-
-
-
-//limb body = {
-//    standS
-//};
-
-limb body = {
-    walking_e0000, walking_e0001, walking_e0002, walking_e0003, // 0-3
-    //walking_e0004, walking_e0005, walking_e0006, walking_e0007,
-
-    walking_w0000, walking_w0001, walking_w0002, walking_w0003, // 4-7
-    //walking_w0004, walking_w0005, walking_w0006, walking_w0007,
-
-    walking_s0000, walking_s0001, walking_s0002, walking_s0003, // 8-11
-    //walking_s0004, walking_s0005, walking_s0006, walking_s0007,
-
-    walking_n0000, walking_n0001, walking_n0002, walking_n0003, // 12-15
-    //walking_n0004, walking_n0005, walking_n0006, walking_n0007,
-
-    standE, // 16
-    standW, // 17
-    standN, // 18
-    standS, // 19
-
-    talking_e0000, talking_e0001, talking_e0002, // 20-22
-
-    talking_w0000, talking_w0001, talking_w0002, // 23-25
-
-    talking_s0000, talking_s0001, talking_s0002, // 26-28
-
-    standN, talking_N, standN, // 29-31
-
-    raisearmE00, raisearmE01, raisearmE00, standE, // 32-35
-    
-    standWithPhoneE, // 36
-    standWithPhoneW, // 37
-    standWithPhoneN, // 38
-    standWithPhoneS, // 39
-
-    talkToPhone_e0000, talkToPhone_e0001, talkToPhone_e0002, // 40-42
-
-    talkToPhone_w0000, talkToPhone_w0001, talkToPhone_w0002, // 43-45
-
-    talkToPhone_s0000, talkToPhone_s0001, talkToPhone_s0002, // 46-48
-
-    standWithPhoneN, talking_N, standWithPhoneN, // 49-51
-    
-    lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneS, // 52-55
-
-    beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS, // 56-67
-
-    aimE00, aimE01, aimupE, fireupE, aimupE, aimE01, aimE00, // 68-74
-
-    aimE00, aimE01, aimE02, firestraightE, aimE02, aimE01, aimE00 // 75-81
-
-
-};
+limb body;
 
 anim walk = {
-    E = { body([0-3]) };
-    W = { body([4-7]) };
-    S = { body([8-11]) };
-    N = { body([12-15]) };
+    E = { body(walking_e0000, walking_e0001, walking_e0002, walking_e0003) };
+    W = { body(walking_w0000, walking_w0001, walking_w0002, walking_w0003) };
+    S = { body(walking_s0000, walking_s0001, walking_s0002, walking_s0003) };
+    N = { body(walking_n0000, walking_n0001, walking_n0002, walking_n0003) };
 };
 
 anim stand = {
-    E = { body(16) };
-    W = { body(17) };
-    N = { body(18) };
-    S = { body(19) };
+    E = { body(standE) };
+    W = { body(standW) };
+    N = { body(standN) };
+    S = { body(standS) };
 };
 
 anim init = {
-    E = { body(16) };
-    W = { body(17) };
-    N = { body(18) };
-    S = { body(19) };
+    E = { body(standE) };
+    W = { body(standW) };
+    N = { body(standN) };
+    S = { body(standS) };
 };
 
 anim talkStart = {
-    E = { body([20-22]) };
-    W = { body([23-25]) };
-    S = { body([26-28]) };
-    N = { body([29-31]) };
+    E = { body(talking_e0000, talking_e0001, talking_e0002) };
+    W = { body(talking_w0000, talking_w0001, talking_w0002) };
+    S = { body(talking_s0000, talking_s0001, talking_s0002) };
+    N = { body(standN, talking_N, standN) };
 };
 
 anim talkStop = {
-    E = { body(16) };
-    W = { body(17) };
-    N = { body(18) };
-    S = { body(19) };
+    E = { body(standE) };
+    W = { body(standW) };
+    N = { body(standN) };
+    S = { body(standS) };
 };
 
 anim raiseArm @ 24 = {
-    E = { body([32-33]) !LOOP };
-    W = { body([32-33]) !LOOP };
-    N = { body([32-33]) !LOOP };
-    S = { body([32-33]) !LOOP };
+    E = { body(raisearmE00, raisearmE01) !LOOP };
+    W = { body(raisearmE00, raisearmE01) !LOOP };
+    N = { body(raisearmE00, raisearmE01) !LOOP };
+    S = { body(raisearmE00, raisearmE01) !LOOP };
 };
 
 anim lowerArm @ 28 = {
-    E = { body([33-35]) !LOOP };
-    W = { body([33-35]) !LOOP };
-    N = { body([33-35]) !LOOP };
-    S = { body([33-35]) !LOOP };
+    E = { body(raisearmE00, standE) !LOOP };
+    W = { body(raisearmE00, standW) !LOOP };
+    N = { body(raisearmE00, standN) !LOOP };
+    S = { body(raisearmE00, standS) !LOOP };
 };
 
 anim standWithPhone @ 32 = {
-    E = { body(36) };
-    W = { body(37) };
-    N = { body(38) };
-    S = { body(39) };
+    E = { body(standWithPhoneE) };
+    W = { body(standWithPhoneW) };
+    N = { body(standWithPhoneN) };
+    S = { body(standWithPhoneS) };
 };
 
 anim talkToPhoneStart @ 36 = {
-    E = { body([40-42]) };
-    W = { body([43-45]) };
-    S = { body([46-48]) };
-    N = { body([49-51]) };
+    E = { body(talkToPhone_e0000, talkToPhone_e0001, talkToPhone_e0002) };
+    W = { body(talkToPhone_w0000, talkToPhone_w0001, talkToPhone_w0002) };
+    S = { body(talkToPhone_s0000, talkToPhone_s0001, talkToPhone_s0002) };
+    N = { body(standWithPhoneN, talking_N, standWithPhoneN) };
 };
 
 anim lookAround @ 40 = {
-    E = { body([52-55]) };
-    W = { body([52-55]) };
-    S = { body([52-55]) };
-    N = { body([52-55]) };
+    E = { body(lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneE) };
+    W = { body(lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneW) };
+    S = { body(lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneS) };
+    N = { body(lookaroundS00, standWithPhoneS, lookaroundS01, standWithPhoneN) };
 };
 
 anim beam @ 44 = {
-    E = { body([56-67]) !LOOP };
-    W = { body([56-67]) !LOOP };
-    S = { body([56-67]) !LOOP };
-    N = { body([56-67]) !LOOP };
+    E = { body(beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standE) !LOOP };
+    W = { body(beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standW) !LOOP };
+    S = { body(beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standS) !LOOP };
+    N = { body(beam00, beam01, beam02, beam03, beam04, beam05, beam06, beam07, beam08, beam09, beam10, standN) !LOOP };
 };
 
 anim fireup @ 48 = {
-    E = { body([68-74]) !LOOP };
-    W = { body([68-74]) !LOOP };
-    S = { body([68-74]) !LOOP };
-    N = { body([68-74]) !LOOP };
+    E = { body(aimE00, aimE01, aimupE, fireupE, aimupE, aimE01, aimE00) !LOOP };
+    W = { body(aimE00, aimE01, aimupE, fireupE, aimupE, aimE01, aimE00) !LOOP };
+    S = { body(aimE00, aimE01, aimupE, fireupE, aimupE, aimE01, aimE00) !LOOP };
+    N = { body(aimE00, aimE01, aimupE, fireupE, aimupE, aimE01, aimE00) !LOOP };
 };
 
 anim firestraight @ 52 = {
-    E = { body([75-81]) !LOOP };
-    W = { body([75-81]) !LOOP };
-    S = { body([75-81]) !LOOP };
-    N = { body([75-81]) !LOOP };
+    E = { body(aimE00, aimE01, aimE02, firestraightE, aimE02, aimE01, aimE00) !LOOP };
+    W = { body(aimE00, aimE01, aimE02, firestraightE, aimE02, aimE01, aimE00) !LOOP };
+    S = { body(aimE00, aimE01, aimE02, firestraightE, aimE02, aimE01, aimE00) !LOOP };
+    N = { body(aimE00, aimE01, aimE02, firestraightE, aimE02, aimE01, aimE00) !LOOP };
 };
 
 

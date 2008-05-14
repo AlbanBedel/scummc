@@ -28,20 +28,18 @@ picture standS_ = {
 
 
 
-limb body = {
-    standS_00, standS_01, standS_02, standS_03, standS_04, standS_05, standS_06 // 0-6
-};
+limb body;
 
 anim stand = {
-    S = { body(0) };
+    S = { body(standS_00) };
 };
 
 anim init = {
-    S = { body(0) };
+    S = { body(standS_00) };
 };
 
 anim dissolve @ 24 = {
-    S = { body([0-6]) !LOOP };
+    S = { body(standS_00, standS_01, standS_02, standS_03, standS_04, standS_05, standS_06) !LOOP };
 };
 
 

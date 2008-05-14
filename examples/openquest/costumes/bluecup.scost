@@ -34,19 +34,16 @@ picture standS_ = {
 //    standS
 //};
 
-limb body = {
-    standS_00, standS_01, standS_02, standS_03, // 0-3
-    standS_04, standS_05, standS_06, standS_07  // 4-7
-
-
-};
+limb body;
 
 anim stand = {
-    S = { body([0-7]) };
+    S = { body(standS_00, standS_01, standS_02, standS_03,
+               standS_04, standS_05, standS_06, standS_07) };
 };
 
 anim init = {
-    S = { body([0-7]) };
+    S = { body(standS_00, standS_01, standS_02, standS_03,
+               standS_04, standS_05, standS_06, standS_07) };
 };
 
 

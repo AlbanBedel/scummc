@@ -26,11 +26,9 @@ picture standS = {
 };
 
 
-limb body = {
-    standS
-};
+limb body;
 
 anim stand = {
-    S = { body(0) };
+    S = { body(standS) };
 };
 
