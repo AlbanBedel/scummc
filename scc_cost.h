@@ -80,13 +80,19 @@ struct scc_cost {
   scc_cost_anim_t* anims;
 };
 
+typedef struct scc_cost_dec_track {
+  scc_cost_anim_def_t* anim;
+  uint16_t pc;
+} scc_cost_dec_track_t;
+
 typedef struct scc_cost_dec {
   scc_cost_t* cost;
   scc_cost_anim_t* anim;
   unsigned anim_id;
 
+  scc_cost_anim_def_t track[16];
   uint16_t pc[16]; // limb pc
-  uint8_t stopped;
+  uint16_t stopped;
 
   unsigned anim_counter;
 } scc_cost_dec_t;

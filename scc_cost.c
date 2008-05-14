@@ -576,17 +576,26 @@ int scc_cost_dec_load_anim(scc_cost_dec_t* dec,uint16_t aid) {
   dec->anim_counter = 0;
 
   for(i = 0 ; i < 16 ; i++) {
-    dec->pc[i] = anim->limb[i].start;
-    if(dec->pc[i] == 0xFFFF) continue;
-    if(dec->pc[i] >= dec->cost->cmds_size) {
-      printf("Warning: limb %d got out of the cmd array\n",i);
+    unsigned pc = anim->limb[i].start;
+    if(pc == 0xFFFF) {
+      dec->pc[i] = pc;
+      dec->track[i] = anim->limb[i];
       continue;
     }
-    cmd = dec->cost->cmds[dec->pc[i]];
+    if(pc >= dec->cost->cmds_size) {
+      printf("Warning: limb %d got out of the cmd array\n",i);
+      dec->track[i].start = dec->pc[i] = 0xFFFF;
+      continue;
+    }
+    cmd = dec->cost->cmds[pc];
     if(cmd == 0x79)
       dec->stopped |= (1 << i);
     else if(cmd == 0x7A)
       dec->stopped &= ~(1 << i);
+    else {
+      dec->pc[i] = pc;
+      dec->track[i] = anim->limb[i];
+    }
   }
 
   return 1;
@@ -597,12 +606,12 @@ int scc_cost_dec_step(scc_cost_dec_t* dec) {
   int i;
 
   for(i = 0 ; i < 16 ; i++) {
-    if(dec->anim->limb[i].start == 0xFFFF) continue;
+    if(dec->track[i].start == 0xFFFF) continue;
     
     while(1) {
-      if(dec->pc[i] >= dec->anim->limb[i].end) {
-	if(dec->anim->limb[i].flags & SCC_COST_ANIM_LOOP)
-	  dec->pc[i] = dec->anim->limb[i].start;
+      if(dec->pc[i] >= dec->track[i].end) {
+	if(dec->track[i].flags & SCC_COST_ANIM_LOOP)
+	  dec->pc[i] = dec->track[i].start;
       } else
 	dec->pc[i]++;
 	 
@@ -611,10 +620,10 @@ int scc_cost_dec_step(scc_cost_dec_t* dec) {
     
       if(cmd == 0x7C) {
 	dec->anim_counter++;
-	if(dec->pc[i] < dec->anim->limb[i].end) continue;
+	if(dec->pc[i] < dec->track[i].end) continue;
       } else if(cmd > 0x70 && cmd < 0x79) {
 	// queue soound ?
-	if(dec->pc[i] < dec->anim->limb[i].end) continue;
+	if(dec->pc[i] < dec->track[i].end) continue;
       }
       break;
     }
