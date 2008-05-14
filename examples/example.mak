@@ -130,7 +130,7 @@ distclean: clean
 $(GAME_NAME).dep: $(SRCS:%=$(GAME_DIR)/%)
 	$(SCC) -d -o $@ $(SCC_FLAGS) $^
 
-deps: $(GAME_NAME).det
+deps: $(GAME_NAME).dep
 
 NO_DEPS_GOALS       = clean \
                       distclean \
