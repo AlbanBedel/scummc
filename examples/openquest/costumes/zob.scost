@@ -122,20 +122,25 @@ picture die = {
 
 
 
+limb talk_body;
 limb body;
 
 anim walk = {
-    E = { body(walking_e0000, walking_e0001, walking_e0002, walking_e0003) };
-    W = { body(walking_w0000, walking_w0001, walking_w0002, walking_w0003) };
-    S = { body(walking_s0000, walking_s0001, walking_s0002, walking_s0003) };
-    N = { body(walking_n0000, walking_n0001, walking_n0002, walking_n0003) };
+    E = { body(walking_e0000, walking_e0001, walking_e0002, walking_e0003),
+          talk_body(HIDE) };
+    W = { body(walking_w0000, walking_w0001, walking_w0002, walking_w0003),
+          talk_body(HIDE) };
+    S = { body(walking_s0000, walking_s0001, walking_s0002, walking_s0003),
+          talk_body(HIDE) };
+    N = { body(walking_n0000, walking_n0001, walking_n0002, walking_n0003),
+          talk_body(HIDE) };
 };
 
 anim stand = {
-    E = { body(standE) };
-    W = { body(standW) };
-    N = { body(standN) };
-    S = { body(standS) };
+    E = { body(standE), talk_body(SHOW) };
+    W = { body(standW), talk_body(SHOW) };
+    N = { body(standN), talk_body(SHOW) };
+    S = { body(standS), talk_body(SHOW) };
 };
 
 anim init = {
@@ -146,17 +151,17 @@ anim init = {
 };
 
 anim talkStart = {
-    E = { body(talking_e0000, talking_e0001, talking_e0002) };
-    W = { body(talking_w0000, talking_w0001, talking_w0002) };
-    S = { body(talking_s0000, talking_s0001, talking_s0002) };
-    N = { body(standN, talking_N, standN) };
+    E = { talk_body(talking_e0000, talking_e0001, talking_e0002) };
+    W = { talk_body(talking_w0000, talking_w0001, talking_w0002) };
+    S = { talk_body(talking_s0000, talking_s0001, talking_s0002) };
+    N = { talk_body(standN, talking_N, standN) };
 };
 
 anim talkStop = {
-    E = { body(standE) };
-    W = { body(standW) };
-    N = { body(standN) };
-    S = { body(standS) };
+    E = { talk_body() };
+    W = { talk_body() };
+    N = { talk_body() };
+    S = { talk_body() };
 };
 
 anim raiseArm @ 24 = {

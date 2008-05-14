@@ -27,7 +27,6 @@
 #include "officeroom.sch"
 #include "titlescreen.scc"
 
-#include "zob_anim.sch"
 
 
 
@@ -393,18 +392,14 @@ room ResRoom {
         
         // if the object is in the room walk there
         if(objA <= 0xF || owner == 0xF) {
-            setActorTalkFrame( 0, 0 );
             walkActorToObj(VAR_EGO,objA,0);
             waitForActor(VAR_EGO);
-            setActorTalkFrame( zob_anim_talkStart, zob_anim_talkStop );
             // This is needed when walking to an actor
             if(objA <= 0xF)
                 actorFace(VAR_EGO,objA);
         } else if(objB) if(objB <= 0xF || getObjectOwner(objB) == 0xF) {
-            setActorTalkFrame( 0, 0 );
             walkActorToObj(VAR_EGO,objB,0);
             waitForActor(VAR_EGO);
-            setActorTalkFrame( zob_anim_talkStart, zob_anim_talkStop );
             if(objB <= 0xF)
                 actorFace(VAR_EGO,objB);
         }
@@ -531,10 +526,7 @@ room ResRoom {
         if(selVerb) resetSntc(0);
         
         // then go there
-        setActorTalkFrame( 0, 0 );
         walkActorTo(VAR_EGO,VAR_VIRT_MOUSE_X,VAR_VIRT_MOUSE_Y);
-        waitForActor(VAR_EGO);
-        setActorTalkFrame( zob_anim_talkStart, zob_anim_talkStop );
     }
 
     script setInventoryIcon(int icon, int slot) {
