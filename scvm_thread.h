@@ -96,6 +96,8 @@ int scvm_thread_r32(scvm_thread_t* thread, uint32_t* ret);
 
 int scvm_thread_strlen(scvm_thread_t* thread, unsigned* len);
 
+int scvm_thread_get_string(scvm_thread_t* thread, char** p_str);
+
 int scvm_thread_begin_override(scvm_t* vm, scvm_thread_t* thread);
 
 int scvm_thread_end_override(scvm_t* vm, scvm_thread_t* thread);

@@ -1035,17 +1035,7 @@ static int scvm_op_set_actor_talk_color(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9D58
 static int scvm_op_set_actor_name(scvm_t* vm, scvm_thread_t* thread) {
-  int r,len;
-  if((r = scvm_thread_strlen(thread,&len))) return r;
-  if(vm->current_actor->name)
-    free(vm->current_actor->name);
-  vm->current_actor->name = malloc(len+1);
-  if(len > 0)
-    memcpy(vm->current_actor->name,
-           &thread->script->code[thread->code_ptr],len);
-  thread->code_ptr += len+1;
-  vm->current_actor->name[len] = 0;
-  return 0;
+  return scvm_thread_get_string(thread,&vm->current_actor->name);
 }
 
 // 0x9D59

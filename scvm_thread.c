@@ -119,6 +119,22 @@ int scvm_thread_strlen(scvm_thread_t* thread,unsigned *ret) {
   return 0;
 }
 
+int scvm_thread_get_string(scvm_thread_t* thread, char** p_str) {
+    int r;
+    unsigned len = 0;
+    if((r = scvm_thread_strlen(thread,&len))) return r;
+    if(p_str) {
+        char* str = *p_str;
+        str = realloc(str,len+1);
+        if(len > 0)
+            memcpy(str,thread->script->code+thread->code_ptr,len);
+        str[len] = 0;
+        *p_str = str;
+    }
+    thread->code_ptr += len+1;
+    return 0;
+}
+
 int scvm_thread_begin_override(scvm_t* vm, scvm_thread_t* thread) {
   if(thread->override_ptr >= SCVM_MAX_OVERRIDE)
     return SCVM_ERR_OVERRIDE_OVERFLOW;
