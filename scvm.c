@@ -107,6 +107,10 @@ char* scvm_state_name(unsigned state) {
     return "begin cycle";
   case SCVM_RUNNING:
     return "running";
+  case SCVM_FINISHED_SCRIPTS:
+    return "finished scripts";
+  case SCVM_FINISH_CYCLE:
+    return "finish cycle";
   case SCVM_START_SCRIPT:
     return "start script";
   case SCVM_OPEN_ROOM:
@@ -127,6 +131,22 @@ char* scvm_state_name(unsigned state) {
     return "run post entry";
   case SCVM_OPENED_ROOM:
     return "opened room";
+  case SCVM_CAMERA_FOLLOW_ACTOR:
+    return "camera follow actor";
+  case SCVM_CAMERA_START_FOLLOWING_ACTOR:
+    return "camera start following actor";
+  case SCVM_CAMERA_START_FOLLOWING_ACTOR_IN_ROOM:
+    return "camera start following actor in room";
+  case SCVM_RUN_INVENTORY:
+    return "run inventory";
+  case SCVM_CHECK_INPUT:
+    return "check input";
+  case SCVM_CHECKED_INPUT:
+    return "checked input";
+  case SCVM_MOVE_CAMERA:
+    return "move camera";
+  case SCVM_WALK_ACTORS:
+    return "walk actors";
   }
   return NULL;
 }
