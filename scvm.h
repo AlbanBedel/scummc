@@ -514,8 +514,16 @@ struct scvm {
 #define SCVM_ERR_BAD_PALETTE        -20
 #define SCVM_ERR_UNINITED_VM        -21
 #define SCVM_ERR_VIDEO_MODE         -22
-#define SCVM_ERR_INTERRUPTED        -23
-#define SCVM_ERR_BREAKPOINT         -24
+
+
+
+#define SCVM_NOT_ERR_BASE           (10000)
+#define SCVM_NOT_ERR(n)             (-SCVM_NOT_ERR_BASE-(n))
+#define SCVM_IS_ERR(n)              ((n) < 0 && (n) > SCVM_NOT_ERR(0))
+#define SCVM_IS_NOT_ERR(n)          ((n) >= 0 || (n) <= SCVM_NOT_ERR(0))
+
+#define SCVM_ERR_INTERRUPTED        SCVM_NOT_ERR(0)
+#define SCVM_ERR_BREAKPOINT         SCVM_NOT_ERR(1)
 
 
 char* scvm_state_name(unsigned state);

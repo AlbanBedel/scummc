@@ -48,7 +48,9 @@
 
 #include "scvm_help.h"
 
-static char* scvm_error[0x100] = {
+#define SCVM_ERR_MAX 0x100
+
+static const char* scvm_error[SCVM_ERR_MAX] = {
   "no error",
   "script bound",
   "op not supported or invalid",
@@ -72,6 +74,10 @@ static char* scvm_error[0x100] = {
   "bad palette",
   "uninitialized vm",
   "failed to set video mode",
+  NULL
+};
+
+static const char* scvm_not_error[SCVM_ERR_MAX] = {
   "interrupted",
   "breakpoint",
   NULL
@@ -79,6 +85,17 @@ static char* scvm_error[0x100] = {
 
 extern scvm_op_t scvm_optable[0x100];
 extern scvm_op_t scvm_suboptable[0x100];
+
+const char* scvm_strerror(int errn) {
+  const char** names = scvm_error;
+  if(errn < 0) errn = -errn;
+  if(errn > SCVM_NOT_ERR_BASE) {
+    errn -= SCVM_NOT_ERR_BASE;
+    names = scvm_not_error;
+  }
+  if(errn >= SCVM_ERR_MAX) return NULL;
+  return names[errn];
+}
 
 char* scvm_state_name(unsigned state) {
   switch(state) {
@@ -514,7 +531,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         return SCVM_ERR_VIDEO_MODE;
       }
       if((r=scvm_start_script(vm,0,1,NULL)) < 0) {
-        scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_error[-r]);
+        scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_strerror(r));
         return r;
       }
       vm->state = SCVM_BEGIN_CYCLE;
@@ -841,13 +858,13 @@ int scvm_run_once(scvm_t* vm) {
   start = scvm_get_time(vm);
   scvm_check_events(vm);
   r = scvm_run_threads(vm,1);
-  if(r < 0) {
+  if(SCVM_IS_ERR(r)) {
     if(vm->current_thread)
       scc_log(LOG_MSG,"Script error: %s @ %03d:0x%04X\n",
-              scvm_error[-r],vm->current_thread->script->id,
+              scvm_strerror(r),vm->current_thread->script->id,
               vm->current_thread->op_start);
     else
-      scc_log(LOG_MSG,"Script error: %s\n",scvm_error[-r]);
+      scc_log(LOG_MSG,"Script error: %s\n",scvm_strerror(r));
     return r;
   }
 
@@ -867,7 +884,7 @@ int scvm_run_once(scvm_t* vm) {
 
   scvm_flip(vm);
 
-  return 0;
+  return r;
 }
 
 int scvm_run(scvm_t* vm) {
