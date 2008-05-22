@@ -816,7 +816,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
 }
 
 void scvm_cycle_palette(scvm_t* vm) {
-  int i,step,add;
+  int i,step;
   scvm_color_t color;
   scvm_cycle_t* cycle;
   if(!vm->room || !vm->room->cycle) return;
@@ -826,7 +826,7 @@ void scvm_cycle_palette(scvm_t* vm) {
   for(i = 0 ; i < vm->room->num_cycle ; i++) {
     cycle = &vm->room->cycle[i];
     if(!cycle->delay) continue;
-    cycle->counter += add;
+    cycle->counter += step;
     if(cycle->counter < cycle->delay) continue;
     // backward
     if(cycle->flags & 2) {
@@ -834,14 +834,14 @@ void scvm_cycle_palette(scvm_t* vm) {
       if(cycle->end-cycle->start > 0)
         memmove(&vm->view->palette[cycle->start],
                 &vm->view->palette[cycle->start+1],
-                (cycle->end-cycle->start-1)*sizeof(scvm_color_t));
+                (cycle->end-cycle->start)*sizeof(scvm_color_t));
       vm->view->palette[cycle->end] = color;
     } else { // forward
       color = vm->view->palette[cycle->end];
       if(cycle->end-cycle->start > 0)
         memmove(&vm->view->palette[cycle->start+1],
                 &vm->view->palette[cycle->start],
-                (cycle->end-cycle->start-1)*sizeof(scvm_color_t));
+                (cycle->end-cycle->start)*sizeof(scvm_color_t));
       vm->view->palette[cycle->start] = color;
     }
     vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
