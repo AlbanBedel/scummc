@@ -72,3 +72,5 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num);
 void* scvm_load_costume(scvm_t* vm,scc_fd_t* fd, unsigned num);
 
 void * scvm_load_charset(scvm_t* vm,scc_fd_t* fd, unsigned num);
+
+void* scvm_load_object(scvm_t* vm, int room_id, int obj_id, unsigned wich);

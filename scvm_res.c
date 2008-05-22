@@ -72,6 +72,33 @@ void scvm_close_file(scvm_t* vm,unsigned num) {
   }
 }
 
+scc_fd_t* scvm_open_res_file(scvm_t* vm,unsigned res_type,unsigned res_id) {
+  scvm_res_type_t* res = &vm->res[res_type];
+  scc_fd_t* fd;
+  unsigned offset;
+
+  if(res_id >= res->num) return NULL;
+  if(!(fd = scvm_open_file(vm,res->idx[res_id].file)))
+    return NULL;
+
+  offset = res->idx[res_id].offset;
+  if(scc_fd_seek(fd,offset,SEEK_SET) != offset) {
+    scc_log(LOG_ERR,"Failed to seek to %d in %s.\n",offset,fd->filename);
+    scvm_close_file(vm,res->idx[res_id].file);
+    return NULL;
+  }
+
+  return fd;
+}
+
+int scvm_close_res_file(scvm_t* vm,unsigned res_type,unsigned res_id) {
+  scvm_res_type_t* res = &vm->res[res_type];
+
+  if(res_id >= res->num) return -1;
+  scvm_close_file(vm,res->idx[res_id].file);
+  return 0;
+}
+
 
 void scvm_res_init(scvm_res_type_t* res, char* name, unsigned num,
                    scvm_res_load_f load, scvm_res_nuke_f nuke) {
@@ -157,15 +184,9 @@ void* scvm_load_res(scvm_t* vm, unsigned type, unsigned num) {
   }
   // load if needed
   if(!vm->res[type].idx[num].data) {
-    scc_fd_t* fd = scvm_open_file(vm,vm->res[type].idx[num].file);
-    unsigned offset = vm->res[type].idx[num].offset;
+    scc_fd_t* fd = scvm_open_res_file(vm,type,num);
     if(!fd) return NULL;
-    if(scc_fd_seek(fd,offset,SEEK_SET) != offset) {
-      scc_log(LOG_ERR,"Failed to seek to %d in %s.\n",offset,fd->filename);
-      scvm_close_file(vm,vm->res[type].idx[num].file);
-      return NULL;
-    }
-    vm->res[type].idx[num].data = vm->res[type].load(vm,fd,num);
+   vm->res[type].idx[num].data = vm->res[type].load(vm,fd,num);
     if(!vm->res[type].idx[num].data)
       scc_log(LOG_ERR,"Failed to load %s %d\n",vm->res[type].name,num);
   }
@@ -247,7 +268,7 @@ int scvm_load_image(unsigned width, unsigned height, unsigned num_zplane,
   return 1;
 }
 
-scvm_object_t* scvm_load_obim(scvm_t* vm, scvm_room_t* room, scc_fd_t* fd) {
+scvm_object_t* scvm_load_obim(scvm_t* vm, scc_fd_t* fd) {
   uint32_t type = scc_fd_r32(fd);
   uint32_t size = scc_fd_r32be(fd);
   scvm_object_t* obj;
@@ -302,7 +323,7 @@ scvm_object_t* scvm_load_obim(scvm_t* vm, scvm_room_t* room, scc_fd_t* fd) {
   return obj;
 }
 
-scvm_object_t* scvm_load_obcd(scvm_t* vm, scvm_room_t* room, scc_fd_t* fd) {
+scvm_object_t* scvm_load_obcd(scvm_t* vm, scc_fd_t* fd) {
   uint32_t type = scc_fd_r32(fd);
   uint32_t size = scc_fd_r32be(fd);
   scvm_object_t* obj;
@@ -382,6 +403,54 @@ scvm_object_t* scvm_load_obcd(scvm_t* vm, scvm_room_t* room, scc_fd_t* fd) {
     obj->pdata->name[size-1] = 0;
   }  
   
+  return obj;
+}
+
+void* scvm_load_object(scvm_t* vm, int room_id, int obj_id, unsigned wich) {
+  scc_fd_t* fd;
+  scvm_object_t* obj;
+  uint32_t type, size, block_size;
+  off_t next_block;
+  unsigned len = 8;
+  wich &= (SCVM_OBJ_OBIM|SCVM_OBJ_OBCD);
+  if((obj = vm->res[SCVM_RES_OBJECT].idx[obj_id].data) &&
+     (obj->loaded & wich) == wich)
+    return obj;
+  if(!(fd = scvm_open_res_file(vm,SCVM_RES_ROOM,room_id)))
+    return NULL;
+  type = scc_fd_r32(fd);
+  size = scc_fd_r32be(fd);
+  if(type != MKID('R','O','O','M')|| size < 16) {
+    scc_log(LOG_ERR,"Bad ROOM block %d: %c%c%c%c %d\n",room_id,
+            UNMKID(type),size);
+    scvm_close_res_file(vm,SCVM_RES_ROOM,room_id);
+    return NULL;
+  }
+  while(wich && len < size) {
+    type = scc_fd_r32(fd);
+    block_size = scc_fd_r32be(fd);
+    next_block = scc_fd_pos(fd)-8+block_size;
+    len += block_size;
+    switch(type) {
+    case MKID('O','B','I','M'):
+      if(!(wich & SCVM_OBJ_OBIM)) break;
+      scc_fd_seek(fd,8,SEEK_CUR);
+      if(scc_fd_r16(fd) != obj_id) break;
+      scc_fd_seek(fd,-8-2,SEEK_CUR);
+      if(!(obj = scvm_load_obim(vm,fd))) return NULL;
+      wich &= ~SCVM_OBJ_OBIM;
+      break;
+    case MKID('O','B','C','D'):
+      if(!(wich & SCVM_OBJ_OBCD)) break;
+      scc_fd_seek(fd,8,SEEK_CUR);
+      if(scc_fd_r16(fd) != obj_id) break;
+      scc_fd_seek(fd,-8-2,SEEK_CUR);
+      if(!(obj = scvm_load_obcd(vm,fd))) return NULL;
+      wich &= ~SCVM_OBJ_OBCD;
+      break;
+    }
+    if(wich) scc_fd_seek(fd,next_block,SEEK_SET);
+  }
   return obj;
 }
 
@@ -495,7 +564,7 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
         goto bad_block;
       }
       if(block_size < 8+8+20 ||
-         !(obj = scvm_load_obim(vm,room,fd))) goto bad_block;
+         !(obj = scvm_load_obim(vm,fd))) goto bad_block;
       if(!objlist[num_obim])
         objlist[num_obim] = obj;
       else if(objlist[num_obim] != obj) {
@@ -511,7 +580,7 @@ void* scvm_load_room(scvm_t* vm,scc_fd_t* fd, unsigned num) {
         goto bad_block;
       }
       if(block_size < 8+8+17 ||
-         !(obj = scvm_load_obcd(vm,room,fd))) goto bad_block;
+         !(obj = scvm_load_obcd(vm,fd))) goto bad_block;
       if(!objlist[num_obcd])
         objlist[num_obcd] = obj;
       else if(objlist[num_obcd] != obj) {
