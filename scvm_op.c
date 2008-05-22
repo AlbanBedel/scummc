@@ -968,7 +968,7 @@ static int scvm_op_set_palette(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
   if((r=scvm_pop(vm,&a))) return r;
-  if(r >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   vm->current_actor = &vm->actor[a];
   return 0;
 }
