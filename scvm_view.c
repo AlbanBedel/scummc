@@ -100,10 +100,13 @@ uint8_t* make_zplane(scvm_t* vm, scvm_view_t* view,
                      unsigned src_width, unsigned src_height,
                      unsigned src_x, unsigned zid) {
   uint8_t* zplane = malloc(dst_width*dst_height);
-  scale_copy(zplane,dst_width,dst_width,dst_height,
-             0,0,dst_width,dst_height,
-             vm->room->image.zplane[zid] + src_x,vm->room->width,
-             src_width, src_height,-1);
+  if(vm->room->image.zplane[zid])
+      scale_copy(zplane,dst_width,dst_width,dst_height,
+                 0,0,dst_width,dst_height,
+                 vm->room->image.zplane[zid] + src_x,vm->room->width,
+                 src_width, src_height,-1);
+  else
+      memset(zplane,0,dst_width*dst_height);
   // TODO: copy objects zplanes from the visible area
   return zplane;
 }
@@ -174,7 +177,7 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     scc_log(LOG_MSG,"Draw actor %d at %dx%d\n",a,vm->actor[a].x,vm->actor[a].y);
     if(vm->actor[a].box) {
       int mask = vm->room->box[vm->actor[a].box].mask;
-      if(mask <= vm->room->num_zplane) {
+      if(mask && mask <= vm->room->num_zplane) {
         if(!vm->room->zplane[mask])
           vm->room->zplane[mask] = make_zplane(vm,view,
                                                dw,dh,
