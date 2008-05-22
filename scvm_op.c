@@ -1108,6 +1108,122 @@ static int scvm_op_set_actor_talk_script(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_pop(vm,&vm->current_actor->talk_script);
 }
 
+// 0x9E7D
+static int scvm_op_set_verb_name(scvm_t* vm, scvm_thread_t* thread) {
+  char** p_name = vm->current_verb ? &vm->current_verb->name : NULL;
+  return scvm_thread_get_string(thread,p_name);
+}
+
+// 0x9E7E
+static int scvm_op_set_verb_color(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned c;
+  if((r=scvm_pop(vm,&c))) return r;
+  if(c >= 0x100) return SCVM_ERR_BAD_COLOR;
+  if(!vm->current_verb) return 0;
+  vm->current_verb->color = c;
+  return 0;
+}
+
+// 0x9E7F
+static int scvm_op_set_verb_hi_color(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned c;
+  if((r=scvm_pop(vm,&c))) return r;
+  if(c >= 0x100) return SCVM_ERR_BAD_COLOR;
+  if(!vm->current_verb) return 0;
+  vm->current_verb->hi_color = c;
+  return 0;
+}
+
+// 0x9E80
+static int scvm_op_set_verb_xy(scvm_t* vm, scvm_thread_t* thread) {
+  int r,x,y;
+  if((r = scvm_vpop(vm,&y,&x,NULL))) return r;
+  if(vm->current_verb) {
+    vm->current_verb->y = y;
+    vm->current_verb->x = x;
+  }
+  return 0;
+}
+
+// 0x9E81
+static int scvm_op_set_verb_on(scvm_t* vm, scvm_thread_t* thread) {
+  if(vm->current_verb)
+    vm->current_verb->mode = SCVM_VERB_SHOW;
+  return 0;
+}
+
+// 0x9E82
+static int scvm_op_set_verb_off(scvm_t* vm, scvm_thread_t* thread) {
+  if(vm->current_verb)
+    vm->current_verb->mode = SCVM_VERB_HIDE;
+  return 0;
+}
+
+// 0x9E83
+static int scvm_op_kill_verb(scvm_t* vm, scvm_thread_t* thread) {
+  if(!vm->current_verb_id) return 0;
+  scvm_kill_verb(vm,vm->current_verb_id);
+  return 0;
+}
+
+// 0x9E84
+static int scvm_op_init_verb(scvm_t* vm, scvm_thread_t* thread) {
+  if(!vm->current_verb_id) return SCVM_ERR_BAD_VERB;
+  if(!(vm->current_verb = scvm_new_verb(vm,vm->current_verb_id)))
+    return SCVM_ERR_TOO_MANY_VERB;
+  return 0;
+}
+
+// 0x9E85
+static int scvm_op_set_verb_dim_color(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned c;
+  if((r=scvm_pop(vm,&c))) return r;
+  if(c >= 0x100) return SCVM_ERR_BAD_COLOR;
+  if(vm->current_verb)
+    vm->current_verb->dim_color = c;
+  return 0;
+}
+
+// 0x9E86
+static int scvm_op_set_verb_dim(scvm_t* vm, scvm_thread_t* thread) {
+  if(vm->current_verb)
+    vm->current_verb->mode = SCVM_VERB_DIM;
+  return 0;
+}
+
+// 0x9E87
+static int scvm_op_set_verb_key(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pop(vm,vm->current_verb ? &vm->current_verb->key : NULL);
+}
+
+// 0x9E88
+static int scvm_op_set_verb_center(scvm_t* vm, scvm_thread_t* thread) {
+  if(vm->current_verb)
+    vm->current_verb->flags |= SCVM_VERB_CENTER;
+  return 0;
+}
+
+// 0x9E8B
+static int scvm_op_set_verb_object_image(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned room, obj;
+  if((r = scvm_vpop(vm,&room,&obj,NULL))) return r;
+  if(!vm->current_verb) return 0;
+  return scvm_set_verb_image(vm,vm->current_verb_id,room,obj);
+}
+
+// 0x9EC4
+static int scvm_op_set_current_verb(scvm_t* vm, scvm_thread_t* thread) {
+  int r,v;
+  if((r=scvm_pop(vm,&v))) return r;
+  if(!v) return SCVM_ERR_BAD_VERB;
+  vm->current_verb_id = v;
+  vm->current_verb = scvm_get_verb(vm,v,0);
+  return 0;
+}
 
 // 0xA4CD
 static int scvm_op_array_write_string(scvm_t* vm, scvm_thread_t* thread) {
@@ -1962,24 +2078,24 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   // 7C
   { scvm_op_dummy_v, "set image" },
-  { scvm_op_dummy_s, "set name" },
-  { scvm_op_dummy_v, "set color" },
-  { scvm_op_dummy_v, "set hi-color" },
+  { scvm_op_set_verb_name, "set name" },
+  { scvm_op_set_verb_color, "set color" },
+  { scvm_op_set_verb_hi_color, "set hi-color" },
   // 80
-  { scvm_op_dummy_vv, "set XY" },
-  { scvm_op_dummy, "set on" },
-  { scvm_op_dummy, "set off" },
-  { scvm_op_dummy, "kill" },
+  { scvm_op_set_verb_xy, "set XY" },
+  { scvm_op_set_verb_on, "set on" },
+  { scvm_op_set_verb_off, "set off" },
+  { scvm_op_kill_verb, "kill" },
   // 84
-  { scvm_op_dummy, "init" },
-  { scvm_op_dummy_v, "set dim-color" },
-  { scvm_op_dummy, "dim" },
-  { scvm_op_dummy_v, "set key" },
+  { scvm_op_init_verb, "init" },
+  { scvm_op_set_verb_dim_color, "set dim-color" },
+  { scvm_op_set_verb_dim, "dim" },
+  { scvm_op_set_verb_key, "set key" },
   // 88
-  { scvm_op_dummy, "set center" },
+  { scvm_op_set_verb_center, "set center" },
   { scvm_op_dummy_v, "set name string" },
   { NULL, NULL },
-  { scvm_op_dummy_vv, "set object" },
+  { scvm_op_set_verb_object_image, "set object" },
   // 8C
   { scvm_op_dummy_v, "set back color" },
   { scvm_op_dummy_vvv, "save verbs" },
@@ -2051,7 +2167,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { NULL, NULL },
   { NULL, NULL },
   // C4
-  { scvm_op_dummy_v, "set current verb" },
+  { scvm_op_set_current_verb, "set current verb" },
   { scvm_op_set_current_actor, "set current actor" },
   { scvm_op_dummy_vv, "set anim var" },
   { NULL, NULL },

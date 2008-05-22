@@ -89,6 +89,39 @@ struct scvm_object {
 
 int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y);
 
+// Verb mode
+#define SCVM_VERB_HIDE     0
+#define SCVM_VERB_SHOW     1
+#define SCVM_VERB_DIM      2
+
+// Verb flags
+#define SCVM_VERB_CENTER   1
+
+typedef struct scvm_verb {
+  unsigned id;
+  unsigned save_id;
+  char*    name;
+  unsigned width, height;
+  int      x,y;
+  unsigned color, back_color;
+  unsigned hi_color, dim_color;
+  unsigned charset;
+  unsigned key;
+  unsigned mode;
+  unsigned flags;
+  scvm_image_t img;
+} scvm_verb_t;
+
+scvm_verb_t* scvm_verb_init(scvm_verb_t* v, unsigned id, unsigned charset);
+
+scvm_verb_t* scvm_get_verb(scvm_t* vm, unsigned id, unsigned save_id);
+
+scvm_verb_t* scvm_new_verb(scvm_t* vm, unsigned id);
+
+void scvm_kill_verb(scvm_t* vm, unsigned id);
+
+int scvm_set_verb_image(scvm_t* vm, unsigned id,
+                        unsigned room_id, unsigned obj_id);
 
 typedef struct scvm_cycle {
   unsigned id;
@@ -447,6 +480,11 @@ struct scvm {
   // arrays
   unsigned num_array;
   scvm_array_t *array;
+  // verb
+  unsigned num_verb;
+  scvm_verb_t *verb;
+  scvm_verb_t *current_verb;
+  unsigned current_verb_id;
   
   // ressources
   char *path;
@@ -519,6 +557,9 @@ struct scvm {
 #define SCVM_ERR_BAD_PALETTE        -20
 #define SCVM_ERR_UNINITED_VM        -21
 #define SCVM_ERR_VIDEO_MODE         -22
+#define SCVM_ERR_BAD_VERB           -23
+#define SCVM_ERR_BAD_COLOR          -24
+#define SCVM_ERR_TOO_MANY_VERB      -25
 
 
 

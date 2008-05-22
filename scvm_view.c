@@ -168,7 +168,30 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                img->data, obj_w, obj_w, obj_h,
                img->have_trans ? vm->room->trans : -1);
   }
-  
+
+  for(a = 0 ; a < vm->num_verb ; a++) {
+    scvm_image_t* img;
+    int vrb_w,vrb_h;
+    scvm_verb_t* vrb = vm->verb + a;
+    if(!vrb->mode || !vrb->img.data) continue;
+    img = &vrb->img;
+    vrb_w = vrb->width;
+    vrb_h = vrb->height;
+    if(vrb->x >=  view->screen_width ||
+       vrb->x + vrb_w < 0 ||
+       vrb->y >= view->screen_height ||
+       vrb->y + vrb_h < 0)
+      continue;
+
+    scale_copy(buffer,stride,width,height,
+               vrb->x*width/view->screen_width,
+               vrb->y*height/view->screen_height,
+               vrb_w*width/view->screen_width,
+               vrb_h*height/view->screen_height,
+               img->data, vrb_w, vrb_w, vrb_h,
+               img->have_trans ? vm->room->trans : -1);
+  }
+
   for(a = 0 ; a < vm->num_actor ; a++) {
     uint8_t* zplane = NULL;
     if(!vm->actor[a].room ||

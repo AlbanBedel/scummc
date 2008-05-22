@@ -198,6 +198,54 @@ static int cmd_quit(scvm_t* vm, char* args) {
   return -1;
 }
 
+///////////// show verb ///////////////////////
+
+static void cmd_show_verb_usage(char* args) {
+  printf("Usage: show verb [ verb-addr [ save-slot ] ]\n");
+}
+
+static int cmd_show_verb(scvm_t* vm, char* args) {
+  int id,save = -1;
+  scvm_verb_t* verb;
+  if(args) {
+    if(sscanf(args,"%d %d",&id,&save) < 1) {
+      cmd_show_verb_usage(NULL);
+      return 0;
+    }
+    if(id <= 0) {
+      printf("Invalid verb address: %d\n",id);
+      return 0;
+    }
+    if(save < 0) save = 0;
+    verb = scvm_get_verb(vm,id,save);
+    if(!verb) {
+        printf("Verb %d (save slot %d) not found.\n",id,save);
+        return 0;
+    }
+  } else if(!vm->current_verb) {
+    printf("Current verb is not set.\n");
+    return 0;
+  } else
+    verb = vm->current_verb;
+
+  printf("Verb %d:\n",verb->id);
+  printf("  Name               : %s\n",verb->name);
+  printf("  Save slot          : %d\n",verb->save_id);
+  printf("  Size               : %dx%d\n",verb->width,verb->height);
+  printf("  Position           : %dx%d\n",verb->x,verb->y);
+  printf("  Color              : %d\n",verb->color);
+  printf("  Background color   : %d\n",verb->back_color);
+  printf("  Highlight color    : %d\n",verb->hi_color);
+  printf("  Dim color          : %d\n",verb->dim_color);
+  printf("  Charset            : %d\n",verb->charset);
+  printf("  Key                : %d\n",verb->key);
+  printf("  Mode               : %s\n",
+         verb->mode == 0 ? "hide" : (verb->mode == 1 ? "show" : "dim"));
+  printf("  Center             : %s\n",
+         (verb->flags & SCVM_VERB_CENTER) ? "Yes" : "No");
+  return 1;
+}
+
 ///////////// show actor ///////////////////////
 
 static void cmd_show_actor_usage(char* args) {
@@ -554,6 +602,7 @@ static scvm_debug_cmd_t show_cmd[] = {
   SHOW_CMD(room),
   SHOW_CMD(thread),
   SHOW_CMD(var),
+  SHOW_CMD(verb),
   SHOW_CMD(vm),
   { NULL }
 };

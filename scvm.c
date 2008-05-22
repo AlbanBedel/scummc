@@ -74,6 +74,9 @@ static const char* scvm_error[SCVM_ERR_MAX] = {
   "bad palette",
   "uninitialized vm",
   "failed to set video mode",
+  "bad verb",
+  "bad color",
+  "too many verb",
   NULL
 };
 
@@ -262,7 +265,8 @@ scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename, uint8_t key) {
   // unkonwn
   scc_fd_r16le(fd);
   // verbs
-  scc_fd_r16le(fd);
+  vm->num_verb = scc_fd_r16le(fd);
+  vm->verb = calloc(vm->num_verb,sizeof(scvm_verb_t));
   // fl objects
   scc_fd_r16le(fd);
   // inventory
