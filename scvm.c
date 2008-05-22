@@ -80,6 +80,7 @@ static const char* scvm_error[SCVM_ERR_MAX] = {
 static const char* scvm_not_error[SCVM_ERR_MAX] = {
   "interrupted",
   "breakpoint",
+  "quit",
   NULL
 };
 
@@ -103,6 +104,8 @@ char* scvm_state_name(unsigned state) {
     return "uninited";
   case SCVM_BOOT:
     return "boot";
+  case SCVM_PAUSE:
+    return "pause";
   case SCVM_BEGIN_CYCLE:
     return "begin cycle";
   case SCVM_RUNNING:
@@ -147,6 +150,10 @@ char* scvm_state_name(unsigned state) {
     return "move camera";
   case SCVM_WALK_ACTORS:
     return "walk actors";
+  case SCVM_RESTART:
+    return "restart";
+  case SCVM_QUIT:
+    return "quit";
   }
   return NULL;
 }
@@ -495,7 +502,21 @@ void scvm_check_events(scvm_t* vm) {
   vm->backend->check_events(vm->backend->priv,vm);
 }
 
+unsigned scvm_pause(scvm_t* vm) {
+  if(vm->state == SCVM_PAUSE) {
+    vm->state = vm->pause_state;
+    vm->pause_state = 0;
+  } else {
+    vm->pause_state = vm->state;
+    vm->state = SCVM_PAUSE;
+  }
+  return vm->state;
+}
+
 void scvm_press_key(scvm_t* vm, uint8_t key) {
+  if(vm->state == SCVM_PAUSE  ||
+     (vm->var->pause_key != -1 && key == vm->var->pause_key))
+    scvm_pause(vm);
   vm->keypress = key;
   vm->key_state[key>>3] |= 1<<(key&7);
 }
@@ -825,6 +846,12 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       vm->cycle++;
       vm->state = SCVM_BEGIN_CYCLE;
       break;
+
+    case SCVM_PAUSE:
+      return 0;
+
+    case SCVM_QUIT:
+      return SCVM_ERR_QUIT;
 
     default:
       scc_log(LOG_ERR,"Invalid VM state: %d\n",vm->state);

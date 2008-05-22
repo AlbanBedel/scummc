@@ -393,6 +393,7 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 
 #define SCVM_UNINITED         0
 #define SCVM_BOOT             5
+#define SCVM_PAUSE            8
 
 #define SCVM_BEGIN_CYCLE      10
 #define SCVM_RUNNING          20
@@ -421,6 +422,9 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 #define SCVM_CHECKED_INPUT                                   490
 #define SCVM_MOVE_CAMERA                                     500
 #define SCVM_WALK_ACTORS                                     510
+
+#define SCVM_RESTART                                        9999
+#define SCVM_QUIT                                          10000
 
 // Input zone
 #define SCVM_INPUT_VERB   1
@@ -470,6 +474,7 @@ struct scvm {
   
   // threads
   unsigned state;
+  unsigned pause_state;
   unsigned num_thread;
   unsigned cycle;
   scvm_thread_t* current_thread;
@@ -524,6 +529,7 @@ struct scvm {
 
 #define SCVM_ERR_INTERRUPTED        SCVM_NOT_ERR(0)
 #define SCVM_ERR_BREAKPOINT         SCVM_NOT_ERR(1)
+#define SCVM_ERR_QUIT               SCVM_NOT_ERR(2)
 
 
 char* scvm_state_name(unsigned state);
@@ -552,3 +558,6 @@ void scvm_flip(scvm_t* vm);
 void scvm_uninit_video(scvm_t* vm);
 
 int scvm_debugger(scvm_t* vm);
+
+unsigned scvm_pause(scvm_t* vm);
+

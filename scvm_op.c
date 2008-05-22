@@ -1261,6 +1261,16 @@ static int scvm_op_is_any_of(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,0);
 }
 
+// 0xAE9F
+static int scvm_op_pause(scvm_t* vm, scvm_thread_t* thread) {
+  return scvm_pause(vm);
+}
+
+// 0xAEA0
+static int scvm_op_quit(scvm_t* vm, scvm_thread_t* thread) {
+  return SCVM_QUIT;
+}
+
 // 0xB0
 static int scvm_op_delay(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -1700,7 +1710,7 @@ scvm_op_t scvm_optable[0x100] = {
   // AC
   { scvm_op_sound_kludge, "sound kludge" },
   { scvm_op_is_any_of, "is any of" },
-  { NULL, NULL },
+  { scvm_op_subop, "system ops" },
   { NULL, NULL },
   // B0
   { scvm_op_delay, "delay" },
@@ -2004,9 +2014,9 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_dummy_v, "init charset" },
   { scvm_op_dummy_l, "set charset colors" },
   { scvm_op_dummy, "restart" },
-  { scvm_op_dummy, "pause" },
+  { scvm_op_pause, "pause" },
   // A0
-  { scvm_op_dummy, "quit" },
+  { scvm_op_quit, "quit" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },
