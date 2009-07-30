@@ -49,6 +49,7 @@ typedef struct scvm_script {
 
 #define SCVM_MAX_OVERRIDE 8
 
+struct scvm_array;
 typedef struct scvm_thread scvm_thread_t;
 
 struct scvm_thread {
@@ -122,6 +123,13 @@ int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
 
 int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
                           uint16_t addr, int val);
+
+struct scvm_array* scvm_thread_get_array_var(scvm_t* vm,
+                                             scvm_thread_t* thread,
+                                             uint16_t addr);
+
+unsigned char* scvm_thread_get_string_var(scvm_t* vm, scvm_thread_t* thread,
+                                          uint16_t addr);
 
 int scvm_read_array(scvm_t* vm, unsigned addr, unsigned x, unsigned y, int* val);
 

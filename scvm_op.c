@@ -138,6 +138,21 @@ int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
   return 0;
 }
 
+scvm_array_t* scvm_thread_get_array_var(scvm_t* vm, scvm_thread_t* thread,
+                                        uint16_t addr) {
+  unsigned id;
+  if(scvm_thread_read_var(vm,vm->current_thread,addr,&id) ||
+     id >= vm->num_array)
+    return NULL;
+  return vm->array[id].size ? &vm->array[id] : NULL;
+}
+
+unsigned char* scvm_thread_get_string_var(scvm_t* vm, scvm_thread_t* thread,
+                                          uint16_t addr) {
+  scvm_array_t* array = scvm_thread_get_array_var(vm,thread,addr);
+  return array ? array->data.byte : NULL;
+}
+
 
 int scvm_read_array(scvm_t* vm, unsigned addr, unsigned x, unsigned y, int* val) {
   unsigned idx;
