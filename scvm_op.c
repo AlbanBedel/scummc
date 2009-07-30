@@ -650,6 +650,18 @@ static int scvm_op_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x6B9C
+static int scvm_op_init_charset(scvm_t* vm, scvm_thread_t* thread) {
+  int r, chset_id;
+  struct scc_charmap_st* chset;
+  if((r = scvm_pop(vm,&chset_id)))
+    return r;
+  if(!(chset = scvm_load_res(vm,SCVM_RES_CHARSET,chset_id)))
+    return SCVM_ERR_BAD_RESOURCE;
+  vm->current_charset = chset;
+  return 0;
+}
+
 // 0x6C
 static int scvm_op_break_script(scvm_t* vm, scvm_thread_t* thread) {
   thread->cycle = vm->cycle+1;
@@ -2169,7 +2181,7 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_dummy_vv, "set cursor hotspot" },
   { NULL, NULL },
   // 9C
-  { scvm_op_dummy_v, "init charset" },
+  { scvm_op_init_charset, "init charset" },
   { scvm_op_dummy_l, "set charset colors" },
   { scvm_op_dummy, "restart" },
   { scvm_op_pause, "pause" },

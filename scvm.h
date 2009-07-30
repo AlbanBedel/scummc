@@ -24,6 +24,8 @@
  * @brief A primitive SCUMM VM implementation.
  */
 
+struct scc_charmap_st;
+
 #define SCVM_ARRAY_BIT    0
 #define SCVM_ARRAY_NIBBLE 1
 #define SCVM_ARRAY_BYTE   2
@@ -486,7 +488,11 @@ struct scvm {
   scvm_verb_t *verb;
   scvm_verb_t *current_verb;
   unsigned current_verb_id;
-  
+
+  // charset
+  unsigned num_charset;
+  struct scc_charmap_st* current_charset;
+
   // ressources
   char *path;
   char *basename;
