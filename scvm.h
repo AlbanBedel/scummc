@@ -141,7 +141,9 @@ scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y);
 #define SCVM_VERB_DIM      2
 
 // Verb flags
-#define SCVM_VERB_CENTER   1
+#define SCVM_VERB_CENTER        (1<<0)
+#define SCVM_VERB_HAS_IMG       (1<<16)
+#define SCVM_VERB_HAS_NAME_IMG  (1<<17)
 
 typedef struct scvm_verb {
   unsigned id;
@@ -168,6 +170,8 @@ void scvm_kill_verb(scvm_t* vm, unsigned id);
 
 int scvm_set_verb_image(scvm_t* vm, unsigned id,
                         unsigned room_id, unsigned obj_id);
+
+scvm_image_t* scvm_get_verb_image(scvm_t* vm, scvm_verb_t* vrb);
 
 typedef struct scvm_cycle {
   unsigned id;

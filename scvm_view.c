@@ -171,21 +171,25 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
 
   for(a = 0 ; a < vm->num_verb ; a++) {
     scvm_image_t* img;
-    int vrb_w,vrb_h;
+    int vrb_x,vrb_y,vrb_w,vrb_h;
     scvm_verb_t* vrb = vm->verb + a;
-    if(!vrb->mode || !vrb->img.data) continue;
-    img = &vrb->img;
+    if(!vrb->mode || vrb->save_id ||
+       !(img = scvm_get_verb_image(vm,vrb))) continue;
     vrb_w = vrb->width;
     vrb_h = vrb->height;
-    if(vrb->x >=  view->screen_width ||
-       vrb->x + vrb_w < 0 ||
-       vrb->y >= view->screen_height ||
-       vrb->y + vrb_h < 0)
+    vrb_x = vrb->x;
+    vrb_y = vrb->y;
+    if(vrb->flags & SCVM_VERB_CENTER)
+        vrb_x -= vrb_w/2;
+    if(vrb_x >=  view->screen_width ||
+       vrb_x + vrb_w < 0 ||
+       vrb_y >= view->screen_height ||
+       vrb_y + vrb_h < 0)
       continue;
 
     scale_copy(buffer,stride,width,height,
-               vrb->x*width/view->screen_width,
-               vrb->y*height/view->screen_height,
+               vrb_x*width/view->screen_width,
+               vrb_y*height/view->screen_height,
                vrb_w*width/view->screen_width,
                vrb_h*height/view->screen_height,
                img->data, vrb_w, vrb_w, vrb_h,
@@ -197,7 +201,6 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
     if(!vm->actor[a].room ||
        vm->actor[a].room != vm->room->id ||
        !vm->actor[a].costdec.cost) continue;
-    scc_log(LOG_MSG,"Draw actor %d at %dx%d\n",a,vm->actor[a].x,vm->actor[a].y);
     if(vm->actor[a].box) {
       int mask = vm->room->box[vm->actor[a].box].mask;
       if(mask && mask <= vm->room->num_zplane) {
@@ -208,6 +211,9 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
         zplane = vm->room->zplane[mask];
       }
     }
+    scc_log(LOG_MSG,"Draw actor %d at %dx%d (zplane: %d)\n",a,
+            vm->actor[a].x,vm->actor[a].y,
+            zplane ?  vm->room->box[vm->actor[a].box].mask : -1);
     scc_cost_dec_frame(&vm->actor[a].costdec,
                        buffer + dy*stride + dx,
                        (vm->actor[a].x-sx)*width/view->screen_width,

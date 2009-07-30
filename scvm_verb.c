@@ -37,6 +37,7 @@
 #include "scc_util.h"
 #include "scc_cost.h"
 #include "scc_box.h"
+#include "scc_char.h"
 #include "scvm_res.h"
 #include "scvm_thread.h"
 #include "scvm.h"
@@ -70,13 +71,15 @@ scvm_verb_t* scvm_new_verb(scvm_t* vm, unsigned id) {
             }
         if(!vrb) return NULL;
     }
-    return scvm_verb_init(vrb,id,0 /* vm->cur_charset */);
+    return scvm_verb_init(vrb,id,
+                          vm->current_charset ? vm->current_charset->id : 0);
 }
 
 void scvm_kill_verb(scvm_t* vm, unsigned id) {
     scvm_verb_t* vrb = scvm_get_verb(vm,id,0);
     if(!vrb) return;
     if(vrb->name) free(vrb->name);
+    if(vrb->img.data) free(vrb->img.data);
     memset(vrb,0,sizeof(*vrb));
 }
 
@@ -96,6 +99,49 @@ int scvm_set_verb_image(scvm_t* vm, unsigned id,
     vrb->img.data = realloc(vrb->img.data,obj->width*obj->height);
     memcpy(vrb->img.data,obj->image[1].data,obj->width*obj->height);
     vrb->img.have_trans = obj->image[1].have_trans;
+    vrb->flags |= SCVM_VERB_HAS_IMG;
 
     return 0;
+}
+
+scvm_image_t* scvm_get_verb_image(scvm_t* vm, scvm_verb_t* vrb) {
+    scvm_string_dc_t size_dc, draw_dc;;
+    unsigned txt_w = 0, txt_h = 0;
+    int vrb_x = vrb->x, vrb_y = vrb->y;
+
+    if(vrb->flags & SCVM_VERB_HAS_IMG)
+        return vrb->img.data ? &vrb->img : NULL;
+
+    if(!vrb->name) return NULL;
+
+    if(scvm_init_string_dc(vm,&size_dc,vrb->charset))
+        return NULL;
+    scvm_string_dc_copy(&draw_dc,&size_dc);
+
+    if(scvm_string_get_size(vm,&size_dc,vrb->name,&txt_w,&txt_h) < 0 ||
+       !txt_w || !txt_h)
+        return NULL;
+
+    if(vrb->flags & SCVM_VERB_CENTER)
+        vrb_x -= vrb->width/2;
+
+    if(vm->var->mouse_x >= vrb_x && vm->var->mouse_x < vrb_x+vrb->width &&
+       vm->var->mouse_y >= vrb_y && vm->var->mouse_y < vrb_y+vrb->height)
+        draw_dc.pal[0] = vrb->hi_color;
+    else if(vrb->mode == SCVM_VERB_DIM)
+        draw_dc.pal[0] = vrb->dim_color;
+    else
+        draw_dc.pal[0] = vrb->color;
+
+    if(txt_w != vrb->width || txt_h != vrb->height) {
+        vrb->width = txt_w;
+        vrb->height = txt_h;
+        vrb->img.data = realloc(vrb->img.data,vrb->width*vrb->height);
+    }
+
+    memset(vrb->img.data,vrb->back_color,vrb->width*vrb->height);
+    vrb->img.have_trans = !vrb->back_color;
+    scvm_string_draw(vm,&draw_dc,vrb->name,vrb->img.data,vrb->width,
+                     0,0,vrb->width,vrb->height);
+    return &vrb->img;
 }
