@@ -656,6 +656,48 @@ static int scvm_op_break_script(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x6D
+static int scvm_op_is_object_of_class(scvm_t* vm, scvm_thread_t* thread) {
+  int r,len;
+  if((r = scvm_pop(vm,&len))) return r;
+  else {
+    unsigned obj,i,vals[len];
+    for(i = 0 ; i < len ; i++)
+      if((r = scvm_pop(vm,&vals[i]))) return r;
+    if((r = scvm_pop(vm,&obj))) return r;
+    if(obj >= vm->num_object) return SCVM_ERR_BAD_OBJECT;
+    for(i = 0 ; i < len ; i++)
+      if(((vals[i] & 0x80) &&
+          !(vm->object_pdata[obj].klass & (1 << (vals[i]&0x7F)))) ||
+         (!(vals[i] & 0x80) &&
+          (vm->object_pdata[obj].klass & (1 << (vals[i]&0x7F))))) {
+        r = 1;
+        break;
+      }
+  }
+  return scvm_push(vm,!r);
+}
+
+// 0x6E
+static int scvm_op_set_object_class(scvm_t* vm, scvm_thread_t* thread) {
+  int r,len;
+  if((r = scvm_pop(vm,&len))) return r;
+  else {
+    unsigned obj,i,vals[len];
+    for(i = 0 ; i < len ; i++)
+      if((r = scvm_pop(vm,&vals[i]))) return r;
+    if((r = scvm_pop(vm,&obj))) return r;
+    if(obj >= vm->num_object) return SCVM_ERR_BAD_OBJECT;
+    for(i = 0 ; i < len ; i++) {
+      if(vals[i] & 0x80)
+        vm->object_pdata[obj].klass |= 1 << (vals[i]&0x7F);
+      else
+        vm->object_pdata[obj].klass &= ~(1 << (vals[i]&0x7F));
+    }
+  }
+  return 0;
+}
+
 // 0x73
 static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
   int r,ptr;
@@ -1735,8 +1777,8 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_subop, "interface op" },
   // 6C
   { scvm_op_break_script, "break script" },
-  { NULL, NULL },
-  { scvm_op_dummy_vl, "set classes" },
+  { scvm_op_is_object_of_class, "is object of class" },
+  { scvm_op_set_object_class, "set class" },
   { scvm_op_dummy_v, "set object state" },
   // 70
   { scvm_op_dummy_vv, "set object state" },
