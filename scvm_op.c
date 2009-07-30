@@ -895,6 +895,17 @@ static int scvm_op_get_inventory_count(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,0);
 }
 
+// 0x94
+static int scvm_op_get_verb_at(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned x,y;
+  scvm_verb_t* verb;
+  if((r=scvm_vpop(vm,&y,&x,NULL))) return r;
+  verb = scvm_get_verb_at(vm,x,y);
+  return scvm_push(vm,verb ? verb->id : 0);
+  
+}
+
 // 0x95
 static int scvm_op_begin_override(scvm_t* vm, scvm_thread_t* thread) {
   int r;
@@ -1897,7 +1908,7 @@ scvm_op_t scvm_optable[0x100] = {
   { NULL, NULL },
   { scvm_op_get_inventory_count, "get inventory count" },
   // 94
-  { scvm_op_dummy_get_at, "get verb at" },
+  { scvm_op_get_verb_at, "get verb at" },
   { scvm_op_begin_override, "begin override" },
   { scvm_op_end_override, "end override" },
   { NULL, NULL },

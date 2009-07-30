@@ -178,6 +178,8 @@ void scvm_save_verb(scvm_t* vm, unsigned id, unsigned save_id);
 
 void scvm_restore_verb(scvm_t* vm, unsigned id, unsigned save_id);
 
+scvm_verb_t* scvm_get_verb_at(scvm_t* vm, unsigned x, unsigned y);
+
 typedef struct scvm_cycle {
   unsigned id;
   unsigned delay;

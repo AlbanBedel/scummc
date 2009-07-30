@@ -818,9 +818,11 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       }
       if(vm->btnpress) {
         int args[] = { 3, SCVM_INPUT_VERB, 0, vm->btnpress };
+        scvm_verb_t* verb;
         vm->btnpress = 0;
-        if(0 /* clickOnVerb */) {
-          //args[2] = verb->id;
+        if((verb = scvm_get_verb_at(vm,vm->var->mouse_x,
+                                    vm->var->mouse_y))) {
+          args[2] = verb->id;
         } else if(vm->var->virtual_mouse_x >= 0)
           args[1] = SCVM_INPUT_ROOM;
         if((r = scvm_start_script(vm,0,vm->var->verb_script,args)) < 0)

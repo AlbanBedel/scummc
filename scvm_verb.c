@@ -159,3 +159,14 @@ void scvm_restore_verb(scvm_t* vm, unsigned id, unsigned save_id) {
     vrb->save_id = 0;
 }
 
+scvm_verb_t* scvm_get_verb_at(scvm_t* vm, unsigned x, unsigned y) {
+    unsigned i;
+    for(i = vm->num_verb-1 ; i != -1 ; i--) {
+        scvm_verb_t* vrb = &vm->verb[i];
+        if(!vrb->mode || vrb->save_id) continue;
+        if(x >= vrb->x && x <= vrb->x + vrb->width &&
+           y >= vrb->y && y <= vrb->y + vrb->height)
+            return vrb;
+    }
+    return NULL;
+}
