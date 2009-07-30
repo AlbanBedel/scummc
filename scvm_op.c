@@ -858,6 +858,15 @@ static int scvm_op_actor_animate(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x83
+static int scvm_op_do_sentence(scvm_t* vm, scvm_thread_t* thread) {
+  int r,vrb,obj_a,dummy,obj_b;
+  if((r = scvm_vpop(vm,&obj_b,&dummy,&obj_a,&vrb,NULL)))
+    return r;
+  scvm_do_sentence(vm,vrb,obj_a,obj_b);
+  return 0;
+}
+
 // 0x87
 static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
   int r,max;
@@ -1924,7 +1933,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_dummy_vvv,  "put actor at object" },
   { scvm_op_dummy_vv, "actor face" },
   { scvm_op_actor_animate, "actor animate" },
-  { scvm_op_dummy_vvvv, "do sentence" },
+  { scvm_op_do_sentence, "do sentence" },
   // 84
   { scvm_op_dummy_vv, "pickup object" },
   { NULL, NULL },

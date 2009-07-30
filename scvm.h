@@ -180,6 +180,17 @@ void scvm_restore_verb(scvm_t* vm, unsigned id, unsigned save_id);
 
 scvm_verb_t* scvm_get_verb_at(scvm_t* vm, unsigned x, unsigned y);
 
+typedef struct scvm_sentence {
+  unsigned verb;
+  unsigned object_a;
+  unsigned object_b;
+} scvm_sentence_t;
+
+#define SCVM_MAX_SENTENCE 6
+
+int scvm_do_sentence(scvm_t* vm, unsigned vrb, unsigned obj_a,
+                     unsigned obj_b);
+
 typedef struct scvm_cycle {
   unsigned id;
   unsigned delay;
@@ -508,6 +519,10 @@ typedef int (*scvm_set_var_f)(struct scvm* vm,unsigned addr, int val);
 
 #define SCVM_RUN_INVENTORY                                   400
 
+#define SCVM_CHECK_SENTENCE                                  450
+#define SCVM_REMOVE_SENTENCE                                 455
+#define SCVM_CHECKED_SENTENCE                                460
+
 #define SCVM_CHECK_INPUT                                     480
 #define SCVM_CHECKED_INPUT                                   490
 #define SCVM_MOVE_CAMERA                                     500
@@ -542,6 +557,9 @@ struct scvm {
   scvm_verb_t *verb;
   scvm_verb_t *current_verb;
   unsigned current_verb_id;
+  // sentences
+  unsigned num_sentence;
+  scvm_sentence_t sentence[SCVM_MAX_SENTENCE];
 
   // charset
   unsigned num_charset;
@@ -621,6 +639,7 @@ struct scvm {
 #define SCVM_ERR_BAD_VERB           -23
 #define SCVM_ERR_BAD_COLOR          -24
 #define SCVM_ERR_TOO_MANY_VERB      -25
+#define SCVM_ERR_SENTENCE_OVERFLOW  -26
 
 
 

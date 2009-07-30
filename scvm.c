@@ -77,6 +77,7 @@ static const char* scvm_error[SCVM_ERR_MAX] = {
   "bad verb",
   "bad color",
   "too many verb",
+  "sentence overflow",
   NULL
 };
 
@@ -145,6 +146,12 @@ char* scvm_state_name(unsigned state) {
     return "camera start following actor in room";
   case SCVM_RUN_INVENTORY:
     return "run inventory";
+  case SCVM_CHECK_SENTENCE:
+    return "check sentence";
+  case SCVM_REMOVE_SENTENCE:
+    return "remove sentence";
+  case SCVM_CHECKED_SENTENCE:
+    return "checked sentence";
   case SCVM_CHECK_INPUT:
     return "check input";
   case SCVM_CHECKED_INPUT:
@@ -796,7 +803,40 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       break;
 
     case SCVM_FINISHED_SCRIPTS:
+      vm->state = SCVM_CHECK_SENTENCE;
+
+
+    case SCVM_CHECK_SENTENCE:
+      if(!vm->var->sentence_script) {
+        vm->state = SCVM_REMOVE_SENTENCE;
+        break;
+      }
+      if(!vm->num_sentence ||
+         scvm_is_script_running(vm,vm->var->sentence_script)) {
+        vm->state = SCVM_CHECKED_SENTENCE;
+        break;
+      } else {
+        unsigned args[] = { 3, vm->sentence->verb,
+                            vm->sentence->object_a,
+                            vm->sentence->object_b };
+        if((r = scvm_start_script(vm,0,vm->var->sentence_script,args)) < 0)
+          return r;
+        scvm_switch_to_thread(vm,r,SCVM_REMOVE_SENTENCE);
+        break;
+      }
+      vm->state = SCVM_CHECKED_SENTENCE;
+      break;
+
+    case SCVM_REMOVE_SENTENCE:
+      if(vm->num_sentence > 1)
+        memmove(vm->sentence,vm->sentence+1,
+                (vm->num_sentence-1)*sizeof(scvm_sentence_t));
+      vm->num_sentence -= 1;
+      vm->state = SCVM_CHECKED_SENTENCE;
+
+    case SCVM_CHECKED_SENTENCE:
       vm->state = SCVM_CHECK_INPUT;
+
 
     case SCVM_CHECK_INPUT:
       if(!vm->var->verb_script /*|| !vm->userput*/) {
@@ -899,6 +939,19 @@ void scvm_cycle_palette(scvm_t* vm) {
     }
     vm->view->flags |= SCVM_VIEW_PALETTE_CHANGED;
   }
+}
+
+int scvm_do_sentence(scvm_t* vm, unsigned vrb, unsigned obj_a,
+                     unsigned obj_b) {
+  scvm_sentence_t* st;
+  if(vm->num_sentence >= SCVM_MAX_SENTENCE)
+    return SCVM_ERR_SENTENCE_OVERFLOW;
+  st = &vm->sentence[vm->num_sentence];
+  st->verb = vrb;
+  st->object_a = obj_a;
+  st->object_b = obj_b;
+  vm->num_sentence += 1;
+  return 0;
 }
 
 int scvm_run_once(scvm_t* vm) {
