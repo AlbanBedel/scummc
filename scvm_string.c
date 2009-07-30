@@ -112,9 +112,8 @@ int scvm_string_get_escape_size(scvm_t* vm, scvm_string_dc_t* dc,
         if(val <= 0xF) {
             if(val < vm->num_actor)
                 sub_str = vm->actor[val].name;
-        } else {
-            // TODO
-        }
+        } else
+            scvm_get_object_name(vm,val,&sub_str);
         break;
     case SCVM_CHAR_STRING_VAR:
         sub_str = scvm_thread_get_string_var(vm,vm->current_thread,arg);
@@ -258,9 +257,8 @@ int scvm_string_draw_escape(scvm_t* vm, scvm_string_dc_t* dc,
         if(val <= 0xF) {
             if(val < vm->num_actor)
                 sub_str = vm->actor[val].name;
-        } else {
-            // TODO
-        }
+        } else
+            scvm_get_object_name(vm,val,&sub_str);
         break;
     case SCVM_CHAR_STRING_VAR:
         sub_str = scvm_thread_get_string_var(vm,vm->current_thread,arg);

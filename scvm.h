@@ -132,6 +132,7 @@ struct scvm_object {
   scvm_object_pdata_t* pdata;
 };
 
+int scvm_get_object_name(scvm_t* vm, unsigned id, char** name);
 int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y);
 scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y);
 

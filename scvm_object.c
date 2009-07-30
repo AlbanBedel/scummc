@@ -43,6 +43,17 @@
 #include "scvm_thread.h"
 #include "scvm.h"
 
+int scvm_get_object_name(scvm_t* vm, unsigned id, char** name) {
+    if(id < vm->num_actor) {
+        *name = vm->actor[id].name;
+        return 0;
+    }
+    if(id >= vm->res[SCVM_RES_OBJECT].num)
+        return SCVM_ERR_BAD_OBJECT;
+    *name = vm->object_pdata[id].name;
+    return 0;
+}
+
 int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y) {
     scvm_object_t* obj;
     if(id < vm->num_actor) {
