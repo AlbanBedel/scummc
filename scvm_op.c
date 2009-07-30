@@ -1267,6 +1267,16 @@ static int scvm_op_set_current_verb(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0xA0
+static int scvm_op_get_object_at(scvm_t* vm, scvm_thread_t* thread) {
+  int r,x,y;
+  scvm_object_t* obj;
+  if((r = scvm_vpop(vm,&y,&x,NULL))) return r;
+  obj = scvm_get_object_at(vm,x,y);
+  return scvm_push(vm,obj ? obj->id : 0);
+}
+
+
 // 0xA4CD
 static int scvm_op_array_write_string(scvm_t* vm, scvm_thread_t* thread) {
   int r,addr;
@@ -1841,7 +1851,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_subop, "verb op" },
   { scvm_op_dummy_get_at, "get actor at" },
   // A0
-  { scvm_op_dummy_get_at, "get object at" },
+  { scvm_op_get_object_at, "get object at" },
   { NULL, NULL },
   { NULL, NULL },
   { NULL, NULL },

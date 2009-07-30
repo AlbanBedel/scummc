@@ -88,6 +88,7 @@ struct scvm_object {
 };
 
 int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y);
+scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y);
 
 // Verb mode
 #define SCVM_VERB_HIDE     0
