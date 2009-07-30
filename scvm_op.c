@@ -725,6 +725,44 @@ static int scvm_op_set_object_class(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x6F
+static int scvm_op_get_object_state(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned obj;
+  if((r = scvm_pop(vm,&obj))) return r;
+  if(obj >= vm->num_object) return SCVM_ERR_BAD_OBJECT;
+  return scvm_push(vm,vm->object_pdata[obj].state);
+}
+
+// 0x70
+static int scvm_op_set_object_state(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned obj, state;
+  if((r = scvm_vpop(vm,&state,&obj,NULL))) return r;
+  if(obj >= vm->num_object) return SCVM_ERR_BAD_OBJECT;
+  vm->object_pdata[obj].state = state;
+  return 0;
+}
+
+// 0x71
+static int scvm_op_set_object_owner(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned obj, owner;
+  if((r = scvm_vpop(vm,&owner,&obj,NULL))) return r;
+  if(obj >= vm->num_object) return SCVM_ERR_BAD_OBJECT;
+  vm->object_pdata[obj].owner = owner;
+  return 0;
+}
+
+// 0x72
+static int scvm_op_get_object_owner(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned obj;
+  if((r = scvm_pop(vm,&obj))) return r;
+  if(obj >= vm->num_object) return SCVM_ERR_BAD_OBJECT;
+  return scvm_push(vm,vm->object_pdata[obj].owner);
+}
+
 // 0x73
 static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
   int r,ptr;
@@ -1861,11 +1899,11 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_break_script, "break script" },
   { scvm_op_is_object_of_class, "is object of class" },
   { scvm_op_set_object_class, "set class" },
-  { scvm_op_dummy_v, "set object state" },
+  { scvm_op_get_object_state, "get object state" },
   // 70
-  { scvm_op_dummy_vv, "set object state" },
-  { scvm_op_dummy_vv, "set object owner" },
-  { scvm_op_dummy_v, "get object owner" },
+  { scvm_op_set_object_state, "set object state" },
+  { scvm_op_set_object_owner, "set object owner" },
+  { scvm_op_get_object_owner, "get object owner" },
   { scvm_op_jmp, "jump" },
   // 74
   { scvm_op_dummy_v, "start sound" },
