@@ -179,6 +179,7 @@ scvm_SRCS=                      \
 	scvm_view.c             \
 	scvm_actor.c            \
 	scvm_verb.c             \
+	scvm_string.c           \
 	scc_fd.c                \
 	scc_util.c              \
 	scc_param.c             \

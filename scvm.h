@@ -58,6 +58,49 @@ typedef struct scvm_image {
   unsigned have_trans;
 } scvm_image_t;
 
+#define SCVM_CHAR_MAX_ARGS              2
+
+#define SCVM_CHAR_ESCAPE                0xFF
+
+#define SCVM_CHAR_NEW_LINE              0x01
+#define SCVM_CHAR_KEEP                  0x02
+#define SCVM_CHAR_WAIT                  0x03
+#define SCVM_CHAR_INT_VAR               0x04
+#define SCVM_CHAR_VERB                  0x05
+#define SCVM_CHAR_NAME                  0x06
+#define SCVM_CHAR_STRING_VAR            0x07
+#define SCVM_CHAR_ACTOR_ANIM            0x09
+#define SCVM_CHAR_VOICE                 0x0A
+#define SCVM_CHAR_COLOR                 0x0B
+#define SCVM_CHAR_CHARSET               0x0E
+
+#define SCVM_STRING_CENTER                 1
+
+typedef struct scvm_string_dc_st {
+    struct scc_charmap_st*   chset;
+    int8_t                   pal[15];
+    unsigned                 flags;
+    int                      pen_x;
+    int                      pen_y;
+} scvm_string_dc_t;
+
+int scvm_getc(unsigned char* str, unsigned* c, int* arg);
+
+int scvm_strlen(unsigned char* str);
+
+int scvm_init_string_dc(scvm_t* vm,scvm_string_dc_t* dc,unsigned chset_no);
+
+void scvm_string_dc_copy(scvm_string_dc_t* to, const scvm_string_dc_t* from);
+
+int scvm_string_get_size(scvm_t* vm, scvm_string_dc_t* dc,
+                         unsigned char* str,
+                         unsigned* p_width, unsigned* p_height);
+
+int scvm_string_draw(scvm_t* vm, scvm_string_dc_t* dc,
+                     unsigned char* str,
+                     uint8_t* dst, int dst_stride,
+                     int dx, int dy, int clip_w, int clip_h);
+
 typedef struct scvm_object_pdata {
   unsigned klass;
   unsigned owner;
