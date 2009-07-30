@@ -1233,7 +1233,7 @@ static int scvm_op_set_verb_off(scvm_t* vm, scvm_thread_t* thread) {
 // 0x9E83
 static int scvm_op_kill_verb(scvm_t* vm, scvm_thread_t* thread) {
   if(!vm->current_verb_id) return 0;
-  scvm_kill_verb(vm,vm->current_verb_id);
+  scvm_kill_verb(vm,vm->current_verb_id,0);
   return 0;
 }
 
@@ -1368,6 +1368,40 @@ static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
   }
   return 0;
 }
+
+// 0xA58D
+static int scvm_op_save_verbs(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned from,to,save_id,vrb;
+  if((r=scvm_vpop(vm,&save_id,&to,&from,NULL)))
+      return r;
+  for(vrb = from ; vrb <= to ; vrb++)
+      scvm_save_verb(vm,vrb,save_id);
+  return 0;
+}
+
+// 0xA58E
+static int scvm_op_restore_verbs(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned from,to,save_id,vrb;
+  if((r=scvm_vpop(vm,&save_id,&to,&from,NULL)))
+      return r;
+  for(vrb = from ; vrb <= to ; vrb++)
+      scvm_restore_verb(vm,vrb,save_id);
+  return 0;
+}
+
+// 0xA58F
+static int scvm_op_kill_verbs(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned from,to,save_id,vrb;
+  if((r=scvm_vpop(vm,&save_id,&to,&from,&vrb,NULL)))
+      return r;
+  for(vrb = from ; vrb <= to ; vrb++)
+      scvm_kill_verb(vm,vrb,save_id);
+  return 0;
+}
+
 
 // 0xA9A8
 static int scvm_op_wait_for_actor(scvm_t* vm, scvm_thread_t* thread) {
@@ -2177,9 +2211,9 @@ scvm_op_t scvm_suboptable[0x100] = {
   { scvm_op_set_verb_object_image, "set object" },
   // 8C
   { scvm_op_dummy_v, "set back color" },
-  { scvm_op_dummy_vvv, "save verbs" },
-  { scvm_op_dummy_vvv, "restore verbs" },
-  { scvm_op_dummy_vvv, "delete verbs" },
+  { scvm_op_save_verbs, "save verbs" },
+  { scvm_op_restore_verbs, "restore verbs" },
+  { scvm_op_kill_verbs, "kill verbs" },
   // 90
   { scvm_op_dummy, "cursor on" },
   { scvm_op_dummy, "cursor off" },

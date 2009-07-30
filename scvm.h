@@ -166,12 +166,16 @@ scvm_verb_t* scvm_get_verb(scvm_t* vm, unsigned id, unsigned save_id);
 
 scvm_verb_t* scvm_new_verb(scvm_t* vm, unsigned id);
 
-void scvm_kill_verb(scvm_t* vm, unsigned id);
+void scvm_kill_verb(scvm_t* vm, unsigned id, unsigned save_id);
 
 int scvm_set_verb_image(scvm_t* vm, unsigned id,
                         unsigned room_id, unsigned obj_id);
 
 scvm_image_t* scvm_get_verb_image(scvm_t* vm, scvm_verb_t* vrb);
+
+void scvm_save_verb(scvm_t* vm, unsigned id, unsigned save_id);
+
+void scvm_restore_verb(scvm_t* vm, unsigned id, unsigned save_id);
 
 typedef struct scvm_cycle {
   unsigned id;

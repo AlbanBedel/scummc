@@ -75,8 +75,8 @@ scvm_verb_t* scvm_new_verb(scvm_t* vm, unsigned id) {
                           vm->current_charset ? vm->current_charset->id : 0);
 }
 
-void scvm_kill_verb(scvm_t* vm, unsigned id) {
-    scvm_verb_t* vrb = scvm_get_verb(vm,id,0);
+void scvm_kill_verb(scvm_t* vm, unsigned id, unsigned save_id) {
+    scvm_verb_t* vrb = scvm_get_verb(vm,id,save_id);
     if(!vrb) return;
     if(vrb->name) free(vrb->name);
     if(vrb->img.data) free(vrb->img.data);
@@ -145,3 +145,17 @@ scvm_image_t* scvm_get_verb_image(scvm_t* vm, scvm_verb_t* vrb) {
                      0,0,vrb->width,vrb->height);
     return &vrb->img;
 }
+
+void scvm_save_verb(scvm_t* vm, unsigned id, unsigned save_id) {
+    scvm_verb_t* vrb = scvm_get_verb(vm,id,0);
+    if(!vrb) return;
+    vrb->save_id = save_id;
+}
+
+void scvm_restore_verb(scvm_t* vm, unsigned id, unsigned save_id) {
+    scvm_verb_t* vrb = scvm_get_verb(vm,id,save_id);
+    if(!vrb) return;
+    scvm_kill_verb(vm,id,0);
+    vrb->save_id = 0;
+}
+
