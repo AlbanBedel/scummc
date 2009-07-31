@@ -237,6 +237,12 @@ typedef struct scvm_room {
 
 #define SCVM_ACTOR_IGNORE_BOXES        1
 
+#define SCVM_ACTOR_WALKING_STOPPED     0
+#define SCVM_ACTOR_WALKING_INIT        1
+#define SCVM_ACTOR_WALKING_FIND_DST    2
+#define SCVM_ACTOR_WALKING_TO_DST      3
+
+
 typedef struct scvm_actor {
   unsigned id;
   char* name;

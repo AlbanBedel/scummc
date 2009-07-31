@@ -78,7 +78,7 @@ void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room) {
   a->dstX = x;
   a->dstY = y;
   if(a->walking) {
-    a->walking = 0;
+    a->walking = SCVM_ACTOR_WALKING_STOPPED;
     scvm_actor_animate(a,a->stand_frame);
   }
   a->box = 0;
@@ -88,7 +88,7 @@ void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room) {
 void scvm_actor_walk_to(scvm_actor_t* a, int x, int y) {
   a->walk_to_x = x;
   a->walk_to_y = y;
-  a->walking = 1;
+  a->walking = SCVM_ACTOR_WALKING_INIT;
 }
 
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost) {
@@ -106,7 +106,7 @@ void scvm_actor_animate(scvm_actor_t* a, int anim) {
     scc_cost_dec_load_anim(&a->costdec,(a->stand_frame<<2)+(anim&3));
     a->direction = anim&3;
     // stop moving
-    a->walking = 0;
+    a->walking = SCVM_ACTOR_WALKING_STOPPED;
     return;
   }
   if(anim >= 0xF8) {
@@ -140,22 +140,23 @@ static int get_direction_to(int sx, int sy, int dx, int dy) {
 void scvm_actor_walk_step(scvm_actor_t* a,scvm_room_t* room) {
   int dstDir,step,len;
 
-  if(!a->walking) return;
+  if(a->walking == SCVM_ACTOR_WALKING_STOPPED) return;
 
   if(a->x == a->walk_to_x && a->y == a->walk_to_y) {
-    a->walking = 0;
+    a->walking = SCVM_ACTOR_WALKING_STOPPED;
     a->box = a->walk_to_box;
     scvm_actor_animate(a,a->stand_frame);
     return;
   }
 
-  if(a->walking > 2 && a->x == a->dstX && a->y == a->dstY) {
+  if(a->walking == SCVM_ACTOR_WALKING_TO_DST &&
+     a->x == a->dstX && a->y == a->dstY) {
     a->box = a->dst_box;
-    a->walking = 2;
+    a->walking = SCVM_ACTOR_WALKING_FIND_DST;
   }
 
 
-  if(a->walking == 1) {
+  if(a->walking == SCVM_ACTOR_WALKING_INIT) {
     if(!(a->flags & SCVM_ACTOR_IGNORE_BOXES)) {
       scc_box_t* box = scc_boxes_adjust_point(room->box,
                                               a->walk_to_x, a->walk_to_y,
@@ -163,11 +164,11 @@ void scvm_actor_walk_step(scvm_actor_t* a,scvm_room_t* room) {
       a->walk_to_box = box->id;
     } else
       a->walk_to_box = a->box;
-    a->walking = 2;
+    a->walking = SCVM_ACTOR_WALKING_FIND_DST;
   }
 
 
-  if(a->walking == 2) {
+  if(a->walking == SCVM_ACTOR_WALKING_FIND_DST) {
     if((a->flags & SCVM_ACTOR_IGNORE_BOXES) ||
        a->box == a->walk_to_box) {
       a->dstX = a->walk_to_x;
@@ -178,7 +179,7 @@ void scvm_actor_walk_step(scvm_actor_t* a,scvm_room_t* room) {
       if(a->dst_box >= room->num_box) {
         scc_log(LOG_ERR,"Bad destination box: %d from %d.\n",
                 a->dst_box,a->box);
-        a->walking = 0;
+        a->walking = SCVM_ACTOR_WALKING_STOPPED;
         scvm_actor_animate(a,a->stand_frame);
         return;
       }
@@ -198,7 +199,7 @@ void scvm_actor_walk_step(scvm_actor_t* a,scvm_room_t* room) {
     a->walk_dx  = abs(a->dstX - a->x);
     a->walk_dy  = abs(a->dstY - a->y);
     a->walk_err = 0;
-    a->walking  = 3;
+    a->walking  = SCVM_ACTOR_WALKING_TO_DST;
     scvm_actor_animate(a,a->walk_frame);
     return;
   }
