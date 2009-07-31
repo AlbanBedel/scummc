@@ -276,14 +276,14 @@ typedef struct scvm_actor {
 
   unsigned walking;
   int walk_dx, walk_dy, walk_err;
-  int walk_to_x, walk_to_y, walk_to_box;
+  int walk_to_x, walk_to_y, walk_to_dir, walk_to_box;
   int dstX, dstY, dst_box;
 } scvm_actor_t;
 
 void scvm_actor_init(scvm_actor_t* a);
 void scvm_actor_set_default_frames(scvm_actor_t* a);
 void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room);
-void scvm_actor_walk_to(scvm_actor_t* a, int x, int y);
+void scvm_actor_walk_to(scvm_actor_t* a, int x, int y, int dir);
 void scvm_actor_set_costume(scvm_actor_t* a, scc_cost_t* cost);
 void scvm_actor_animate(scvm_actor_t* a, int anim);
 void scvm_actor_step_anim(scvm_actor_t* a);

@@ -847,6 +847,35 @@ static int scvm_op_stop_script(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+// 0x7D
+static int scvm_op_walk_actor_to_object(scvm_t* vm, scvm_thread_t* thread) {
+  int r,x,y,dist;
+  unsigned a,o;
+  scvm_object_t* obj;
+
+  if((r=scvm_vpop(vm,&dist,&o,&a,NULL)))
+    return r;
+
+  if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
+  if(!(obj = scvm_get_object(vm,o))) return SCVM_ERR_BAD_OBJECT;
+
+  x = obj->x, y = obj->y;
+  if(obj->hotspot) {
+    unsigned hs = obj->pdata->state;
+    if(hs > obj->num_hotspot) hs = obj->num_hotspot-1;
+    x += obj->hotspot[hs*2+0];
+    y += obj->hotspot[hs*2+1];
+  }
+  if(dist) {
+    if(vm->actor[a].x <= x)
+      x -= dist;
+    else
+      x += dist;
+  }
+  scvm_actor_walk_to(&vm->actor[a],x,y,obj->actor_dir);
+  return 0;
+}
+
 // 0x7E
 static int scvm_op_walk_actor_to(scvm_t* vm, scvm_thread_t* thread) {
   int r,a,x,y;
@@ -855,7 +884,7 @@ static int scvm_op_walk_actor_to(scvm_t* vm, scvm_thread_t* thread) {
     return r;
 
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
-  scvm_actor_walk_to(&vm->actor[a],x,y);
+  scvm_actor_walk_to(&vm->actor[a],x,y,-1);
   return 0;
 }
 
@@ -1957,7 +1986,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_start_room, "start room" },
   // 7C
   { scvm_op_stop_script, "stop script" },
-  { scvm_op_dummy_vvv, "walk actor to object" },
+  { scvm_op_walk_actor_to_object, "walk actor to object" },
   { scvm_op_walk_actor_to, "walk actor to" },
   { scvm_op_put_actor_at, "put actor at" },
   // 80

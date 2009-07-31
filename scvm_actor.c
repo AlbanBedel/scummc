@@ -85,9 +85,10 @@ void scvm_actor_put_at(scvm_actor_t* a, int x, int y, unsigned room) {
   a->room = room;
 }
 
-void scvm_actor_walk_to(scvm_actor_t* a, int x, int y) {
+void scvm_actor_walk_to(scvm_actor_t* a, int x, int y, int dir) {
   a->walk_to_x = x;
   a->walk_to_y = y;
+  a->walk_to_dir = dir;
   a->walking = SCVM_ACTOR_WALKING_INIT;
 }
 
@@ -145,6 +146,10 @@ void scvm_actor_walk_step(scvm_actor_t* a,scvm_room_t* room) {
   if(a->x == a->walk_to_x && a->y == a->walk_to_y) {
     a->walking = SCVM_ACTOR_WALKING_STOPPED;
     a->box = a->walk_to_box;
+    if(a->walk_to_dir >= 0 && a->walk_to_dir != a->direction) {
+      // TODO: turn to the right direction
+      a->direction = a->walk_to_dir;
+    }
     scvm_actor_animate(a,a->stand_frame);
     return;
   }
