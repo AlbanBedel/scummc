@@ -365,7 +365,7 @@ scvm_object_t* scvm_load_obcd(scvm_t* vm, scc_fd_t* fd) {
 
   if(type == MKID('V','E','R','B')) {
     unsigned entries[0x200];
-    unsigned num_entries = 0,verb;
+    unsigned num_entries = 0,verb,i;
     if(size < 8+1) return NULL;
     size -= 8;
     while(1) {
@@ -379,7 +379,11 @@ scvm_object_t* scvm_load_obcd(scvm_t* vm, scc_fd_t* fd) {
     if(num_entries) {
       obj->verb_entries = malloc(2*num_entries*sizeof(unsigned));
       obj->num_verb_entries = num_entries;
-      memcpy(obj->verb_entries,entries,2*num_entries*sizeof(unsigned));
+      for(i = 0 ; i < num_entries ; i++) {
+        obj->verb_entries[2*i+0] = entries[2*num_entries+0];
+        obj->verb_entries[2*i+1] =
+          entries[2*num_entries+1] - 8 - 3*num_entries - 1;
+      }
     }
     if(size > 0) {
       obj->script = malloc(sizeof(scvm_script_t)+size);
