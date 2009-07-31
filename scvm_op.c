@@ -646,6 +646,27 @@ static int scvm_op_start_script_recursive(scvm_t* vm, scvm_thread_t* thread) {
   }    
 }
 
+// 0x60
+static int scvm_op_start_object_script(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  unsigned num_args,flags,obj,verb;
+  if((r=scvm_pop(vm,&num_args))) return r;
+  else {
+    int args[num_args+1];
+    args[0] = num_args;
+    while(num_args > 0) {
+      if((r=scvm_pop(vm,&args[num_args]))) return r;
+      num_args--;
+    }
+    if((r=scvm_vpop(vm,&verb,&obj,&flags,NULL)) ||
+       (r=scvm_start_object_script(vm,obj,verb,flags,args)) < 0)
+      return r;
+    vm->next_thread = &vm->thread[r];
+    return SCVM_START_SCRIPT;
+  }
+}
+
+
 // 0x61
 static int scvm_op_draw_object(scvm_t* vm, scvm_thread_t* thread) {
   int r,obj_id,state;
@@ -1361,6 +1382,16 @@ static int scvm_op_get_object_at(scvm_t* vm, scvm_thread_t* thread) {
   return scvm_push(vm,obj ? obj->id : 0);
 }
 
+// 0xA3
+static int scvm_op_get_object_verb_entry_point(scvm_t* vm,
+                                               scvm_thread_t* thread) {
+  int r;
+  unsigned obj,verb,entry;
+  if((r = scvm_vpop(vm,&verb,&obj,NULL)) ||
+     (r = scvm_get_object_verb_entry_point(vm,obj,verb,&entry)) < 0)
+    return r;
+  return scvm_push(vm,entry);
+}
 
 // 0xA4CD
 static int scvm_op_array_write_string(scvm_t* vm, scvm_thread_t* thread) {
@@ -1890,7 +1921,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_start_script, "start script" },
   { scvm_op_start_script0, "start script0" },
   // 60
-  { NULL, NULL },
+  { scvm_op_start_object_script, "start object script" },
   { scvm_op_draw_object, "draw object" },
   { NULL, NULL },
   { NULL, NULL },
@@ -1973,7 +2004,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_get_object_at, "get object at" },
   { NULL, NULL },
   { NULL, NULL },
-  { NULL, NULL },
+  { scvm_op_get_object_verb_entry_point, "get object verb entry point" },
   // A4
   { scvm_op_subop, "array write" },
   { scvm_op_subop, "save-load verbs" },

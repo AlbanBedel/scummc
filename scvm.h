@@ -132,9 +132,15 @@ struct scvm_object {
   scvm_object_pdata_t* pdata;
 };
 
+scvm_object_t* scvm_get_object(scvm_t* vm, unsigned id);
 int scvm_get_object_name(scvm_t* vm, unsigned id, char** name);
 int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y);
 scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y);
+int scvm_get_object_verb_entry_point(scvm_t* vm, unsigned id,
+                                     unsigned verb, unsigned *entry);
+int scvm_start_object_script(scvm_t* vm, unsigned id,
+                             unsigned verb, unsigned flags,
+                             unsigned* args);
 
 // Verb mode
 #define SCVM_VERB_HIDE     0

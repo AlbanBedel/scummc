@@ -43,6 +43,12 @@
 #include "scvm_thread.h"
 #include "scvm.h"
 
+scvm_object_t* scvm_get_object(scvm_t* vm, unsigned id) {
+    if(id >= vm->res[SCVM_RES_OBJECT].num)
+        return NULL;
+    return vm->res[SCVM_RES_OBJECT].idx[id].data;
+}
+
 int scvm_get_object_name(scvm_t* vm, unsigned id, char** name) {
     if(id < vm->num_actor) {
         *name = vm->actor[id].name;
@@ -84,4 +90,34 @@ scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y) {
             return obj;
     }
     return NULL;
+}
+
+int scvm_get_object_verb_entry_point(scvm_t* vm, unsigned id,
+                                     unsigned verb, unsigned *entry) {
+    scvm_object_t* obj;
+    unsigned i;
+    if(!(obj = scvm_get_object(vm,id)) ||
+       !(obj->loaded & SCVM_OBJ_OBCD))
+        return SCVM_ERR_BAD_OBJECT;
+    for(i = 0 ; i < obj->num_verb_entries ; i++)
+        if(obj->verb_entries[i*2] == verb ||
+           obj->verb_entries[i*2] == 0xFF) {
+            *entry = obj->verb_entries[i*2+1];
+            return 0;
+        }
+    *entry = 0;
+    return 1;
+}
+
+int scvm_start_object_script(scvm_t* vm, unsigned id,
+                             unsigned verb, unsigned flags,
+                             unsigned* args) {
+    int r;
+    unsigned entry;
+    scvm_object_t* obj;
+    if((r = scvm_get_object_verb_entry_point(vm,id,verb,&entry)) < 0)
+        return r;
+    if(!entry) return SCVM_ERR_BAD_VERB;
+    obj = scvm_get_object(vm,id);
+    return scvm_start_thread(vm,obj->script,entry,flags,args);
 }
