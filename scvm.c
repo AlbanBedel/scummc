@@ -960,7 +960,7 @@ int scvm_do_sentence(scvm_t* vm, unsigned vrb, unsigned obj_a,
 }
 
 int scvm_run_once(scvm_t* vm) {
-  unsigned start,end,delay;
+  unsigned start,end,delay,diff;
   int r;
 
   if(!vm->backend)
@@ -989,9 +989,12 @@ int scvm_run_once(scvm_t* vm) {
 
   end = scvm_get_time(vm);
   if(end < start) end = start;
+  diff = end-start;
+  vm->var->timer = diff*1000/60;
+  vm->var->timer_total += diff*1000/60;
   delay = vm->var->timer_next*1000/60;
-  if(delay > end-start)
-    scvm_sleep(vm,delay-(end-start));
+  if(delay > diff)
+    scvm_sleep(vm,delay-diff);
 
   scvm_flip(vm);
 

@@ -378,7 +378,7 @@ typedef struct scvm_vars {
   int mouse_x;
   int mouse_y;
   int timer;
-  int timer4;
+  int timer_total;
   int soundcard;
   int videomode;
   // 050
