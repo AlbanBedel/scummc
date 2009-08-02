@@ -48,6 +48,8 @@ static int scvm_op_dummy_v(scvm_t* vm, scvm_thread_t* thread);
 
 static int scvm_op_dummy_vv(scvm_t* vm, scvm_thread_t* thread);
 
+static int scvm_op_dummy_s(scvm_t* vm, scvm_thread_t* thread);
+
 // Basic stack ops
 
 int scvm_push(scvm_t* vm,int val) {
@@ -1701,6 +1703,32 @@ static int scvm_op_dbg_print(scvm_t* vm, scvm_thread_t* thread) {
   return SCVM_ERR_NO_OP;
 }
 
+// 0xB8
+static int scvm_op_actor_print(scvm_t* vm, scvm_thread_t* thread) {
+  int r;
+  uint8_t op;
+  if((r = scvm_thread_r8(thread,&op))) return r;
+  switch(op) {
+  case 0x41: // at
+    return scvm_op_dummy_vv(vm,thread);
+  case 0x42: // color
+  case 0x43: // clipped
+    return scvm_op_dummy_v(vm,thread);
+  case 0x45: // center
+  case 0x47: // left
+  case 0x48: // overhead
+  case 0x4A: // mumble
+    return 0;
+  case 0xFE: // begin
+    return scvm_op_dummy_v(vm,thread);
+  case 0xFF: // end
+    return 0;
+  case 0x4B:
+    return scvm_op_dummy_s(vm,thread);
+  }
+  return SCVM_ERR_NO_OP;
+}
+
 // 0xBA
 static int scvm_op_actor_say(scvm_t* vm, scvm_thread_t* thread) {
     int r;
@@ -2126,7 +2154,7 @@ scvm_op_t scvm_optable[0x100] = {
   { scvm_op_dbg_print, "debug print" },
   { scvm_op_dummy_print, "sys print" },
   // B8
-  { scvm_op_dummy_print, "actor print" },
+  { scvm_op_actor_print, "actor print" },
   { scvm_op_dummy_print, "ego print" },
   { scvm_op_actor_say, "actor say" },
   { scvm_op_ego_say, "ego say" },
