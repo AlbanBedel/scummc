@@ -66,6 +66,57 @@ int scvm_strlen(unsigned char* str) {
     return len;
 }
 
+unsigned char* scvm_string_escape_get_string(scvm_t* vm,
+                                             unsigned esc, int arg,
+                                             unsigned char* tmp,
+                                             unsigned size) {
+    int val;
+    unsigned id;
+    scvm_verb_t* verb;
+
+    switch(esc) {
+    case SCVM_CHAR_NEW_LINE:
+    case SCVM_CHAR_KEEP:
+    case SCVM_CHAR_WAIT:
+        if(size < 3) return NULL;
+        tmp[0] = SCVM_CHAR_ESCAPE;
+        tmp[1] = esc;
+        tmp[2] = 0;
+        return tmp;
+
+    case SCVM_CHAR_INT_VAR:
+        if(scvm_thread_read_svar(vm,vm->current_thread,arg,&val))
+            break;
+        snprintf((char*)tmp,size,"%d",val);
+        return tmp;
+
+    case SCVM_CHAR_VERB:
+        if(scvm_thread_read_var(vm,vm->current_thread,arg,&id))
+            break;
+        if(!(verb = scvm_get_verb(vm,id,0)))
+            return 0;
+        return verb->name;
+
+    case SCVM_CHAR_NAME:
+        if(scvm_thread_read_var(vm,vm->current_thread,arg,&id))
+            break;
+        if(id <= 0xF) {
+            if(id < vm->num_actor)
+                return vm->actor[id].name;
+            return NULL;
+        } else {
+            unsigned char* ret = NULL;
+            scvm_get_object_name(vm,id,&ret);
+            return ret;
+        }
+
+    case SCVM_CHAR_STRING_VAR:
+        return scvm_thread_get_string_var(vm,vm->current_thread,arg);
+    }
+
+    return NULL;
+}
+
 int scvm_init_string_dc(scvm_t* vm,scvm_string_dc_t* dc,unsigned chset_no) {
     scc_charmap_t* chset = scvm_load_res(vm,SCVM_RES_CHARSET,chset_no);
     if(!chset) return -1;
@@ -84,42 +135,9 @@ int scvm_string_get_escape_size(scvm_t* vm, scvm_string_dc_t* dc,
                                 unsigned esc, int arg,
                                 unsigned* p_width, unsigned* p_height) {
     unsigned w = 0, h = 0;
-    int val;
-    unsigned char tmp_str[64];
-    unsigned char* sub_str = NULL;
-    scvm_verb_t* verb;
-
-    switch(esc) {
-    case SCVM_CHAR_NEW_LINE:
-    case SCVM_CHAR_KEEP:
-    case SCVM_CHAR_WAIT:
-        break;
-    case SCVM_CHAR_INT_VAR:
-        if(scvm_thread_read_var(vm,vm->current_thread,arg,&val))
-            break;
-        snprintf((char*)tmp_str,sizeof(tmp_str),"%d",val);
-        sub_str = tmp_str;
-        break;
-    case SCVM_CHAR_VERB:
-        if(scvm_thread_read_var(vm,vm->current_thread,arg,&val))
-            break;
-        if((verb = scvm_get_verb(vm,val,0)))
-            sub_str = verb->name;
-        break;
-    case SCVM_CHAR_NAME:
-        if(scvm_thread_read_var(vm,vm->current_thread,arg,&val))
-            break;
-        if(val <= 0xF) {
-            if(val < vm->num_actor)
-                sub_str = vm->actor[val].name;
-        } else
-            scvm_get_object_name(vm,val,&sub_str);
-        break;
-    case SCVM_CHAR_STRING_VAR:
-        sub_str = scvm_thread_get_string_var(vm,vm->current_thread,arg);
-        break;
-    }
-
+    unsigned char tmp[64];
+    unsigned char* sub_str = scvm_string_escape_get_string(vm,esc,arg,
+                                                           tmp,sizeof(tmp));
     if(sub_str && scvm_string_get_size(vm,dc,sub_str,&w,&h) < 0)
         return -1;
 
@@ -229,41 +247,9 @@ int scvm_string_draw_escape(scvm_t* vm, scvm_string_dc_t* dc,
                             unsigned esc, int arg,
                             uint8_t* dst, int dst_stride,
                             int dx, int dy, int clip_w, int clip_h) {
-    int val;
-    char tmp_str[64];
-    unsigned char* sub_str = NULL;
-    scvm_verb_t* verb;
-
-    switch(esc) {
-    case SCVM_CHAR_NEW_LINE:
-    case SCVM_CHAR_KEEP:
-    case SCVM_CHAR_WAIT:
-        break;
-    case SCVM_CHAR_INT_VAR:
-        if(scvm_thread_read_var(vm,vm->current_thread,arg,&val))
-            break;
-        snprintf(tmp_str,sizeof(tmp_str),"%d",val);
-        sub_str = tmp_str;
-        break;
-    case SCVM_CHAR_VERB:
-        if(scvm_thread_read_var(vm,vm->current_thread,arg,&val))
-            break;
-        if((verb = scvm_get_verb(vm,val,0)))
-            sub_str = verb->name;
-        break;
-    case SCVM_CHAR_NAME:
-        if(scvm_thread_read_var(vm,vm->current_thread,arg,&val))
-            break;
-        if(val <= 0xF) {
-            if(val < vm->num_actor)
-                sub_str = vm->actor[val].name;
-        } else
-            scvm_get_object_name(vm,val,&sub_str);
-        break;
-    case SCVM_CHAR_STRING_VAR:
-        sub_str = scvm_thread_get_string_var(vm,vm->current_thread,arg);
-        break;
-    }
+    unsigned char tmp[64];
+    unsigned char* sub_str = scvm_string_escape_get_string(vm,esc,arg,
+                                                           tmp,sizeof(tmp));
 
     if(sub_str)
         return scvm_string_draw(vm,dc,sub_str,dst,dst_stride,
