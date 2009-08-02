@@ -62,7 +62,7 @@ int scvm_getc(unsigned char* str, unsigned* c, int* arg) {
 int scvm_strlen(unsigned char* str) {
     int len = 0, r;
     while((r = scvm_getc(str,NULL,NULL)) > 0)
-        len += r;
+        len += r, str += r;
     return len;
 }
 
