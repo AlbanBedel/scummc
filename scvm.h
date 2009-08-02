@@ -101,6 +101,9 @@ int scvm_string_draw(scvm_t* vm, scvm_string_dc_t* dc,
                      uint8_t* dst, int dst_stride,
                      int dx, int dy, int clip_w, int clip_h);
 
+int scvm_string_expand(scvm_t* vm, unsigned char* str,
+                       unsigned char* dst, unsigned size);
+
 typedef struct scvm_object_pdata {
   unsigned klass;
   unsigned owner;

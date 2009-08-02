@@ -66,6 +66,17 @@ int scvm_strlen(unsigned char* str) {
     return len;
 }
 
+int scvm_strcpy(unsigned char* dst, unsigned char* src, unsigned size) {
+    int pos = 0, r;
+    while((r = scvm_getc(src+pos,NULL,NULL)) > 0) {
+        if(pos+r >= size) break;
+        memcpy(dst+pos,src+pos,r);
+        pos += r;
+    }
+    if(pos < size) dst[pos] = 0;
+    return pos;
+}
+
 unsigned char* scvm_string_escape_get_string(scvm_t* vm,
                                              unsigned esc, int arg,
                                              unsigned char* tmp,
@@ -115,6 +126,66 @@ unsigned char* scvm_string_escape_get_string(scvm_t* vm,
     }
 
     return NULL;
+}
+
+int scvm_string_expand_escape(scvm_t* vm, unsigned esc, int arg,
+                              unsigned char* dst, unsigned size) {
+    unsigned char* sub_str = NULL;
+
+    switch(esc) {
+    case SCVM_CHAR_NEW_LINE:
+        if(size < 2) return 0;
+        dst[0] = '\n';
+        dst[1] = 0;
+        return 1;
+
+    case SCVM_CHAR_KEEP:
+    case SCVM_CHAR_WAIT:
+        if(size < 3) return 0;
+        dst[0] = '^';
+        dst[1] = (esc == SCVM_CHAR_KEEP) ? 'K' : 'W';
+        dst[2] = 0;
+        return 2;
+
+    }
+
+    sub_str = scvm_string_escape_get_string(vm,esc,arg,
+                                            dst,size);
+    if(!sub_str) return 0;
+
+    if (sub_str != dst)
+        return scvm_strcpy(dst,sub_str,size);
+
+    return scvm_strlen(dst);
+}
+
+int scvm_string_expand(scvm_t* vm, unsigned char* str,
+                       unsigned char* dst, unsigned size) {
+    unsigned c;
+    int r, arg[2];
+    if(!size) return -1;
+    while(size > 1) {
+        r = scvm_getc(str,&c,arg);
+        if(r <  0) return r;
+        if(r == 0) break;
+        str += r;
+
+        if(c != SCVM_CHAR_ESCAPE) {
+            dst[0] = c;
+            r      = 1;
+            dst   += 1;
+            size  -= 1;
+            continue;
+        } else if((r = scvm_string_expand_escape(vm,arg[0],arg[1],
+                                                 dst,size-1)) < 0)
+            return r;
+
+        if(r >= size) r = size-1;
+        dst  += r;
+        size -= r;
+    }
+    dst[0] = 0;
+    return 0;
 }
 
 int scvm_init_string_dc(scvm_t* vm,scvm_string_dc_t* dc,unsigned chset_no) {
