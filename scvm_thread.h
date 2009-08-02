@@ -93,11 +93,13 @@ int scvm_thread_r8(scvm_thread_t* thread, uint8_t* ret);
 
 int scvm_thread_r16(scvm_thread_t* thread, uint16_t* ret);
 
+int scvm_thread_r16s(scvm_thread_t* thread, int16_t* ret);
+
 int scvm_thread_r32(scvm_thread_t* thread, uint32_t* ret);
 
 int scvm_thread_strlen(scvm_thread_t* thread, unsigned* len);
 
-int scvm_thread_get_string(scvm_thread_t* thread, char** p_str);
+int scvm_thread_get_string(scvm_thread_t* thread, unsigned char** p_str);
 
 int scvm_thread_begin_override(scvm_t* vm, scvm_thread_t* thread);
 
@@ -119,10 +121,13 @@ int scvm_stop_script(scvm_t* vm, unsigned id);
 int scvm_is_script_running(scvm_t* vm, unsigned id);
 
 int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
-                         uint16_t addr, int* val);
+                         uint16_t addr, unsigned* val);
+
+int scvm_thread_read_svar(scvm_t* vm, scvm_thread_t* thread,
+                          uint16_t addr, int* val);
 
 int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
-                          uint16_t addr, int val);
+                          uint16_t addr, unsigned val);
 
 struct scvm_array* scvm_thread_get_array_var(scvm_t* vm,
                                              scvm_thread_t* thread,

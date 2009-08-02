@@ -105,7 +105,7 @@ typedef struct scvm_object_pdata {
   unsigned klass;
   unsigned owner;
   unsigned state;
-  char* name;
+  unsigned char* name;
 } scvm_object_pdata_t;
 
 #define SCVM_OBJ_OBIM 1
@@ -133,7 +133,7 @@ struct scvm_object {
 };
 
 scvm_object_t* scvm_get_object(scvm_t* vm, unsigned id);
-int scvm_get_object_name(scvm_t* vm, unsigned id, char** name);
+int scvm_get_object_name(scvm_t* vm, unsigned id, unsigned char** name);
 int scvm_get_object_position(scvm_t* vm, unsigned id, int* x, int* y);
 scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y);
 int scvm_get_object_verb_entry_point(scvm_t* vm, unsigned id,
@@ -155,7 +155,7 @@ int scvm_start_object_script(scvm_t* vm, unsigned id,
 typedef struct scvm_verb {
   unsigned id;
   unsigned save_id;
-  char*    name;
+  unsigned char* name;
   unsigned width, height;
   int      x,y;
   unsigned color, back_color;
@@ -245,7 +245,7 @@ typedef struct scvm_room {
 
 typedef struct scvm_actor {
   unsigned id;
-  char* name;
+  unsigned char* name;
   scc_cost_dec_t costdec;
   //scvm_room_t* room;
   int room;
@@ -302,7 +302,7 @@ typedef struct scvm_view {
   int scroll_left,scroll_right;
   int camera_x, camera_dst_x;
   int screen_width, screen_height;
-  int effect;
+  unsigned effect;
   unsigned follow;
   unsigned flags;
   // palette used with the current room
@@ -665,7 +665,7 @@ struct scvm {
 #define SCVM_ERR_QUIT               SCVM_NOT_ERR(2)
 
 
-char* scvm_state_name(unsigned state);
+const char* scvm_state_name(unsigned state);
 
 int scvm_add_breakpoint(scvm_t* vm, unsigned room_id,
                         unsigned script_id, unsigned pos);

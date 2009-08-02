@@ -102,7 +102,7 @@ const char* scvm_strerror(int errn) {
   return names[errn];
 }
 
-char* scvm_state_name(unsigned state) {
+const char* scvm_state_name(unsigned state) {
   switch(state) {
   case SCVM_UNINITED:
     return "uninited";
@@ -844,7 +844,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         break;
       }
       if(vm->keypress) {
-        int args[] = { 3, SCVM_INPUT_KEY, vm->keypress, 1 };
+        unsigned args[] = { 3, SCVM_INPUT_KEY, vm->keypress, 1 };
         vm->keypress = 0;
         // TODO: check verb keys
         if((r = scvm_start_script(vm,0,vm->var->verb_script,args)) < 0)
@@ -857,7 +857,7 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
         break;
       }
       if(vm->btnpress) {
-        int args[] = { 3, SCVM_INPUT_VERB, 0, vm->btnpress };
+        unsigned args[] = { 3, SCVM_INPUT_VERB, 0, vm->btnpress };
         scvm_verb_t* verb;
         vm->btnpress = 0;
         if((verb = scvm_get_verb_at(vm,vm->var->mouse_x,

@@ -90,6 +90,10 @@ int scvm_thread_r16(scvm_thread_t* thread, uint16_t *ret) {
   return 0;
 }
 
+int scvm_thread_r16s(scvm_thread_t* thread, int16_t *ret) {
+  return scvm_thread_r16(thread,(uint16_t*)ret);
+}
+
 int scvm_thread_r32(scvm_thread_t* thread, uint32_t *ret) {
   if(thread->code_ptr + 4 > thread->script->size) return SCVM_ERR_SCRIPT_BOUND;
   *ret = thread->script->code[thread->code_ptr];
@@ -119,12 +123,12 @@ int scvm_thread_strlen(scvm_thread_t* thread,unsigned *ret) {
   return 0;
 }
 
-int scvm_thread_get_string(scvm_thread_t* thread, char** p_str) {
+int scvm_thread_get_string(scvm_thread_t* thread, unsigned char** p_str) {
     int r;
     unsigned len = 0;
     if((r = scvm_thread_strlen(thread,&len))) return r;
     if(p_str) {
-        char* str = *p_str;
+        unsigned char* str = *p_str;
         str = realloc(str,len+1);
         if(len > 0)
             memcpy(str,thread->script->code+thread->code_ptr,len);

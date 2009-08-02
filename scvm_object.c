@@ -49,7 +49,7 @@ scvm_object_t* scvm_get_object(scvm_t* vm, unsigned id) {
     return vm->res[SCVM_RES_OBJECT].idx[id].data;
 }
 
-int scvm_get_object_name(scvm_t* vm, unsigned id, char** name) {
+int scvm_get_object_name(scvm_t* vm, unsigned id, unsigned char** name) {
     if(id < vm->num_actor) {
         *name = vm->actor[id].name;
         return 0;

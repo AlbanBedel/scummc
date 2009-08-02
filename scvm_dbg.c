@@ -356,7 +356,7 @@ static int cmd_show_avar(scvm_t* vm, char* args) {
     cmd_show_avar_usage(NULL);
     return 0;
   }
-  if(scvm_thread_read_var(vm,vm->current_thread,var,&a)) {
+  if(scvm_thread_read_svar(vm,vm->current_thread,var,&a)) {
     printf("Invalid address: %d\n",var);
     return 0;
   }
@@ -552,7 +552,7 @@ static int cmd_show_var(scvm_t* vm, char* args) {
     cmd_show_var_usage(NULL);
     return 0;
   }
-  if(scvm_thread_read_var(vm,vm->current_thread,var,&val)) {
+  if(scvm_thread_read_svar(vm,vm->current_thread,var,&val)) {
     printf("Invalid address: %d\n",var);
     return 0;
   }

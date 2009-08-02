@@ -57,7 +57,7 @@ int scvm_push(scvm_t* vm,int val) {
   return 0;
 }
 
-int scvm_pop(scvm_t* vm,int* val) {
+int scvm_pop(scvm_t* vm,unsigned* val) {
   if(vm->stack_ptr < 1) {
     scc_log(LOG_ERR,"Stack underflow!\n");
     return SCVM_ERR_STACK_UNDERFLOW;
@@ -68,11 +68,16 @@ int scvm_pop(scvm_t* vm,int* val) {
   return 0;
 }
 
+int scvm_spop(scvm_t* vm,int* val) {
+  return scvm_pop(vm,(unsigned*)val);
+}
+
 int scvm_vpop(scvm_t* vm, ...) {
   va_list ap;
-  int* val,r;
+  unsigned* val;
+  int r;
   va_start(ap,vm);
-  while((val = va_arg(ap,int*)))
+  while((val = va_arg(ap,unsigned*)))
     if((r = scvm_pop(vm,val))) return r;
   va_end(ap);
   return 0;
@@ -88,7 +93,7 @@ int scvm_peek(scvm_t* vm,int* val) {
 }
 
 int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
-                         uint16_t addr, int* val) {
+                         uint16_t addr, unsigned* val) {
   // decode the address
   if(addr & 0x8000) { // bit variable
     addr &= 0x7FFF;
@@ -113,7 +118,7 @@ int scvm_thread_read_var(scvm_t* vm, scvm_thread_t* thread,
 }
 
 int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
-                          uint16_t addr, int val) {
+                          uint16_t addr, unsigned val) {
   // decode the address
   if(addr & 0x8000) { // bit variable
     addr &= 0x7FFF;
@@ -136,6 +141,11 @@ int scvm_thread_write_var(scvm_t* vm, scvm_thread_t* thread,
     scc_log(LOG_MSG,"Write global var %d: %d\n",addr,val);
   }
   return 0;
+}
+
+int scvm_thread_read_svar(scvm_t* vm, scvm_thread_t* thread,
+                          uint16_t addr, int* val) {
+  return scvm_thread_read_var(vm,thread,addr,(unsigned*)val);
 }
 
 scvm_array_t* scvm_thread_get_array_var(scvm_t* vm, scvm_thread_t* thread,
@@ -280,7 +290,7 @@ static int scvm_op_push_byte(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_push_word(scvm_t* vm, scvm_thread_t* thread) {
   int r;
   int16_t word;
-  if((r=scvm_thread_r16(thread,&word))) return r;
+  if((r=scvm_thread_r16s(thread,&word))) return r;
   return scvm_push(vm,word);
 }
 
@@ -289,7 +299,7 @@ static int scvm_op_var_read_byte(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint8_t addr;
   if((r=scvm_thread_r8(thread,&addr)) ||
-     (r=scvm_thread_read_var(vm,thread,addr,&val))) return r;
+     (r=scvm_thread_read_svar(vm,thread,addr,&val))) return r;
   return scvm_push(vm,val);
 }
 
@@ -298,7 +308,7 @@ static int scvm_op_var_read_word(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint16_t addr;
   if((r=scvm_thread_r16(thread,&addr)) ||
-     (r=scvm_thread_read_var(vm,thread,addr,&val))) return r;
+     (r=scvm_thread_read_svar(vm,thread,addr,&val))) return r;
   return scvm_push(vm,val);
 }
 
@@ -364,7 +374,7 @@ static int scvm_op_dup(scvm_t* vm, scvm_thread_t* thread) {
 // 0x0D
 static int scvm_op_not(scvm_t* vm, scvm_thread_t* thread) {
   int r,a;
-  if((r=scvm_pop(vm,&a))) return r;
+  if((r=scvm_spop(vm,&a))) return r;
   return scvm_push(vm,!a);
 }
 
@@ -403,7 +413,7 @@ static int scvm_op_var_write_byte(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint8_t addr;
   if((r=scvm_thread_r8(thread,&addr)) ||
-     (r=scvm_pop(vm,&val))) return r;
+     (r=scvm_spop(vm,&val))) return r;
   return scvm_thread_write_var(vm,thread,addr,val);
 }
 
@@ -412,7 +422,7 @@ static int scvm_op_var_write_word(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint16_t addr;
   if((r=scvm_thread_r16(thread,&addr)) ||
-     (r=scvm_pop(vm,&val))) return r;
+     (r=scvm_spop(vm,&val))) return r;
   return scvm_thread_write_var(vm,thread,addr,val);
 }
 
@@ -469,7 +479,7 @@ static int scvm_op_var_inc_byte(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint8_t addr;
   if((r=scvm_thread_r8(thread,&addr)) ||
-     (r=scvm_thread_read_var(vm,thread,addr,&val))) return r;
+     (r=scvm_thread_read_svar(vm,thread,addr,&val))) return r;
   val++;
   return scvm_thread_write_var(vm,thread,addr,val);
 }
@@ -479,7 +489,7 @@ static int scvm_op_var_inc_word(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint16_t addr;
   if((r=scvm_thread_r16(thread,&addr)) ||
-     (r=scvm_thread_read_var(vm,thread,addr,&val))) return r;
+     (r=scvm_thread_read_svar(vm,thread,addr,&val))) return r;
   val++;
   return scvm_thread_write_var(vm,thread,addr,val);
 }
@@ -517,7 +527,7 @@ static int scvm_op_var_dec_byte(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint8_t addr;
   if((r=scvm_thread_r8(thread,&addr)) ||
-     (r=scvm_thread_read_var(vm,thread,addr,&val))) return r;
+     (r=scvm_thread_read_svar(vm,thread,addr,&val))) return r;
   val--;
   return scvm_thread_write_var(vm,thread,addr,val);
 }
@@ -527,7 +537,7 @@ static int scvm_op_var_dec_word(scvm_t* vm, scvm_thread_t* thread) {
   int r,val;
   uint16_t addr;
   if((r=scvm_thread_r16(thread,&addr)) ||
-     (r=scvm_thread_read_var(vm,thread,addr,&val))) return r;
+     (r=scvm_thread_read_svar(vm,thread,addr,&val))) return r;
   val--;
   return scvm_thread_write_var(vm,thread,addr,val);
 }
@@ -564,8 +574,8 @@ static int scvm_op_array_dec_word(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_jmp_not_zero(scvm_t* vm, scvm_thread_t* thread) {
   int r,ptr,val;
   int16_t off;
-  if((r=scvm_thread_r16(thread,&off)) ||
-     (r=scvm_pop(vm,&val))) return r;
+  if((r=scvm_thread_r16s(thread,&off)) ||
+     (r=scvm_spop(vm,&val))) return r;
   ptr = thread->code_ptr+off;
   if(ptr < 0 || ptr >= thread->script->size)
     return SCVM_ERR_JUMP_BOUND;
@@ -577,8 +587,8 @@ static int scvm_op_jmp_not_zero(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_jmp_zero(scvm_t* vm, scvm_thread_t* thread) {
   int r,ptr,val;
   int16_t off;
-  if((r=scvm_thread_r16(thread,&off)) ||
-     (r=scvm_pop(vm,&val))) return r;
+  if((r=scvm_thread_r16s(thread,&off)) ||
+     (r=scvm_spop(vm,&val))) return r;
   ptr = thread->code_ptr+off;
   if(ptr < 0 || ptr >= thread->script->size)
     return SCVM_ERR_JUMP_BOUND;
@@ -592,7 +602,7 @@ static int scvm_op_start_script(scvm_t* vm, scvm_thread_t* thread) {
   unsigned num_args,script,flags;
   if((r=scvm_pop(vm,&num_args))) return r;
   else {
-    int args[num_args+1];
+    unsigned args[num_args+1];
     args[0] = num_args;
     while(num_args > 0) {
       if((r=scvm_pop(vm,&args[num_args]))) return r;
@@ -612,7 +622,7 @@ static int scvm_op_start_script0(scvm_t* vm, scvm_thread_t* thread) {
   unsigned num_args,script;
   if((r=scvm_pop(vm,&num_args))) return r;
   else {
-    int args[num_args+1];
+    unsigned args[num_args+1];
     args[0] = num_args;
     while(num_args > 0) {
       if((r=scvm_pop(vm,&args[num_args]))) return r;
@@ -632,7 +642,7 @@ static int scvm_op_start_script_recursive(scvm_t* vm, scvm_thread_t* thread) {
   unsigned num_args,script;
   if((r=scvm_pop(vm,&num_args))) return r;
   else {
-    int args[num_args+1];
+    unsigned args[num_args+1];
     args[0] = num_args;
     while(num_args > 0) {
       if((r=scvm_pop(vm,&args[num_args]))) return r;
@@ -652,7 +662,7 @@ static int scvm_op_start_object_script(scvm_t* vm, scvm_thread_t* thread) {
   unsigned num_args,flags,obj,verb;
   if((r=scvm_pop(vm,&num_args))) return r;
   else {
-    int args[num_args+1];
+    unsigned args[num_args+1];
     args[0] = num_args;
     while(num_args > 0) {
       if((r=scvm_pop(vm,&args[num_args]))) return r;
@@ -688,7 +698,8 @@ static int scvm_op_stop_thread(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x6B9C
 static int scvm_op_init_charset(scvm_t* vm, scvm_thread_t* thread) {
-  int r, chset_id;
+  int r;
+  unsigned chset_id;
   struct scc_charmap_st* chset;
   if((r = scvm_pop(vm,&chset_id)))
     return r;
@@ -706,7 +717,8 @@ static int scvm_op_break_script(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x6D
 static int scvm_op_is_object_of_class(scvm_t* vm, scvm_thread_t* thread) {
-  int r,len;
+  int r;
+  unsigned len;
   if((r = scvm_pop(vm,&len))) return r;
   else {
     unsigned obj,i,vals[len];
@@ -728,7 +740,8 @@ static int scvm_op_is_object_of_class(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x6E
 static int scvm_op_set_object_class(scvm_t* vm, scvm_thread_t* thread) {
-  int r,len;
+  int r;
+  unsigned len;
   if((r = scvm_pop(vm,&len))) return r;
   else {
     unsigned obj,i,vals[len];
@@ -788,7 +801,7 @@ static int scvm_op_get_object_owner(scvm_t* vm, scvm_thread_t* thread) {
 static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
   int r,ptr;
   int16_t off;
-  if((r=scvm_thread_r16(thread,&off))) return r;
+  if((r=scvm_thread_r16s(thread,&off))) return r;
   ptr = thread->code_ptr+off;
   if(ptr < 0 || ptr >= thread->script->size)
     return SCVM_ERR_JUMP_BOUND;
@@ -799,7 +812,7 @@ static int scvm_op_jmp(scvm_t* vm, scvm_thread_t* thread) {
 // 0x78
 static int scvm_op_pan_camera_to(scvm_t* vm, scvm_thread_t* thread) {
   int r,x;
-  if((r=scvm_pop(vm,&x))) return r;
+  if((r=scvm_spop(vm,&x))) return r;
   scvm_pan_camera_to(vm,x);
   return 0;
 }
@@ -817,7 +830,7 @@ static int scvm_op_camera_follow_actor(scvm_t* vm, scvm_thread_t* thread) {
 // 0x7A
 static int scvm_op_set_camera_at(scvm_t* vm, scvm_thread_t* thread) {
   int r,x;
-  if((r=scvm_pop(vm,&x)) ||
+  if((r=scvm_spop(vm,&x)) ||
      (r=scvm_set_camera_at(vm,x)) < 0) return r;
 
   // Stop following actors and panning
@@ -841,7 +854,8 @@ static int scvm_op_start_room(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x7C
 static int scvm_op_stop_script(scvm_t* vm, scvm_thread_t* thread) {
-  int r,id;
+  int r;
+  unsigned id;
   if((r=scvm_pop(vm,&id))) return r;
   scvm_stop_script(vm,id);
   return 0;
@@ -919,7 +933,8 @@ static int scvm_op_do_sentence(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x87
 static int scvm_op_get_random_number(scvm_t* vm, scvm_thread_t* thread) {
-  int r,max;
+  int r;
+  unsigned max;
   if((r=scvm_pop(vm,&max))) return r;
   vm->var->random_num = scvm_random(vm,0,max);
   return scvm_push(vm,vm->var->random_num);
@@ -936,7 +951,8 @@ static int scvm_op_get_random_number_range(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x8B
 static int scvm_op_is_script_running(scvm_t* vm, scvm_thread_t* thread) {
-  int r,id;
+  int r;
+  unsigned id;
   if((r=scvm_pop(vm,&id))) return r;
   r = scvm_is_script_running(vm,id);
   return scvm_push(vm,r);
@@ -944,7 +960,8 @@ static int scvm_op_is_script_running(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x8C
 static int scvm_op_get_actor_room(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a;
+  int r;
+  unsigned a;
   if((r=scvm_pop(vm,&a))) return r;
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   return scvm_push(vm,vm->actor[a].room);
@@ -952,7 +969,8 @@ static int scvm_op_get_actor_room(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x8D
 static int scvm_op_get_object_x(scvm_t* vm, scvm_thread_t* thread) {
-  int r,o,x;
+  int r,x;
+  unsigned o;
   if((r=scvm_pop(vm,&o)) ||
      (r=scvm_get_object_position(vm,o,&x,NULL)) < 0) return r;
   return scvm_push(vm,x);
@@ -960,7 +978,8 @@ static int scvm_op_get_object_x(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x8E
 static int scvm_op_get_object_y(scvm_t* vm, scvm_thread_t* thread) {
-  int r,o,y;
+  int r,y;
+  unsigned o;
   if((r=scvm_pop(vm,&o)) ||
      (r=scvm_get_object_position(vm,o,NULL,&y)) < 0) return r;
   return scvm_push(vm,y);
@@ -968,7 +987,8 @@ static int scvm_op_get_object_y(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x8F
 static int scvm_op_get_object_direction(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a;
+  int r;
+  unsigned a;
   if((r=scvm_pop(vm,&a))) return r;
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   return scvm_push(vm,vm->actor[a].direction);
@@ -1023,7 +1043,8 @@ static int scvm_op_end_override(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9B
 static int scvm_op_resource(scvm_t* vm, scvm_thread_t* thread) {
-  int r,res;
+  int r;
+  unsigned res;
   uint8_t op;
   
   if((r=scvm_thread_r8(thread,&op)) ||
@@ -1128,7 +1149,8 @@ static int scvm_op_set_rgb_intensity(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9CD5
 static int scvm_op_set_palette(scvm_t* vm, scvm_thread_t* thread) {
-  int r,p;
+  int r;
+  unsigned p;
   if((r=scvm_pop(vm,&p))) return r;
   if(!vm->room) return SCVM_ERR_NO_ROOM;
   if(p < 0 || p >= vm->room->num_palette)
@@ -1143,7 +1165,8 @@ static int scvm_op_set_palette(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9DC5
 static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a;
+  int r;
+  unsigned a;
   if((r=scvm_pop(vm,&a))) return r;
   if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   vm->current_actor = &vm->actor[a];
@@ -1152,7 +1175,8 @@ static int scvm_op_set_current_actor(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9D4C
 static int scvm_op_set_actor_costume(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a;
+  int r;
+  unsigned a;
   scc_cost_t* cost = NULL;
   if((r=scvm_pop(vm,&a))) return r;
   if(a && !(cost = scvm_load_res(vm,SCVM_RES_COSTUME,a)))
@@ -1287,7 +1311,7 @@ static int scvm_op_set_actor_talk_script(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9E7D
 static int scvm_op_set_verb_name(scvm_t* vm, scvm_thread_t* thread) {
-  char** p_name = vm->current_verb ? &vm->current_verb->name : NULL;
+  unsigned char** p_name = vm->current_verb ? &vm->current_verb->name : NULL;
   return scvm_thread_get_string(thread,p_name);
 }
 
@@ -1394,7 +1418,8 @@ static int scvm_op_set_verb_object_image(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0x9EC4
 static int scvm_op_set_current_verb(scvm_t* vm, scvm_thread_t* thread) {
-  int r,v;
+  int r;
+  unsigned v;
   if((r=scvm_pop(vm,&v))) return r;
   if(!v) return SCVM_ERR_BAD_VERB;
   vm->current_verb_id = v;
@@ -1444,9 +1469,9 @@ static int scvm_op_array_write_string(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0xA4D0
 static int scvm_op_array_write_list(scvm_t* vm, scvm_thread_t* thread) {
-  int r,val,addr;
+  int r;
   uint16_t vaddr;
-  unsigned len,x;
+  unsigned addr,val,len,x;
   
   if((r=scvm_pop(vm,&x)) ||
      (r=scvm_thread_r16(thread,&vaddr)) ||
@@ -1467,9 +1492,9 @@ static int scvm_op_array_write_list(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0xA4D4
 static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
-  int r,addr;
+  int r;
   uint16_t vaddr;
-  unsigned len,x,y;
+  unsigned addr,len,x,y;
   
   if((r=scvm_pop(vm,&x)) ||
      (r=scvm_thread_r16(thread,&vaddr)) ||
@@ -1477,7 +1502,7 @@ static int scvm_op_array_write_list2(scvm_t* vm, scvm_thread_t* thread) {
      (r = scvm_pop(vm,&len))) return r;
   if(!addr || addr >= vm->num_array) return SCVM_ERR_BAD_ADDR;
   else {
-    int i,list[len];
+    unsigned i,list[len];
     for(i = 0 ; i < len ; i++)
       if((r = scvm_pop(vm,list+i))) return r;
     if((r = scvm_pop(vm,&y))) return r;
@@ -1527,7 +1552,7 @@ static int scvm_op_wait_for_actor(scvm_t* vm, scvm_thread_t* thread) {
   unsigned a;
   int16_t off;
   if((r=scvm_pop(vm,&a)) ||
-     (r=scvm_thread_r16(thread,&off))) return r;
+     (r=scvm_thread_r16s(thread,&off))) return r;
   if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   if(vm->actor[a].walking) {
       thread->code_ptr += off;
@@ -1553,7 +1578,8 @@ static int scvm_op_wait(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0xAA
 static int scvm_op_get_actor_x_scale(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a;
+  int r;
+  unsigned a;
   if((r=scvm_pop(vm,&a))) return a;
   if(a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   return scvm_push(vm,vm->actor[a].scale_x);
@@ -1561,7 +1587,8 @@ static int scvm_op_get_actor_x_scale(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0xAB
 static int scvm_op_get_actor_anim_counter(scvm_t* vm, scvm_thread_t* thread) {
-  int r,a;
+  int r;
+  unsigned a;
   if((r=scvm_pop(vm,&a))) return r;
   if(a < 0 || a >= vm->num_actor) return SCVM_ERR_BAD_ACTOR;
   return scvm_push(vm,vm->actor[a].costdec.anim_counter);
@@ -1587,7 +1614,7 @@ static int scvm_op_is_any_of(scvm_t* vm, scvm_thread_t* thread) {
   unsigned len;
   if((r=scvm_pop(vm,&len))) return r;
   else {
-    int i,val,list[len];
+    unsigned i,val,list[len];
     for(i = len-1 ; i >= 0 ; i--)
       if((r=scvm_pop(vm,list+i))) return r;
     if((r=scvm_pop(vm,&val))) return r;
@@ -1640,8 +1667,8 @@ static int scvm_op_delay_minutes(scvm_t* vm, scvm_thread_t* thread) {
 
 // 0xBA
 static int scvm_op_actor_say(scvm_t* vm, scvm_thread_t* thread) {
-    int r,len;
-    int actor;
+    int r;
+    unsigned actor,len;
     if((r = scvm_pop(vm,&actor))) return r;
 
     if((r = scvm_thread_strlen(thread,&len))) return r;
@@ -1657,8 +1684,8 @@ static int scvm_op_ego_say(scvm_t* vm, scvm_thread_t* thread) {
 }
 
 static int scvm_op_dim_array(scvm_t* vm, scvm_thread_t* thread, int dim) {
-  int r,addr;
-  unsigned size, size_y = 0;
+  int r;
+  unsigned addr,size, size_y = 0;
   uint8_t op;
   uint16_t vaddr;
   
@@ -1767,7 +1794,8 @@ static int scvm_op_dummy_vvvvv(scvm_t* vm, scvm_thread_t* thread) {
 }
 
 static int scvm_op_dummy_l(scvm_t* vm, scvm_thread_t* thread) {
-  int r,len;
+  int r;
+  unsigned len;
   if((r=scvm_pop(vm,&len))) return r;
   while(len > 0) {
     if((r=scvm_pop(vm,NULL))) return r;
@@ -1777,7 +1805,8 @@ static int scvm_op_dummy_l(scvm_t* vm, scvm_thread_t* thread) {
 }
 
 static int scvm_op_dummy_vl(scvm_t* vm, scvm_thread_t* thread) {
-  int r,len;
+  int r;
+  unsigned len;
   if((r=scvm_pop(vm,&len))) return r;
   while(len > 0) {
     if((r=scvm_pop(vm,NULL))) return r;
@@ -1788,7 +1817,8 @@ static int scvm_op_dummy_vl(scvm_t* vm, scvm_thread_t* thread) {
 
 
 static int scvm_op_dummy_s(scvm_t* vm, scvm_thread_t* thread) {
-  int r,len;
+  int r;
+  unsigned len;
   if((r = scvm_thread_strlen(thread,&len))) return r;
   thread->code_ptr += len+1;
   return 0;
