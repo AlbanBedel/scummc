@@ -555,6 +555,8 @@ struct scvm {
   // Debuging data
   scvm_debug_t* dbg;
 
+  int boot_param;
+
   // variables
   unsigned num_var;
   int *var_mem;

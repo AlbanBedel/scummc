@@ -205,7 +205,8 @@ static void scvm_vars_init(scvm_vars_t* var) {
   var->charinc = 4;
 }
 
-scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename, uint8_t key) {
+scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename,
+                 uint8_t key, int boot_param) {
   scc_fd_t* fd;
   scvm_t* vm;
   int i,num,len = (path ? strlen(path) + 1 : 0) + strlen(basename);
@@ -255,6 +256,7 @@ scvm_t *scvm_new(scvm_backend_t* be, char* path,char* basename, uint8_t key) {
   vm = calloc(1,sizeof(scvm_t));
   vm->backend = be;
   // vars
+  vm->boot_param = boot_param;
   vm->num_var = scc_fd_r16le(fd);
   vm->var_mem = calloc(vm->num_var,sizeof(int));
   vm->var = (scvm_vars_t*)vm->var_mem;
@@ -581,10 +583,13 @@ int scvm_run_threads(scvm_t* vm,unsigned cycles) {
       if(!scvm_init_video(vm,640,480,8)) {
        scc_log(LOG_ERR,"Failed to open video output.\n");
         return SCVM_ERR_VIDEO_MODE;
-      }
-      if((r=scvm_start_script(vm,0,1,NULL)) < 0) {
-        scc_log(LOG_MSG,"Failed to start boot script: %s\n",scvm_strerror(r));
-        return r;
+      } else {
+        unsigned args[] = { 1, vm->boot_param };
+        if((r=scvm_start_script(vm,0,1,args)) < 0) {
+          scc_log(LOG_MSG,"Failed to start boot script: %s\n",
+                  scvm_strerror(r));
+          return r;
+        }
       }
       vm->state = SCVM_BEGIN_CYCLE;
 
@@ -1128,11 +1133,13 @@ static int sdl_backend_init(scvm_backend_t* be) {
 
 static char* basedir = NULL;
 static int file_key = 0;
+static int boot_param = 0;
 static int run_debugger = 0;
 
 static scc_param_t scc_parse_params[] = {
   { "dir", SCC_PARAM_STR, 0, 0, &basedir },
   { "key", SCC_PARAM_INT, 0, 0xFF, &file_key },
+  { "boot", SCC_PARAM_INT, 0, 0xFFFF, &boot_param },
   { "dbg", SCC_PARAM_FLAG, 0, 1, &run_debugger },
   { "help", SCC_PARAM_HELP, 0, 0, &scvm_help },
   { NULL, 0, 0, 0, NULL }
@@ -1147,7 +1154,7 @@ int main(int argc,char** argv) {
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   if(!files) scc_print_help(&scvm_help,1);
 
-  vm = scvm_new(&backend,basedir,files->val,file_key);
+  vm = scvm_new(&backend,basedir,files->val,file_key,boot_param);
 
   if(!vm) {
     scc_log(LOG_ERR,"Failed to create VM.\n");
