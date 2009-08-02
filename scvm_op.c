@@ -1619,7 +1619,7 @@ static int scvm_op_is_any_of(scvm_t* vm, scvm_thread_t* thread) {
   if((r=scvm_pop(vm,&len))) return r;
   else {
     unsigned i,val,list[len];
-    for(i = len-1 ; i >= 0 ; i--)
+    for(i = len-1 ; i != -1 ; i--)
       if((r=scvm_pop(vm,list+i))) return r;
     if((r=scvm_pop(vm,&val))) return r;
     for(i = 0 ; i < len ; i++)
