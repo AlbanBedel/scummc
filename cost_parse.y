@@ -1067,7 +1067,8 @@ static int akos_write(scc_fd_t* fd) {
         while(cmd) {
           switch(cmd->type) {
           case COST_CMD_DISPLAY:
-            anim->cmd[anim->len] = pic->idx;        anim->len++;
+            anim->cmd[anim->len] = cmd->arg[0].pic->idx;
+            anim->len++;
             break;
           }
           cmd = cmd->next;
