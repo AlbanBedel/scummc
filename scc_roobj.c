@@ -182,6 +182,12 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj) {
   if(obj->trans >= 0) {
     int x,y;
     scc_roobj_state_t* state;
+    // first, we need a room image for this to work!
+    if (ro->image == NULL) {
+        scc_log(LOG_ERR,"Specified trans for %s in a room with no image.\n",obj->sym->sym);
+        return 0;
+    }
+
     for(state = obj->states ; state ; state = state->next) {
       uint8_t *optr = state->img->data;
       uint8_t *rptr = ro->image->data+obj->y*ro->image->w+obj->x;
