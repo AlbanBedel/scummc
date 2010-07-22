@@ -580,6 +580,138 @@ int scc_img_quantize(scc_img_t* img, int colors) {
   return 1;
 }
 
+typedef struct {
+  int x;
+  int y;
+} imgpos_t;
+
+typedef struct {
+  int x;
+  int y;
+  int width;
+  int height;
+} imgrect_t;
+
+// Clips src into dest, storing the result in out
+void scc_clip(const imgrect_t src, const imgrect_t dest, imgrect_t* out) {
+  imgrect_t out_rect = src;
+
+  // x...
+  if (src.x < dest.x) {
+    out_rect.x = dest.x;
+    out_rect.width = src.width + (src.x - dest.x);
+  } else if (src.x+src.width > dest.x+dest.width){
+    out_rect.width = dest.x+dest.width-out_rect.x;
+  }
+
+  // y...
+  if (src.y < dest.y) {
+    out_rect.y = dest.y;
+    out_rect.height = src.height + (src.y - dest.y);
+  } else if (src.y+src.height > dest.y+dest.height){
+    out_rect.height = dest.y+dest.height-out_rect.y;
+  }
+
+  *out = out_rect;
+}
+
+// Blips src into dest using specified coordinates
+void scc_img_blit(scc_img_t* src, scc_img_t* dest, int sx, int sy, int dx, int dy, int width, int height) {
+  imgrect_t src_extent;
+  imgrect_t dest_extent;
+  imgrect_t test_extent;
+
+  int copy_y, dest_sz, src_stride, dest_stride;
+  char* sp, dp;
+
+  if (!(src->bpp == dest->bpp))
+    return;
+
+  // Clip source with sx,sy -> width,height
+  test_extent.x = test_extent.y = 0;
+  test_extent.width = src->w;
+  test_extent.height = src->h;
+
+  src_extent.x = sx;
+  src_extent.y = sy;
+  src_extent.width = width;
+  src_extent.height = height;
+
+  scc_clip(src_extent, test_extent, &src_extent);
+
+  // Clip dest with dx,dy -> src_extent.width, src_extent.height
+  test_extent.x = test_extent.y = 0;
+  test_extent.width = dest->w;
+  test_extent.height = dest->h;
+
+  dest_extent.x = dx + (src_extent.x - sx); // add in any offset introduced by the src clip
+  dest_extent.y = dy + (src_extent.y - sy);
+  dest_extent.width = src_extent.width;
+  dest_extent.height = src_extent.height;
+
+  scc_clip(dest_extent, test_extent, &dest_extent);
+
+  dest_sz     = (dest_extent.width*dest->bpp)>>3;
+  src_stride  = (src->w*src->bpp)>>3;
+  dest_stride = (dest->w*dest->bpp)>>3;
+  sp = src->data  + ((((dest_extent.y*src_stride)+src_extent.x)   * src->bpp)  >> 3);
+  dp = dest->data + ((((dest_extent.y*dest_stride)+dest_extent.x) * dest->bpp) >> 3);
+
+  // We now have everything we need, so copy!
+  for (copy_y=dest_extent.y; copy_y < dest_extent.y+dest_extent.height; copy_y++) {
+    memcpy(sp, dp, dest_sz);
+    sp += src_stride;
+    dp += dest_stride;
+  }
+}
+
+/// Reduce colors across a set of images
+int scc_images_quantize(scc_img_t** imgs, int num, int colors) {
+  // 1) Combine images into single image
+  // 2) Reduce result
+  // 3) Copy palette and resultant image data back into the images
+  int i;
+  int dest_height = 0;
+  int dest_width = 0;
+  int cur_x = 0;
+  imgpos_t* pos = malloc(sizeof(imgpos_t)*num);
+
+  // 0. Images need to ditch their palette
+  for (i=0; i<num; i++) {
+    if (imgs[i]->pal)
+      scc_img_quantize(imgs[i], 255);
+  }
+
+  // 1. Determine destination x,y of images
+  for (i=0; i<num; i++) {
+    pos[i].x = cur_x;
+    cur_x += imgs[i]->w;
+    dest_height = (imgs[i]->h > dest_height) ? imgs[i]->h : dest_height;
+  }
+
+  // 2. Make a new image
+  scc_img_t* img = scc_img_new(dest_width, dest_height, -1, 24);
+
+  // ... combine previous images
+  for (i=0; i<num; i++) {
+    imgpos_t ip = pos[i];
+    scc_img_blit(imgs[i], img, 0, 0, ip.x, ip.y, imgs[i]->w, imgs[i]->h);
+  }
+
+  // 3. Quantize new image
+  scc_img_quantize(img, colors);
+
+  // 4. Extract images out of new image
+  for (i=0; i<num; i++) {
+    imgpos_t ip = pos[i];
+    scc_img_blit(img, imgs[i], ip.x, ip.y, 0, 0, imgs[i]->w, imgs[i]->h);
+  }
+
+  free(img);
+  free(pos);
+  return 1;
+}
+
 //#define SCC_IMG_TEST 1
 #ifdef SCC_IMG_TEST
 
