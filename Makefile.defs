@@ -91,6 +91,7 @@ scc_SRCS=                       \
 	scc_target.c            \
 	scc_roobj.c             \
 	scc_img.c               \
+	quantize.c              \
 	scc_code.c              \
 	code.c                  \
 	write.c                 \
@@ -114,6 +115,7 @@ boxedit_SRCS=                   \
 	scc_fd.c                \
 	scc_cost.c              \
 	scc_img.c               \
+	quantize.c              \
 	scc_param.c             \
 	boxedit.c               \
 	scc_util.c              \
@@ -127,6 +129,7 @@ cost_SRCS=                      \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_img.c               \
+	quantize.c              \
 	scc_util.c              \
 	scc_lex.c               \
 	cost_lexer.c            \
@@ -136,6 +139,7 @@ char_SRCS=                      \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_img.c               \
+	quantize.c              \
 	scc_util.c              \
 	scc_char.c              \
 
@@ -165,6 +169,7 @@ costview_SRCS=                  \
 	scc_cost.c              \
 	costview.c              \
 	scc_img.c               \
+	quantize.c              \
 	scc_param.c             \
 
 costview_LIBS=                  \
@@ -213,11 +218,13 @@ zpnn2bmp_SRCS=                  \
 	scc_param.c             \
 	decode.c                \
 	scc_img.c               \
+	quantize.c              \
 	scc_util.c              \
 
 imgsplit_SRCS=                  \
 	imgsplit.c              \
 	scc_img.c               \
+	quantize.c              \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_util.c              \
@@ -225,6 +232,7 @@ imgsplit_SRCS=                  \
 imgremap_SRCS=                  \
 	imgremap.c              \
 	scc_img.c               \
+	quantize.c              \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_util.c              \
@@ -238,6 +246,7 @@ raw2voc_SRCS=                   \
 palcat_SRCS=                    \
 	palcat.c                \
 	scc_img.c               \
+	quantize.c              \
 	scc_fd.c                \
 	scc_param.c             \
 	scc_util.c              \

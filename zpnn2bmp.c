@@ -114,7 +114,7 @@ int main(int argc,char** argv) {
     return -1;
   }
 
-  img = scc_img_new(w,h,2);
+  img = scc_img_new(w,h,2,8);
   // set the ones to black
   img->pal[3] = 0xFF;
   img->pal[4] = 0xFF;

@@ -30,12 +30,13 @@
 typedef struct scc_img {
   unsigned int w,h;
   unsigned int ncol,trans;
-  uint8_t* pal;
-  uint8_t* data;
+  unsigned int bpp;
+  uint8_t* pal;    // NOTE: colors stored as BGR
+  uint8_t* data;   // NOTE: either indexed(8bit), or stored as RGB
 } scc_img_t;
 
 /// Create a new empty image of the given size
-scc_img_t* scc_img_new(int w,int h,int ncol);
+scc_img_t* scc_img_new(int w,int h,int ncol,int bpp);
 
 /// Destroy an image
 void scc_img_free(scc_img_t* img);
@@ -48,3 +49,12 @@ int scc_img_save_bmp(scc_img_t* img,char* path);
 
 /// Open an image. Only BMP is supported atm.
 scc_img_t* scc_img_open(char* path);
+
+/// Remove palette from an image
+void scc_img_unpal(scc_img_t* img);
+
+/// Reduce colors in image
+int scc_img_quantize(scc_img_t* img, int colors);
+
+/// Reduce colors across a set of images
+int scc_images_quantize(scc_img_t** img, int num, int colors);

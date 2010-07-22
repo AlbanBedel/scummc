@@ -38,14 +38,17 @@
 #include "scc_fd.h"
 #include "scc_img.h"
 
+#include "quantize.h"
+
 // create a new empty image of the given size
-scc_img_t* scc_img_new(int w,int h,int ncol) {
+scc_img_t* scc_img_new(int w,int h,int ncol,int bpp) {
   scc_img_t* img = calloc(1,sizeof(scc_img_t));
   img->w = w;
   img->h = h;
   img->ncol = ncol;
+  img->bpp = bpp;
 
-  img->pal = calloc(3,ncol);
+  img->pal = img->ncol >= 0 ? calloc(3,ncol) : NULL;
   img->data = calloc(w,h);
 
   return img;
@@ -58,11 +61,16 @@ void scc_img_free(scc_img_t* img) {
 }
 
 int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
-  int doff = 14 + 40 + 4 * img->ncol;
-  int stride = ((img->w+3)/4)*4;
+  int doff = 14 + 40 + (4 * img->ncol);
+  int stride = ((img->w*img->bpp)>>3);
+      stride = ((stride+3)/4)*4;
   int isize = stride*img->h;
   int fsize = doff + isize;
   int i;
+  
+  // Switch to BGR for saving...
+  if (img->pal == NULL)
+    scc_img_swapchannels(img);
 
   scc_fd_w8(fd,'B');
   scc_fd_w8(fd,'M');
@@ -82,7 +90,7 @@ int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
   // n planes
   scc_fd_w16le(fd,1);
   // bpp
-  scc_fd_w16le(fd,8);
+  scc_fd_w16le(fd,img->bpp);
   // comp
   scc_fd_w32le(fd,0);
   // isize
@@ -95,30 +103,79 @@ int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
   // ncol
   scc_fd_w32le(fd,img->ncol);
   // num of important color
-  scc_fd_w32le(fd,16);
+  scc_fd_w32le(fd,img->pal ? 16 : 0);
 
   // palette
   for(i = 0 ; i < img->ncol ; i++) {
-    scc_fd_w8(fd,img->pal[i*3+2]); // r
+    scc_fd_w8(fd,img->pal[i*3+2]); // b
     scc_fd_w8(fd,img->pal[i*3+1]); // g
-    scc_fd_w8(fd,img->pal[i*3]);   // b
+    scc_fd_w8(fd,img->pal[i*3]);   // r
     scc_fd_w8(fd,0);               // junk
   }
-
+  
   // data
+  isize = (img->w*img->bpp)>>3;
   for(i = img->h-1 ; i >= 0 ; i--) {
-    if(scc_fd_write(fd,&img->data[i*img->w],img->w) != img->w) {
+    if(scc_fd_write(fd,&img->data[(i*img->w*img->bpp)>>3],isize) != isize) {
       printf("Error while writing BMP data.\n");
+      scc_img_swapchannels(img);
       return 0;
     }
-    if(stride > img->w) {
-      int i;
-      for(i = img->w ; i < stride ; i++)
-	scc_fd_w8(fd,0);
-    }       
+    
+    if(stride > isize) {
+      int s;
+      for(s = isize ; s < stride ; s++)
+        scc_fd_w8(fd,0);
+    }
   }
   
+  // Switch back from BGR for saving...
+  if (img->pal == NULL)
+    scc_img_swapchannels(img);
+  
   return 1;
+}
+
+// Swap R and B channels in an image
+void scc_img_swapchannels(scc_img_t* img) {
+  int i;
+  int r,g,b;
+  int sz = (img->w*img->h*img->bpp)>>3;
+  int calc;
+  char* data = img->data;
+  switch (img->bpp) {
+    case 16:
+      for(i = 0 ; i < sz ; i ++) {
+        calc = ((short*)data)[i];
+        r = (calc>>11) & 0x1F; // r
+        g = (calc>>5)  & 0x3F; // g
+        b = (calc)     & 0x1F; // b
+        ((short*)data)[i] = (b) | (g>>5) | (r>>11);
+      }
+      break;
+    case 24:
+      for(i = 0 ; i < sz ; i += 3) {
+        r = data[i]; // r
+        g = data[i+1]; // g
+        b = data[i+2];   // b
+
+        data[i]   = b;
+        data[i+1] = g;
+        data[i+2] = r;
+      }
+      break;
+    case 32:
+      for(i = 0 ; i < sz ; i += 4) {
+        r = data[i]; // r
+        g = data[i+1]; // g
+        b = data[i+2];   // b
+
+        data[i]   = b;
+        data[i+1] = g;
+        data[i+2] = r;
+      }
+      break;
+  }
 }
   
 int scc_img_save_bmp(scc_img_t* img,char* path) {
@@ -142,11 +199,13 @@ int scc_img_save_bmp(scc_img_t* img,char* path) {
 
 static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   char hdr[2];
-  int i,l,bpp;
-  uint32_t fsize,doff,hsize,w,stride,h,isize,ncol,fmt;
+  int i,l,w,h,bpp,scan_stride;
+  int flip;
+  uint32_t fsize,doff,hsize,stride,isize,ncol,fmt;
   scc_img_t* img;
   uint8_t* dst;
   int n,c,x;
+  int calc,r,g,b;
 
   // Header
   if(scc_fd_read(fd,hdr,2) != 2) return NULL;
@@ -170,6 +229,8 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   // image size
   w = scc_fd_r32le(fd);
   h = scc_fd_r32le(fd);
+  flip = h < 0 ? 1 : 0;
+  h = flip ? -h : h;
 
   if(scc_fd_r16le(fd) != 1) {
     printf("BMP file %s has an invalid number of planes.\n",fd->filename);
@@ -188,8 +249,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
     stride = (w+7)/8;
     break;
   default:
-    printf("%s is not an indexed BMP: %d bpp.\n",fd->filename,bpp);
-    return NULL;
+    stride = (bpp*w)>>3;
   }
   // align the stride on dword boundary
   stride = ((stride+3)/4)*4;
@@ -203,7 +263,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   isize = scc_fd_r32le(fd);
  
   if(fmt == 0 && isize && isize != stride*h) {
-    printf("BMP file %s has an invalid image size: %d.\n",fd->filename,isize);
+    printf("BMP file %s has an invalid image size: %d (should be %d).\n",fd->filename,isize, stride*h);
     return NULL;
   }
   
@@ -225,24 +285,33 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   img = calloc(1,sizeof(scc_img_t));
   img->w = w;
   img->h = h;
+  img->bpp = bpp;
 
   img->ncol = ncol;
-  img->pal = malloc(3*ncol);
-  for(img->ncol = 0 ; img->ncol < ncol ; img->ncol++) {
-    img->pal[img->ncol*3+2] = scc_fd_r8(fd); // r
-    img->pal[img->ncol*3+1] = scc_fd_r8(fd); // g
-    img->pal[img->ncol*3] = scc_fd_r8(fd);   // b
-    scc_fd_r8(fd); // skip junk
-  }
-  // gimp use the last color for transparent areas
-  img->trans = img->ncol-1;
   
-  img->data = malloc(w*h);
+  if (img->ncol > 0) {
+    img->pal = malloc(3*ncol);
+    for(img->ncol = 0 ; img->ncol < ncol ; img->ncol++) {
+      img->pal[img->ncol*3+2] = scc_fd_r8(fd); // b
+      img->pal[img->ncol*3+1] = scc_fd_r8(fd); // g
+      img->pal[img->ncol*3] = scc_fd_r8(fd);   // r
+      scc_fd_r8(fd); // skip junk
+    }
+    // gimp use the last color for transparent areas
+    img->trans = img->ncol-1;
+  } else {
+    img->pal = NULL;
+  }
+  
+  img->data = malloc((w*h*bpp)>>3);
 
   switch(fmt) {
   case 0: // raw data
-      for(l = 0, dst = &img->data[w*(h-1)] ; l < h ; dst -= w, l++) {
+      dst = flip ? &img->data[0] : &img->data[(w*(h-1)*bpp)>>3];
+      scan_stride = flip ? stride : -stride;
+      for(l = 0; l < h ; dst += scan_stride, l++) {
           uint8_t data[stride];
+          //printf("Strip %d OF %d [%i, %i]\n", l, h, stride, scan_stride);
 
           if(scc_fd_read(fd,data,stride) != stride) {
               printf("Error while reading BMP file %s\n",fd->filename);
@@ -258,16 +327,35 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
                   else
                       dst[i] = 0;
               }
+              img->bpp = 8;
               break;
           case 4:
               for(i = 0 ; i < w ; i += 2) {
                   dst[i] = data[i/2]>>4;
                   dst[i+1] = data[i/2] & 0xF;
               }
+              img->bpp = 8;
               break;
           case 8:
               memcpy(dst,data,w);
               break;
+          case 16:
+            for(i = 0 ; i < w ; i ++) {
+                ((short*)dst)[i] = ((short*)data)[i];
+            }
+            break;
+          case 24:
+            for(i = 0 ; i < w ; i += 3) {
+                dst[i]   = data[i]; // r
+                dst[i+1] = data[i+1]; // g
+                dst[i+2] = data[i+2];   // b
+            }
+            break;
+          case 32:
+            for(i = 0 ; i < w ; i ++) {
+                ((int*)dst)[i] = ((int*)data)[i];
+            }
+            break;
           }
       }
       break;
@@ -360,6 +448,10 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
       printf("Got unsupported image format.\n");
       
   }
+  
+  // BMP will be BGR if we don't have a palette
+  if (img->pal == NULL)
+    scc_img_swapchannels(img);
 
   return img;
 }
@@ -383,6 +475,111 @@ scc_img_t* scc_img_open(char* path) {
   return img;
 }
 
+// Remove palette from an image, converts to 24bpp
+void scc_img_unpal(scc_img_t* img) {
+  uint8_t* out = malloc(img->w*img->h*3);
+  uint8_t* optr = out;
+  uint8_t* iptr = img->data;
+  uint8_t* pal = img->pal;
+
+  if (pal == NULL)
+    return;
+
+  int i;
+  int sz=img->w*img->h;
+  for (i=0; i<sz; i++) {
+    int pos = *iptr++;
+    *optr++ = pal[pos++];
+    *optr++ = pal[pos++];
+    *optr++ = pal[pos];
+  }
+
+  free(img->data);
+  free(img->pal);
+  img->data = out;
+  img->pal = NULL;
+  img->ncol = 0;
+  img->bpp = 24;
+}
+
+/// Reduce colors in an image
+int scc_img_quantize(scc_img_t* img, int colors) {
+  int i;
+  int sz = colors,
+    stride = (img->bpp*img->w)>>3,
+    isize=img->w*img->h,
+    w = img->w,
+    h = img->h;
+  GifByteType* RedInput = malloc(w*h);
+  GifByteType* GreenInput = malloc(w*h);
+  GifByteType* BlueInput = malloc(w*h);
+  GifByteType* OutImg = malloc(w*h);
+  GifColorType* OutPal = malloc(w*h*colors);
+  uint8_t* data;
+
+  // Ditch the palette
+  if (img->pal)
+    scc_img_unpal(img);
+
+  data = img->data;
+
+  switch (img->bpp)
+  {
+    case 16:
+      for (i=0; i<isize; i++) {
+        uint16_t val = ((short*)data)[i];
+        RedInput[i]   = val & 0x1F; val >>= 5;
+        GreenInput[i] = val & 0x3F; val >>= 6;
+        BlueInput[i]  = val & 0x1F;
+      }
+      break;
+    case 24:
+      for (i=0; i<isize; i++) {
+        uint8_t* ptr = data + (i*3);
+        RedInput[i]   = *ptr++;
+        GreenInput[i] = *ptr++;
+        BlueInput[i]  = *ptr++;
+      }
+      break;
+    case 32:
+      for (i=0; i<isize; i++) {
+        uint32_t val = ((int*)data)[i];
+        RedInput[i]   = val & 0xFF; val >>= 8;
+        GreenInput[i] = val & 0xFF; val >>= 8;
+        BlueInput[i]  = val & 0xFF;
+      }
+      break;
+  }
+
+  // Go ahead!
+  if (QuantizeBuffer(w, h, &sz, RedInput, GreenInput, BlueInput, OutImg, OutPal) != GIF_OK) {
+    free(RedInput);
+    free(GreenInput);
+    free(BlueInput);
+    free(OutImg);
+    free(OutPal);
+    return 0;
+  }
+
+  // Copy OutPal into final palette
+  if (img->pal)
+    free(img->pal);
+  img->pal = malloc(sz*3);
+  data = img->pal;
+  memcpy(img->pal, OutPal, sz*3);
+
+  free(RedInput);
+  free(GreenInput);
+  free(BlueInput);
+  free(OutPal);
+  free(img->data);
+
+  img->data = OutImg;
+  img->ncol = sz;
+  img->bpp = 8;
+  return 1;
+}
+
 //#define SCC_IMG_TEST 1
 #ifdef SCC_IMG_TEST
 
@@ -398,8 +595,19 @@ int main(int argc,char** argv) {
   img = scc_img_open(argv[1]);
   if(!img) return -1;
 
-  printf("Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\n",
-	 img->w,img->h,img->ncol,img->trans);
+  printf("Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\nBPP: %d\n",
+   img->w,img->h,img->ncol,img->trans,img->bpp);
+  
+  // Test Quantize
+  scc_img_quantize(img, 255);
+  printf("Quantized Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\nBPP: %d\n",
+       img->w,img->h,img->ncol,img->trans,img->bpp);
+  scc_img_save_bmp(img, "dump.bmp");
+  scc_img_free(img);
+  
+  scc_img_open("dump.bmp");
+  printf("Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\nBPP: %d\n",
+     img->w,img->h,img->ncol,img->trans,img->bpp);
 
   return 0;
 

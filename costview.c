@@ -884,6 +884,11 @@ int main(int argc,char** argv) {
       scc_log(LOG_ERR,"Failed to open %s.\n",bmp_path);
       return -1;
     }
+    if (img->pal == NULL) {
+      scc_log(LOG_ERR,"Image %s must have a palette.\n",bmp_path);
+      scc_img_free(img);
+      return -1;
+    }
     pal = calloc(1,sizeof(scc_pal_t));
     for(i = 0 ; i < img->ncol && i < 256 ; i++) {
       pal->r[i] = img->pal[3*i];

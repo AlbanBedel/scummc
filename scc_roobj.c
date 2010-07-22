@@ -462,6 +462,13 @@ static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
     scc_log(LOG_ERR,"Failed to parse image %s.\n",val);
     return 0;
   }
+  
+  if (ro->image->pal == NULL) {
+    scc_log(LOG_ERR,"Image %s must have a palette.\n",val);
+    scc_img_free(ro->image);
+    ro->image = NULL;
+    return 0;
+  }
 
   if(ro->image->w%8 != 0) {
     scc_log(LOG_ERR,"Images must have w%%8==0 !!!\n");
@@ -490,8 +497,12 @@ int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
   }
 
   ro->zplane[idx] = scc_img_open(val);
-  if(!ro->zplane[idx]) {
+  if(!ro->zplane[idx]||ro->zplane[idx]->pal == NULL) {
     scc_log(LOG_ERR,"Failed to open zplane image %s.\n",val);
+    if (ro->zplane[idx]) {
+      scc_img_free(ro->zplane[idx]);
+      ro->zplane[idx] = NULL;
+    }
     return 0;
   }
 
@@ -686,7 +697,12 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   if(img_path) {
     img = scc_img_open(img_path);
     if(!img) return 0;
-
+    if (img->pal == NULL) {
+      scc_log(LOG_ERR,"Image %s must have a palette.\n",img_path);
+      scc_img_free(img);
+      return -1;
+    }
+    
     if(img->w%8 || img->h%8) {
       scc_log(LOG_ERR,"Image width and height must be multiples of 8.\n");
       scc_img_free(img);
@@ -710,7 +726,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   if(zp_paths) {
     for(i = 0 ; zp_paths[i] ; i++) {
       if(zp_paths[i][0] == '\0')
-        st->zp[i] = scc_img_new(img->w,img->h,2);
+        st->zp[i] = scc_img_new(img->w,img->h,2, 8);
       else {
         st->zp[i] = scc_img_open(zp_paths[i]);
         if(!st->zp[i]) {
@@ -843,7 +859,7 @@ scc_pal_t* scc_roobj_gen_pals(scc_roobj_t* ro) {
 
   if(!ro->image) {
     scc_log(LOG_V,"Room has no image, using dummy one!!!!\n");
-    ro->image = scc_img_new(8,8,256);
+    ro->image = scc_img_new(8,8,256,8);
   }
 
   pal = calloc(1,sizeof(scc_pal_t));
@@ -864,7 +880,7 @@ scc_rmim_t* scc_roobj_gen_rmim(scc_roobj_t* ro) {
 
   if(!ro->image) {
     scc_log(LOG_V,"Room has no image, using dummy one!!!!\n");
-    ro->image = scc_img_new(8,8,256);
+    ro->image = scc_img_new(8,8,256,8);
   }
 
   for(i = 1 ; i < SCC_MAX_IM_PLANES ; i++) {

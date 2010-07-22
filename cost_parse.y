@@ -736,7 +736,12 @@ static int cost_pic_load(cost_pic_t* pic,char* file) {
   uint8_t* dst;
 
   if(!img) return 0;
-
+  if (img->pal == NULL) {
+    scc_log(LOG_ERR,"Image %s must have a palette.\n",file);
+    scc_img_free(img);
+    return 0;
+  }
+  
   if(img->ncol != pal_size)
     printf("Warning, image %s doesn't have the same number of colors as the palette: %d != %d.\n",file,img->ncol,pal_size);
 

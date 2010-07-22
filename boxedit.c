@@ -1877,8 +1877,9 @@ static void clicked_open_btn_cb(GtkButton *btn,scc_boxedit_t* be) {
 
   if(open_img) {
     scc_img_t* rmim = scc_img_open(fname);
-    if(!rmim) {
+    if(!rmim || rmim->pal == NULL) {
       scc_boxedit_status_msg(be,"Failed to load image %s\n",fname);
+      if (rmim) scc_img_free(rmim);
       free(fname);
       return;
     }
@@ -2426,6 +2427,11 @@ int main(int argc,char** argv) {
   if(rmim_file) {
     rmim = scc_img_open(rmim_file);
     if(!rmim) printf("Failed to load %s.\n",rmim_file);
+    if(rmim->pal == NULL) {
+      printf("Failed to load %s.\n",rmim_file);
+      scc_img_free(rmim);
+      rmim = NULL;
+    }
   }
 
   be = scc_boxedit_new(rmim);
