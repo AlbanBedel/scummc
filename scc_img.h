@@ -50,6 +50,9 @@ int scc_img_save_bmp(scc_img_t* img,char* path);
 /// Open an image. Only BMP is supported atm.
 scc_img_t* scc_img_open(char* path);
 
+/// Swap R and B channels
+void scc_img_swapchannels(scc_img_t* img);
+
 /// Remove palette from an image
 void scc_img_unpal(scc_img_t* img);
 
