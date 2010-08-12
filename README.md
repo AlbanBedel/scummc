@@ -146,12 +146,12 @@ save as. On the view you have following actions:
 There are also the following keys:
 
  * b         : create a new box
- * d/suppr   : delete the selection
+ * d / suppr   : delete the selection
  * esc       : clear selection
- * u/q       : undo
- * r/o       : redo
- * >/+       : zoom in
- * </-       : zoom out
+ * u / q       : undo
+ * r / o       : redo
+ * > / +       : zoom in
+ * < / -       : zoom out
  * s         : save
  * S         : save as
 
