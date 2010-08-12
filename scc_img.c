@@ -37,6 +37,7 @@
 
 #include "scc_fd.h"
 #include "scc_img.h"
+#include "scc_util.h"
 
 #include "quantize.h"
 
@@ -216,7 +217,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   char hdr[2];
   int i,l,w,h,bpp,scan_bpp,scan_stride,dir_stride;
   int flip;
-  uint32_t fsize,doff,hsize,stride,isize,ncol,fmt;
+  uint32_t fsize,doff,hsize,stride,isize,ncol,nimp,fmt;
   scc_img_t* img;
   uint8_t* dst;
   int n,c,x;
@@ -295,13 +296,12 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   // num of color
   ncol = scc_fd_r32le(fd);
   // num of important color
-  scc_fd_r32(fd);
+  nimp = scc_fd_r32le(fd);
 
-  if(doff != 14 + 40 + 4 * ncol) {
-    printf("BMP file %s has an invalid data offset.\n",fd->filename);
-    return NULL;
+  if(doff != 14 + hsize + 4 * ncol) {
+    printf("BMP file %s has an invalid data offset (%d should be 14 + %d + 4 * %d  [%d]).\n",fd->filename, doff, hsize, ncol, isize);
+    //return NULL;
   }
-
 
   img = calloc(1,sizeof(scc_img_t));
   img->w = w;
@@ -318,13 +318,12 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
       img->pal[img->ncol*3] = scc_fd_r8(fd);   // r
       scc_fd_r8(fd); // skip junk
     }
-    // gimp use the last color for transparent areas
-    img->trans = img->ncol-1;
   } else {
     img->pal = NULL;
     img->trans = -1;
   }
   
+  //scc_fd_seek(fd, doff, SEEK_SET);
   img->data = calloc(1,(w*h*scan_bpp)>>3);
 
   switch(fmt) {
@@ -470,6 +469,13 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
       
   }
   
+  if (img->pal)
+  {
+    // Use the first pixel as the transparent color
+    // (better than nothing!)
+    img->trans = *img->data;
+  }
+  
   // BMP will be BGR if we don't have a palette
   if (img->pal == NULL)
     scc_img_swapchannels(img);
@@ -509,7 +515,7 @@ void scc_img_unpal(scc_img_t* img) {
   int i;
   int sz=img->w*img->h;
   for (i=0; i<sz; i++) {
-    int col = *iptr++;
+    uint8_t col = *iptr++;
     int pos = col*3;
     *optr++ = pal[pos++];
     *optr++ = pal[pos++];
@@ -585,9 +591,9 @@ int scc_img_quantize(scc_img_t* img, int colors) {
   }
 
   // Copy OutPal into final palette
-  img->pal = malloc(sz*3);
+  img->pal = malloc(colors*3);
   data = img->pal;
-  memcpy(img->pal, OutPal, sz*3);
+  memcpy(img->pal, OutPal, colors*3);
 
   free(RedInput);
   free(GreenInput);
@@ -596,7 +602,7 @@ int scc_img_quantize(scc_img_t* img, int colors) {
   free(img->data);
 
   img->data = OutImg;
-  img->ncol = sz;
+  img->ncol = colors;
   img->bpp = 8;
   return 1;
 }
@@ -720,20 +726,147 @@ void scc_img_copypal(scc_img_t* img, scc_img_t* src) {
   }
 }
 
+void scc_img_swapcol(scc_img_t* img, uint8_t from, uint8_t to)
+{
+  uint8_t* data = img->data;
+  uint8_t t;
+  int i,j;
+  int w = img->w, h = img->h;
+  if (img->pal == NULL)
+    return;
+  
+  j = to*3;
+  for (i=0; i<3; i++, j++) {
+    t = img->pal[(from*3)+i];
+    img->pal[(from*3)+i] = img->pal[j];
+    img->pal[j] = t;
+  }
+  
+  for (i=0; i<w*h; i++, data++) {
+    uint8_t col = *data;
+    if (col == from)
+      *data = to;
+    else if (col == to)
+      *data = from;
+  }
+}
+
+int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y)
+{
+  int sx, sy;
+  uint8_t* data = img->data;
+  int w = img->w, h = img->h;
+  *x = *y = -1;
+  
+  switch (img->bpp)
+  {
+    case 8:
+    for (sy=0; sy<h; sy++) {
+      for (sx=0; sx<w; sx++) {
+        if (*data++ == color) {
+          *x = sx;
+          *y = sy;
+          return 1;
+        }
+      }
+    }
+    break;
+  }
+  return 0;
+}
+
+void scc_img_copymask(scc_img_t* img, scc_img_t* dest)
+{
+  int i;
+  int trans = img->trans;
+  uint8_t* data = img->data+3;
+  uint8_t* dest_data = dest->data;
+  int w = img->w, h = img->h;
+  
+  switch (img->bpp)
+  {
+    case 8:
+      for (i=0; i<w*h; i++) {
+        *dest_data++ = (*data++ == trans) ? 0 : 255;
+      }
+      break;
+    case 32:
+        for (i=3; i<w*h*4; i+= 4, data += 4) {
+          *dest_data++ = *data;
+        }
+      break;
+  }
+}
+
+void scc_img_mask(scc_img_t* img)
+{
+  int i;
+  int trans = -1;
+  int isize=img->w*img->h;
+  uint8_t* data;
+  uint8_t* new_data, *new_ptr;
+  
+  if (img->bpp == 32)
+    return;
+
+  // Ditch the palette
+  if (img->pal)
+    scc_img_unpal(img);
+
+  data = img->data;
+  new_data = new_ptr = malloc(isize*4);
+
+  switch (img->bpp)
+  {
+    case 16:
+      for (i=0; i<isize; i++) {
+        uint16_t val = ((short*)data)[i];
+        new_ptr[0] = val & 0x1F; val >>= 5;
+        new_ptr[1] = val & 0x3F; val >>= 6;
+        new_ptr[2] = val & 0x1F;
+        if (i == 0)
+          trans = ((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16));
+        new_ptr[3] = trans >= 0 && (((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16)) == trans) ? 0 : 255;
+        new_ptr += 4;
+      }
+      break;
+    case 24:
+      for (i=0; i<isize; i++) {
+        uint8_t* ptr = data + (i*3);
+        new_ptr[0] = *ptr++;
+        new_ptr[1] = *ptr++;
+        new_ptr[2] = *ptr;
+        if (i == 0)
+          trans = ((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16));
+        new_ptr[3] = trans >= 0 && (((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16)) == trans) ? 0 : 255;
+        new_ptr += 4;
+      }
+      break;
+  }
+  
+  free(data);
+  img->data = new_data;
+  img->bpp = 32;
+}
+
 /// Reduce colors across a set of images
-int scc_images_quantize(scc_img_t** imgs, int num, int colors) {
+int scc_images_quantize(scc_img_t** imgs, int num, int colors, int dump) {
   // 1) Combine images into single image
   // 2) Reduce result
   // 3) Copy palette and resultant image data back into the images
   int i;
   int dest_height = 0;
   int dest_width = 0;
+  int trans_x, trans_y;
+  scc_img_t* mask;
   imgpos_t* pos = malloc(sizeof(imgpos_t)*num);
 
-  // 0. Images need to ditch their palette
+  // 0. Images need to ditch their palette, and they need a mask
   for (i=0; i<num; i++) {
     if (imgs[i]->pal)
       scc_img_unpal(imgs[i]);
+    else if (imgs[i]->bpp < 32)
+      scc_img_mask(imgs[i]);
   }
 
   // 1. Determine destination x,y of images
@@ -752,11 +885,40 @@ int scc_images_quantize(scc_img_t** imgs, int num, int colors) {
     imgpos_t ip = pos[i];
     scc_img_blit(imgs[i], img, 0, 0, ip.x, ip.y, imgs[i]->w, imgs[i]->h);
   }
+  
+  // copy alpha mask and find first instance of transparent color
+  mask = scc_img_new(dest_width, dest_height, 256, 8);
+  scc_img_copymask(img, mask);
+  scc_img_findpixel(mask, 0, &trans_x, &trans_y);
 
   // 3. Quantize new image
   scc_img_quantize(img, colors);
-  //scc_img_save_bmp(img, "combined.bmp"); // DEBUG
 
+  // make sure the transparent color (if used) is at the end
+  if (trans_x >= 0) {
+    uint8_t idx = *(img->data + ((img->w*trans_y)+trans_x));
+    scc_log(LOG_V, "Transparent color @ %i,%i = %i\n", trans_x, trans_y, idx, mask->bpp);
+    img->trans = img->ncol-1;
+    scc_img_swapcol(img, idx, img->ncol-1);
+    /* // Paint all transparent areas again
+    if (trans_x >= 0) {
+      uint8_t* data = img->data;
+      uint8_t* mask_data = mask->data;
+      int ext = img->w*img->h;
+      for (i=0; i<ext; i++) {
+        if (*mask_data < 255)
+          *data = img->ncol-1;
+        data++;mask_data++;
+      }
+    }*/
+  }
+  
+  if (dump)
+    scc_img_save_bmp(img, "combined.bmp"); // DEBUG
+  
+  if (mask)
+    scc_img_free(mask);
+  
   // 4. Extract images out of new image
   for (i=0; i<num; i++) {
     imgpos_t ip = pos[i];
@@ -802,7 +964,7 @@ int main(int argc,char** argv) {
   
   // Test combiner
   imgs[0] = img; imgs[1] = img2;
-  scc_images_quantize(imgs, 2, 255);
+  scc_images_quantize(imgs, 2, 255, 1);
   scc_img_save_bmp(imgs[0], "dump_0.bmp");
   scc_img_save_bmp(imgs[1], "dump_1.bmp");
   

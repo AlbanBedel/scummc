@@ -56,8 +56,20 @@ void scc_img_swapchannels(scc_img_t* img);
 /// Remove palette from an image
 void scc_img_unpal(scc_img_t* img);
 
+/// Swap two color indexes
+void scc_img_swapcol(scc_img_t* img, uint8_t src, uint8_t dest);
+
+/// Copies alpha or transparency mask to dest
+void scc_img_copymask(scc_img_t* img, scc_img_t* dest);
+
+/// converts <32bpp to 32bpp with a mask
+void scc_img_mask(scc_img_t* img);
+
+/// Find pixel in image
+int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y);
+
 /// Reduce colors in image
 int scc_img_quantize(scc_img_t* img, int colors);
 
 /// Reduce colors across a set of images
-int scc_images_quantize(scc_img_t** img, int num, int colors);
+int scc_images_quantize(scc_img_t** img, int num, int colors, int dump);
