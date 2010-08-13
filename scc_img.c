@@ -41,6 +41,10 @@
 
 #include "quantize.h"
 
+inline int scc_img_rgb(int r, int g, int b) {
+  return (r) | (g << 8) | (b << 16);
+}
+
 // create a new empty image of the given size
 scc_img_t* scc_img_new(int w,int h,int ncol,int bpp) {
   scc_img_t* img = calloc(1,sizeof(scc_img_t));
@@ -775,6 +779,39 @@ int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y)
   return 0;
 }
 
+int scc_img_findpal(scc_img_t* img, int color)
+{
+  uint8_t* data = img->pal;
+  int i;
+  int idx = -1;
+  
+  if (data) {
+    for (i=0; i<img->ncol; i++) {
+      int col = scc_img_rgb(*data++, *data++, *data++);
+      if (col == color) {
+        idx = i;
+        break;
+      }
+    }
+  }
+  return idx;
+}
+
+void scc_img_findpal_indexes(scc_img_t* costume_img, scc_img_t* room_img, uint8_t* indexes)
+{
+  int i;
+  uint8_t* data;
+  
+  // Locate indexes
+  data = costume_img->pal;
+  for (i=0; i<costume_img->ncol; i++) {
+    int col = scc_img_rgb(*data++, *data++, *data++);
+    int found = scc_img_findpal(room_img, col);
+    indexes[i] = (found < 0) ? 0 : found;
+  }
+}
+
+
 void scc_img_copymask(scc_img_t* img, scc_img_t* dest)
 {
   int i;
@@ -825,8 +862,8 @@ void scc_img_mask(scc_img_t* img)
         new_ptr[1] = val & 0x3F; val >>= 6;
         new_ptr[2] = val & 0x1F;
         if (i == 0)
-          trans = ((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16));
-        new_ptr[3] = trans >= 0 && (((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16)) == trans) ? 0 : 255;
+          trans = scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]);
+        new_ptr[3] = trans >= 0 && (scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]) == trans) ? 0 : 255;
         new_ptr += 4;
       }
       break;
@@ -837,8 +874,8 @@ void scc_img_mask(scc_img_t* img)
         new_ptr[1] = *ptr++;
         new_ptr[2] = *ptr;
         if (i == 0)
-          trans = ((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16));
-        new_ptr[3] = trans >= 0 && (((new_ptr[0]) | (new_ptr[1] << 8) | (new_ptr[2] << 16)) == trans) ? 0 : 255;
+          trans = scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]);
+        new_ptr[3] = trans >= 0 && (scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]) == trans) ? 0 : 255;
         new_ptr += 4;
       }
       break;
@@ -894,12 +931,12 @@ int scc_images_quantize(scc_img_t** imgs, int num, int colors, int dump) {
   // 3. Quantize new image
   scc_img_quantize(img, colors);
 
-  // make sure the transparent color (if used) is at the end
+  // make sure the transparent color (if used) is at the start
   if (trans_x >= 0) {
     uint8_t idx = *(img->data + ((img->w*trans_y)+trans_x));
-    scc_log(LOG_V, "Transparent color @ %i,%i = %i\n", trans_x, trans_y, idx, mask->bpp);
-    img->trans = img->ncol-1;
-    scc_img_swapcol(img, idx, img->ncol-1);
+    scc_log(LOG_V, "Transparent color @ %i,%i = %i\n", trans_x, trans_y, idx);
+    img->trans = 0;
+    scc_img_swapcol(img, idx, 0);
     /* // Paint all transparent areas again
     if (trans_x >= 0) {
       uint8_t* data = img->data;

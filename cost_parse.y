@@ -153,6 +153,7 @@
 
 #define COST_MAX_PALETTE_SIZE 32
   static unsigned pal_size = 0;
+  static scc_img_t* pal_room = NULL;
   static uint8_t pal[COST_MAX_PALETTE_SIZE];
 
   // Default to no flip
@@ -241,7 +242,7 @@ srcfile: /* empty */
 | costume
 ;
 
-// the palette declaration is requiered and must be
+// the palette declaration is required and must be
 // first.
 costume: palette costflags statementlist
 ;
@@ -607,6 +608,23 @@ palette: PALETTE '(' intlist ')' ';'
   memcpy(pal,$3+1,pal_size);
   free($3);
 }
+| PALETTE '(' STRING ')' ';'
+{
+  char* pal_path = $3;
+  
+  if(img_path)
+    asprintf(&pal_path,"%s/%s",img_path,$3);
+  
+  pal_room = scc_img_open(pal_path);
+  
+  if(!pal_room)
+    COST_ABORT(@1,"Could not load room palette %s.\n", pal_path);
+  if(!pal_room->pal)
+    COST_ABORT(@1,"No palette present in %s.\n", pal_path);
+  
+  if (img_path)
+    free(pal_path);
+}
 ;
 
 intlist: intlistitem
@@ -738,6 +756,22 @@ static int cost_pic_load(cost_pic_t* pic,char* file) {
   if(!img) return 0;
   if (img->pal == NULL) {
     scc_log(LOG_ERR,"Image %s must have a palette.\n",file);
+    scc_img_free(img);
+    return 0;
+  }
+  
+  if (pal_size == 0 && pal_room != NULL) {
+    // Load the actor color indexes from pal_room
+    if (img->ncol > 32) {
+        scc_log(LOG_ERR,"Too many colors in image %s.\n",file);
+        scc_img_free(img);
+        return 0;
+    }
+    memset(pal, '\0', sizeof(pal));
+    scc_img_findpal_indexes(img, pal_room, pal);
+    pal_size = img->ncol;
+  } else if (pal_size < 0) {
+    scc_log(LOG_ERR,"Could not find actor palette. Did you specify one?\n");
     scc_img_free(img);
     return 0;
   }
@@ -1287,6 +1321,9 @@ int main (int argc, char** argv) {
     header_write(out_fd,symbol_prefix);
     scc_fd_close(out_fd);
   }
+  
+  if (pal_room)
+    scc_img_free(pal_room);
 
   return 0;
 }

@@ -68,8 +68,15 @@ void scc_img_mask(scc_img_t* img);
 /// Find pixel in image
 int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y);
 
+/// Find color in palette
+int scc_img_findpal(scc_img_t* img, int color);
+
+/// Find palette indexes in room image
+void scc_img_findpal_indexes(scc_img_t* costume_img, scc_img_t* room_img, uint8_t* indexes);
+
 /// Reduce colors in image
 int scc_img_quantize(scc_img_t* img, int colors);
 
 /// Reduce colors across a set of images
 int scc_images_quantize(scc_img_t** img, int num, int colors, int dump);
+
