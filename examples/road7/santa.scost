@@ -17,7 +17,7 @@
  *
  */
 
-palette([48-79]);
+palette("road.bmp");
 
 
 picture standS = {
