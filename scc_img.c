@@ -1,5 +1,6 @@
 /* ScummC
  * Copyright (C) 2004-2006  Alban Bedel
+ * Portions Copyright (C) 2010 James Urquhart
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -730,8 +731,7 @@ void scc_img_copypal(scc_img_t* img, scc_img_t* src) {
   }
 }
 
-void scc_img_swapcol(scc_img_t* img, uint8_t from, uint8_t to)
-{
+void scc_img_swapcol(scc_img_t* img, uint8_t from, uint8_t to) {
   uint8_t* data = img->data;
   uint8_t t;
   int i,j;
@@ -755,8 +755,7 @@ void scc_img_swapcol(scc_img_t* img, uint8_t from, uint8_t to)
   }
 }
 
-int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y)
-{
+int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y) {
   int sx, sy;
   uint8_t* data = img->data;
   int w = img->w, h = img->h;
@@ -779,8 +778,7 @@ int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y)
   return 0;
 }
 
-int scc_img_findpal(scc_img_t* img, int color)
-{
+int scc_img_findpal(scc_img_t* img, int color) {
   uint8_t* data = img->pal;
   int i;
   int idx = -1;
@@ -797,8 +795,7 @@ int scc_img_findpal(scc_img_t* img, int color)
   return idx;
 }
 
-void scc_img_findpal_indexes(scc_img_t* costume_img, scc_img_t* room_img, uint8_t* indexes)
-{
+void scc_img_findpal_indexes(scc_img_t* costume_img, scc_img_t* room_img, uint8_t* indexes) {
   int i;
   uint8_t* data;
   
@@ -812,8 +809,7 @@ void scc_img_findpal_indexes(scc_img_t* costume_img, scc_img_t* room_img, uint8_
 }
 
 
-void scc_img_copymask(scc_img_t* img, scc_img_t* dest)
-{
+void scc_img_copymask(scc_img_t* img, scc_img_t* dest) {
   int i;
   int trans = img->trans;
   uint8_t* data = img->data+3;
@@ -835,8 +831,7 @@ void scc_img_copymask(scc_img_t* img, scc_img_t* dest)
   }
 }
 
-void scc_img_mask(scc_img_t* img)
-{
+void scc_img_mask(scc_img_t* img) {
   int i;
   int trans = -1;
   int isize=img->w*img->h;

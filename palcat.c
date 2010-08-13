@@ -1,5 +1,6 @@
 /* ScummC
  * Copyright (C) 2005-2006  Alban Bedel
+ * Portions Copyright (C) 2010 James Urquhart
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -69,8 +70,7 @@ typedef struct remap_img_s {
 } remap_img_t;
 
 static char name_buffer[4096];
-char* calcbasepath(char* fname)
-{
+char* calcbasepath(char* fname) {
   char* ptr = fname;
   char* last = ptr;
   while (*ptr != '\0') {
@@ -84,8 +84,7 @@ char* calcbasepath(char* fname)
   return name_buffer;
 }
 
-char* calcbasename(char* fname)
-{
+char* calcbasename(char* fname) {
   char* ptr = fname;
   char* last = ptr;
   while (*ptr != '\0') {
@@ -98,8 +97,7 @@ char* calcbasename(char* fname)
   return name_buffer;
 }
 
-void clear_remaps(remap_img_t* list, int count)
-{
+void clear_remaps(remap_img_t* list, int count) {
   int i;
   for (i=0; i<count; i++) {
     if (list[i].path) {
@@ -113,8 +111,7 @@ void clear_remaps(remap_img_t* list, int count)
   free(list);
 }
 
-void dump_remaps(remap_img_t* remaps, int count)
-{
+void dump_remaps(remap_img_t* remaps, int count) {
   int i;
   char buffer[4096];
   for (i=0; i<count; i++) {
@@ -124,8 +121,7 @@ void dump_remaps(remap_img_t* remaps, int count)
   }
 }
 
-void dump_pal(uint8_t* pal, int size)
-{
+void dump_pal(uint8_t* pal, int size) {
   uint8_t* data;
   int i;
   char buffer[4096];

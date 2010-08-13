@@ -1,5 +1,6 @@
 /* ScummC
  * Copyright (C) 2005-2006  Alban Bedel
+ * Portions Copyright (C) 2010 James Urquhart
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
