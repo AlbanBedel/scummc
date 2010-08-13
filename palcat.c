@@ -44,12 +44,16 @@
 
 static char* outname = NULL;
 static int combine_colors = 0;
-static int do_dump = -1;
+static int do_dump = 0;
+static int make_single_pal = 0;
+static int clip_colors = 0;
 
 static scc_param_t scc_parse_params[] = {
   { "o", SCC_PARAM_STR, 0, 0, &outname },
   { "d", SCC_PARAM_FLAG, 0, 1, &do_dump },
   { "col", SCC_PARAM_INT, 0, 256, &combine_colors },
+  { "pal", SCC_PARAM_FLAG, 0, 1, &make_single_pal },
+  { "clip", SCC_PARAM_INT, 0, 256, &clip_colors },
   { "v", SCC_PARAM_FLAG, LOG_MSG, LOG_V, &scc_log_level },
   { NULL, 0, 0, 0, NULL }
 };
@@ -109,12 +113,42 @@ void clear_remaps(remap_img_t* list, int count)
   free(list);
 }
 
+void dump_remaps(remap_img_t* remaps, int count)
+{
+  int i;
+  char buffer[4096];
+  for (i=0; i<count; i++) {
+    remap_img_t *remap = remaps+i;
+    sprintf(buffer, "%s%s%s", remap->basepath, outname, remap->name);
+    scc_img_save_bmp(remap->img, buffer);
+  }
+}
+
+void dump_pal(uint8_t* pal, int size)
+{
+  uint8_t* data;
+  int i;
+  char buffer[4096];
+  sprintf(buffer, "%spal.bmp", outname);
+  
+  scc_log(LOG_V, "Palette: %s\t[%i colors]\n", buffer, size);
+  scc_img_t* img = scc_img_new(size, 1, size, 8);
+  data = img->data;
+  memcpy(img->pal, pal, size*3);
+  
+  for (i=0; i<size; i++) {
+    *data++ = i;
+  }
+  
+  scc_img_save_bmp(img, buffer);
+  scc_img_free(img);
+}
+
 int main(int argc,char** argv) {
   scc_cl_arg_t* files,*f;
   remap_img_t* remaps;
-  char new_pal[256];
-  char buffer[4096];
-  char *np;
+  uint8_t new_pal[256];
+  uint8_t *np;
   int remap_count = 0;
   int i = 0, j = 0;
   
@@ -160,24 +194,27 @@ int main(int argc,char** argv) {
     scc_images_quantize(maps, remap_count, combine_colors, do_dump);
     
     // Write output
-    for (i=0; i<remap_count; i++) {
-      remap_img_t *remap = remaps+i;
-      sprintf(buffer, "%s%s%s", remap->basepath, outname, remap->name);
-      scc_img_save_bmp(remap->img, buffer);
+    if (!make_single_pal) {
+      dump_remaps(remaps, remap_count);
+    } else {
+      dump_pal(remaps[0].img->pal, remaps[0].img->ncol);
     }
     
     free(maps);
   }
   else
-  {
-    scc_log(LOG_V, "Appending...\n");
+  {  
     // Append and remap colors in each image
+    scc_log(LOG_V, "Appending...\n");
     int count = 0;
     np = new_pal;
+    memset(np, '\0', sizeof(new_pal));
+    
     for (i=0; i<remap_count; i++) {
         remap_img_t *remap = remaps+i;
         scc_img_t *in = remap->img;
-        if (in->pal == NULL || count+in->ncol > 256) {
+        int real_inc = (clip_colors > 0) ? clip_colors : in->ncol;
+        if (in->pal == NULL || count+real_inc > 256) {
           scc_log(LOG_ERR,"'%s' has too many colors to fit into current palette\n",f->val);
           clear_remaps(remaps, remap_count);
           return 1;
@@ -187,26 +224,34 @@ int main(int argc,char** argv) {
         // Offset bitmap data in image by input colors (assuming data is 8bit)
         for (j = 0 ; j < in->w*in->h ; j++)
             in->data[j] += count;
-        memcpy(np,in->pal,in->ncol*3);
-        np += in->ncol*3;
-        count += in->ncol;
+        
+        if (real_inc > in->ncol)
+          memcpy(np,in->pal,in->ncol*3);
+        else
+          memcpy(np,in->pal,real_inc*3);
+        np += real_inc*3;
+        count += real_inc;
     }
     
-    // Copy new palette to all images and dump!
-    for (i=0; i<remap_count; i++) {
-      remap_img_t *remap = remaps+i;
-      scc_img_t *in = remap->img;
+    if (!make_single_pal) {
+      // Copy new palette to all images and dump!
+      for (i=0; i<remap_count; i++) {
+        remap_img_t *remap = remaps+i;
+        scc_img_t *in = remap->img;
       
-      free(in->pal);
-      in->pal = malloc(count*3);
-      in->ncol = count;
-      memcpy(in->pal, new_pal, count*3);
+        free(in->pal);
+        in->pal = malloc(count*3);
+        in->ncol = count;
+        memcpy(in->pal, new_pal, count*3);
+      }
       
-      sprintf(buffer, "%s%s%s", remap->basepath, outname, remap->name);
-      scc_img_save_bmp(remap->img, buffer);
+      dump_remaps(remaps, remap_count);
+    } else {
+      dump_pal(new_pal, count);
     }
   }
-  scc_log(LOG_V, "Generated %i images.\n", remap_count);
+  scc_log(LOG_V, "Processed %i images.\n", remap_count);
+  clear_remaps(remaps, remap_count);
   
   return 0;
 }
