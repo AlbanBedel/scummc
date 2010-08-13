@@ -17,8 +17,7 @@
  *
  */
 
-palette([224-255]);
-
+palette("../graphics/rooms/skyline.bmp");
 
 
 picture ufo = {

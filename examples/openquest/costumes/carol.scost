@@ -17,7 +17,7 @@
  *
  */
 
-palette([224-255]);
+palette("../graphics/rooms/back01_merged.bmp");
 
 
 
