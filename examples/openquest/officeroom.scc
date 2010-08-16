@@ -44,14 +44,14 @@ room OfficeRoom {
     boxd = "graphics/rooms/back01.box";
     trans = 0;
 
-    voice beamedSnd = { "sounds/beamed.voc" };
-    voice phoneSnd = { "sounds/phone.voc" };
-    voice openCabinetSnd = { "sounds/open_cabinet.voc"  };
-    voice closeCabinetSnd = { "sounds/close_cabinet.voc" };
-    voice switchSnd = { "sounds/switch.voc" };
-    voice movePlantSnd = { "sounds/move_plant.voc" };
-    voice openDoorSnd = { "sounds/open_door.voc" };
-    voice openedDoorSnd = { "sounds/opened_door.voc" };
+    sound beamedSnd =  "beamed.soun";
+    sound phoneSnd =  "phone.soun" ;
+    sound openCabinetSnd =  "open_cabinet.soun";
+    sound closeCabinetSnd =  "close_cabinet.soun";
+    sound switchSnd =  "switch.soun";
+    sound movePlantSnd =  "move_plant.soun";
+    sound openDoorSnd =  "open_door.soun";
+    sound openedDoorSnd =  "opened_door.soun";
 
     // for the bullets behind the plant
     bit hasSeenBullets, hasTriedToMovePlant, hasTalkedAboutPlant;
@@ -87,7 +87,7 @@ room OfficeRoom {
                 delay(150);
                 putActorAt(ensignZob,170,110,OfficeRoom);
                 putActorAt(commanderZif,200,120,OfficeRoom);
-                dbgPrint("%V{beamedSnd}");
+                startSound(beamedSnd);
                 animateActor( commanderZif, zif_anim_beam );
                 animateActor( ensignZob, zob_anim_beam );
                 delay(150);
@@ -96,7 +96,7 @@ room OfficeRoom {
                 actorSay(commanderZif, "Hmmm...");
                 waitForMessage();
                 Actors::setZifOnThePhone();
-                dbgPrint("%V{phoneSnd}");
+                startSound(phoneSnd);
                 animateActor( commanderZif, zif_anim_lookAround );
                 delay(30);
                 actorSay(commanderZif, "Commander's log, star date 432.1");
@@ -329,9 +329,9 @@ room OfficeRoom {
             return;
         case Open:
             unless(getObjectState(cabinetDrawer))
-                dbgPrint("%V{openCabinetSnd}");
+                startSound(openCabinetSnd);
             else
-                dbgPrint("%V{closeCabinetSnd}");
+                startSound(closeCabinetSnd);
             ResRoom::defaultAction(vrb,objA,objB);
             return;
         }
@@ -420,7 +420,7 @@ room OfficeRoom {
             if( getObjectState( plant ) == 1 ) {
                 cutscene(0) {
                     animateActor(VAR_EGO, zob_anim_raiseArm);
-                    dbgPrint("%V{movePlantSnd}");
+                    startSound(movePlantSnd);
                     delay(20);
                     setObjectState( plant, 2 );
                     delay(30);
@@ -505,12 +505,12 @@ room OfficeRoom {
                         animateActor(VAR_EGO, zob_anim_raiseArm);
                         animateActor(commanderZif, zif_anim_raiseArm);
                         delay(30);
-                        dbgPrint("%V{openDoorSnd}");
+                        startSound(openDoorSnd);
                         for(i = 2 ; i < 8 ; i++) {
                             delay( 10 );
                             setObjectState( exitToSecretRoom, i );
                         }
-                        dbgPrint("%V{openedDoorSnd}");
+                        startSound(openedDoorSnd);
                         animateActor(VAR_EGO, zob_anim_lowerArm);
                         animateActor(commanderZif, zif_anim_lowerArm);
                         delay(30);
@@ -602,7 +602,7 @@ room OfficeRoom {
                     waitForMessage();
                     animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
-                    dbgPrint("%V{switchSnd}");
+                    startSound(switchSnd);
                     setRoomRGBIntensity(143,123,119,0,255);
                     animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(20);
@@ -614,7 +614,7 @@ room OfficeRoom {
                     waitForMessage();
                     animateActor(VAR_EGO, zob_anim_raiseArm);
                     delay(20);
-                    dbgPrint("%V{switchSnd}");
+                    startSound(switchSnd);
                     setRoomPalette(0);
                     animateActor(VAR_EGO, zob_anim_lowerArm);
                     delay(20);

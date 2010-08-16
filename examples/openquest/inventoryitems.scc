@@ -27,7 +27,7 @@
 
 room InventoryItems {
 
-    voice loadingGunSnd = { "sounds/loading_gun.voc" };
+    sound loadingGunSnd = "loading_gun.soun";
     // the inventory icons
     
     
@@ -99,7 +99,7 @@ room InventoryItems {
     script loadGun() {
         setObjectState( gun, 2 );
         setObjectOwner( bullets, 0 );
-        dbgPrint("%V{loadingGunSnd}");
+        startSound(loadingGunSnd);
         egoSay("The weapon has been loaded.");
     }
 
