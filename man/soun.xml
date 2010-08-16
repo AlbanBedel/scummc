@@ -26,17 +26,10 @@
     It can create MIDI block with only General MIDI data, or SOUN block
     which can also have Adlib and Roland MIDI data.
   </description>
-
   <command name="soun">
     <param-group name="options">
       <param name="o" arg="output.soun" default="output.soun">
         Set the output file name
-      </param>
-      <param name="key" arg="k">
-        Decryption key to use when reading the datafiles.
-      </param>
-      <param name="dbg">
-        Run in debugger mode.
       </param>
     </param-group>
     <param-group name="MIDI options">
@@ -53,6 +46,12 @@
       </param>
       <param name="gmd" arg="file.mid">
         Use this General MIDI file.
+      </param>
+      <param name="voc" arg="sound.voc">
+        Use this VOC file.
+      </param>
+      <param name="spk" arg="pc.spk">
+        Use this PC Speaker file.
       </param>
     </param-group>
   </command>
