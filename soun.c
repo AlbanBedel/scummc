@@ -97,8 +97,6 @@ static int load_voc(char* path,char** rdata, unsigned *pos, unsigned *size) {
     return 0;
   }
   
-  data[22] = 0x0A; // version
-  data[23] = 0x01;
   r = scc_fd_read(fd,data,26);
   if (r < 0 || data[0] != 'C' || ((data[23]<<8) | data[22]) != 266) {
     printf("Invalid voc file %s  %c [%i].\n", path, data[0], (data[23]<<8) | data[23]);
@@ -126,7 +124,7 @@ int main(int argc,char** argv) {
   scc_fd_t *fd;
   unsigned size = 2048,pos = 0;
   char *data;
-  int s,ssize = 0,spos,apos,ahpos;
+  int s,ssize = 0,spos,ahpos;
 
   files = scc_param_parse_argv(scc_parse_params,argc-1,&argv[1]);
   
@@ -178,11 +176,11 @@ int main(int argc,char** argv) {
       spos = pos + 4;
       pos += 8; // hdr+block size
       SCC_SET_32(data,pos,MKID('A','U','h','d'));
-      apos = pos + 4;
+      SCC_SET_32BE(data,pos+4,3);
       pos += 8; // ahdr+block size
       data[pos] = 0x00;
       data[pos+1] = 0x00;
-      data[pos+2] = 0x80; 
+      data[pos+2] = 0x80;
       pos += 3;
       SCC_SET_32(data,pos,MKID('A','U','d','t'));
       ahpos = pos + 4;
@@ -190,11 +188,10 @@ int main(int argc,char** argv) {
       
       if(!(s = load_voc(voc_file,&data,&pos,&size))) return 1;
       
-      SCC_SET_32BE(data,spos,s + 8 + 3 + 8 + 8);
-      SCC_SET_32BE(data,apos,s + 8 + 3 + 8);
+      SCC_SET_32BE(data,spos,s + 8 + 8 + 8 + 3);
       SCC_SET_32BE(data,ahpos,s + 8);
       
-      ssize += s + 8 + 3 + 8 + 8;
+      ssize += s + 8 + 8 + 8 + 3;
     }
     
     if (spk_file) {
