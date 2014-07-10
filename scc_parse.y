@@ -23,6 +23,9 @@
  * @brief ScummC compiler
  */
 
+%parse-param {struct scc_parser *v_sccp}
+%lex-param {scc_parser_t *YYLEX_PARAM}
+
 %{
 #include "config.h"
 
@@ -82,7 +85,7 @@ typedef struct scc_parser {
 // redefined the function names
 #define yyparse scc_parser_parse_internal
 #define yylex scc_lex_lex
-#define yyerror(msg) scc_parser_error(sccp,&yyloc,msg)
+#define yyerror(loc,sccp,msg) scc_parser_error(sccp,loc,msg)
 
 int scc_parser_error (scc_parser_t* p,YYLTYPE *llocp, const char *s);
 void scc_parser_add_dep(scc_parser_t* p, char* dep);
@@ -188,7 +191,7 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
 
 %}
 
-%pure_parser
+%pure-parser
 
 %union {
   int integer;
