@@ -387,7 +387,7 @@ int scc_boxedit_save(scc_boxedit_t* be, char* path) {
   return 1;
 }
 
-
+/*
 #define SWAP(a,b) t = a; a = b; b = t;
 
 static int is_near_line(scc_box_pts_t* a,scc_box_pts_t* b, int x, int y) {
@@ -437,6 +437,7 @@ static int is_near_line(scc_box_pts_t* a,scc_box_pts_t* b, int x, int y) {
   }
   return r;
 }
+*/
 
 static int is_near_point(scc_box_pts_t* a,int x, int y,int th) {
   int dx = a->x - x;

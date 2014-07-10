@@ -65,7 +65,7 @@ struct scc_ld_block_st {
 
 
   int data_len;
-  char data[0];
+  uint8_t data[0];
 };
 
 typedef struct scc_ld_room_st scc_ld_room_t;
@@ -253,7 +253,7 @@ int scc_ld_parse_sym_block(scc_fd_t* fd, scc_ld_room_t* room, int len) {
 
 // parse all sym. decl
 int scc_ld_parse_stab(scc_fd_t* fd, scc_ld_room_t* room, int max_len) {
-  int32_t type;
+  uint32_t type;
   int len,rid;
   int pos = 0;
   scc_symbol_t *sym,*gsym;
@@ -338,7 +338,8 @@ int scc_ld_parse_voice(scc_fd_t* fd, scc_ld_room_t* room, int len) {
 }
 
 scc_ld_room_t* scc_ld_parse_room(scc_fd_t* fd,int max_len) {
-  int addr,type,len,pos = 0;
+  int addr,len,pos = 0;
+  uint32_t type;
   scc_ld_room_t* room;
   scc_ld_block_t* blk;
   scc_ld_block_t* room_last = NULL,*scr_last = NULL, *cost_last = NULL;
@@ -1181,10 +1182,11 @@ int scc_ld_write_res_idx(scc_fd_t* fd, int n,char* name,int rtype) {
     }
 
     for(blk = scc_ld_room_get_res_list(r,rtype) ; 
-	blk && blk->addr != a ; blk = blk->next)
+        blk && blk->addr != a ; blk = blk->next) {
       off += 8 + blk->data_len;
+    }
     if(!blk) {
-      scc_log(LOG_ERR,"Error while writing script index.\n");
+      scc_log(LOG_ERR,"Error while writing script index (type = %i).\n", rtype);
       return 0;
     }
     room_no[a] = r->sym->addr;

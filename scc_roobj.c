@@ -273,7 +273,7 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
 static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
   int hsize,ver,magic,pos,type,len,pack;
 
-  if(strncmp(data,"Creative Voice File",19)) {
+  if(strncmp((char*)data, "Creative Voice File", 19)) {
     scc_log(LOG_ERR,"%s is not a creative voice file.\n",file);
     return 0;
   }
