@@ -1868,6 +1868,7 @@ static int scvm_op_dummy_l(scvm_t* vm, scvm_thread_t* thread) {
   return 0;
 }
 
+/*
 static int scvm_op_dummy_vl(scvm_t* vm, scvm_thread_t* thread) {
   int r;
   unsigned len;
@@ -1878,7 +1879,7 @@ static int scvm_op_dummy_vl(scvm_t* vm, scvm_thread_t* thread) {
   }
   return scvm_pop(vm,NULL);
 }
-
+*/
 
 static int scvm_op_dummy_s(scvm_t* vm, scvm_thread_t* thread) {
   int r;
