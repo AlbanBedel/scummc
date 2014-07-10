@@ -478,7 +478,6 @@ echo "GNU Make: $MAKE ($makever)"
 ## Look for bison
 ##
 ## TODO: Find minimal version
-## Oldest tested version: 1.28
 ##
 
 if [ -z "$BISON" ] ; then
@@ -497,17 +496,12 @@ else
 fi
 
 bisonver=`$BISON --version | _head 1 | tr -c -d '[[:digit:].]'`
+bisonver_major="`echo $bisonver | sed 's/\..*//'`"
+bisonver_minor="`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`"
 
-if [ "`echo $bisonver | sed 's/\..*//'`" -le 1 ] ; then
-    if [ "`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`" -le 28 ] ; then
-	echo "Bison ($bisonver) is too old, versions up to 1.28 are known to fail."
-	exit 1
-    fi
-    if [ "`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`" -lt 35 ] ; then
-	echo "Bison: $BISON ($bisonver) Untested version, please report the result."
-    else
-	echo "Bison: $BISON ($bisonver)"
-    fi
+if [ $bisonver_major -lt 1 ] || [ $bisonver_major -eq 1 -a $bisonver_minor -lt 175 ] ; then
+    echo "Bison ($bisonver) is too old, version 1.175 is required."
+    exit 1
 else
     echo "Bison: $BISON ($bisonver)"
 fi

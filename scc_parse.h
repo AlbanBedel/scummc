@@ -481,3 +481,4 @@ typedef struct scc_target_st {
 
 scc_target_t* scc_get_target(int version);
 
+struct scc_parser;
