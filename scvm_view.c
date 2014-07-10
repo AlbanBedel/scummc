@@ -303,7 +303,7 @@ int scvm_set_camera_at(scvm_t* vm, int x) {
 
 int scvm_move_camera(scvm_t* vm) {
   int fast = vm->var->camera_fast_x;
-  int r, x = vm->view->camera_x;
+  int x = vm->view->camera_x;
   // Keep into range. Such adjustement are not
   // calling the camera script
   if(x < vm->var->camera_min_x) {

@@ -752,7 +752,6 @@ location: /* empty */
 static int cost_pic_load(cost_pic_t* pic,char* file) {  
   scc_img_t* img = scc_img_open(file);
   int color,rep,shr,max_rep,x,y;
-  uint8_t* dst;
 
   if(!img) return 0;
   if (img->pal == NULL) {
@@ -785,7 +784,7 @@ static int cost_pic_load(cost_pic_t* pic,char* file) {
 
   // encode the pic
   // alloc enouth mem for the worst case
-  dst = pic->data = malloc(img->w*img->h);
+  pic->data = malloc(img->w*img->h);
 
   // set the params
   switch(pal_size) {

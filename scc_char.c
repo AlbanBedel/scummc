@@ -38,8 +38,8 @@
 #include "scc_char.h"
 
 scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size) {
-  uint32_t size2,unk,bpp,height,num_char;
-  uint8_t pal[15],byte,mask,bits,step;
+  uint32_t size2,bpp,height,num_char;
+  uint8_t pal[15],byte,mask,bits;
   off_t font_ptr;
   uint32_t* char_off,x,i;
   scc_charmap_t* chmap;
@@ -55,7 +55,7 @@ scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size) {
   if(size2 != size-15)
     scc_log(LOG_WARN,"Warning, size2 is invalid: %d != %d\n",size2,size-15);
     
-  unk = scc_fd_r16le(fd);
+  scc_fd_r16le(fd);  /* unk */
   if(scc_fd_read(fd,pal,15) != 15) {
     scc_log(LOG_ERR,"Failed to read CHAR palette.\n");
     return NULL;
@@ -114,7 +114,6 @@ scc_charmap_t* scc_parse_charmap(scc_fd_t* fd, unsigned size) {
     if(!ch->w || !ch->h) continue;
     ch->data = malloc(ch->w*ch->h);
     bits = 0;
-    step = 8/bpp;
     x = 0;
     while(x < ch->w*ch->h) {
       if(!bits) {
