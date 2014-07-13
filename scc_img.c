@@ -307,6 +307,10 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
     printf("BMP file %s has an invalid data offset (%d should be 14 + %d + 4 * %d  [%d]).\n",fd->filename, doff, hsize, ncol, isize);
     //return NULL;
   }
+  if (hsize > 40) {
+    /* Skip remaining header bytes */
+    scc_fd_seek(fd, hsize - 40, SEEK_CUR);
+  }
 
   img = calloc(1,sizeof(scc_img_t));
   img->w = w;
