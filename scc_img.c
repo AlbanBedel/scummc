@@ -222,7 +222,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   char hdr[2];
   int i,l,w,h,bpp,scan_bpp,scan_stride,dir_stride;
   int flip;
-  uint32_t fsize,doff,hsize,stride,isize,ncol,nimp,fmt;
+  uint32_t fsize,doff,hsize,stride,isize,ncol,fmt;
   scc_img_t* img;
   uint8_t* dst;
   int n,c,x;
@@ -301,7 +301,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   // num of color
   ncol = scc_fd_r32le(fd);
   // num of important color
-  nimp = scc_fd_r32le(fd);
+  scc_fd_r32le(fd);
 
   if(doff != 14 + hsize + 4 * ncol) {
     printf("BMP file %s has an invalid data offset (%d should be 14 + %d + 4 * %d  [%d]).\n",fd->filename, doff, hsize, ncol, isize);
