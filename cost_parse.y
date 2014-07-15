@@ -756,6 +756,9 @@ static int cost_pic_load(cost_pic_t* pic,char* file) {
     shr = 3;
     max_rep = 0x07;
     break;
+  default:
+    scc_log(LOG_ERR,"Palette needs to have 16 or 32 colors!\n");
+    return 0;
   }
 
   // take the initial color
