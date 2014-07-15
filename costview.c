@@ -254,9 +254,7 @@ static void toogle_anim_loop_cb(GtkToggleButton* btn,uint8_t* flags) {
 void cost_view_anim_def_load_anim(GtkWidget* tbl) {
   cost_view_anim_def_tbl_t* p = g_object_get_data(G_OBJECT(tbl),"priv");
   GtkWidget *box,*w;
-  GtkObject *hadj;
   int i;
-  char buf[20];
 
   if(GTK_BIN(p->cmd_win)->child)
     gtk_object_destroy(GTK_OBJECT(GTK_BIN(p->cmd_win)->child));
@@ -303,10 +301,8 @@ void cost_view_anim_def_load_anim(GtkWidget* tbl) {
 
 GtkWidget* cost_view_anim_def_tbl_new(scc_cost_dec_t* dec,int step_size) {
   cost_view_anim_def_tbl_t* p = calloc(1,sizeof(cost_view_anim_def_tbl_t));
-  GtkWidget *vbox,*hbox,*scr1,*scr2,*def_box,*w;
-  GtkObject *hadj,*vadj;
-  int i;
-
+  GtkWidget *vbox,*hbox,*scr1,*scr2,*w;
+  GtkObject *hadj;
 
   p->dec = dec;
   p->step_size = step_size;
@@ -368,7 +364,6 @@ GtkWidget* cost_view_anim_def_tbl_new(scc_cost_dec_t* dec,int step_size) {
   gtk_widget_set_size_request(hbox,600,100);
 
   return hbox;
-					
 }
 
 
@@ -434,7 +429,6 @@ static void scc_cost_view_load_anim(scc_cost_view_t* cv,uint16_t aid) {
 }
 
 static void anim_selected_cb(GtkWidget *entry,scc_cost_view_t* cv) {
-  scc_cost_anim_t *anim;
   int id;
 
   id = atoi(gtk_editable_get_chars(GTK_EDITABLE(entry),0,-1));
@@ -444,7 +438,6 @@ static void anim_selected_cb(GtkWidget *entry,scc_cost_view_t* cv) {
   }
 
   scc_cost_view_load_anim(cv,id);
-  
 }
 
 int play_timeout_cb(scc_cost_view_t* cv) {
@@ -517,7 +510,7 @@ static void limb_pic_selected_cb(GtkWidget* pic_list,GtkTreePath* path,
 GtkWidget* create_limb_select(scc_cost_view_t* cv) {
   GtkWidget* vbox;
   GtkWidget* hbox;
-  GtkWidget* w, *scroll, *list;
+  GtkWidget* w, *scroll;
   GtkCellRenderer* render = gtk_cell_renderer_text_new();
 
   vbox = gtk_vbox_new(0,2);
@@ -597,8 +590,7 @@ GtkWidget* create_limb_select(scc_cost_view_t* cv) {
 }
 
 static void expose_img_cb(GtkWidget *img,GdkEvent* ev,scc_cost_view_t* cv) {
-  int x1,x2,y1,y2;
-  int x,y;
+  //int x1,x2,y1,y2;
 
   //if(!scc_cost_dec_bbox(&cv->dec,&x1,&y1,&x2,&y2)) return;
   //w = x2-x1;
@@ -619,8 +611,6 @@ static void expose_img_cb(GtkWidget *img,GdkEvent* ev,scc_cost_view_t* cv) {
 		     cv->buf_w,cv->buf_h,cv->buf_w,NULL,0,255,255);
 
   //printf("Draw Image !!!\n");
-
-  
 
   gdk_draw_indexed_image(img->window,cv->img_gc,
 			 (img->allocation.width%10)/2,
@@ -720,7 +710,6 @@ scc_cost_view_t* create_win(void) {
   scc_cost_view_t* cv = calloc(1,sizeof(scc_cost_view_t));
   GtkWidget* hpan,*vpan;
   GtkWidget *w;
-  GdkPixmap* pmap;
 
   cv->win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   g_signal_connect(G_OBJECT(cv->win),"destroy-event",
@@ -731,8 +720,6 @@ scc_cost_view_t* create_win(void) {
 
   hpan = gtk_hpaned_new();
   vpan = gtk_vpaned_new();
-
-
 
   w = create_limb_select(cv);
   gtk_paned_add1(GTK_PANED(vpan),w);
@@ -864,7 +851,6 @@ static scc_param_t costview_params[] = {
 
 int main(int argc,char** argv) {
   scc_cl_arg_t* files;
-  scc_cost_dec_t dec;
   scc_cost_view_t* cv;
   scc_cost_t* cost;
   scc_pal_t* pal;
