@@ -2426,8 +2426,10 @@ int main(int argc,char** argv) {
 
   if(rmim_file) {
     rmim = scc_img_open(rmim_file);
-    if(!rmim) printf("Failed to load %s.\n",rmim_file);
-    if(rmim->pal == NULL) {
+    if (!rmim) {
+      printf("Failed to load %s.\n",rmim_file);
+    }
+    else if (rmim->pal == NULL) {
       printf("Failed to load %s.\n",rmim_file);
       scc_img_free(rmim);
       rmim = NULL;
