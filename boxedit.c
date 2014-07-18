@@ -2148,9 +2148,7 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
   w = gtk_label_new("Plane");
   gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
   be->mask_entry = 
-    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,15,
-							  1,1,1)),
-			1,0);
+    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,15,1,1,0)), 1,0);
   g_signal_connect(G_OBJECT(be->mask_entry),"value-changed",
 		   G_CALLBACK(value_changed_mask_cb),be);
   gtk_widget_set_sensitive(be->mask_entry,0);
@@ -2162,9 +2160,7 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
   w = gtk_label_new("Scale");
   gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
   be->scale_entry =
-    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(1,1,255,
-							  1,1,10)),
-			1,0);
+    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(1,1,255,1,1,0)), 1,0);
   g_signal_connect(G_OBJECT(be->scale_entry),"value-changed",
 		   G_CALLBACK(value_changed_scale_cb),be);
   gtk_widget_set_sensitive(be->scale_entry,0);
@@ -2248,7 +2244,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("Y1");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2259,7 +2255,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("S1");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i+1] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2273,7 +2269,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("Y2");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i+2] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2284,7 +2280,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("S2");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i+3] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
