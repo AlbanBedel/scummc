@@ -27,14 +27,27 @@
 
   <command name="palcat">
     <param-group name="options">
-      <param name="o" arg="output.bmp" required="true">
-        Set the output file name.
+      <param name="o" arg="out_" required="true">
+        <short>Set the output prefix.</short>
+        e.g. "out_" will generate "out_mybitmap.bmp".
       </param>
-      <param name="i" arg="input.bmp">
-        <short>Set the image to use for the picture.</short>
-        By default the first file is used. With this option another
-        file can be selected and the colors will be adjusted to match
-        the new palette.
+      <param name="col" arg="1245">
+        <short>The amount of colors which should be present in the output.</short>
+        If specified, all images will be combined into a single image then quantized.
+        All generated images will include the combined palette from this image.
+      </param>
+      <param name="clip" arg="1245">
+        Clips the amount of colors in the input images (will be fixed at this value).
+      </param>
+      <param name="pal">
+        <short>Dump a palette instead of the normal images.</short>
+        The palette will be named out_pal.bmp (out_ being your prefix).
+      </param>
+      <param name="d">
+        Dump the combined image when using -col.
+      </param>
+      <param name="v">
+        Enable verbose output.
       </param>
     </param-group>
     <file name="input.bmp" required="true" repeat="true"/>
@@ -45,3 +58,4 @@
   </see-also>
 
 </man>
+

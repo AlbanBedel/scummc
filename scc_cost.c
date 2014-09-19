@@ -129,7 +129,7 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 			int x_min,int x_max,int y_min,int y_max,
 			int trans, int x_scale, int y_scale,
 			int y_flip) {
-  int shr,mask,x = 0,y = 0,end = 0,pos = 0, x_step, sx;
+  int shr,mask,x = 0,y = 0,end = 0,pos = 0, x_step;
   int yerr = 0, xerr = 0, xskip = 0, yskip = 0, dx = 0, dy = 0;
   int col_start = 0;
   uint8_t col_start_color = 0, col_start_rep = 0;
@@ -151,11 +151,9 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 
   if(y_flip) {
     dx = pic->width*x_scale/255-1;
-    sx = pic->width-1;
     x_step = -1;
   } else {
     x_step = 1;
-    sx = 0;
   }
 
   // Store the initial color and repeat
@@ -247,16 +245,14 @@ int scc_cost_decode_pic(scc_cost_t* cost,scc_cost_pic_t* pic,
 
 int scc_read_cost_pic(scc_fd_t* fd,scc_cost_t* cost,scc_cost_pic_t* pic,int len,int* posp) {
   int pos = *posp,off = *posp;
-  int shr,mask,x = 0,y = 0,end = 0;
+  int mask,x = 0,y = 0,end = 0;
   uint8_t rep;
 
   switch(cost->pal_size) {
   case 16:
-    shr = 4;
     mask = 0x0F;
     break;
   case 32:
-    shr = 3;
     mask = 0x07;
     break;
   default:

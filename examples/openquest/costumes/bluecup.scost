@@ -17,9 +17,7 @@
  *
  */
 
-//palette([48-79]);
-//palette([0-31]);
-palette([144-175]);
+palette("../graphics/rooms/back02_merged.bmp");
 
 
 

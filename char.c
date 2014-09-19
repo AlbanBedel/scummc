@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #ifdef HAVE_FT
 #include <ft2build.h>
@@ -259,6 +260,11 @@ scc_charmap_t* new_charmap_from_bitmap(char* path, int base_idx) {
     }
     // check the palette
     // keep in mind we need an extra color for our "borders"
+    if (img->pal == NULL) {
+      scc_log(LOG_ERR,"Image must have a palette.\n");
+      scc_img_free(img);
+      return NULL;
+    }
     if(img->ncol > 17) {
         printf("Image has too many colors.\n");
         scc_img_free(img);
@@ -422,7 +428,7 @@ scc_img_t* charmap_to_bitmap(scc_charmap_t* chmap, unsigned width,unsigned space
       total_color = pal_size;
   }
 
-  img = scc_img_new(width,rows*(chmap->height+ 2*space),total_color);
+  img = scc_img_new(width,rows*(chmap->height+ 2*space),total_color, 8);
   if(chmap->rgb_pal) {
     memcpy(img->pal,chmap->rgb_pal,3*ncol);
     if(ncol < total_color)

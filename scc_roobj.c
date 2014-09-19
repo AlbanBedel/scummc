@@ -182,6 +182,12 @@ int scc_roobj_add_obj(scc_roobj_t* ro,scc_roobj_obj_t* obj) {
   if(obj->trans >= 0) {
     int x,y;
     scc_roobj_state_t* state;
+    // first, we need a room image for this to work!
+    if (ro->image == NULL) {
+        scc_log(LOG_ERR,"Specified trans for %s in a room with no image.\n",obj->sym->sym);
+        return 0;
+    }
+
     for(state = obj->states ; state ; state = state->next) {
       uint8_t *optr = state->img->data;
       uint8_t *rptr = ro->image->data+obj->y*ro->image->w+obj->x;
@@ -267,7 +273,7 @@ scc_roobj_res_t* scc_roobj_add_res(scc_roobj_t* ro,scc_symbol_t* sym,
 static int scc_check_voc(char* file,unsigned char* data,unsigned size) {
   int hsize,ver,magic,pos,type,len,pack;
 
-  if(strncmp(data,"Creative Voice File",19)) {
+  if(strncmp((char*)data, "Creative Voice File", 19)) {
     scc_log(LOG_ERR,"%s is not a creative voice file.\n",file);
     return 0;
   }
@@ -456,6 +462,13 @@ static int scc_roobj_set_image(scc_roobj_t* ro,scc_ns_t* ns,char* val) {
     scc_log(LOG_ERR,"Failed to parse image %s.\n",val);
     return 0;
   }
+  
+  if (ro->image->pal == NULL) {
+    scc_log(LOG_ERR,"Image %s must have a palette.\n",val);
+    scc_img_free(ro->image);
+    ro->image = NULL;
+    return 0;
+  }
 
   if(ro->image->w%8 != 0) {
     scc_log(LOG_ERR,"Images must have w%%8==0 !!!\n");
@@ -484,8 +497,12 @@ int scc_roobj_set_zplane(scc_roobj_t* ro, int idx,char* val) {
   }
 
   ro->zplane[idx] = scc_img_open(val);
-  if(!ro->zplane[idx]) {
+  if(!ro->zplane[idx]||ro->zplane[idx]->pal == NULL) {
     scc_log(LOG_ERR,"Failed to open zplane image %s.\n",val);
+    if (ro->zplane[idx]) {
+      scc_img_free(ro->zplane[idx]);
+      ro->zplane[idx] = NULL;
+    }
     return 0;
   }
 
@@ -680,7 +697,12 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   if(img_path) {
     img = scc_img_open(img_path);
     if(!img) return 0;
-
+    if (img->pal == NULL) {
+      scc_log(LOG_ERR,"Image %s must have a palette.\n",img_path);
+      scc_img_free(img);
+      return -1;
+    }
+    
     if(img->w%8 || img->h%8) {
       scc_log(LOG_ERR,"Image width and height must be multiples of 8.\n");
       scc_img_free(img);
@@ -704,7 +726,7 @@ int scc_roobj_obj_add_state(scc_roobj_obj_t* obj,int x, int y,
   if(zp_paths) {
     for(i = 0 ; zp_paths[i] ; i++) {
       if(zp_paths[i][0] == '\0')
-        st->zp[i] = scc_img_new(img->w,img->h,2);
+        st->zp[i] = scc_img_new(img->w,img->h,2, 8);
       else {
         st->zp[i] = scc_img_open(zp_paths[i]);
         if(!st->zp[i]) {
@@ -837,7 +859,7 @@ scc_pal_t* scc_roobj_gen_pals(scc_roobj_t* ro) {
 
   if(!ro->image) {
     scc_log(LOG_V,"Room has no image, using dummy one!!!!\n");
-    ro->image = scc_img_new(8,8,256);
+    ro->image = scc_img_new(8,8,256,8);
   }
 
   pal = calloc(1,sizeof(scc_pal_t));
@@ -858,7 +880,7 @@ scc_rmim_t* scc_roobj_gen_rmim(scc_roobj_t* ro) {
 
   if(!ro->image) {
     scc_log(LOG_V,"Room has no image, using dummy one!!!!\n");
-    ro->image = scc_img_new(8,8,256);
+    ro->image = scc_img_new(8,8,256,8);
   }
 
   for(i = 1 ; i < SCC_MAX_IM_PLANES ; i++) {

@@ -17,9 +17,7 @@
  *
  */
 
-//palette([48-79]);
-//palette([0-31]);
-palette([224-255]);
+palette("../graphics/rooms/back01_merged.bmp");
 flags = FLIP;
 
 

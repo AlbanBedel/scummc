@@ -225,15 +225,15 @@ int scc_cost_anim_size(scc_cost_anim_t* a) {
 
 int scc_cost_pic_size(scc_cost_pic_t* p,uint8_t fmt) {
   scc_cost_pic_t* i;
-  int s,n,size = 0;
+  int n, size = 0;
 
   // dup limb table
   if(!p || p->id == 0xFF) return 0;
 
   for(n = 0, i = p ; i ; i = i->next) {
+    // int s = size;
     // get the hightest id, need for the table
     if(i->id > n) n = i->id;
-    s = size;
     size += 2 + 2 + // width,height
       2 + 2 + // rel_x, rel_y
       2 + 2; // move_x, move_y

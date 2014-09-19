@@ -387,7 +387,7 @@ int scc_boxedit_save(scc_boxedit_t* be, char* path) {
   return 1;
 }
 
-
+/*
 #define SWAP(a,b) t = a; a = b; b = t;
 
 static int is_near_line(scc_box_pts_t* a,scc_box_pts_t* b, int x, int y) {
@@ -437,6 +437,7 @@ static int is_near_line(scc_box_pts_t* a,scc_box_pts_t* b, int x, int y) {
   }
   return r;
 }
+*/
 
 static int is_near_point(scc_box_pts_t* a,int x, int y,int th) {
   int dx = a->x - x;
@@ -1877,8 +1878,9 @@ static void clicked_open_btn_cb(GtkButton *btn,scc_boxedit_t* be) {
 
   if(open_img) {
     scc_img_t* rmim = scc_img_open(fname);
-    if(!rmim) {
+    if(!rmim || rmim->pal == NULL) {
       scc_boxedit_status_msg(be,"Failed to load image %s\n",fname);
+      if (rmim) scc_img_free(rmim);
       free(fname);
       return;
     }
@@ -2147,9 +2149,7 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
   w = gtk_label_new("Plane");
   gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
   be->mask_entry = 
-    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,15,
-							  1,1,1)),
-			1,0);
+    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,15,1,1,0)), 1,0);
   g_signal_connect(G_OBJECT(be->mask_entry),"value-changed",
 		   G_CALLBACK(value_changed_mask_cb),be);
   gtk_widget_set_sensitive(be->mask_entry,0);
@@ -2161,9 +2161,7 @@ GtkWidget* scc_boxedit_list_new(scc_boxedit_t* be) {
   w = gtk_label_new("Scale");
   gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
   be->scale_entry =
-    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(1,1,255,
-							  1,1,10)),
-			1,0);
+    gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(1,1,255,1,1,0)), 1,0);
   g_signal_connect(G_OBJECT(be->scale_entry),"value-changed",
 		   G_CALLBACK(value_changed_scale_cb),be);
   gtk_widget_set_sensitive(be->scale_entry,0);
@@ -2247,7 +2245,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("Y1");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2258,7 +2256,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("S1");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i+1] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2272,7 +2270,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("Y2");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i+2] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2283,7 +2281,7 @@ GtkWidget* scc_boxedit_scale_win_new(scc_boxedit_t* be) {
     w = gtk_label_new("S2");
     gtk_box_pack_start(GTK_BOX(hbox),w,0,0,5);
     w = gtk_spin_button_new(GTK_ADJUSTMENT(gtk_adjustment_new(0,0,0xFFFF,
-                                                              1,1,10)),
+                                                              1,1,0)),
                             1,0);
     be->scale_slot_entries[4*i+3] = w;
     g_signal_connect(G_OBJECT(w),"value-changed",
@@ -2425,7 +2423,14 @@ int main(int argc,char** argv) {
 
   if(rmim_file) {
     rmim = scc_img_open(rmim_file);
-    if(!rmim) printf("Failed to load %s.\n",rmim_file);
+    if (!rmim) {
+      printf("Failed to load %s.\n",rmim_file);
+    }
+    else if (rmim->pal == NULL) {
+      printf("Failed to load %s.\n",rmim_file);
+      scc_img_free(rmim);
+      rmim = NULL;
+    }
   }
 
   be = scc_boxedit_new(rmim);

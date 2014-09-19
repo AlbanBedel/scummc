@@ -1,5 +1,6 @@
 /* ScummC
  * Copyright (C) 2004-2006  Alban Bedel
+ * Portions Copyright (C) 2010 James Urquhart
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,16 +38,25 @@
 
 #include "scc_fd.h"
 #include "scc_img.h"
+#include "scc_util.h"
+
+#include "quantize.h"
+
+inline int scc_img_rgb(int r, int g, int b) {
+  return (r) | (g << 8) | (b << 16);
+}
 
 // create a new empty image of the given size
-scc_img_t* scc_img_new(int w,int h,int ncol) {
+scc_img_t* scc_img_new(int w,int h,int ncol,int bpp) {
   scc_img_t* img = calloc(1,sizeof(scc_img_t));
   img->w = w;
   img->h = h;
   img->ncol = ncol;
+  img->bpp = bpp;
 
-  img->pal = calloc(3,ncol);
-  img->data = calloc(w,h);
+  img->pal = bpp > 8 ? NULL : calloc(3,ncol);
+  img->data = bpp > 8 ? calloc(1,(bpp*w*h)>>3) : calloc(w,h);
+  img->trans = -1;
 
   return img;
 }
@@ -58,11 +68,16 @@ void scc_img_free(scc_img_t* img) {
 }
 
 int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
-  int doff = 14 + 40 + 4 * img->ncol;
-  int stride = ((img->w+3)/4)*4;
+  int doff = 14 + 40 + (4 * img->ncol);
+  int stride = ((img->w*img->bpp)>>3);
+      stride = ((stride+3)/4)*4;
   int isize = stride*img->h;
   int fsize = doff + isize;
   int i;
+  
+  // Switch to BGR for saving...
+  if (img->pal == NULL)
+    scc_img_swapchannels(img);
 
   scc_fd_w8(fd,'B');
   scc_fd_w8(fd,'M');
@@ -82,7 +97,7 @@ int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
   // n planes
   scc_fd_w16le(fd,1);
   // bpp
-  scc_fd_w16le(fd,8);
+  scc_fd_w16le(fd,img->bpp);
   // comp
   scc_fd_w32le(fd,0);
   // isize
@@ -95,30 +110,93 @@ int scc_img_write_bmp(scc_img_t* img,scc_fd_t* fd) {
   // ncol
   scc_fd_w32le(fd,img->ncol);
   // num of important color
-  scc_fd_w32le(fd,16);
+  scc_fd_w32le(fd,img->pal ? 16 : 0);
 
   // palette
   for(i = 0 ; i < img->ncol ; i++) {
-    scc_fd_w8(fd,img->pal[i*3+2]); // r
+    scc_fd_w8(fd,img->pal[i*3+2]); // b
     scc_fd_w8(fd,img->pal[i*3+1]); // g
-    scc_fd_w8(fd,img->pal[i*3]);   // b
+    scc_fd_w8(fd,img->pal[i*3]);   // r
     scc_fd_w8(fd,0);               // junk
   }
-
+  
   // data
+  isize = (img->w*img->bpp)>>3;
   for(i = img->h-1 ; i >= 0 ; i--) {
-    if(scc_fd_write(fd,&img->data[i*img->w],img->w) != img->w) {
+    if(scc_fd_write(fd,&img->data[(i*img->w*img->bpp)>>3],isize) != isize) {
       printf("Error while writing BMP data.\n");
+      if (img->pal == NULL)
+        scc_img_swapchannels(img);
       return 0;
     }
-    if(stride > img->w) {
-      int i;
-      for(i = img->w ; i < stride ; i++)
-	scc_fd_w8(fd,0);
-    }       
+    
+    if(stride > isize) {
+      int s;
+      for(s = isize ; s < stride ; s++)
+        scc_fd_w8(fd,0);
+    }
   }
   
+  // Switch back from BGR for saving...
+  if (img->pal == NULL)
+    scc_img_swapchannels(img);
+  
   return 1;
+}
+
+// Swap R and B channels in an image
+void scc_img_swapchannels(scc_img_t* img) {
+  int i;
+  int r,g,b;
+  int sz = (img->w*img->h*img->bpp)>>3;
+  int calc;
+  uint8_t* data = img->data;
+  switch (img->bpp) {
+    case 8:
+      data = img->pal;
+      sz = img->ncol*3;
+      for(i = 0 ; i < sz ; i += 3) {
+        r = data[i]; // r
+        g = data[i+1]; // g
+        b = data[i+2];   // b
+
+        data[i]   = b;
+        data[i+1] = g;
+        data[i+2] = r;
+      }
+      break;
+    case 16:
+      for(i = 0 ; i < sz ; i ++) {
+        calc = ((short*)data)[i];
+        r = (calc>>11) & 0x1F; // r
+        g = (calc>>5)  & 0x3F; // g
+        b = (calc)     & 0x1F; // b
+        ((short*)data)[i] = (b) | (g>>5) | (r>>11);
+      }
+      break;
+    case 24:
+      for(i = 0 ; i < sz ; i += 3) {
+        r = data[i]; // r
+        g = data[i+1]; // g
+        b = data[i+2];   // b
+
+        data[i]   = b;
+        data[i+1] = g;
+        data[i+2] = r;
+      }
+      break;
+    case 32:
+      for(i = 0 ; i < sz ; i += 4) {
+        r = data[i]; // r
+        g = data[i+1]; // g
+        b = data[i+2];   // b
+
+        data[i]   = b;
+        data[i+1] = g;
+        data[i+2] = r;
+      }
+      break;
+  }
 }
   
 int scc_img_save_bmp(scc_img_t* img,char* path) {
@@ -142,8 +220,9 @@ int scc_img_save_bmp(scc_img_t* img,char* path) {
 
 static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   char hdr[2];
-  int i,l,bpp;
-  uint32_t fsize,doff,hsize,w,stride,h,isize,ncol,fmt;
+  int i,l,w,h,bpp,scan_bpp,scan_stride,dir_stride;
+  int flip;
+  uint32_t fsize,doff,hsize,stride,isize,ncol,fmt;
   scc_img_t* img;
   uint8_t* dst;
   int n,c,x;
@@ -170,6 +249,8 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   // image size
   w = scc_fd_r32le(fd);
   h = scc_fd_r32le(fd);
+  flip = h < 0 ? 1 : 0;
+  h = flip ? -h : h;
 
   if(scc_fd_r16le(fd) != 1) {
     printf("BMP file %s has an invalid number of planes.\n",fd->filename);
@@ -179,20 +260,26 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   bpp = scc_fd_r16le(fd);
   switch(bpp) {
   case 8:
-    stride = w;
+    scan_bpp = 8;
+    scan_stride = w;
     break;
   case 4:
-    stride = (w+1)/2;
+    scan_bpp = 8;
+    scan_stride = (w+1)/2;
     break;
   case 1:
-    stride = (w+7)/8;
+    scan_bpp = 8;
+    scan_stride = (w+7)/8;
     break;
   default:
-    printf("%s is not an indexed BMP: %d bpp.\n",fd->filename,bpp);
-    return NULL;
+    scan_bpp = bpp;
+    scan_stride = (bpp*w)>>3;
+    break;
   }
   // align the stride on dword boundary
-  stride = ((stride+3)/4)*4;
+  stride = ((scan_stride+3)/4)*4;
+  scan_stride = (scan_bpp*w)>>3; // will at least be 8bpp
+  dir_stride = flip ? scan_stride : -scan_stride;
 
   fmt = scc_fd_r32le(fd);
   if(fmt != 0 && fmt != 1) {
@@ -203,7 +290,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   isize = scc_fd_r32le(fd);
  
   if(fmt == 0 && isize && isize != stride*h) {
-    printf("BMP file %s has an invalid image size: %d.\n",fd->filename,isize);
+    printf("BMP file %s has an invalid image size: %d (should be %d).\n",fd->filename,isize, stride*h);
     return NULL;
   }
   
@@ -214,35 +301,46 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   // num of color
   ncol = scc_fd_r32le(fd);
   // num of important color
-  scc_fd_r32(fd);
+  scc_fd_r32le(fd);
 
-  if(doff != 14 + 40 + 4 * ncol) {
-    printf("BMP file %s has an invalid data offset.\n",fd->filename);
-    return NULL;
+  if(doff != 14 + hsize + 4 * ncol) {
+    printf("BMP file %s has an invalid data offset (%d should be 14 + %d + 4 * %d  [%d]).\n",fd->filename, doff, hsize, ncol, isize);
+    //return NULL;
   }
-
+  if (hsize > 40) {
+    /* Skip remaining header bytes */
+    scc_fd_seek(fd, hsize - 40, SEEK_CUR);
+  }
 
   img = calloc(1,sizeof(scc_img_t));
   img->w = w;
   img->h = h;
+  img->bpp = scan_bpp;
 
   img->ncol = ncol;
-  img->pal = malloc(3*ncol);
-  for(img->ncol = 0 ; img->ncol < ncol ; img->ncol++) {
-    img->pal[img->ncol*3+2] = scc_fd_r8(fd); // r
-    img->pal[img->ncol*3+1] = scc_fd_r8(fd); // g
-    img->pal[img->ncol*3] = scc_fd_r8(fd);   // b
-    scc_fd_r8(fd); // skip junk
-  }
-  // gimp use the last color for transparent areas
-  img->trans = img->ncol-1;
   
-  img->data = malloc(w*h);
+  if (img->ncol > 0) {
+    img->pal = malloc(3*ncol);
+    for(img->ncol = 0 ; img->ncol < ncol ; img->ncol++) {
+      img->pal[img->ncol*3+2] = scc_fd_r8(fd); // b
+      img->pal[img->ncol*3+1] = scc_fd_r8(fd); // g
+      img->pal[img->ncol*3] = scc_fd_r8(fd);   // r
+      scc_fd_r8(fd); // skip junk
+    }
+  } else {
+    img->pal = NULL;
+    img->trans = -1;
+  }
+  
+  //scc_fd_seek(fd, doff, SEEK_SET);
+  img->data = calloc(1,(w*h*scan_bpp)>>3);
 
   switch(fmt) {
   case 0: // raw data
-      for(l = 0, dst = &img->data[w*(h-1)] ; l < h ; dst -= w, l++) {
+      dst = flip ? &img->data[0] : &img->data[scan_stride*(h-1)];
+      for(l = 0; l < h ; dst += dir_stride, l++) {
           uint8_t data[stride];
+          //printf("Strip %d OF %d [%i, %i]\n", l, h, stride, scan_stride);
 
           if(scc_fd_read(fd,data,stride) != stride) {
               printf("Error while reading BMP file %s\n",fd->filename);
@@ -258,16 +356,35 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
                   else
                       dst[i] = 0;
               }
+              img->bpp = 8;
               break;
           case 4:
               for(i = 0 ; i < w ; i += 2) {
                   dst[i] = data[i/2]>>4;
                   dst[i+1] = data[i/2] & 0xF;
               }
+              img->bpp = 8;
               break;
           case 8:
-              memcpy(dst,data,w);
+              memcpy(dst,data,scan_stride);
               break;
+          case 16:
+            for(i = 0 ; i < w ; i ++) {
+                ((short*)dst)[i] = ((short*)data)[i];
+            }
+            break;
+          case 24:
+            for(i = 0 ; i < scan_stride ; i += 3) {
+                dst[i]   = data[i]; // r
+                dst[i+1] = data[i+1]; // g
+                dst[i+2] = data[i+2];   // b
+            }
+            break;
+          case 32:
+            for(i = 0 ; i < w ; i ++) {
+                ((int*)dst)[i] = ((int*)data)[i];
+            }
+            break;
           }
       }
       break;
@@ -360,6 +477,17 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
       printf("Got unsupported image format.\n");
       
   }
+  
+  if (img->pal)
+  {
+    // Use the first pixel as the transparent color
+    // (better than nothing!)
+    img->trans = *img->data;
+  }
+  
+  // BMP will be BGR if we don't have a palette
+  if (img->pal == NULL)
+    scc_img_swapchannels(img);
 
   return img;
 }
@@ -383,11 +511,469 @@ scc_img_t* scc_img_open(char* path) {
   return img;
 }
 
+// Remove palette from an image, converts to 32bpp
+void scc_img_unpal(scc_img_t* img) {
+  uint8_t* out = malloc(img->w*img->h*4);
+  uint8_t* optr = out;
+  uint8_t* iptr = img->data;
+  uint8_t* pal = img->pal;
+
+  if (pal == NULL)
+    return;
+
+  int i;
+  int sz=img->w*img->h;
+  for (i=0; i<sz; i++) {
+    uint8_t col = *iptr++;
+    int pos = col*3;
+    *optr++ = pal[pos++];
+    *optr++ = pal[pos++];
+    *optr++ = pal[pos];
+    *optr++ = col == img->trans ? 0 : 255;
+  }
+
+  free(img->data);
+  free(img->pal);
+  img->data = out;
+  img->pal = NULL;
+  img->ncol = 0;
+  img->bpp = 32;
+  img->trans = -1;
+}
+
+/// Reduce colors in an image
+int scc_img_quantize(scc_img_t* img, int colors) {
+  int i;
+  int sz = colors,
+    isize=img->w*img->h,
+    w = img->w,
+    h = img->h;
+  GifByteType* RedInput = malloc(w*h);
+  GifByteType* GreenInput = malloc(w*h);
+  GifByteType* BlueInput = malloc(w*h);
+  GifByteType* OutImg = malloc(w*h);
+  GifColorType* OutPal = malloc(w*h*colors);
+  uint8_t* data;
+
+  // Ditch the palette
+  if (img->pal)
+    scc_img_unpal(img);
+
+  data = img->data;
+
+  switch (img->bpp)
+  {
+    case 16:
+      for (i=0; i<isize; i++) {
+        uint16_t val = ((short*)data)[i];
+        RedInput[i]   = val & 0x1F; val >>= 5;
+        GreenInput[i] = val & 0x3F; val >>= 6;
+        BlueInput[i]  = val & 0x1F;
+      }
+      break;
+    case 24:
+      for (i=0; i<isize; i++) {
+        uint8_t* ptr = data + (i*3);
+        RedInput[i]   = *ptr++;
+        GreenInput[i] = *ptr++;
+        BlueInput[i]  = *ptr;
+      }
+      break;
+    case 32:
+      for (i=0; i<isize; i++) {
+        uint8_t* ptr = data + (i*4);
+        RedInput[i]   = *ptr++;
+        GreenInput[i] = *ptr++;
+        BlueInput[i]  = *ptr;
+      }
+      break;
+  }
+
+  // Go ahead!
+  if (QuantizeBuffer(w, h, &sz, RedInput, GreenInput, BlueInput, OutImg, OutPal) != GIF_OK) {
+    free(RedInput);
+    free(GreenInput);
+    free(BlueInput);
+    free(OutImg);
+    free(OutPal);
+    return 0;
+  }
+
+  // Copy OutPal into final palette
+  img->pal = malloc(colors*3);
+  data = img->pal;
+  memcpy(img->pal, OutPal, colors*3);
+
+  free(RedInput);
+  free(GreenInput);
+  free(BlueInput);
+  free(OutPal);
+  free(img->data);
+
+  img->data = OutImg;
+  img->ncol = colors;
+  img->bpp = 8;
+  return 1;
+}
+
+typedef struct {
+  int x;
+  int y;
+} imgpos_t;
+
+typedef struct {
+  int x;
+  int y;
+  int width;
+  int height;
+} imgrect_t;
+
+// Clips src into dest, storing the result in out
+void scc_clip(const imgrect_t src, const imgrect_t dest, imgrect_t* out) {
+  imgrect_t out_rect = src;
+
+  //printf("CLIP x=%i,y=%i,w=%i,h=%i IN %i,%i,%i,%i\n", src.x, src.y, src.width, src.height, dest.x,dest.y,dest.width,dest.height);
+
+  // x...
+  if (src.x < dest.x) {
+    out_rect.x = dest.x;
+    out_rect.width = src.width + (src.x - dest.x);
+  } else if (src.x+src.width > dest.x+dest.width){
+    out_rect.width -= (src.x+src.width)-(dest.x+dest.width);
+  }
+
+  // y...
+  if (src.y < dest.y) {
+    out_rect.y = dest.y;
+    out_rect.height = src.height + (src.y - dest.y);
+  } else if (src.y+src.height > dest.y+dest.height){
+    out_rect.height -= (src.y+src.height)-(dest.y+dest.height);
+  }
+
+  //printf("CLIPPED x=%i,y=%i,w=%i,h=%i\n", out_rect.x, out_rect.y, out_rect.width, out_rect.height);
+
+  *out = out_rect;
+}
+
+// Blips src into dest using specified coordinates
+void scc_img_blit(scc_img_t* src, scc_img_t* dest, int sx, int sy, int dx, int dy, int width, int height) {
+  imgrect_t src_extent;
+  imgrect_t dest_extent;
+  imgrect_t test_extent;
+
+  int copy_y,dest_sz,src_stride,dest_stride;
+  uint8_t * sp;
+  uint8_t* dp;
+
+  if (src->bpp != dest->bpp)
+    return;
+
+  // Clip source with sx,sy -> width,height
+  test_extent.x = test_extent.y = 0;
+  test_extent.width = src->w;
+  test_extent.height = src->h;
+
+  src_extent.x = sx;
+  src_extent.y = sy;
+  src_extent.width = width;
+  src_extent.height = height;
+
+  scc_clip(src_extent, test_extent, &src_extent);
+
+  // Clip dest with dx,dy -> src_extent.width, src_extent.height
+  test_extent.x = test_extent.y = 0;
+  test_extent.width = dest->w;
+  test_extent.height = dest->h;
+
+  dest_extent.x = dx + (src_extent.x - sx); // add in any offset introduced by the src clip
+  dest_extent.y = dy + (src_extent.y - sy);
+  dest_extent.width = src_extent.width;
+  dest_extent.height = src_extent.height;
+
+  scc_clip(dest_extent, test_extent, &dest_extent);
+
+  src_extent.x = sx + (dest_extent.x - dx); // add in any offset introduced by the dest clip
+  src_extent.y = sy + (dest_extent.y - dy);
+  src_extent.width = dest_extent.width;
+  src_extent.height = dest_extent.height;
+
+  // Exclude bad drawing rects
+  if (src_extent.width <= 0 || src_extent.height <= 0)
+    return;
+
+  dest_sz     = (dest_extent.width*dest->bpp)>>3;
+  src_stride  = (src->w*src->bpp)>>3;
+  dest_stride = (dest->w*dest->bpp)>>3;
+  sp = &src->data[(((src_extent.y*src->w)+src_extent.x)   * src->bpp)  >> 3];
+  dp = &dest->data[(((dest_extent.y*dest->w)+dest_extent.x) * dest->bpp) >> 3];
+  /*printf("SCC_BLIT: %i, %i, %i, %i [%i,%i] -> [%i,%i %i,%i], [%i,%i %i,%i]\n",
+                    sx,sy,dx,dy,width,height, 
+                    src_extent.x,src_extent.y,src_extent.width,src_extent.height,
+                    dest_extent.x,dest_extent.y,dest_extent.width,dest_extent.height);*/
+  
+  // We now have everything we need, so copy!
+  for (copy_y=dest_extent.y; copy_y < dest_extent.y+dest_extent.height; copy_y++) {
+    memcpy(dp, sp, dest_sz);
+    sp += src_stride;
+    dp += dest_stride;
+  }
+}
+
+/// Copies palette from src to dest. Image will be erased if bpp > 8 
+void scc_img_copypal(scc_img_t* img, scc_img_t* src) {
+  if (img->pal)
+    free(img->pal);
+  
+  img->pal = malloc(src->ncol*3);
+  memcpy(img->pal, src->pal, src->ncol*3);
+  img->ncol = src->ncol;
+  img->bpp = 8;
+  
+  if (img->bpp > 8) {
+    free(img->data);
+    img->data = calloc(1,(img->w*img->h*img->bpp)>>3);
+  }
+}
+
+void scc_img_swapcol(scc_img_t* img, uint8_t from, uint8_t to) {
+  uint8_t* data = img->data;
+  uint8_t t;
+  int i,j;
+  int w = img->w, h = img->h;
+  if (img->pal == NULL)
+    return;
+  
+  j = to*3;
+  for (i=0; i<3; i++, j++) {
+    t = img->pal[(from*3)+i];
+    img->pal[(from*3)+i] = img->pal[j];
+    img->pal[j] = t;
+  }
+  
+  for (i=0; i<w*h; i++, data++) {
+    uint8_t col = *data;
+    if (col == from)
+      *data = to;
+    else if (col == to)
+      *data = from;
+  }
+}
+
+int scc_img_findpixel(scc_img_t* img, int color, int* x, int* y) {
+  int sx, sy;
+  uint8_t* data = img->data;
+  int w = img->w, h = img->h;
+  *x = *y = -1;
+  
+  switch (img->bpp)
+  {
+    case 8:
+    for (sy=0; sy<h; sy++) {
+      for (sx=0; sx<w; sx++) {
+        if (*data++ == color) {
+          *x = sx;
+          *y = sy;
+          return 1;
+        }
+      }
+    }
+    break;
+  }
+  return 0;
+}
+
+int scc_img_findpal(scc_img_t* img, int color) {
+  uint8_t* data = img->pal;
+  int i;
+  int idx = -1;
+  
+  if (data) {
+    for (i=0; i<img->ncol; i++) {
+      int col = scc_img_rgb(*data++, *data++, *data++);
+      if (col == color) {
+        idx = i;
+        break;
+      }
+    }
+  }
+  return idx;
+}
+
+void scc_img_findpal_indexes(scc_img_t* costume_img, scc_img_t* room_img, uint8_t* indexes) {
+  int i;
+  uint8_t* data;
+  
+  // Locate indexes
+  data = costume_img->pal;
+  for (i=0; i<costume_img->ncol; i++) {
+    int col = scc_img_rgb(*data++, *data++, *data++);
+    int found = scc_img_findpal(room_img, col);
+    indexes[i] = (found < 0) ? 0 : found;
+  }
+}
+
+
+void scc_img_copymask(scc_img_t* img, scc_img_t* dest) {
+  int i;
+  int trans = img->trans;
+  uint8_t* data = img->data+3;
+  uint8_t* dest_data = dest->data;
+  int w = img->w, h = img->h;
+  
+  switch (img->bpp)
+  {
+    case 8:
+      for (i=0; i<w*h; i++) {
+        *dest_data++ = (*data++ == trans) ? 0 : 255;
+      }
+      break;
+    case 32:
+        for (i=3; i<w*h*4; i+= 4, data += 4) {
+          *dest_data++ = *data;
+        }
+      break;
+  }
+}
+
+void scc_img_mask(scc_img_t* img) {
+  int i;
+  int trans = -1;
+  int isize=img->w*img->h;
+  uint8_t* data;
+  uint8_t* new_data, *new_ptr;
+  
+  if (img->bpp == 32)
+    return;
+
+  // Ditch the palette
+  if (img->pal)
+    scc_img_unpal(img);
+
+  data = img->data;
+  new_data = new_ptr = malloc(isize*4);
+
+  switch (img->bpp)
+  {
+    case 16:
+      for (i=0; i<isize; i++) {
+        uint16_t val = ((short*)data)[i];
+        new_ptr[0] = val & 0x1F; val >>= 5;
+        new_ptr[1] = val & 0x3F; val >>= 6;
+        new_ptr[2] = val & 0x1F;
+        if (i == 0)
+          trans = scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]);
+        new_ptr[3] = trans >= 0 && (scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]) == trans) ? 0 : 255;
+        new_ptr += 4;
+      }
+      break;
+    case 24:
+      for (i=0; i<isize; i++) {
+        uint8_t* ptr = data + (i*3);
+        new_ptr[0] = *ptr++;
+        new_ptr[1] = *ptr++;
+        new_ptr[2] = *ptr;
+        if (i == 0)
+          trans = scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]);
+        new_ptr[3] = trans >= 0 && (scc_img_rgb(new_ptr[0], new_ptr[1], new_ptr[2]) == trans) ? 0 : 255;
+        new_ptr += 4;
+      }
+      break;
+  }
+  
+  free(data);
+  img->data = new_data;
+  img->bpp = 32;
+}
+
+/// Reduce colors across a set of images
+int scc_images_quantize(scc_img_t** imgs, int num, int colors, int dump) {
+  // 1) Combine images into single image
+  // 2) Reduce result
+  // 3) Copy palette and resultant image data back into the images
+  int i;
+  int dest_height = 0;
+  int dest_width = 0;
+  int trans_x, trans_y;
+  scc_img_t* mask;
+  imgpos_t* pos = malloc(sizeof(imgpos_t)*num);
+
+  // 0. Images need to ditch their palette, and they need a mask
+  for (i=0; i<num; i++) {
+    if (imgs[i]->pal)
+      scc_img_unpal(imgs[i]);
+    else if (imgs[i]->bpp < 32)
+      scc_img_mask(imgs[i]);
+  }
+
+  // 1. Determine destination x,y of images
+  for (i=0; i<num; i++) {
+    pos[i].x = dest_width;
+    pos[i].y = 0;
+    dest_width += imgs[i]->w;
+    dest_height = (imgs[i]->h > dest_height) ? imgs[i]->h : dest_height;
+  }
+
+  // 2. Make a new image
+  scc_img_t* img = scc_img_new(dest_width, dest_height, 0, 32);
+
+  // ... combine previous images
+  for (i=0; i<num; i++) {
+    imgpos_t ip = pos[i];
+    scc_img_blit(imgs[i], img, 0, 0, ip.x, ip.y, imgs[i]->w, imgs[i]->h);
+  }
+  
+  // copy alpha mask and find first instance of transparent color
+  mask = scc_img_new(dest_width, dest_height, 256, 8);
+  scc_img_copymask(img, mask);
+  scc_img_findpixel(mask, 0, &trans_x, &trans_y);
+
+  // 3. Quantize new image
+  scc_img_quantize(img, colors);
+
+  // make sure the transparent color (if used) is at the start
+  if (trans_x >= 0) {
+    uint8_t idx = *(img->data + ((img->w*trans_y)+trans_x));
+    scc_log(LOG_V, "Transparent color @ %i,%i = %i\n", trans_x, trans_y, idx);
+    img->trans = 0;
+    scc_img_swapcol(img, idx, 0);
+    /* // Paint all transparent areas again
+    if (trans_x >= 0) {
+      uint8_t* data = img->data;
+      uint8_t* mask_data = mask->data;
+      int ext = img->w*img->h;
+      for (i=0; i<ext; i++) {
+        if (*mask_data < 255)
+          *data = img->ncol-1;
+        data++;mask_data++;
+      }
+    }*/
+  }
+  
+  if (dump)
+    scc_img_save_bmp(img, "combined.bmp"); // DEBUG
+  
+  if (mask)
+    scc_img_free(mask);
+  
+  // 4. Extract images out of new image
+  for (i=0; i<num; i++) {
+    imgpos_t ip = pos[i];
+    scc_img_copypal(imgs[i], img); // clone palette
+    scc_img_blit(img, imgs[i], ip.x, ip.y, 0, 0, imgs[i]->w, imgs[i]->h);
+  }
+
+  free(img);
+  free(pos);
+  return 1;
+}
+
 //#define SCC_IMG_TEST 1
 #ifdef SCC_IMG_TEST
 
 int main(int argc,char** argv) {
   scc_img_t* img;
+  scc_img_t* img2;
+  scc_img_t* imgs[2];
   
 
   if(argc < 2) {
@@ -398,8 +984,28 @@ int main(int argc,char** argv) {
   img = scc_img_open(argv[1]);
   if(!img) return -1;
 
-  printf("Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\n",
-	 img->w,img->h,img->ncol,img->trans);
+  printf("Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\nBPP: %d\n\n",
+   img->w,img->h,img->ncol,img->trans,img->bpp);
+  
+  // Test Quantize
+  scc_img_quantize(img, 255);
+  printf("Quantized Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\nBPP: %d\n\n",
+       img->w,img->h,img->ncol,img->trans,img->bpp);
+  scc_img_save_bmp(img, "dump_quant.bmp");
+  img2 = scc_img_open("dump_quant.bmp");
+  printf("Reloaded Quantized Width: %d\nHeight: %d\nNum colors: %d\nTransparent color: %d\nBPP: %d\n\n",
+       img->w,img->h,img->ncol,img->trans,img->bpp);
+  scc_img_save_bmp(img2, "dump_quant_reloaded.bmp");
+  scc_img_swapchannels(img2);
+  
+  // Test combiner
+  imgs[0] = img; imgs[1] = img2;
+  scc_images_quantize(imgs, 2, 255, 1);
+  scc_img_save_bmp(imgs[0], "dump_0.bmp");
+  scc_img_save_bmp(imgs[1], "dump_1.bmp");
+  
+  scc_img_free(img);
+  scc_img_free(img2);
 
   return 0;
 

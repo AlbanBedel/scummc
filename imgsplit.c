@@ -87,7 +87,7 @@ int main(int argc,char** argv) {
              f->val);
     for(y = 0 ; y < in->h ; y += dh) {
       for(x = 0 ; x < in->w ; x += dw) {
-        out = scc_img_new(dw,dh,in->ncol);
+        out = scc_img_new(dw,dh,in->ncol,8);
         memcpy(out->pal,in->pal,3*in->ncol);
         for(l = 0 ; l < dh ; l++)
           memcpy(&out->data[l*dw],&in->data[(y+l)*in->w+x],dw);

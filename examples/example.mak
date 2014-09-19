@@ -49,6 +49,7 @@ endif
 
 COST_DIR ?= $(GAME_DIR)/costumes
 FONT_DIR ?= $(GAME_DIR)/fonts
+SOUND_DIR ?= $(GAME_DIR)/sounds
 
 REF_FILE = $(GAME_DIR)/$(GAME_NAME).md5
 
@@ -56,6 +57,7 @@ SCC  ?= $(BIN_DIR)/scc$(EXESUF)
 SLD  ?= $(BIN_DIR)/sld$(EXESUF)
 COST ?= $(BIN_DIR)/cost$(EXESUF)
 CHAR ?= $(BIN_DIR)/char$(EXESUF)
+SOUN ?= $(BIN_DIR)/soun$(EXESUF)
 
 SCC_FLAGS ?= -V $(TARGET_VERSION) \
              -I $(INC_DIR) \
@@ -88,6 +90,8 @@ all: $(OUT_FILES)
 %.roobj: $(GAME_DIR)/%.scc $(SCC)
 	$(SCC) -o $@ $(SCC_FLAGS) $<
 
+%.soun: $(SOUND_DIR)/%.voc $(SOUN)
+	$(SOUN) -o $@ -voc $<
 
 $(OUT_NAME).000: $(OBJS)
 	$(SLD) -o $(OUT_NAME) $^
@@ -114,7 +118,8 @@ clean:
               *.char \
               *.roobj \
               *.cost \
-	      *_anim.sch \
+              *.soun \
+              *._anim.sch \
               tentacle.000 \
               tentacle.001 \
               tentacle.sou \
