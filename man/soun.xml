@@ -47,6 +47,12 @@
       <param name="gmd" arg="file.mid">
         Use this General MIDI file.
       </param>
+      <param name="voc" arg="sound.voc">
+        Use this VOC file.
+      </param>
+      <param name="spk" arg="pc.spk">
+        Use this PC Speaker file.
+      </param>
     </param-group>
   </command>
 
