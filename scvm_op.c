@@ -465,7 +465,7 @@ static int scvm_op_array2_write_byte(scvm_t* vm, scvm_thread_t* thread) {
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
      (r=scvm_vpop(vm,&val,&x,&y,NULL)))
     return r;
-  return scvm_write_array(vm,addr,x,0,val);
+  return scvm_write_array(vm,addr,x,y,val);
 }
 
 // 0x4B
@@ -477,7 +477,7 @@ static int scvm_op_array2_write_word(scvm_t* vm, scvm_thread_t* thread) {
      (r=scvm_thread_read_var(vm,thread,vaddr,&addr)) ||
      (r=scvm_vpop(vm,&val,&x,&y,NULL)))
     return r;
-  return scvm_write_array(vm,addr,x,0,val);
+  return scvm_write_array(vm,addr,x,y,val);
 }
 
 // 0x4E
