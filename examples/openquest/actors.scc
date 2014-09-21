@@ -119,7 +119,7 @@ room Actors {
             return;
         }
         dbgPrint("Starting roam script for %n{a}");
-        unless(roaming) dimNibble2(roaming,0xF,RM_NUM_FIELD);
+        unless(roaming) dimInt2(roaming,0xF,RM_NUM_FIELD);
         roaming[a,RM_MIN_X] = x_min; roaming[a,RM_MAX_X] = x_max;
         roaming[a,RM_MIN_Y] = y_min; roaming[a,RM_MAX_Y] = y_max;
         if(roaming[a,RM_STATE] > RM_STOPPED)
