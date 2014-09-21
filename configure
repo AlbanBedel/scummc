@@ -422,6 +422,7 @@ echo "Target system: $TARGET ($endian endian)"
 ## Set the base C/LDFLAGS
 ## We need -I. for config.h and the other generated includes
 CFLAGS="$CFLAGS -Wall"
+LDFLAGS="$LDFLAGS -lm"
 if [ $debug = "yes" ] ; then
     CFLAGS="$CFLAGS -g -I. -I$SRCDIR"
     LDFLAGS="$LDFLAGS -g"
