@@ -800,8 +800,8 @@ int main(void) {
   return 0;
 }
 EOF
-    $CC -o $BUILDDIR/test.bin $CFLAGS -lreadline -ltermcap \
-        $BUILDDIR/test.c 2> /dev/null
+    $CC -o $BUILDDIR/test.bin $CFLAGS $BUILDDIR/test.c \
+        $LDFLAGS -lreadline -ltermcap 2> /dev/null
     if [ $? -eq 0 ] ; then
 	readline=yes
 	readline_def='#define HAVE_READLINE 1'
