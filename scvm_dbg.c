@@ -349,10 +349,10 @@ static void cmd_show_avar_usage(char* args) {
 
 static int cmd_show_avar(scvm_t* vm, char* args) {
   int i, var, a, val;
-  if(sscanf(args,"local %d",&var) == 1) {
+  if(args && sscanf(args,"local %d",&var) == 1) {
     var &= 0x3FFF;
     var |= 0x4000;
-  } else if(sscanf(args,"%d",&var) != 1) {
+  } else if(!args || sscanf(args,"%d",&var) != 1) {
     cmd_show_avar_usage(NULL);
     return 0;
   }
