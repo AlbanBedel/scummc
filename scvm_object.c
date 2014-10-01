@@ -84,7 +84,9 @@ scvm_object_t* scvm_get_object_at(scvm_t* vm, int x, int y) {
     if(!vm->room) return NULL;
     for(i = 0 ; i < vm->room->num_object ; i++) {
         scvm_object_t* obj = vm->room->object[i];
-        if(!obj) continue;
+        if(!obj ||
+	   (obj->parent && obj->parent->pdata->state != obj->parent_state))
+	    continue;
         if(x >= obj->x && x < obj->x + obj->width &&
            y >= obj->y && y < obj->y + obj->height)
             return obj;
