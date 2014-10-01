@@ -96,10 +96,13 @@ static void scale_copy(uint8_t* dst, int dst_stride,
 }
 
 uint8_t* make_zplane(scvm_t* vm, scvm_view_t* view,
+                     unsigned view_width, unsigned view_height,
                      unsigned dst_width, unsigned dst_height,
                      unsigned src_width, unsigned src_height,
                      unsigned src_x, unsigned zid) {
   uint8_t* zplane = malloc(dst_width*dst_height);
+  unsigned o,obj_w,obj_h;
+
   if(vm->room->image.zplane[zid])
       scale_copy(zplane,dst_width,dst_width,dst_height,
                  0,0,dst_width,dst_height,
@@ -107,7 +110,32 @@ uint8_t* make_zplane(scvm_t* vm, scvm_view_t* view,
                  src_width, src_height,-1);
   else
       memset(zplane,0,dst_width*dst_height);
-  // TODO: copy objects zplanes from the visible area
+
+  for(o = 0 ; o < vm->room->num_object ; o++) {
+    scvm_object_t* obj = vm->room->object[o];
+    scvm_image_t* img;
+    if(!obj->pdata->state ||
+       obj->pdata->state > obj->num_image ||
+       zid > obj->num_zplane)
+      continue;
+    img = &obj->image[obj->pdata->state];
+    if(!img->zplane || !img->zplane[zid]) continue;
+    obj_w = obj->width;
+    obj_h = obj->height;
+    if(obj->x >= src_x + vm->room->width ||
+       obj->x + obj->width < src_x ||
+       obj->y >= src_height ||
+       obj->y + obj_h < 0)
+      continue;
+
+    scale_copy(zplane,dst_width,dst_width,dst_height,
+               (obj->x-src_x)*view_width/view->screen_width,
+               obj->y*view_height/view->screen_height,
+               obj_w*view_width/view->screen_width,
+               obj_h*view_height/view->screen_height,
+               img->zplane[zid], obj_w, obj_w, obj_h,
+               -1);
+  }
   return zplane;
 }
 
@@ -206,6 +234,7 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
       if(mask && mask <= vm->room->num_zplane) {
         if(!vm->room->zplane[mask])
           vm->room->zplane[mask] = make_zplane(vm,view,
+                                               width,height,
                                                dw,dh,
                                                w,h,sx,mask);
         zplane = vm->room->zplane[mask];
