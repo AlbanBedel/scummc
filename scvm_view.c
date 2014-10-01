@@ -144,6 +144,8 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
                    uint8_t* buffer, int stride,
                    unsigned width, unsigned height) {
   int sx,dx,dy,w,h,dw,dh,a;
+  int i,num_actor = 0;
+  scvm_actor_t* actor[vm->num_actor];
 
   if(!vm->room) return 0;
 
@@ -225,12 +227,21 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
   }
 
   for(a = 0 ; a < vm->num_actor ; a++) {
-    uint8_t* zplane = NULL;
     if(!vm->actor[a].room ||
        vm->actor[a].room != vm->room->id ||
        !vm->actor[a].costdec.cost) continue;
-    if(vm->actor[a].box) {
-      int mask = vm->room->box[vm->actor[a].box].mask;
+    for(i = 0 ; i < num_actor ; i++)
+      if(vm->actor[a].y < actor[i]->y) break;
+    if(i < num_actor) memmove(&actor[i+1],&actor[i],
+                              (num_actor-i)*sizeof(scvm_actor_t*));
+    actor[i] = &vm->actor[a];
+    num_actor += 1;
+  }
+
+  for(a = 0 ; a < num_actor ; a++) {
+    uint8_t* zplane = NULL;
+    if(actor[a]->box) {
+      int mask = vm->room->box[actor[a]->box].mask;
       if(mask && mask <= vm->room->num_zplane) {
         if(!vm->room->zplane[mask])
           vm->room->zplane[mask] = make_zplane(vm,view,
@@ -240,17 +251,19 @@ int scvm_view_draw(scvm_t* vm, scvm_view_t* view,
         zplane = vm->room->zplane[mask];
       }
     }
+
     scc_log(LOG_MSG,"Draw actor %d at %dx%d (zplane: %d)\n",a,
-            vm->actor[a].x,vm->actor[a].y,
-            zplane ?  vm->room->box[vm->actor[a].box].mask : -1);
-    scc_cost_dec_frame(&vm->actor[a].costdec,
+            actor[a]->x,actor[a]->y,
+            zplane ? vm->room->box[actor[a]->box].mask : -1);
+
+    scc_cost_dec_frame(&actor[a]->costdec,
                        buffer + dy*stride + dx,
-                       (vm->actor[a].x-sx)*width/view->screen_width,
-                       vm->actor[a].y*height/view->screen_height,
+                       (actor[a]->x-sx)*width/view->screen_width,
+                       actor[a]->y*height/view->screen_height,
                        dw,dh,stride,
                        zplane,dw,
-                       vm->actor[a].scale_x*width/view->screen_width,
-                       vm->actor[a].scale_y*height/view->screen_height);
+                       actor[a]->scale_x*width/view->screen_width,
+                       actor[a]->scale_y*height/view->screen_height);
   }
 
   // TODO: Use some invalidation to avoid recomputing the
