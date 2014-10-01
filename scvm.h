@@ -125,7 +125,7 @@ struct scvm_object {
   unsigned num_hotspot;
   int* hotspot;
   scvm_image_t* image;
-  unsigned flags;
+  unsigned parent_state;
   scvm_object_t* parent;
   unsigned actor_dir;
   unsigned* verb_entries;

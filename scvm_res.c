@@ -353,7 +353,7 @@ scvm_object_t* scvm_load_obcd(scvm_t* vm, scc_fd_t* fd) {
     obj->height = scc_fd_r16le(fd);
   } else
     scc_fd_seek(fd,8,SEEK_CUR);
-  obj->flags = scc_fd_r8(fd);
+  obj->parent_state = scc_fd_r8(fd);
   // hack, the real pointer get resolved when all
   // object are loaded.
   obj->parent = (scvm_object_t*)((intptr_t)scc_fd_r8(fd));
