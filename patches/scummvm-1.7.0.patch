@@ -1,0 +1,84 @@
+From 3af10bac39788cff5cfe30bcbd62d80dda4fd7af Mon Sep 17 00:00:00 2001
+From: Alban Bedel <albeu@free.fr>
+Date: Tue, 7 Apr 2015 21:43:25 +0200
+Subject: [PATCH] SCUMM: Add support for ScummC games
+
+Make it easy to add and run games made with ScummC.
+---
+ engines/scumm/detection_tables.h | 11 +++++++++++
+ engines/scumm/scumm.h            |  3 +++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/engines/scumm/detection_tables.h b/engines/scumm/detection_tables.h
+index 1dccbd3..52c9650 100644
+--- a/engines/scumm/detection_tables.h
++++ b/engines/scumm/detection_tables.h
+@@ -71,6 +71,7 @@ static const PlainGameDescriptor gameDescriptions[] = {
+ 	{ "monkey2", "Monkey Island 2: LeChuck's Revenge" },
+ 	{ "pass", "Passport to Adventure" },
+ 	{ "samnmax", "Sam & Max Hit the Road" },
++	{ "scummc6", "ScummC games for v6" },
+ 	{ "tentacle", "Day of the Tentacle" },
+ 	{ "zak", "Zak McKracken and the Alien Mindbenders" },
+ 	{ "indyloom", "Indiana Jones and the Last Crusade & Loom" },
+@@ -80,6 +81,7 @@ static const PlainGameDescriptor gameDescriptions[] = {
+ #ifdef ENABLE_SCUMM_7_8
+ 	{ "ft", "Full Throttle" },
+ 	{ "dig", "The Dig" },
++	{ "scummc7", "ScummC games for v7" },
+ 	{ "comi", "The Curse of Monkey Island" },
+ #endif
+ 
+@@ -259,12 +261,16 @@ static const GameSettings gameVariantsTable[] = {
+ 	{"samnmax",  "", 0, GID_SAMNMAX,  6, 0, MDT_ADLIB | MDT_MIDI | MDT_PREFER_GM, GF_USE_KEY, UNK, GUIO0()},
+ 	{"samnmax",  "Floppy", 0, GID_SAMNMAX,  6, 0, MDT_ADLIB | MDT_MIDI | MDT_PREFER_GM, GF_USE_KEY, UNK, GUIO1(GUIO_NOSPEECH)},
+ 
++	{"scummc6", "", 0, GID_SCUMMC6, 6, 0, MDT_ADLIB | MDT_MIDI | MDT_PREFER_GM, 0, UNK, GUIO0()},
++
+ #ifdef ENABLE_SCUMM_7_8
+ 	{"ft",       0, 0, GID_FT,  7, 0, MDT_NONE, 0, UNK, GUIO1(GUIO_NOMIDI)},
+ 
+ 	{"dig",       "",       0, GID_DIG, 7, 0, MDT_NONE, 0, UNK, GUIO1(GUIO_NOMIDI)},
+ 	{"dig",  "Steam", "steam", GID_DIG, 7, 0, MDT_NONE, 0, UNK, GUIO1(GUIO_NOMIDI)},
+ 
++	{"scummc7", "", "", GID_SCUMMC7, 7, 0, MDT_NONE, 0, UNK, GUIO0()},
++
+ 	{"comi",     0, 0, GID_CMI, 8, 0, MDT_NONE, 0, Common::kPlatformWindows, GUIO2(GUIO_NOMIDI, GUIO_NOASPECT)},
+ #endif
+ 
+@@ -504,6 +510,9 @@ static const GameFilenamePattern gameFilenamesTable[] = {
+ 	{ "samnmax", "snmidemo.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ 	{ "samnmax", "sdemo.sm%d", kGenDiskNum, Common::DE_DEU, UNK, 0 },
+ 
++	{ "scummc6", "scummc.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
++	{ "scummc6", "scummc6.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
++
+ #ifdef ENABLE_SCUMM_7_8
+ 	{ "dig", "dig.la%d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ 	{ "dig", "dig.la%d", kGenDiskNumSteam, UNK_LANG, Common::kPlatformWindows, "Steam" },
+@@ -520,6 +529,8 @@ static const GameFilenamePattern gameFilenamesTable[] = {
+ 	{ "ft", "Vollgas Data", kGenUnchanged, Common::DE_DEU, Common::kPlatformMacintosh, 0 },
+ 	{ "ft", "Vollgas Demo Data", kGenUnchanged, Common::DE_DEU, Common::kPlatformMacintosh, "Demo" },
+ 
++	{ "scummc7", "scummc7.%03d", kGenDiskNum, UNK_LANG, UNK, 0 },
++
+ 	{ "comi", "comi.la%d", kGenDiskNum, UNK_LANG, UNK, 0 },
+ #endif
+ 
+diff --git a/engines/scumm/scumm.h b/engines/scumm/scumm.h
+index be5a83d..698d1d2 100644
+--- a/engines/scumm/scumm.h
++++ b/engines/scumm/scumm.h
+@@ -235,6 +235,9 @@ enum ScummGameId {
+ 	GID_TENTACLE,
+ 	GID_ZAK,
+ 
++	GID_SCUMMC6,
++	GID_SCUMMC7,
++
+ 	GID_HEGAME,      // Generic name for all HE games with default behavior
+ 	GID_PUTTDEMO,
+ 	GID_FBEAR,
+-- 
+2.0.0
+
