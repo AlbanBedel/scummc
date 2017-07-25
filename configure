@@ -468,7 +468,7 @@ minor=`echo $makever | cut -d . -f 2`
 if [ $major -lt 3 ] ; then
     echo "GNU Make $makever is way too old, at least 3.80 is required."
     exit 1
-elif [ $minor -lt 80 ] ; then
+elif [ $major -eq 3 -a $minor -lt 80 ] ; then
     echo "GNU Make $makever is too old, at least 3.80 is required."
     exit 1
 fi
