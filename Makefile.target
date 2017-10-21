@@ -281,7 +281,7 @@ else
 define TEST_template
 test_$(1):
 	@echo "Can't run test for $(TARGET)"  $(MSGLOG)
-	
+
 PHONY_TARGETS+= test_$(1)
 
 endef
