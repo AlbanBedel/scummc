@@ -544,8 +544,10 @@ int scc_write_obcd(scc_fd_t* fd,scc_obcd_t* o) {
   scc_fd_w16le(fd,o->unk2);
   scc_fd_w8(fd,o->actor_dir);
 
-  if(o->verb)
-    scc_write_data(fd,MKID('V','E','R','B'),o->verb);
+  // The verb writing function is missing. As this is just some old
+  // testing code comment that out to silence the warning.
+  //if(o->verb)
+  //  scc_write_data(fd,MKID('V','E','R','B'),o->verb);
 
   if(o->name) {
     int r,w=0,len = strlen(o->name) + 1;

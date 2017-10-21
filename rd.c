@@ -63,9 +63,8 @@ int main(int argc,char** argv) {
   scc_fd_t* fd2,*fd = new_scc_fd("TENTACLE.000",O_RDONLY,0x69);
   scc_res_idx_t* idx;
   scc_res_t* res;
-  int i,len;
+  int len;
   scc_lfl_t* lfl;
-  scc_res_list_t *d;
 
   if(!fd) {
     printf("Failed to open index :((\n");
@@ -73,7 +72,6 @@ int main(int argc,char** argv) {
   }
 
   idx = scc_read_res_idx(fd);
-  d = idx->scr_list;
 
   //for(i = 0 ; i < d->size ; i++)
   //  printf("%d ==> ROOM %d: %d\n",i,d->room_no[i],d->room_off[i]);
@@ -100,10 +98,7 @@ int main(int argc,char** argv) {
     scc_room_t* r = &lfl->room;
     uint8_t* img8 = calloc(r->width,r->height+5);
     uint8_t* img24 = malloc(r->width*r->height*3);
-    int w,i,c = 0;
-    char name[1024];
-    scc_obim_t* ob;
-    scc_imnn_t* im;
+    int w,i;
     uint8_t* smap;
     uint32_t smap_len;
 
