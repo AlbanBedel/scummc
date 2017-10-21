@@ -13,9 +13,6 @@ Throttle).
 
 ## II. This release
 
-This release mark a new important milestone: it is finally possible
-to create a 100% free SCUMM game.
-
 In this release you will find:
 
   * scc      : the compiler
@@ -68,7 +65,7 @@ following platforms should still be fully supported:
   * OSX         i386 ppc
 
 Mingw is only supported via cross-compiling because the Makefiles aren't
-working with MSys. Cygwin status is currently unknown.
+working with MSys. Cygwin should works fine.
 
 
 ## IV. What can i do with that ?
@@ -100,14 +97,15 @@ Not that you really need to save in the example game ;)
 Note that to run the game as Day of the Tentacle with ScummVM or with the
 LEC interpreter you must give the following extra options to sld:
 `-o tentacle -key 0x69`. For the LEC interpreter you must also rename
-tentacle.sou to monster.sou.
+tentacle.sou to monster.sou. The example games can be built as Day of
+the Tentacle by running `make tentacle`.
 
 Documentation is currently limited, the two most useful sources are:
 
-  * http://alban.dotsec.net/Projects/ScummC
+  * https://github.com/AlbanBedel/scummc/wiki
 
-    The home of this project, for all ScummC specific documentation
-    and some technical stuff about SCUMM internals.
+    For all ScummC specific documentation and some technical stuff
+    about SCUMM internals.
 
   * http://wiki.scummvm.org/index.php/SCUMM_Technical_Reference
 
@@ -118,8 +116,7 @@ Documentation is currently limited, the two most useful sources are:
   * The man pages
 
     The man directory contain man pages for the various tools. Just open
-    the XML files with any XSLT capable browser (like firefox). The lastest
-    versions can also be read at: https://dotsec.net/repos/scummc/trunk/man
+    the XML files with any XSLT capable browser (like firefox).
 
 
 ## VI. The box editor
@@ -187,17 +184,17 @@ Big thanks to Jesse McGrew and James Urquhart for their contributions.
 Big thanks to Gerrit Karius for OpenQuest and generally making this
 project move forward.
 
-And last but not least, thanks to the few people how at least tried to
+And last but not least, thanks to the few people who at least tried to
 compile and perhaps even used a bit one of those early versions.
 
 
 ## IX. Contact
 
-ScummC have a project page at Gna!: http://gna.org/projects/scummc/
-There you can find our mailing list, bug tracker, etc
+ScummC is hosted on github: https://github.com/AlbanBedel/scummc
+There you can find the wiki, bug tracker, etc
 
 For anything relevant to ScummC and SCUMM games developement use
-the mailing list scummc-general@gna.org, for anything else I can
-be reached at albeu@free.fr.
+the github bug tracker at https://github.com/AlbanBedel/scummc/issues,
+for anything else I can be reached at albeu@free.fr.
 
 Patches and suggestions of all kinds are always welcome!
