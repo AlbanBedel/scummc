@@ -301,12 +301,12 @@ distrib-data: $(DO_ALL)
 	@echo
 	@rm -rf $(DISTRIB)
 	@mkdir $(DISTRIB)
-	@cp $(SRCDIR)/README $(SRCDIR)/LICENSE $(DISTRIB)
+	@cp $(SRCDIR)/README.md $(SRCDIR)/LICENSE $(DISTRIB)
 	@mkdir $(DISTRIB)/bin
 	@cp $(DO_ALL:%=%$(EXESUF)) $(DISTRIB)/bin
-	@svn export $(SRCDIR)/include $(DISTRIB)/include > /dev/null
-	@svn export $(SRCDIR)/examples $(DISTRIB)/examples > /dev/null
-	@svn export $(SRCDIR)/man $(DISTRIB)/man > /dev/null
+	@cp -r $(SRCDIR)/include $(DISTRIB)/include > /dev/null
+	@cp -r $(SRCDIR)/examples $(DISTRIB)/examples > /dev/null
+	@cp -r $(SRCDIR)/man $(DISTRIB)/man > /dev/null
 	@rm $(DISTRIB)/examples/scummc-config.mak.sample
 	@sed 's/^ *# *EXESUF *=.*/EXESUF = $(EXESUF)/' \
 	  < $(SRCDIR)/examples/scummc-config.mak.sample \
