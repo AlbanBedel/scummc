@@ -277,7 +277,7 @@ static scc_code_t* scc_str_gen_code(scc_str_t* s) {
     switch(s->type) {
     case SCC_STR_CHAR:
       c = calloc(1,sizeof(scc_code_t));
-      c->data = strdup(s->str);
+      c->data = (unsigned char *)strdup(s->str);
       c->len = strlen(s->str);
       break;
     case SCC_STR_INT:
