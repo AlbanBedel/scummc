@@ -117,6 +117,7 @@ clean:
               *.char \
               *.roobj \
               *.cost \
+              *.akos \
               *.soun \
               *._anim.sch \
               tentacle.000 \
