@@ -43,7 +43,7 @@ hacking.
 Requirements:
 
   * GNU make >= 3.80
-  * bison (minimal version between 1.28 and 1.35)
+  * bison >= 2.7
   * GTK >= 2.4 (for boxedit and costview)
 
 Optional libraries:

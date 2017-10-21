@@ -23,6 +23,7 @@
  * @brief ScummC compiler
  */
 
+%define api.pure full
 %parse-param {struct scc_parser *v_sccp}
 %lex-param {scc_parser_t *YYLEX_PARAM}
 
@@ -190,8 +191,6 @@ static void scc_parser_find_res(scc_parser_t* p, char** file_ptr);
   }
 
 %}
-
-%pure-parser
 
 %union {
   int integer;

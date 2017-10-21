@@ -500,8 +500,8 @@ bisonver=`$BISON --version | _head 1 | tr -c -d '[[:digit:].]'`
 bisonver_major="`echo $bisonver | sed 's/\..*//'`"
 bisonver_minor="`echo $bisonver | sed 's/[0-9]*\.//; s/\..*//; s/[[:alpha:]]*//g'`"
 
-if [ $bisonver_major -lt 1 ] || [ $bisonver_major -eq 1 -a $bisonver_minor -lt 175 ] ; then
-    echo "Bison ($bisonver) is too old, version 1.175 is required."
+if [ $bisonver_major -lt 2 ] || [ $bisonver_major -eq 2 -a $bisonver_minor -lt 7 ] ; then
+    echo "Bison ($bisonver) is too old, version 2.7 is required."
     exit 1
 else
     echo "Bison: $BISON ($bisonver)"
