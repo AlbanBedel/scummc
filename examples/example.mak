@@ -64,6 +64,8 @@ SCC_FLAGS ?= -V $(TARGET_VERSION) \
              -I $(GAME_DIR) \
              -R $(GAME_DIR) \
 
+SLD_FLAGS ?=
+
 OBJS = $(SRCS:%.scc=%.roobj)
 
 OUT_NAME ?= scummc$(TARGET_VERSION)
@@ -93,17 +95,14 @@ all: $(OUT_FILES)
 %.soun: $(SOUND_DIR)/%.voc $(SOUN)
 	$(SOUN) -o $@ -voc $<
 
-$(OUT_NAME).000: $(OBJS)
-	$(SLD) -o $(OUT_NAME) $^
+%.000: $(OBJS)
+	$(SLD) -o $* $(SLD_FLAGS) $^
 
-$(OUT_NAME).001 $(OUT_NAME).sou: $(OUT_NAME).000 ;
+%.001 %.sou: %.000 ;
 
 ## Target to build a DOTT compatible version of v6 games
 ifeq ($(TARGET_VERSION),6)
-tentacle.000: $(OBJS)
-	$(SLD) -o tentacle -key 0x69 $^
-
-tentacle.001 tentacle.sou: tentacle.000 ;
+tentacle.000: SLD_FLAGS += -key 0x69
 
 monster.sou: tentacle.sou
 	cp $< $@
