@@ -203,7 +203,7 @@ scc_charmap_t* new_charmap_from_ft(int* chars,unsigned num_char,
 
 #endif // HAVE_FT
 
-void import_char(scc_char_t* ch,char* src, int stride,int w, int h) {
+void import_char(scc_char_t* ch,unsigned char* src, int stride,int w, int h) {
     int x,y,s;
     
     if(w <= 0 || h <= 0) {
@@ -251,7 +251,7 @@ scc_charmap_t* new_charmap_from_bitmap(char* path, int base_idx) {
     scc_img_t* img = scc_img_open(path);
     char bcol = img->ncol-1;
     int x,y,x2,y2,w,h,idx = base_idx;
-    char* src;
+    unsigned char* src;
     scc_charmap_t* chmap;
 
     if(!img) {
