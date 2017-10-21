@@ -1,0 +1,10 @@
+*.dep
+*.char
+*.roobj
+*.cost
+*.akos
+*.soun
+*_anim.sch
+*.000
+*.001
+*.sou
