@@ -356,6 +356,9 @@ if [ -z "$TARGET" ] ; then
     fi
 fi
 
+# Workaround for native mingw32
+[ "$TARGET" = "mingw32" ] && TARGET=i686-pc-mingw32
+
 cpu=`echo "$TARGET" | cut -d - -f 1`
 sys=`echo "$TARGET" | cut -d - -f 3`
 [ -z "$sys" ] && sys=`echo "$TARGET" | cut -d - -f 2`
