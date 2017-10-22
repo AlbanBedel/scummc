@@ -31,4 +31,4 @@ matrix:
 install:
   - if test -n "$BREW_PACKAGES"; then brew update ; brew install $BREW_PACKAGES ; fi
 
-script: ./configure $CONFIGURE_FLAGS && make all && make test
+script: ./configure $CONFIGURE_FLAGS && make -j2 all && make test
