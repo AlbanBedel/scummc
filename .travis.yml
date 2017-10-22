@@ -1,0 +1,17 @@
+language: c
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - bison
+            - xsltproc
+            - libfreetype6-dev
+            - libgtk2.0-dev
+            - libsdl-dev
+            - libreadline-dev
+
+script: ./configure && make all && make test
