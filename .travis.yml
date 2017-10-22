@@ -13,5 +13,12 @@ matrix:
             - libgtk2.0-dev
             - libsdl-dev
             - libreadline-dev
+    - os: osx
+      env:
+        - BREW_PACKAGES="bison freetype gtk+ sdl readline"
+        - CONFIGURE_FLAGS="--bison /usr/local/opt/bison/bin/bison"
 
-script: ./configure && make all && make test
+install:
+  - if test -n "$BREW_PACKAGES"; then brew update ; brew install $BREW_PACKAGES ; fi
+
+script: ./configure $CONFIGURE_FLAGS && make all && make test
