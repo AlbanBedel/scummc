@@ -178,7 +178,7 @@ struct scc_data {
 #define SCC_TOUPPER(c) (((c) >= 'a' && (c) <= 'z') ? (c)-'a'+'A' : (c))
 #define SCC_TOLOWER(c) (((c) >= 'A' && (c) <= 'Z') ? (c)-'A'+'a' : (c))
 
-#ifndef HAVE_ASPRINTF
+#if !defined(HAVE_ASPRINTF) || defined(IS_MINGW)
 #ifndef va_start
 #include <stdarg.h>
 #endif
