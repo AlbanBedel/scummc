@@ -198,6 +198,10 @@ scc_data_t* scc_data_load(char* path);
 
 
 #ifdef IS_MINGW
+
+#define GLOB_NOCHECK (16)
+#define GLOB_FLAGS (GLOB_NOCHECK)
+
 typedef struct {
   size_t gl_pathc;
   char **gl_pathv;
