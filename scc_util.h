@@ -199,6 +199,8 @@ scc_data_t* scc_data_load(char* path);
 
 #ifdef IS_MINGW
 
+typedef void (*sig_t)(int signal);
+
 #define GLOB_NOCHECK (16)
 #define GLOB_FLAGS (GLOB_NOCHECK)
 
