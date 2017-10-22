@@ -237,7 +237,6 @@ Usage: $0 [OPTIONS]...
 
   --pkg-config PKGCONFIG    use this pkg-config
   --pkg-config-libdir DIR   set \$PKG_CONFIG_LIBDIR, useful for cross compile
-  --sdl-config SDL_CONFIG   use this sdl-config
   
   --cf-user NAME            set the username to use for the compile farm
   --cf-host HOST            override the compile farm host
@@ -761,17 +760,15 @@ fi
 ## SDL
 ##
 
-[ -z "$SDL_CONFIG" ] && SDL_CONFIG=sdl-config
-
 sdl_def='#undef HAVE_SDL'
 if [ "$sdl" != "no" ] ; then
     sdl=no
-    sdlver=`( $SDL_CONFIG --version ) 2> /dev/null`
+    sdlver=`( $PKGCONFIG --modversion sdl ) 2> /dev/null`
     if [ $? -eq 0 ] ; then
 	sdl=yes
 	sdl_def='#define HAVE_SDL 1'
-	sdl_cflags=`$SDL_CONFIG --cflags`
-	sdl_ldflags=`$SDL_CONFIG --libs`
+	sdl_cflags=`$PKGCONFIG --cflags sdl`
+	sdl_ldflags=`$PKGCONFIG --libs sdl`
 	echo "SDL: yes ($sdlver)"
     else
 	echo "SDL: no"
