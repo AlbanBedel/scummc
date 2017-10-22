@@ -124,68 +124,153 @@ scc_data_t* scc_data_load(char* path) {
 }
 
 //
-// Windows glob implementation from MPlayer.
+// Windows glob implementation from SoX.
 //
 #ifdef IS_MINGW
-
-int glob(const char *pattern, int flags,
-          int (*errfunc)(const char *epath, int eerrno), glob_t *pglob)
+typedef struct file_entry
 {
-    HANDLE searchhndl;
-    WIN32_FIND_DATA found_file;
+    char name[MAX_PATH];
+    struct file_entry *next;
+} file_entry;
 
-    if(errfunc)
-        scc_log(LOG_ERR,"glob():ERROR: Sorry, errfunc not supported "
-                "by this implementation\n");
-    if(flags)
-        scc_log(LOG_ERR,"glob():ERROR:Sorry, no flags supported "
-                "by this implementation\n");
-
-    //scc_log(LOG_DBG,"PATTERN \"%s\"\n",pattern);
-
-    pglob->gl_pathc = 0;
-    searchhndl = FindFirstFile( pattern,&found_file);
-
-    if(searchhndl == INVALID_HANDLE_VALUE) {
-        if(GetLastError() == ERROR_FILE_NOT_FOUND) {
-            pglob->gl_pathc = 0;
-            //scc_log(LOG_DBG,"could not find a file matching your search criteria\n");
-            return 1;
-        } else {
-            //scc_log(LOG_DBG,"glob():ERROR:FindFirstFile: %i\n",GetLastError());
-            return 1;
-        }
+static int
+insert(
+    const char* path,
+    const char* name,
+    file_entry** phead)
+{
+    int len;
+    file_entry* cur = malloc(sizeof(file_entry));
+    if (!cur)
+    {
+        return ENOMEM;
     }
 
-    pglob->gl_pathv = malloc(sizeof(char*));
-    pglob->gl_pathv[0] = strdup(found_file.cFileName);
-    pglob->gl_pathc++;
+    len = _snprintf(cur->name, MAX_PATH, "%s%s", path, name);
+    cur->name[MAX_PATH - 1] = 0;
+    cur->next = *phead;
+    *phead = cur;
 
-    while(1) {
-        if(!FindNextFile(searchhndl,&found_file)) {
-            if(GetLastError()==ERROR_NO_MORE_FILES) {
-                //scc_log(LOG_DBG,"glob(): no more files found\n");
-                break;
-            } else {
-                //scc_log(LOG_DBG,"glob():ERROR:FindNextFile:%i\n",GetLastError());
-                return 1;
-            }
-        } else {
-            //scc_log(LOG_DBG,"glob: found file %s\n",found_file.cFileName);
-            pglob->gl_pathc++;
-            pglob->gl_pathv = realloc(pglob->gl_pathv,pglob->gl_pathc * sizeof(char*));
-            pglob->gl_pathv[pglob->gl_pathc-1] = strdup(found_file.cFileName);
-        }
-    }
-    FindClose(searchhndl);
-    return 0;
+    return len < 0 || len >= MAX_PATH ? ENAMETOOLONG : 0;
 }
 
-void globfree(glob_t *pglob) {
-    int i;
-    for(i=0; i <pglob->gl_pathc ;i++)
-        free(pglob->gl_pathv[i]);
-    free(pglob->gl_pathv);
+static int
+entry_comparer(
+    const void* pv1,
+    const void* pv2)
+{
+	const file_entry* const * pe1 = pv1;
+	const file_entry* const * pe2 = pv2;
+    return _stricmp((*pe1)->name, (*pe2)->name);
+}
+
+int
+glob(
+    const char *pattern,
+    int flags,
+    int (*unused)(const char *epath, int eerrno),
+    glob_t *pglob)
+{
+    char path[MAX_PATH];
+    file_entry *head = NULL;
+    int err = 0;
+    size_t len;
+    unsigned entries = 0;
+    WIN32_FIND_DATAA finddata;
+    HANDLE hfindfile = FindFirstFileA(pattern, &finddata);
+
+    if (!pattern || flags != (flags & GLOB_FLAGS) || unused || !pglob)
+    {
+        errno = EINVAL;
+        return EINVAL;
+    }
+
+    path[MAX_PATH - 1] = 0;
+    strncpy(path, pattern, MAX_PATH);
+    if (path[MAX_PATH - 1] != 0)
+    {
+        errno = ENAMETOOLONG;
+        return ENAMETOOLONG;
+    }
+
+    len = strlen(path);
+    while (len > 0 && path[len - 1] != '/' && path[len - 1] != '\\')
+        len--;
+    path[len] = 0;
+
+    if (hfindfile == INVALID_HANDLE_VALUE)
+    {
+        if (flags & GLOB_NOCHECK)
+        {
+            err = insert("", pattern, &head);
+            entries++;
+        }
+    }
+    else
+    {
+        do
+        {
+            err = insert(path, finddata.cFileName, &head);
+            entries++;
+        } while (!err && FindNextFileA(hfindfile, &finddata));
+
+        FindClose(hfindfile);
+    }
+
+    if (err == 0)
+    {
+        pglob->gl_pathv = malloc((entries + 1) * sizeof(char*));
+        if (pglob->gl_pathv)
+        {
+            pglob->gl_pathc = entries;
+            pglob->gl_pathv[entries] = NULL;
+            for (; head; head = head->next, entries--)
+                pglob->gl_pathv[entries - 1] = (char*)head;
+            qsort(pglob->gl_pathv, pglob->gl_pathc, sizeof(char*), entry_comparer);
+        }
+        else
+        {
+            pglob->gl_pathc = 0;
+            err = ENOMEM;
+        }
+    }
+    else if (pglob)
+    {
+        pglob->gl_pathc = 0;
+        pglob->gl_pathv = NULL;
+    }
+
+    if (err)
+    {
+        file_entry *cur;
+        while (head)
+        {
+            cur = head;
+            head = head->next;
+            free(cur);
+        }
+
+        errno = err;
+    }
+
+    return err;
+}
+
+void
+globfree(
+    glob_t* pglob)
+{
+    if (pglob)
+    {
+        char** cur;
+        for (cur = pglob->gl_pathv; *cur; cur++)
+        {
+            free(*cur);
+        }
+
+        pglob->gl_pathc = 0;
+        pglob->gl_pathv = NULL;
+    }
 }
 
 #endif // IS_MINGW

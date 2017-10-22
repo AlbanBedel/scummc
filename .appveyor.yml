@@ -1,0 +1,14 @@
+platform: x86
+
+before_build:
+  - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;C:\msys64\bin;%PATH%
+  - pacman --noconfirm --needed -Sy pacman pacman-mirrors msys2-runtime msys2-runtime-devel
+  - pacman --noconfirm --needed -S mingw-w64-x86_64-pkg-config mingw-w64-x86_64-freetype mingw-w64-x86_64-SDL mingw-w64-x86_64-readline
+# mingw-w64-x86_64-gtk2
+
+build_script:
+  - sh configure
+  - make -k all
+
+test_script:
+  - make test

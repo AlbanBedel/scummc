@@ -13,7 +13,19 @@ matrix:
             - libgtk2.0-dev
             - libsdl-dev
             - libreadline-dev
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - bison
+            - xsltproc
+            - gcc-mingw-w64
+      env: # Using x86_64-w64-mingw32-pkg-config is not good enough as it still pickup the host's freetype :(
+        - CONFIGURE_FLAGS="--cc x86_64-w64-mingw32-gcc --pkg-config-libdir /usr/x86_64-w64-mingw32/lib/pkgconfig"
     - os: osx
       install: brew update && brew bundle
+      env:
+        - CONFIGURE_FLAGS="--bison /usr/local/opt/bison/bin/bison"
 
-script: ./configure && make all && make test
+script: ./configure $CONFIGURE_FLAGS && make -j2 all && make test

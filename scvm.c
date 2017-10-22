@@ -1016,19 +1016,40 @@ typedef struct scvm_backend_priv {
   SDL_Surface* screen;
 } scvm_backend_sdl_t;
 
+struct signal_slot {
+  int signum;
+  sig_t handler;
+};
+
 static int sdl_scvm_init_video(scvm_backend_sdl_t* be, unsigned width,
                                unsigned height, unsigned bpp) {
   if(!be->inited_video) {
-    sig_t oldint = signal(SIGINT,SIG_DFL);
-    sig_t oldquit = signal(SIGQUIT,SIG_DFL);
-    sig_t oldterm = signal(SIGTERM,SIG_DFL);
+    struct signal_slot signals[] = {
+#ifdef SIGINT
+      { SIGINT },
+#endif
+#ifdef SIGQUIT
+      { SIGQUIT },
+#endif
+#ifdef SIGTERM
+      { SIGTERM },
+#endif
+    };
+    int i;
+
+    for (i = 0; i < sizeof(signals) / sizeof(*signals); i++) {
+      printf("Save signal %d\n", signals[i].signum);
+      signals[i].handler = signal(signals[i].signum, SIG_DFL);
+    }
+
     if(SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
       scc_log(LOG_ERR,"SDL video init failed.\n");
       return 0;
     }
-    signal(SIGINT,oldint);
-    signal(SIGQUIT,oldquit);
-    signal(SIGTERM,oldterm);
+
+    for (i = 0; i < sizeof(signals) / sizeof(*signals); i++)
+       signal(signals[i].signum, signals[i].handler);
+
     // Lame, but this must be called after initing the video
     SDL_EnableUNICODE(1);
     be->inited_video = 1;

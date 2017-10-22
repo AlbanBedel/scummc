@@ -899,7 +899,7 @@ static int cost_create_limbs(void) {
       for(l = 0 ; l < COST_MAX_LIMBS ; l++) {
         cost_limb_anim_t* anim = &anims[a].dir[d].limb[l];
         cost_cmd_t* cmd = anim->cmd_list;
-        unsigned id;
+        int id;
         anim->len = 0;
         while(cmd) {
           if(anim->len+1 > COST_MAX_LIMB_CMDS) goto too_many_cmd;

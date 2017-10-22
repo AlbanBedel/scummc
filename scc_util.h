@@ -178,7 +178,7 @@ struct scc_data {
 #define SCC_TOUPPER(c) (((c) >= 'a' && (c) <= 'z') ? (c)-'a'+'A' : (c))
 #define SCC_TOLOWER(c) (((c) >= 'A' && (c) <= 'Z') ? (c)-'A'+'a' : (c))
 
-#ifndef HAVE_ASPRINTF
+#if !defined(HAVE_ASPRINTF) || defined(IS_MINGW)
 #ifndef va_start
 #include <stdarg.h>
 #endif
@@ -198,6 +198,12 @@ scc_data_t* scc_data_load(char* path);
 
 
 #ifdef IS_MINGW
+
+typedef void (*sig_t)(int signal);
+
+#define GLOB_NOCHECK (16)
+#define GLOB_FLAGS (GLOB_NOCHECK)
+
 typedef struct {
   size_t gl_pathc;
   char **gl_pathv;
