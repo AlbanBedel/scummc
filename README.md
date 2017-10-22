@@ -53,19 +53,15 @@ To compile just run configure and then make (or gmake). If you want to
 also compile the extra utilities run make all. To see all available
 targets run make help.
 
-Only GNU/Linux i386 is fully tested, however in the past the code was
-regularly tested on the (now defunct) sourceforge compile farm. So the
-following platforms should still be fully supported:
+The code is now continuously tested with Travis CI and AppVeyor,
+the following platforms are currently known to work:
 
-  * GNU/Linux   i386 amd64 alpha openpower
-  * NetBSD      i386
-  * FreeBSD     i386
-  * OpenBSD     i386
-  * Solaris     i386 sparc
-  * OSX         i386 ppc
+  * GNU/Linux x86
+  * Mingw64 x86 (native and cross compiled from GNU/Linux)
+  * OSX x86
 
-Mingw is only supported via cross-compiling because the Makefiles aren't
-working with MSys. Cygwin should works fine.
+Past versions have been known to build on NetBSD, FreeBSD, OpenBSD,
+Solaris, OS2 and AmigaOS.
 
 
 ## IV. What can i do with that ?
