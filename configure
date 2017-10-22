@@ -442,6 +442,7 @@ if [ -z "$MAKE" ] ; then
 	MAKE=gmake
     else
 	echo "Failed to find make"
+	exit 1
     fi
 else
     type $MAKE 2> /dev/null >&2
