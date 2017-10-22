@@ -24,11 +24,8 @@ matrix:
       env: # Using x86_64-w64-mingw32-pkg-config is not good enough as it still pickup the host's freetype :(
         - CONFIGURE_FLAGS="--cc x86_64-w64-mingw32-gcc --pkg-config-libdir /usr/x86_64-w64-mingw32/lib/pkgconfig"
     - os: osx
+      install: brew update && brew bundle
       env:
-        - BREW_PACKAGES="bison freetype gtk+ sdl readline"
         - CONFIGURE_FLAGS="--bison /usr/local/opt/bison/bin/bison"
-
-install:
-  - if test -n "$BREW_PACKAGES"; then brew update ; brew install $BREW_PACKAGES ; fi
 
 script: ./configure $CONFIGURE_FLAGS && make -j2 all && make test
