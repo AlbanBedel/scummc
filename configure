@@ -720,7 +720,7 @@ gtk_def='#undef HAVE_GTK'
 if [ "$gtk" != "no" ] ; then
     gtk=no
     if ( $PKGCONFIG --exists gtk+-2.0 ) 2> /dev/null ; then
-	gtkver=`$PKGCONFIG --modversion gtk+-2.0`
+	gtkver=`( $PKGCONFIG --modversion gtk+-2.0 ) 2> /dev/null`
 	if $PKGCONFIG --atleast-version=2.4 gtk+-2.0 ; then
 	    gtk=yes
 	    gtk_def='#define HAVE_GTK 1'
