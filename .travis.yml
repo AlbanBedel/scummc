@@ -28,4 +28,4 @@ matrix:
       env:
         - CONFIGURE_FLAGS="--bison /usr/local/opt/bison/bin/bison"
 
-script: ./configure $CONFIGURE_FLAGS && make -j2 all && make test
+script: ./configure $CONFIGURE_FLAGS && make -k -j2 all && make test
