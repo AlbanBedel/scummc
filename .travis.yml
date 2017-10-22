@@ -14,10 +14,6 @@ matrix:
             - libsdl-dev
             - libreadline-dev
     - os: osx
-      env:
-        - BREW_PACKAGES="bison freetype gtk+ sdl readline"
-
-install:
-  - if test -n "$BREW_PACKAGES"; then brew update ; brew install $BREW_PACKAGES ; fi
+      install: brew update && brew bundle
 
 script: ./configure && make all && make test
