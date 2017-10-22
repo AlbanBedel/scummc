@@ -305,11 +305,7 @@ if [ $? -ne 0 ] ; then
     echo "Failed to run compiler $CC."
     exit 1
 fi
-tmp=`$CC -v 2>&1 | _tail 1`
-## Apple compiler, take the gcc version it's based on
-if echo "$tmp" | grep "^Apple Computer, Inc." 2> /dev/null >&2 ; then
-    tmp=`echo "$tmp" | sed 's/.*based on //'`
-fi
+tmp=`$CC -v 2>&1 | grep -Eo '[[:alnum:]]+ version [[:alnum:].]+' | _head 1`
 ## Pickup the compiler name and version
 ccname=`echo "$tmp" | cut -d ' ' -f 1`
 ccver=`echo "$tmp" | cut -d ' ' -f 3`
