@@ -44,6 +44,11 @@ scc_fd_t* new_scc_fd(char* path,int flags,uint8_t key) {
   int fd;
   scc_fd_t* scc_fd;
 
+  // MinGW needs O_BINARY to get the usual behavior
+#ifdef O_BINARY
+  flags |= O_BINARY;
+#endif
+
   if(flags & O_CREAT)
     fd = open(path,flags,0644);
   else
