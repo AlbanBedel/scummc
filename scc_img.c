@@ -202,7 +202,7 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
 
   isize = scc_fd_r32le(fd);
  
-  if(fmt == 0 && isize && isize != stride*h) {
+  if(fmt == 0 && isize && isize < stride*h) {
     printf("BMP file %s has an invalid image size: %d.\n",fd->filename,isize);
     return NULL;
   }
@@ -213,14 +213,16 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
 
   // num of color
   ncol = scc_fd_r32le(fd);
+  // if the number of color is not given use the default
+  if (ncol == 0)
+    ncol = 1 << bpp;
   // num of important color
   scc_fd_r32(fd);
 
-  if(doff != 14 + 40 + 4 * ncol) {
+  if(doff < 14 + 40 + 4 * ncol) {
     printf("BMP file %s has an invalid data offset.\n",fd->filename);
     return NULL;
   }
-
 
   img = calloc(1,sizeof(scc_img_t));
   img->w = w;
@@ -236,7 +238,16 @@ static scc_img_t* scc_img_parse_bmp(scc_fd_t* fd) {
   }
   // gimp use the last color for transparent areas
   img->trans = img->ncol-1;
-  
+
+  // seek to the data is there is some extra header
+  if(doff > 14 + 40 + 4 * ncol &&
+     scc_fd_seek(fd, doff, SEEK_SET) == (off_t)-1) {
+      printf("Failed to seek to offset %u in BMF file %s.\n",
+             doff, fd->filename);
+      scc_img_free(img);
+      return NULL;
+  }
+
   img->data = malloc(w*h);
 
   switch(fmt) {
