@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	 ScummC
+	 Copyright (C) 2008  Alban Bedel
+	
+	 This program is free software; you can redistribute it and/or
+	 modify it under the terms of the GNU General Public License
+	 as published by the Free Software Foundation; either version 2
+	 of the License, or (at your option) any later version.
+	
+	 This program is distributed in the hope that it will be useful,
+	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 GNU General Public License for more details.
+	
+	 You should have received a copy of the GNU General Public License
+	 along with this program; if not, write to the Free Software
+	 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	-->
+	
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+	
+<man name="printColor" long-name="Set the color in which the string will be printed">
+	<description>	
+	
+	
+	Set the color in which the string will be printed.
+	
+	
+	</description>
+	<command name="printColor">
+		<file name="color" required="true"/>
+	</command>
+	<see-also>
+<cmd>printAt</cmd>, <cmd>printClipped</cmd>, <cmd>printLeft</cmd>, <cmd>printCenter</cmd>, <cmd>printOverhead</cmd>, <cmd>printMumble</cmd>, <cmd>print</cmd>, <cmd>printBegin</cmd>	</see-also>
+</man>

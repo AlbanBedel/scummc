@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	 ScummC
+	 Copyright (C) 2008  Alban Bedel
+	
+	 This program is free software; you can redistribute it and/or
+	 modify it under the terms of the GNU General Public License
+	 as published by the Free Software Foundation; either version 2
+	 of the License, or (at your option) any later version.
+	
+	 This program is distributed in the hope that it will be useful,
+	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 GNU General Public License for more details.
+	
+	 You should have received a copy of the GNU General Public License
+	 along with this program; if not, write to the Free Software
+	 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	-->
+	
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+	
+<man name="screenEffect" long-name="Set the effect that will be used on the next room switching">
+	<description>	
+	
+	
+	Set the effect that will be used on the next room switching. The effect
+	parameter store in fact 2 effect a closing and an openning one. The higest
+	byte define the closing effect and the lowest byte define the opening
+	effect. So for ex. scrennEffect(0x8082) would first do the dissolve then
+	the scroll.
+	
+	* 0x01: box closing effect with the image
+	* 0x02: new image slide from the top left
+	* 0x03: new image slide from the bottom right
+	* 0x04: old image slide to the top left
+	* 0x05: box opening with the image
+	* 0x06: new image slide from the left and a bit above
+	
+	* 0x80: disolve
+	* 0x81: black screen
+	* 0x82: scroll from the left
+	* 0x83: scroll from the right
+	* 0x84: scrool from the top
+	* 0x85: scrool from the bottom
+	* 0x86: fine dissolve
+	* 0x87: columns dissolve
+	
+	
+	</description>
+	<command name="screenEffect">
+		<file name="effect" required="true"/>
+	</command>
+</man>

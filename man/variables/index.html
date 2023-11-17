@@ -1,0 +1,414 @@
+<link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" type="text/css" href="../man.css" />
+<div class="man">
+<center><h1>VARIABLES</h1></center>
+<table>
+	<tr>
+		<td><b>VAR_KEYPRESS</b> <small><em>@ 0</em></small></td>
+		<td>Not sure if this one is really used in v6.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_USERPUT</b> <small><em>@ 53</em></small></td>
+		<td>Set if user input is enabled.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CUTSCENEEXIT_KEY</b> <small><em>@ 24</em></small><br>
+		<b>VAR_RESTART_KEY</b> <small><em>@ 42</em></small><br>
+		<b>VAR_PAUSE_KEY</b> <small><em>@ 43</em></small><br>
+		<b>VAR_MAINMENU_KEY</b> <small><em>@ 50</em></small><br>
+		<b>VAR_TALKSTOP_KEY</b> <small><em>@ 57</em></small></td>
+		<td>Sets the "special" key mappings.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_VIRT_MOUSE_X</b> <small><em>@ 20</em></small><br>
+		<b>VAR_VIRT_MOUSE_Y</b> <small><em>@ 21</em></small></td>
+		<td>Coordinates of the mouse pointer in virtual resolution.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_MOUSE_X</b> <small><em>@ 44</em></small><br>
+		<b>VAR_MOUSE_Y</b> <small><em>@ 45</em></small></td>
+		<td>Coordinates of the mouse pointer in absolute resolution.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_LEFTBTN_HOLD</b> <small><em>@ 74</em></small><br>
+		<b>VAR_RIGHTBTN_HOLD</b> <small><em>@ 75</em></small></td>
+		<td></td>	</tr>
+	<tr>
+		<td><b>VAR_CURSORSTATE</b> <small><em>@ 52</em></small></td>
+		<td>Set if the cursor is visible.
+
+	</tr>
+</table>
+<h2>Actors</h2>
+<table>
+	<tr>
+		<td><b>VAR_EGO</b> <small><em>@ 1</em></small></td>
+		<td>All the "ego" functions use the actor found in this variable.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_NUM_ACTOR</b> <small><em>@ 8</em></small></td>
+		<td>The number of actor in the game ??</td>
+	</tr>
+	<tr>
+		<td><b>VAR_ACTOR_RANGE_MIN</b> <small><em>@ 15</em></small><br>
+		<b>VAR_ACTOR_RANGE_MAX</b> <small><em>@ 16</em></small></td>
+		<td></td>	</tr>
+	<tr>
+		<td><b>VAR_WALKTO_OBJ</b> <small><em>@ 38</em></small></td>
+		<td>Set to the object the ego is walking toward during startRoomWithEgo().
+
+	</tr>
+</table>
+<h2>Camera, view</h2>
+<table>
+	<tr>
+		<td><b>VAR_CAMERA_POS_X</b> <small><em>@ 2</em></small></td>
+		<td><b>X</b> coordinate of the camera (in the virtual resolution).</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CAMERA_MIN_X</b> <small><em>@ 17</em></small><br>
+		<b>VAR_CAMERA_MAX_X</b> <small><em>@ 18</em></small></td>
+		<td>If the camera is outside of this range it is panned back to this range.
+When setting the camera position it is clamped to this range.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CAMERA_FAST_X</b> <small><em>@ 26</em></small></td>
+		<td>If this is non zero the camera will just jump to its destination instead of
+panning.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_VIDEOMODE</b> <small><em>@ 49</em></small></td>
+        <td></td>
+	</tr>
+</table>
+<h2>Messages and charset</h2>
+<table>
+	<tr>
+		<td><b>VAR_HAVE_MSG</b> <small><em>@ 3</em></small></td>
+		<td>True if a message is beeing displayed ??</td>
+	</tr>
+	<tr>
+		<td><b>VAR_TALK_ACTOR</b> <small><em>@ 25</em></small></td>
+		<td>The actor who's currently talking ??</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CHARINC</b> <small><em>@ 37</em></small></td>
+		<td>Display time per character. Each message is displayed
+60+num_char*VAR_CHARINC ticks. It defaults to 3, but can be changed by
+the user at run time with the subtitle speed key (- and +).</td>
+	</tr>
+	<tr>
+		<td><b>VAR_NOSUBTITLES</b> <small><em>@ 60</em></small></td>
+		<td>Subtitles disabled ??
+
+	</tr>
+</table>
+<h2>Room</h2>
+<table>
+	<tr>
+		<td><b>VAR_ROOM</b> <small><em>@ 4</em></small></td>
+		<td>The current room.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_ROOM_RESOURCE</b> <small><em>@ 22</em></small></td>
+		<td>The currently loaded room. Usely it's the same as VAR_ROOM. However when
+in a mapped room (with id >= 0x80) this variable reflect the real room, not
+the mapped one.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_ROOM_WIDTH</b> <small><em>@ 41</em></small><br>
+		<b>VAR_ROOM_HEIGHT</b> <small><em>@ 54</em></small></td>
+		<td>The room dimensions.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_ROOM_FLAG</b> <small><em>@ 70</em></small></td>
+		<td>Apparently this is set when a game state was loaded.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_NEW_ROOM</b> <small><em>@ 72</em></small></td>
+		<td>This is set to the new room right before running an exit script.
+
+	</tr>
+</table>
+<h2>Scripts</h2>
+<table>
+	<tr>
+		<td><b>VAR_OVERRIDE</b> <small><em>@ 5</em></small></td>
+		<td>Set to 1 if inside an override block when the user has skipped a cutscene.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CAMERA_SCRIPT</b> <small><em>@ 27</em></small></td>
+		<td>Script called when the camera has been moved.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_PRE_ENTRY_SCRIPT</b> <small><em>@ 28</em></small><br>
+		<b>VAR_POST_ENTRY_SCRIPT</b> <small><em>@ 29</em></small></td>
+		<td>Script called before/after the room entry script.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_PRE_EXIT_SCRIPT</b> <small><em>@ 30</em></small><br>
+		<b>VAR_POST_EXIT_SCRIPT</b> <small><em>@ 31</em></small></td>
+		<td>Script called before/after the room exit script.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_VERB_SCRIPT</b> <small><em>@ 32</em></small></td>
+		<td>Script to handle low level user input from the mouse, keyboard, etc.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_SENTENCE_SCRIPT</b> <small><em>@ 33</em></small></td>
+		<td>Script to handle sentences passed to the doSentence() instruction.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_INVENTORY_SCRIPT</b> <small><em>@ 34</em></small></td>
+		<td>Script handling inventory related changes.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CUTSCENE_START_SCRIPT</b> <small><em>@ 35</em></small><br>
+		<b>VAR_CUTSCENE_END_SCRIPT</b> <small><em>@ 36</em></small></td>
+		<td>Script run before/after a cutscene.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_GUI_ENTRY_SCRIPT</b> <small><em>@ 61</em></small><br>
+		<b>VAR_GUI_EXIT_SCRIPT</b> <small><em>@ 62</em></small></td>
+		<td>Script run before showing the GUI menu and after closing it. It's not run
+for room 0.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_GAME_LOADED</b> <small><em>@ 71</em></small></td>
+		<td>Set to 201 when the game has been saved and to 203 when it's loaded. Note
+that this variable is reset at each frame, so it's only set for the frame
+right after the save/load.
+
+	</tr>
+</table>
+<h2>Timers</h2>
+<table>
+	<tr>
+		<td>VAR_TMR_1 <small><em>@ 11</em></small><br>
+		<b>VAR_TMR_2</b> <small><em>@ 12</em></small><br>
+		<b>VAR_TMR_3</b> <small><em>@ 13</em></small><br>
+		<b>VAR_TMR_4</b> <small><em>@ 47</em></small></td>
+		<td>These variables simply track the time in units of 15ms. The scripts can
+reset them anytime. Their value is only increased once for each frame.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_TIMER_NEXT</b> <small><em>@ 19</em></small></td>
+		<td>Set the duration of a game frame in unit of 15ms. So 1 gives 66.6 fps, 2
+gives 33.3 fps, etc. DOTT typically uses 6, which is 11.1 fps.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_TIMER</b> <small><em>@ 45</em></small></td>
+		<td>This can be used to alter the speed of the palette cycles. Normally the
+cycle's counters are increased by the value of VAR_TIMER_NEXT at each
+frame. But if VAR_TIMER is greater, then its value is used instead.
+
+	</tr>
+</table>
+<h2>Sound and music</h2>
+<table>
+	<tr>
+		<td><b>VAR_MUSIC_TIMER</b> <small><em>@ 14</em></small></td>
+		<td></td>	</tr>
+	<tr>
+		<td><b>VAR_LAST_SOUND</b> <small><em>@ 23</em></small></td>
+		<td></td>	</tr>
+	<tr>
+		<td><b>VAR_SOUNDCARD</b> <small><em>@ 48</em></small></td>
+		<td></td>	</tr>
+	<tr>
+		<td><b>VAR_SOUNDRESULT</b> <small><em>@ 56</em></small><br>
+		<b>VAR_SOUNDPARAM</b> <small><em>@ 64</em></small><br>
+		<b>VAR_SOUNDPARAM2</b> <small><em>@ 65</em></small><br>
+		<b>VAR_SOUNDPARAM3</b> <small><em>@ 66</em></small></td>
+		<td>Probably part of the imuse interface.
+
+	</tr>
+</table>
+<h2>Utils</h2>
+<table>
+	<tr>
+		<td><b>VAR_RANDOM_NR</b> <small><em>@ 118</em></small></td>
+		<td>Last value returned by getRandomNumber() ?</td>
+	</tr>
+	<tr>
+		<td><b>VAR_TIMEDATE_YEAR</b> <small><em>@ 119</em></small><br>
+		<b>VAR_TIMEDATE_HOUR</b> <small><em>@ 125</em></small><br>
+		<b>VAR_TIMEDATE_MINUTE</b> <small><em>@ 126</em></small><br>
+		<b>VAR_TIMEDATE_DAY</b> <small><em>@ 128</em></small><br>
+		<b>VAR_TIMEDATE_MONTH</b> <small><em>@ 129</em></small></td>
+		<td>Return value of getDateTime()</td>
+	</tr>
+	<tr>
+		<td><b>VAR_GAME_VERSION</b> <small><em>@ 122</em></small></td>
+		<td>This value is set in the game saves. If the value in a save file doesn't
+match the current one, the GUI displays "WARNING... old savegame" instead
+of its name, and the engine refuses to load it.
+
+	</tr>
+</table>
+<h2>System info</h2>
+<table>
+	<tr>
+		<td><b>VAR_MACHINE_SPEED</b> <small><em>@ 6</em></small></td>
+		<td>The machine speed. It probably has no real meaning in ScummVM.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_V6_SOUNDMODE</b> <small><em>@ 9</em></small></td>
+		<td>Dunno what this is supposed to be, or if ScummVM uses it.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_CURRENTDRIVE</b> <small><em>@ 10</em></small></td>
+		<td>Probably the currently used drive on MS systems.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_DEBUGMODE</b> <small><em>@ 39</em></small></td>
+		<td>Set to the debug level ??</td>
+	</tr>
+	<tr>
+		<td><b>VAR_HEAPSPACE</b> <small><em>@ 40</em></small></td>
+		<td>Available size of the heap ?? Probably meaningless with ScummVM.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_FIXEDDISK</b> <small><em>@ 51</em></small></td>
+		<td>Running from harddisk ??</td>
+	</tr>
+	<tr>
+		<td><b>VAR_MOUSEPRESENT</b> <small><em>@ 67</em></small></td>
+		<td>Again one has to wonder if ScummVM implements this kind of stuff.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_MEMORY_PERFORMANCE</b> <small><em>@ 68</em></small><br>
+		<b>VAR_VIDEO_PERFORMANCE</b> <small><em>@ 69</em></small></td>
+		<td>Or this ??</td>
+	</tr>
+	<tr>
+		<td><b>VAR_V6_EMSSPACE</b> <small><em>@ 76</em></small></td>
+		<td>Size of the EMS memory under DOS.
+
+		</table>
+
+<h2>GUI</h2>
+
+<p>These are currently not used by ScummVM, sadly. Hopefully that will change. All the variables must point to an array holding a string. In ScummC these are declared as array so one just needs to assign a string to them. Note that some of the strings must contain some printf escapes.</p>
+
+<table>
+	<tr>
+		<td><b>VAR_GAME_DISK_MSG</b> <small><em>@ 90</em></small></td>
+		<td>Asking for another game disk: "Insert disk %c and click."</td>
+	</tr>
+	<tr>
+		<td><b>VAR_OPEN_FAILED_MSG</b> <small><em>@ 91</em></small></td>
+		<td>Failed to open a file: "Failed to open %s, (%c%d)."  
+Dunno what the %c%d are for, probably some debug stuff.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_READ_ERROR_MSG</b> <small><em>@ 92</em></small></td>
+		<td>Read error: "Read error on disk %c, (%c%d)."  
+The first %c is most probably for the DOS drive and %c%d the same as for
+the open failed message.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_PAUSE_MSG</b> <small><em>@ 93</em></small></td>
+		<td>Obviously something like: "Game paused. Press space to continue."</td>
+	</tr>
+	<tr>
+		<td><b>VAR_RESTART_MSG</b> <small><em>@ 94</em></small><br>
+		<b>VAR_QUIT_MSG</b> <small><em>@ 95</em></small></td>
+		<td>Asking if the user wants to restart/quit: "Do you really want to quit ? (Y/N)Y"  
+The GUI doesn't display the last character, it indicates the "yes"
+character.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_SAVE_BTN</b> <small><em>@ 96</em></small><br>
+		<b>VAR_LOAD_BTN</b> <small><em>@ 97</em></small><br>
+		<b>VAR_PLAY_BTN</b> <small><em>@ 98</em></small><br>
+		<b>VAR_CANCEL_BTN</b> <small><em>@ 99</em></small><br>
+		<b>VAR_QUIT_BTN</b> <small><em>@ 100</em></small><br>
+		<b>VAR_OK_BTN</b> <small><em>@ 101</em></small></td>
+		<td>Text for the GUI buttons.</td>
+	</tr>
+	<tr>
+		<td><b>VAR_SAVE_DISK_MSG</b> <small><em>@ 102</em></small><br>
+		<b>VAR_ENTER_NAME_MSG</b> <small><em>@ 103</em></small><br>
+		<b>VAR_NOT_SAVED_MSG</b> <small><em>@ 104</em></small><br>
+		<b>VAR_NOT_LOADED_MSG</b> <small><em>@ 105</em></small></td>
+		<td>Various error and confirmation messages shown in the GUI: "Insert your save
+ disk", "Enter a name", "Game NOT saved", "Game NOT loaded".</td>
+	</tr>
+	<tr>
+		<td><b>VAR_SAVE_MSG</b> <small><em>@ 106</em></small><br>
+		<b>VAR_LOAD_MSG</b> <small><em>@ 107</em></small></td>
+		<td>Message shown when loading/saving: "Saving '%s'", "Loading '%s'".</td>
+	</tr>
+	<tr>
+		<td><b>VAR_SAVE_MENU_TITLE</b> <small><em>@ 108</em></small><br>
+		<b>VAR_LOAD_MENU_TITLE</b> <small><em>@ 109</em></small><br>
+		<b>VAR_MAIN_MENU_TITLE</b> <small><em>@ 117</em></small></td>
+		<td>Titles of the 3 menu from the GUI: "What do you want?", "Save game", "Load game".</td>
+	</tr>
+	<tr>
+		<td><b>VAR_GUI_COLORS</b> <small><em>@ 110</em></small></td>
+		<td>This is an array defining the colors used in the GUI. DOTT allocates an
+array of 50 elements for this. The following entries in the array are
+known:
+		<ul style="list-style-type: none;">
+			<li>02: menu title text</li>
+			<li>04: menu background</li>
+			<li>05: button text</li>
+			<li>06: clicked button text</li>
+			<li>07: clicked button background</li>
+			<li>09: arrows and filenames background</li>
+			<li>10: filenames text</li>
+			<li>11: clicked filenames text</li>
+			<li>12: clicked arrows and filenames background</li>
+			<li>13: main menu top border</li>
+			<li>14: main menu bottom border</li>
+			<li>15: main menu left border</li>
+			<li>16: main menu right border</li>
+			<li>17: buttons top border and the filenames box bottom border</li>
+			<li>18: buttons bottom border and the filenames box top border</li>
+			<li>19: buttons left border and the filenames box right border</li>
+			<li>20: buttons right border and the filenames box left border</li>
+			<li>25: message (pause, quit and restart) text</li>
+			<li>26: message background</li>
+			<li>27: message top border</li>
+			<li>28: message bottom border</li>
+			<li>29: message left border</li>
+			<li>30: message right border</li>
+			<li>31: internal error text color</li>
+			<li>32: internal error background</li>
+			<li>33: internal error top border</li>
+			<li>34: internal error bottom border</li>
+			<li>35: internal error left border</li>
+			<li>36: internal error right border</li>
+			<li>37: debug menu (room, var, boot param) text</li>
+			<li>38: debug menu background</li>
+			<li>39: debug menu top border</li>
+			<li>40: debug menu bottom border</li>
+			<li>41: debug menu left border</li>
+			<li>42: debug menu right border</td></li>
+		</ul>
+	</tr>
+	<tr>
+		<td><b>VAR_DEBUG_PASSWORD</b> <small><em>@ 111</em></small></td>
+		<td>This array defines the password to activate the debug mode. If this array
+is not defined, the debug mode can not be enabled. If it contains a zero
+length string then no password is needed. The password must be relative to
+'c'; the simplest way is to do something like this:
+
+```
+  VAR_DEBUG_PASSWORD[0] = "mypassword";
+  for(i = 0 ; VAR_DEBUG_PASSWORD[i] != 0 ; i++)
+    VAR_DEBUG_PASSWORD[i] = VAR_DEBUG_PASSWORD[i] - 'c';
+```
+
+	</tr>
+</table>
+<h2>What are these?</h2>
+<table>
+	<tr>
+		<td><b>VAR_ME</b> <small><em>@ 7</em></small></td>
+		<td></td>	</tr>
+	<tr>
+		<td><b>VAR_FADE_DELAY</b> <small><em>@ 59</em></small></td>
+		<td></table>
+</div>
