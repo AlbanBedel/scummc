@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	 ScummC
+	 Copyright (C) 2008  Alban Bedel
+	
+	 This program is free software; you can redistribute it and/or
+	 modify it under the terms of the GNU General Public License
+	 as published by the Free Software Foundation; either version 2
+	 of the License, or (at your option) any later version.
+	
+	 This program is distributed in the hope that it will be useful,
+	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 GNU General Public License for more details.
+	
+	 You should have received a copy of the GNU General Public License
+	 along with this program; if not, write to the Free Software
+	 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	-->
+	
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+	
+<man name="softCursorOn" long-name="These are a bit different, they use ++ and -- instead of setting to 0 or 1">
+	<description>	
+	
+	
+	These are a bit different, they use ++ and -- instead of setting to 0 or 1.
+	Dunno what they are good for.
+	
+	
+	</description>
+	<command name="softCursorOn">
+		<file name="" required="true"/>
+		<file name="softCursorOff()" required="true"/>
+		<file name="softUserPutOn()" required="true"/>
+		<file name="softUserPutOff()" required="true"/>
+	</command>
+</man>

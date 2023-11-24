@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	 ScummC
+	 Copyright (C) 2008  Alban Bedel
+	
+	 This program is free software; you can redistribute it and/or
+	 modify it under the terms of the GNU General Public License
+	 as published by the Free Software Foundation; either version 2
+	 of the License, or (at your option) any later version.
+	
+	 This program is distributed in the hope that it will be useful,
+	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 GNU General Public License for more details.
+	
+	 You should have received a copy of the GNU General Public License
+	 along with this program; if not, write to the Free Software
+	 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	-->
+	
+<?xml-stylesheet href="html.xslt" type="text/xsl"?>
+	
+<man name="getObjectX" long-name="">
+	<description>	
+	
+	
+	Get the object/actor X or Y coordinate.
+	
+	
+	</description>
+	<command name="getObjectX">
+		<file name="obj" required="true"/>
+		<file name="intgetObjectY(obj)" required="true"/>
+	</command>
+	<see-also>
+<cmd>getSpecialBox</cmd>, <cmd>getBoxFlags</cmd>, <cmd>getRoomObjects</cmd>, <cmd>getObjectState</cmd>, <cmd>getObjectOwner</cmd>, <cmd>getObjectDir</cmd>, <cmd>getObjectAt</cmd>, <cmd>getObjectVerbEntrypoint</cmd>, <cmd>getRoomObjectX</cmd>, <cmd>getRoomObjectWidth</cmd>, <cmd>getObjectNewDir</cmd>, <cmd>getActorElevation</cmd>, <cmd>getActorCostume</cmd>, <cmd>getActorAnimVar</cmd>, <cmd>getActorAnimCounter1</cmd>, <cmd>getActorRoom</cmd>, <cmd>getActorWalkBox</cmd>, <cmd>getActorWidth</cmd>, <cmd>getActorLayer</cmd>, <cmd>getActorAt</cmd>, <cmd>getActorXScale</cmd>, <cmd>getActorFrame</cmd>, <cmd>getInventoryCount</cmd>, <cmd>getVerbAt</cmd>, <cmd>getVerbX</cmd>, <cmd>getRandomNumber</cmd>, <cmd>getRandomNumberRange</cmd>, <cmd>getDistObjObj</cmd>, <cmd>getDistObjPt</cmd>, <cmd>getDistPtPt</cmd>, <cmd>getPixel</cmd>, <cmd>getColor</cmd>, <cmd>getKeyState</cmd>, <cmd>getDateTime</cmd>	</see-also>
+</man>

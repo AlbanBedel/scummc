@@ -1,0 +1,22 @@
+<link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" type="text/css" href="../man.css" />
+<div class="man">
+<center><h1>STRINGS</h1></center>
+    <p>In SCUMM strings can contain some escapes to code a few special things. Escapes start with 0xFF followed by a byte which codes the escape type, and are generally followed by some parameters.</p>
+    <table>
+    <tr><td> 0x01: New line</td><td></td></tr>
+    <tr><td> 0x02: Keep</td><td></td></tr>
+    <tr><td> 0x03: Wait</td><td></td></tr>
+    <tr><td> 0x04xxxx: Integer</td><td>Expands to the integer value of the variable at the given address.</td></tr>
+    <tr><td> 0x05xxxx: Verb</td><td>Expands to the verb referenced in the variable at the given address.</td></tr>
+    <tr><td> 0x06xxxx: Name</td><td>Expands to the name of the object or actor referenced in the variable at the given address.
+    </td></tr>
+    <tr><td> 0x07xxxx: String</td><td>Expands to the string contained in the array referenced in the variable atthe given address.</td></tr>
+    <tr><td> 0x09xxxx: Start actor anim</td><td>Starts the given animation. Only works on the talking actor, if any.
+    </td></tr>
+    <tr><td> 0x0Axxxx: Voice</td><td>Plays a sound sample, mostly used for voices. This escape takes quite a lot of arguments. To avoid yet another special case when computing the string length, etc., the escape is repeated several times to code two 32 bits values (LE). The first value is the position of the sample in the sound file. The second value is the size of the VCTL header found before the audio data.
+    </td></tr>
+    <tr><td> 0x0Cxxxx: Color</td><td></td></tr>
+    <tr><td> 0x0Dxxxx: Unknown</td><td></td>
+    <tr><td>0x0Exxxx: Charset</td><td></td></tr>
+    </table>
+</div>

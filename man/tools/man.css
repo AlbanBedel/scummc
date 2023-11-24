@@ -17,41 +17,17 @@
  *
  */
 
- h1 { font-size: 140%;}
- h2 { font-size: 130%; text-indent: 1em; }
- h3 { font-size: 120%; }
- h4 { font-size: 110%; }
- 
- h1,h2,h3,h4 {
-   text-transform: uppercase;
- }
- 
- em {
-   color: #222;
- }
+h1 { font-size: 140%; }
+h2 { font-size: 130%; }
+h3 { font-size: 120%; }
+h4 { font-size: 110%; }
 
-p {
-  text-indent: 1em;
-  padding: 1em;
-
+h1,h2,h3,h4 {
+  text-transform: uppercase;
 }
 
 em {
-  color: #222;
-}
-
-table {
-  width: 98%;
-  margin: 1%;
-  table-layout: fixed;
-
-}
-tr td:nth-of-type(1) {
-  max-width: 50%;
-}
-td {
-  padding: 0.25em;
-  border: 1px solid black;
+  text-decoration: underline;
 }
 
 .man {
