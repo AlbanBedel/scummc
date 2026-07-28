@@ -175,7 +175,7 @@ useful source.
 Big thanks to sourceforge.net for the compile farm that allowed making
 this software portable on 10 different platforms.
 
-Big thanks to Jesse McGrew and James Urquhart for their contributions.
+Big thanks to Tara McGrew and James Urquhart for their contributions.
 
 Big thanks to Gerrit Karius for OpenQuest and generally making this
 project move forward.
